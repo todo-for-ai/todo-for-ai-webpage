@@ -52,6 +52,9 @@ export const APITokenManager: React.FC = () => {
   // 用于在View弹窗中显示完整Token的状态
   const [isTokenRevealed, setIsTokenRevealed] = useState(false)
   const [revealedTokenInView, setRevealedTokenInView] = useState<string>('')
+  // 用于显示加载状态
+  const [isRevealingToken, setIsRevealingToken] = useState(false)
+  const [isCopyingToken, setIsCopyingToken] = useState(false)
   const [form] = Form.useForm()
   const { tp } = usePageTranslation('profile')
 
@@ -120,6 +123,7 @@ export const APITokenManager: React.FC = () => {
       setRevealedTokenInView('')
     } else {
       // 如果未显示，则获取并显示完整Token
+      setIsRevealingToken(true)
       try {
         const response = await fetchApiClient.get(`/tokens/${token.id}/reveal`)
         const data = response?.data || response
@@ -128,15 +132,19 @@ export const APITokenManager: React.FC = () => {
         if (data.token) {
           setRevealedTokenInView(data.token)
           setIsTokenRevealed(true)
+          message.success(tp('apiTokens.messages.revealSuccess'))
         } else if (data.success && data.data) {
           // 备用方案：如果数据结构是嵌套的
           setRevealedTokenInView(data.data.token)
           setIsTokenRevealed(true)
+          message.success(tp('apiTokens.messages.revealSuccess'))
         } else {
           message.error(data.error || tp('apiTokens.messages.revealFailed'))
         }
       } catch (error: any) {
         message.error(tp('apiTokens.messages.revealFailedOldToken'))
+      } finally {
+        setIsRevealingToken(false)
       }
     }
   }
@@ -145,6 +153,38 @@ export const APITokenManager: React.FC = () => {
     // 复制Token前缀（这是我们能安全显示的部分）
     copyToClipboard(`${token.prefix}***`)
     message.info(tp('apiTokens.messages.copyPrefixSuccess'))
+  }
+
+  // 复制完整Token的函数
+  const handleCopyFullToken = async (token: APIToken) => {
+    setIsCopyingToken(true)
+    try {
+      // 如果已经显示了完整token，直接复制
+      if (isTokenRevealed && revealedTokenInView) {
+        copyToClipboard(revealedTokenInView)
+        return
+      }
+
+      // 否则先获取完整token再复制
+      const response = await fetchApiClient.get(`/tokens/${token.id}/reveal`)
+      const data = response?.data || response
+
+      let fullToken = ''
+      if (data.token) {
+        fullToken = data.token
+      } else if (data.success && data.data) {
+        fullToken = data.data.token
+      } else {
+        message.error(data.error || tp('apiTokens.messages.revealFailed'))
+        return
+      }
+
+      copyToClipboard(fullToken)
+    } catch (error: any) {
+      message.error(tp('apiTokens.messages.revealFailedOldToken'))
+    } finally {
+      setIsCopyingToken(false)
+    }
   }
 
   const copyToClipboard = (text: string) => {
@@ -433,6 +473,8 @@ export const APITokenManager: React.FC = () => {
           setViewingToken(null)
           setIsTokenRevealed(false)
           setRevealedTokenInView('')
+          setIsRevealingToken(false)
+          setIsCopyingToken(false)
         }}
         footer={[
           <Button key="close" onClick={() => {
@@ -440,6 +482,8 @@ export const APITokenManager: React.FC = () => {
             setViewingToken(null)
             setIsTokenRevealed(false)
             setRevealedTokenInView('')
+            setIsRevealingToken(false)
+            setIsCopyingToken(false)
           }}>
             {tp('buttons.close')}
           </Button>
@@ -481,6 +525,7 @@ export const APITokenManager: React.FC = () => {
                       type="text"
                       icon={isTokenRevealed ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                       size="small"
+                      loading={isRevealingToken}
                       onClick={() => handleToggleTokenInView(viewingToken)}
                     />
                   </Tooltip>
@@ -489,7 +534,8 @@ export const APITokenManager: React.FC = () => {
                       type="text"
                       icon={<CopyOutlined />}
                       size="small"
-                      onClick={() => copyToClipboard(isTokenRevealed ? revealedTokenInView : `${viewingToken.prefix}***`)}
+                      loading={isCopyingToken}
+                      onClick={() => handleCopyFullToken(viewingToken)}
                     />
                   </Tooltip>
                 </div>

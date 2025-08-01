@@ -109,6 +109,7 @@
       "copySuccess": "已复制到剪贴板",
       "copyFailed": "复制失败",
       "copyPrefixSuccess": "已复制Token前缀到剪贴板",
+      "revealSuccess": "Token已显示",
       "revealFailed": "获取Token失败",
       "revealFailedOldToken": "获取Token失败，可能是旧版本Token不支持此功能"
     },
