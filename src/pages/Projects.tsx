@@ -416,47 +416,52 @@ const Projects = () => {
 
         {/* 搜索区域 */}
         <div style={{ marginTop: '16px', marginBottom: '8px' }}>
-          <Row gutter={16} align="middle">
-            <Col span={8}>
-              <Search
-                placeholder={t('search.placeholder')}
-                value={searchValue}
-                onChange={handleSearchChange}
-                onSearch={handleSearchSubmit}
-                onClear={handleSearchClear}
-                allowClear
-                enterButton={<SearchOutlined />}
-                size="middle"
-                style={{ width: '100%' }}
-                loading={loading}
-              />
-            </Col>
-            <Col span={16}>
-              <div style={{
-                fontSize: '12px',
-                color: '#666',
-                textAlign: 'right',
-                lineHeight: '32px'
-              }}>
-                {loading ? (
-                  <span style={{ color: '#1890ff' }}>{t('search.searching')}</span>
-                ) : pagination?.total ? (
-                  <>
-                    {t('search.totalFound', { total: pagination.total })}
-                    {filters.search && (
-                      <span style={{ marginLeft: '8px' }}>
-                        {t('search.keyword', { keyword: filters.search })}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <span style={{ color: filters.search ? '#ff4d4f' : '#8c8c8c' }}>
-                    {filters.search ? t('search.noResults', { keyword: filters.search }) : t('search.noProjects')}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: '8px'
+          }}>
+            <Search
+              placeholder={t('search.placeholder')}
+              value={searchValue}
+              onChange={handleSearchChange}
+              onSearch={handleSearchSubmit}
+              onClear={handleSearchClear}
+              allowClear
+              enterButton={<SearchOutlined />}
+              size="middle"
+              style={{
+                width: '400px',
+                maxWidth: '80%'
+              }}
+              loading={loading}
+            />
+          </div>
+          {/* 搜索统计信息 */}
+          <div style={{
+            fontSize: '12px',
+            color: '#666',
+            textAlign: 'center',
+            lineHeight: '20px'
+          }}>
+            {loading ? (
+              <span style={{ color: '#1890ff' }}>{t('search.searching')}</span>
+            ) : pagination?.total ? (
+              <>
+                {t('search.totalFound', { total: pagination.total })}
+                {filters.search && (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('search.keyword', { keyword: filters.search })}
                   </span>
                 )}
-              </div>
-            </Col>
-          </Row>
+              </>
+            ) : (
+              <span style={{ color: filters.search ? '#ff4d4f' : '#8c8c8c' }}>
+                {filters.search ? t('search.noResults', { keyword: filters.search }) : t('search.noProjects')}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
