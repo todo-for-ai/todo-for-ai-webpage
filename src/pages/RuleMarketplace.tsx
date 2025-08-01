@@ -35,7 +35,6 @@ import { useContextRuleStore, useProjectStore } from '../stores'
 import { fetchApiClient } from '../api/fetchClient'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import { MarkdownEditor } from '../components/MarkdownEditor'
-import { ComplianceNotice } from '../components/ComplianceNotice'
 
 const { Title, Text, Paragraph } = Typography
 const { Option } = Select
@@ -208,9 +207,6 @@ const RuleMarketplace: React.FC = () => {
         <Text type="secondary">
           {t('subtitle')}
         </Text>
-        <div style={{ marginTop: '12px' }}>
-          <ComplianceNotice />
-        </div>
       </div>
 
       {/* 搜索和筛选 */}

@@ -3,7 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1',
+  baseURL: '/todo-for-ai/api/v1',
   timeout: 30000,
   withCredentials: true,
   headers: {
