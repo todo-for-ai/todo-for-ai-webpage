@@ -403,6 +403,8 @@ const ProjectDetail = () => {
       message.success('任务删除成功')
       // 如果删除的任务在选中列表中，也要移除
       setSelectedTaskIds(prev => prev.filter(id => id !== task.id))
+      // 刷新任务列表以确保UI立即更新
+      await fetchTasks()
     }
   }
 
