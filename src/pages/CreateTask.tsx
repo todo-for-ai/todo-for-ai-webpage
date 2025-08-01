@@ -926,8 +926,8 @@ const CreateTask: React.FC = () => {
                         loading={loading}
                         onClick={handleSubmit}
                         style={{
-                          backgroundColor: '#1890ff',
-                          borderColor: '#1890ff',
+                          backgroundColor: '#52c41a',
+                          borderColor: '#52c41a',
                           fontWeight: 'bold'
                         }}
                       >
@@ -941,8 +941,8 @@ const CreateTask: React.FC = () => {
                         loading={loading}
                         onClick={handleSubmitAndEdit}
                         style={{
-                          backgroundColor: '#52c41a',
-                          borderColor: '#52c41a',
+                          backgroundColor: '#1890ff',
+                          borderColor: '#1890ff',
                           fontWeight: 'bold'
                         }}
                       >
