@@ -8,7 +8,8 @@
     "help": "Help",
     "about": "About",
     "mcpDocs": "MCP Installation Docs",
-    "apiDocs": "HTTP API Docs"
+    "apiDocs": "HTTP API Docs",
+    "pinnedProject": "Project {{projectId}}"
   },
   "breadcrumb": {
     "home": "Home",

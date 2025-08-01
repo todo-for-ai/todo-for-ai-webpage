@@ -1,7 +1,7 @@
 import React from 'react'
 import { Alert } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
-import { useTranslation } from '../../i18n/hooks/useTranslation'
+import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import './UnsavedChangesAlert.css'
 
 interface UnsavedChangesAlertProps {
@@ -17,7 +17,7 @@ const UnsavedChangesAlert: React.FC<UnsavedChangesAlertProps> = ({
   className,
   style
 }) => {
-  const { tp } = useTranslation('createTask')
+  const { tp } = usePageTranslation('createTask')
 
   if (!visible) return null
 

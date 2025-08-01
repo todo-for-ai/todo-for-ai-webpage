@@ -95,7 +95,7 @@ const TopNavigation: React.FC = () => {
     ...pinnedProjects.map(pin => ({
       key: `/todo-for-ai/pages/projects/${pin.project?.id || pin.project_id}`,
       icon: <PushpinOutlined style={{ color: pin.project?.color || '#1890ff' }} />,
-      label: pin.project?.name || `项目 ${pin.project_id}`,
+      label: pin.project?.name || tn('menu.pinnedProject', { projectId: pin.project_id }),
     }))
   ]
 

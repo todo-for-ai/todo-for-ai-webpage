@@ -22,7 +22,9 @@
     "unpinFailed": "取消Pin失败",
     "pinSuccess": "已Pin项目到导航栏",
     "pinFailed": "操作失败",
-    "pinLimitReached": "最多只能Pin 10个项目，请先取消一些Pin项目"
+    "pinLimitReached": "最多只能Pin 10个项目，请先取消一些Pin项目",
+    "reorderSuccess": "Pin顺序已更新",
+    "reorderFailed": "更新Pin顺序失败"
   },
   "buttons": {
     "close": "关闭"

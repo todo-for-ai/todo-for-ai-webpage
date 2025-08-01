@@ -175,7 +175,7 @@ const Dashboard = () => {
             ) : (
               <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
                 <ProjectOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
-                <div>暂无项目数据</div>
+                <div>{tc('empty.noProjects')}</div>
               </div>
             )}
           </Card>
@@ -215,7 +215,7 @@ const Dashboard = () => {
             ) : (
               <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
                 <CheckSquareOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
-                <div>暂无任务数据</div>
+                <div>{tc('empty.noTasks')}</div>
               </div>
             )}
           </Card>

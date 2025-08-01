@@ -8,7 +8,8 @@
     "help": "帮助",
     "about": "关于",
     "mcpDocs": "MCP安装文档",
-    "apiDocs": "HTTP API文档"
+    "apiDocs": "HTTP API文档",
+    "pinnedProject": "项目 {{projectId}}"
   },
   "breadcrumb": {
     "home": "首页",

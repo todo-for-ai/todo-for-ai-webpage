@@ -178,7 +178,9 @@
     "noData": "No data",
     "noResults": "No results found",
     "noContent": "No content",
-    "noItems": "No items"
+    "noItems": "No items",
+    "noProjects": "No project data",
+    "noTasks": "No task data"
   },
   "wechatGroup": {
     "tooltip": "Join AI Discussion Group",

@@ -93,10 +93,17 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
   const { currentTheme, isTypewriterTheme } = useThemeContext()
   const containerRef = useRef<HTMLDivElement>(null)
   const currentValueRef = useRef(value)
+  const isUpdatingFromParentRef = useRef(false) // 标记是否正在从父组件更新
 
   // 实时保存回调 - 符合三大法则第一条：实时保存
   // 修复：移除value依赖，避免回调频繁重新创建导致编辑器不稳定
   const handleContentChange = useCallback((markdown: string) => {
+    // 防止循环更新：如果正在从父组件更新，则不触发onChange
+    if (isUpdatingFromParentRef.current) {
+      console.log('🔄 跳过onChange回调，正在从父组件更新')
+      return
+    }
+
     currentValueRef.current = markdown
     if (onChange) {
       onChange(markdown)
@@ -128,7 +135,7 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
       .config(ctx => {
         // 配置实时保存监听器 - 符合三大法则第一条：实时保存
         ctx.get(listenerCtx).markdownUpdated((_ctx, markdown, prevMarkdown) => {
-          console.log('📝 内容变化:', { markdown, prevMarkdown })
+          console.log('📝 内容变化:', { markdown, prevMarkdown, isUpdatingFromParent: isUpdatingFromParentRef.current })
           if (markdown !== prevMarkdown) {
             handleContentChange(markdown)
           }
@@ -146,6 +153,7 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
       clearTimeout(updateTimeoutRef.current)
     }
 
+    // 更严格的更新条件检查，避免不必要的更新
     if (get && value !== currentValueRef.current) {
       // 使用防抖，避免快速连续的更新
       updateTimeoutRef.current = window.setTimeout(() => {
@@ -153,13 +161,22 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
           console.log('🔄 更新编辑器内容:', { value, current: currentValueRef.current })
           const editor = get()
           if (editor) {
-            // 只有在内容确实不同时才更新，避免不必要的replaceAll
-            const trimmedValue = (value || '').trim()
-            const trimmedCurrent = (currentValueRef.current || '').trim()
+            // 更严格的内容比较，避免不必要的replaceAll
+            const normalizedValue = (value || '').replace(/\r\n/g, '\n').trim()
+            const normalizedCurrent = (currentValueRef.current || '').replace(/\r\n/g, '\n').trim()
 
-            if (trimmedValue !== trimmedCurrent) {
+            if (normalizedValue !== normalizedCurrent) {
+              // 设置标记，防止循环更新
+              isUpdatingFromParentRef.current = true
+
               editor.action(replaceAll(value || ''))
               currentValueRef.current = value
+
+              // 延迟重置标记，确保replaceAll操作完成
+              setTimeout(() => {
+                isUpdatingFromParentRef.current = false
+              }, 100)
+
               console.log('✅ 编辑器内容更新成功')
             }
           } else {
@@ -167,8 +184,10 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
           }
         } catch (error) {
           console.error('❌ 更新编辑器内容失败:', error)
+          // 确保在错误情况下也重置标记
+          isUpdatingFromParentRef.current = false
         }
-      }, 50) // 50ms防抖延迟
+      }, 100) // 增加防抖延迟到100ms，减少更新频率
     }
 
     return () => {

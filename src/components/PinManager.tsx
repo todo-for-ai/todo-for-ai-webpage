@@ -175,14 +175,14 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
         }))
 
         await pinsApi.reorderPins(reorderData)
-        message.success('Pin顺序已更新')
+        message.success(t('messages.reorderSuccess'))
         onUpdate() // 通知父组件更新导航栏
         // 通知其他组件Pin状态更新
         window.dispatchEvent(new CustomEvent('pinUpdated'))
       } catch (error: any) {
         // 如果保存失败，恢复原来的顺序
         setPins(pins)
-        const errorMessage = error.response?.data?.error || '更新Pin顺序失败'
+        const errorMessage = error.response?.data?.error || t('messages.reorderFailed')
         message.error(errorMessage)
       }
     }

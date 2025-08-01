@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import {
   Typography,
@@ -1033,12 +1033,21 @@ const CreateTask: React.FC = () => {
                       // 修复：避免循环更新，使用更智能的状态管理
                       const newValue = value || ''
 
-                      // 只有在内容真正变化时才更新状态
-                      if (newValue !== editorContent) {
-                        setEditorContent(newValue)
+                      // 更严格的内容比较，避免不必要的状态更新
+                      const normalizedNewValue = newValue.replace(/\r\n/g, '\n').trim()
+                      const normalizedCurrentValue = (editorContent || '').replace(/\r\n/g, '\n').trim()
 
-                        // 使用静默更新，避免触发onValuesChange
-                        form.setFieldValue('content', newValue)
+                      // 只有在内容真正变化时才更新状态
+                      if (normalizedNewValue !== normalizedCurrentValue) {
+                        console.log('📝 编辑器内容变化:', { from: normalizedCurrentValue, to: normalizedNewValue })
+
+                        // 使用批量更新，减少重渲染次数
+                        React.startTransition(() => {
+                          setEditorContent(newValue)
+
+                          // 使用静默更新，避免触发onValuesChange
+                          form.setFieldValue('content', newValue)
+                        })
 
                         // 手动触发实时保存
                         if (!isEditMode) {

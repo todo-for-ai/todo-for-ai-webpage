@@ -178,7 +178,9 @@
     "noData": "暂无数据",
     "noResults": "没有找到相关结果",
     "noContent": "暂无内容",
-    "noItems": "暂无项目"
+    "noItems": "暂无项目",
+    "noProjects": "暂无项目数据",
+    "noTasks": "暂无任务数据"
   },
   "wechatGroup": {
     "tooltip": "加入AI交流群",
