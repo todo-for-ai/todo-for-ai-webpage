@@ -54,6 +54,11 @@ apiClient.interceptors.response.use(
           import('../stores/useAuthStore').then(({ useAuthStore }) => {
             useAuthStore.getState().clearAuth()
           })
+          // 保存当前页面URL用于登录后跳转
+          const currentPath = window.location.pathname + window.location.search
+          if (!currentPath.includes('/login')) {
+            localStorage.setItem('redirect_after_login', currentPath)
+          }
           if (!window.location.pathname.includes('/login')) {
             window.location.href = '/todo-for-ai/pages/login'
           }

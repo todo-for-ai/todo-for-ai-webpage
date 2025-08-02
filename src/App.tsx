@@ -1,7 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AppLayout } from './components/Layout'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthGuard } from './components/AuthGuard'
+import { tokenRefreshService } from './services/TokenRefreshService'
+import { useAuthStore } from './stores/useAuthStore'
 import {
   Dashboard,
   Projects,
@@ -24,6 +27,24 @@ import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 
 function App() {
+  const { isAuthenticated } = useAuthStore()
+
+  // 初始化token刷新服务
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('[App] 启动token刷新服务')
+      tokenRefreshService.start()
+    } else {
+      console.log('[App] 停止token刷新服务')
+      tokenRefreshService.stop()
+    }
+
+    // 清理函数
+    return () => {
+      tokenRefreshService.stop()
+    }
+  }, [isAuthenticated])
+
   return (
     <ThemeProvider options={{
       enablePersistence: true,

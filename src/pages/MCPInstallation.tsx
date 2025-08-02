@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { Card, Tabs, Typography, Alert, Divider, Space, Tag } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { Card, Tabs, Typography, Alert, Divider, Space, Tag, Button, message } from 'antd'
 import {
   ApiOutlined,
   DownloadOutlined,
@@ -7,13 +7,30 @@ import {
   CodeOutlined,
   CheckCircleOutlined,
   InfoCircleOutlined,
-  KeyOutlined
+  KeyOutlined,
+  CopyOutlined
 } from '@ant-design/icons'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { useSearchParams } from 'react-router-dom'
 
 const { Title, Paragraph, Text } = Typography
 const { TabPane } = Tabs
 
 const MCPInstallation: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 定义所有有效的标签页key
+  const validTabs = ['overview', 'api-token', 'installation', 'claude', 'cursor', 'other-ides', 'configuration', 'testing']
+
+  // 获取初始标签页，确保是有效的
+  const getInitialTab = () => {
+    const tabParam = searchParams.get('tab')
+    return validTabs.includes(tabParam || '') ? tabParam! : 'overview'
+  }
+
+  const [activeTab, setActiveTab] = useState(getInitialTab())
+
   // 设置网页标题
   useEffect(() => {
     document.title = 'MCP安装文档 - Todo for AI'
@@ -23,6 +40,87 @@ const MCPInstallation: React.FC = () => {
       document.title = 'Todo for AI'
     }
   }, [])
+
+  // 监听URL参数变化，同步标签页状态
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && validTabs.includes(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam)
+    } else if (!tabParam && activeTab !== 'overview') {
+      // 如果URL中没有tab参数，默认显示overview
+      setActiveTab('overview')
+    }
+  }, [searchParams, activeTab, validTabs])
+
+  // 处理标签页切换
+  const handleTabChange = (key: string) => {
+    setActiveTab(key)
+    // 更新URL参数以保持标签页状态
+    const newSearchParams = new URLSearchParams(searchParams)
+    if (key === 'overview') {
+      // overview是默认标签页，不需要在URL中显示
+      newSearchParams.delete('tab')
+    } else {
+      newSearchParams.set('tab', key)
+    }
+    setSearchParams(newSearchParams, { replace: true })
+  }
+
+  // 复制到剪贴板功能
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      message.success('已复制到剪贴板')
+    }).catch(() => {
+      message.error('复制失败')
+    })
+  }
+
+  // CodeBlock组件
+  const CodeBlock = ({
+    children,
+    copyable = true,
+    language = 'bash'
+  }: {
+    children: string,
+    copyable?: boolean,
+    language?: string
+  }) => (
+    <div style={{ position: 'relative', marginBottom: '16px' }}>
+      <SyntaxHighlighter
+        language={language}
+        style={tomorrow}
+        customStyle={{
+          backgroundColor: '#f6f8fa',
+          padding: '12px',
+          borderRadius: '6px',
+          fontSize: '13px',
+          lineHeight: '1.45',
+          margin: 0
+        }}
+        showLineNumbers={false}
+        wrapLines={true}
+        wrapLongLines={true}
+      >
+        {children}
+      </SyntaxHighlighter>
+      {copyable && (
+        <Button
+          type="text"
+          icon={<CopyOutlined />}
+          size="small"
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            opacity: 0.7,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            border: '1px solid rgba(0, 0, 0, 0.1)'
+          }}
+          onClick={() => copyToClipboard(children)}
+        />
+      )}
+    </div>
+  )
 
   const codeStyle = {
     backgroundColor: '#f6f8fa',
@@ -68,7 +166,11 @@ const MCPInstallation: React.FC = () => {
         showIcon
       />
 
-      <Tabs defaultActiveKey="overview" size="large">
+      <Tabs
+        activeKey={activeTab}
+        onChange={handleTabChange}
+        size="large"
+      >
         <TabPane 
           tab={
             <span>
@@ -143,25 +245,91 @@ const MCPInstallation: React.FC = () => {
               API Token 配置
             </Title>
 
-            <Alert
-              message="重要提醒"
-              description="从版本2.0开始，MCP服务器需要API Token进行身份认证，确保数据安全和访问控制。"
-              type="warning"
-              style={{ marginBottom: '24px' }}
-              showIcon
-            />
 
-            <Title level={4}>1. 创建API Token</Title>
-            <ol>
-              <li>登录Todo for AI系统</li>
-              <li>点击右上角用户头像，选择"个人中心"</li>
-              <li>切换到"API Token"标签页</li>
-              <li>点击"创建Token"按钮</li>
-              <li>填写Token名称（如：MCP Client Token）</li>
-              <li>设置过期时间（可选，留空表示永不过期）</li>
-              <li>点击"创建Token"</li>
-              <li><strong>重要：</strong>立即复制并保存Token，它只会显示一次</li>
-            </ol>
+
+            <Title level={4} style={{
+              marginBottom: '16px',
+              color: '#1890ff',
+              borderLeft: '4px solid #1890ff',
+              paddingLeft: '12px',
+              background: 'linear-gradient(90deg, rgba(24, 144, 255, 0.05) 0%, transparent 100%)',
+              padding: '8px 12px',
+              borderRadius: '4px'
+            }}>
+              <KeyOutlined style={{ marginRight: '8px' }} />
+              1. 创建API Token
+            </Title>
+
+            <div style={{
+              background: '#fafafa',
+              padding: '20px',
+              borderRadius: '8px',
+              border: '1px solid #e8e8e8',
+              marginBottom: '24px'
+            }}>
+              <ol style={{
+                margin: 0,
+                paddingLeft: '20px',
+                lineHeight: '2',
+                fontSize: '14px'
+              }}>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>登录Todo for AI系统</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    访问系统主页并使用您的账户登录
+                  </div>
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>点击右上角用户头像，选择"个人中心"</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    在导航栏右上角找到用户头像并点击
+                  </div>
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>切换到"API Token"标签页</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    在个人中心页面中找到API Token管理选项
+                  </div>
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>点击"创建Token"按钮</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    开始创建新的API访问令牌
+                  </div>
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>填写Token名称（如：MCP Client Token）</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    为Token设置一个便于识别的名称
+                  </div>
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>设置过期时间（可选，留空表示永不过期）</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    根据安全需要设置Token的有效期
+                  </div>
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>点击"创建Token"</strong>
+                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
+                    确认创建并生成Token
+                  </div>
+                </li>
+                <li style={{
+                  marginBottom: '0',
+                  padding: '12px',
+                  background: '#fff2e8',
+                  border: '1px solid #ffbb96',
+                  borderRadius: '6px',
+                  color: '#d4380d'
+                }}>
+                  <strong>⚠️ 重要：</strong>立即复制并保存Token，它只会显示一次
+                  <div style={{ color: '#ad2102', fontSize: '13px', marginTop: '4px' }}>
+                    Token创建后只显示一次，请务必立即复制并妥善保存
+                  </div>
+                </li>
+              </ol>
+            </div>
 
             <Title level={4} style={{ marginTop: '24px' }}>2. 配置Token</Title>
             <Paragraph>
@@ -191,7 +359,7 @@ const MCPInstallation: React.FC = () => {
             <Paragraph>
               以下是一个完整的Claude Desktop配置示例：
             </Paragraph>
-            <div style={configStyle}>
+            <CodeBlock language="json">
 {`{
   "mcpServers": {
     "todo-for-ai": {
@@ -207,7 +375,7 @@ const MCPInstallation: React.FC = () => {
     }
   }
 }`}
-            </div>
+            </CodeBlock>
 
             <Alert
               message="安全提醒"
@@ -236,51 +404,227 @@ const MCPInstallation: React.FC = () => {
           key="installation"
         >
           <Card>
-            <Title level={3}>MCP 服务器安装</Title>
-            
-            <Title level={4}>方法一：从 npm 安装（推荐）</Title>
+            <Title level={3}>
+              <DownloadOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+              MCP 配置安装指南
+            </Title>
+
             <Alert
-              message="最新版本"
-              description="现在可以直接从 npm 中央仓库安装，无需手动构建！"
+              message="简单配置"
+              description="Todo for AI 的 MCP 集成无需安装额外软件，只需要复制 JSON 配置到您的 AI 客户端即可！"
               type="success"
-              style={{ marginBottom: '16px' }}
+              style={{ marginBottom: '24px' }}
               showIcon
             />
-            <div style={codeStyle}>
-              npm install -g @todo-for-ai/mcp
-            </div>
 
-            <Title level={4} style={{ marginTop: '24px' }}>方法二：从源码安装</Title>
-            <Paragraph>
-              如果你需要最新的开发版本或想要自定义修改：
+            <Title level={4} style={{
+              marginBottom: '16px',
+              color: '#1890ff',
+              borderLeft: '4px solid #1890ff',
+              paddingLeft: '12px',
+              background: 'linear-gradient(90deg, rgba(24, 144, 255, 0.05) 0%, transparent 100%)',
+              padding: '8px 12px',
+              borderRadius: '4px'
+            }}>
+              <SettingOutlined style={{ marginRight: '8px' }} />
+              第一步：获取 MCP 配置
+            </Title>
+
+            <Paragraph style={{ fontSize: '14px', color: '#666', marginBottom: '16px' }}>
+              根据您使用的 AI 客户端，复制对应的 MCP JSON 配置：
             </Paragraph>
-            <div style={codeStyle}>
-{`git clone https://github.com/todo-for-ai/todo-for-ai.git
-cd todo-for-ai/todo-mcp
-npm install
-npm run build
-npm link`}
-            </div>
 
-            <Title level={4} style={{ marginTop: '24px' }}>验证安装</Title>
-            <div style={codeStyle}>
-              @todo-for-ai/mcp --version
-            </div>
-
-            <Paragraph style={{ marginTop: '16px' }}>
-              或者如果使用全局安装的命令：
+            <Title level={5} style={{ marginTop: '20px', marginBottom: '12px' }}>
+              📋 Claude Desktop 配置
+            </Title>
+            <Paragraph style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+              复制以下配置到 Claude Desktop 的配置文件中：
             </Paragraph>
-            <div style={codeStyle}>
-              todo-for-ai-mcp --version
+            <CodeBlock language="json">
+{`{
+  "mcpServers": {
+    "todo-for-ai": {
+      "command": "npx",
+      "args": ["@todo-for-ai/mcp"],
+      "env": {
+        "TODO_API_BASE_URL": "http://localhost:50110",
+        "TODO_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}`}
+            </CodeBlock>
+
+            <Title level={5} style={{ marginTop: '20px', marginBottom: '12px' }}>
+              🎯 Cursor IDE 配置
+            </Title>
+            <Paragraph style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+              在 Cursor IDE 的设置中添加以下 MCP 配置：
+            </Paragraph>
+            <CodeBlock language="json">
+{`{
+  "mcpServers": {
+    "todo-for-ai": {
+      "command": "npx",
+      "args": ["@todo-for-ai/mcp"],
+      "env": {
+        "TODO_API_BASE_URL": "http://localhost:50110",
+        "TODO_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}`}
+            </CodeBlock>
+
+            <Title level={5} style={{ marginTop: '20px', marginBottom: '12px' }}>
+              🔧 其他 AI IDE 通用配置
+            </Title>
+            <Paragraph style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+              对于其他支持 MCP 的 AI IDE，使用以下通用配置：
+            </Paragraph>
+            <CodeBlock language="json">
+{`{
+  "mcpServers": {
+    "todo-for-ai": {
+      "command": "npx",
+      "args": ["@todo-for-ai/mcp"],
+      "env": {
+        "TODO_API_BASE_URL": "http://localhost:50110",
+        "TODO_API_TOKEN": "your-api-token-here",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}`}
+            </CodeBlock>
+
+            <Alert
+              message="重要提醒"
+              description={
+                <div>
+                  <p>• 请将 <code>your-api-token-here</code> 替换为您在 "API Token" 标签页中创建的实际 Token</p>
+                  <p>• 确保 Todo for AI 后端服务正在 http://localhost:50110 运行</p>
+                  <p>• 配置完成后需要重启您的 AI 客户端应用</p>
+                </div>
+              }
+              type="warning"
+              style={{ marginTop: '20px' }}
+              showIcon
+            />
+
+            <Divider style={{ margin: '32px 0' }} />
+
+            <Title level={4} style={{
+              marginBottom: '16px',
+              color: '#52c41a',
+              borderLeft: '4px solid #52c41a',
+              paddingLeft: '12px',
+              background: 'linear-gradient(90deg, rgba(82, 196, 26, 0.05) 0%, transparent 100%)',
+              padding: '8px 12px',
+              borderRadius: '4px'
+            }}>
+              <CheckCircleOutlined style={{ marginRight: '8px' }} />
+              第二步：验证 MCP 配置
+            </Title>
+
+            <Paragraph style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+              通过以下步骤验证 MCP 配置是否成功，我们将创建一个测试项目和任务：
+            </Paragraph>
+
+            <div style={{
+              background: '#f6f8fa',
+              padding: '20px',
+              borderRadius: '8px',
+              border: '1px solid #e1e4e8',
+              marginBottom: '20px'
+            }}>
+              <Title level={5} style={{ marginTop: 0, marginBottom: '16px', color: '#1890ff' }}>
+                🎯 验证步骤
+              </Title>
+
+              <div style={{ marginBottom: '16px' }}>
+                <strong style={{ color: '#262626' }}>1. 创建测试项目</strong>
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
+                  • 访问 Todo for AI 系统<br/>
+                  • 点击"项目管理" → "创建项目"<br/>
+                  • 项目名称：<code>MCP 测试项目</code><br/>
+                  • 项目描述：<code>用于验证 MCP 配置是否正常工作</code>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <strong style={{ color: '#262626' }}>2. 创建测试任务</strong>
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
+                  • 在刚创建的项目中点击"创建任务"<br/>
+                  • 任务标题：<code>测试 MCP 连接</code><br/>
+                  • 任务描述：<code>这是一个用于测试 MCP 功能的任务</code><br/>
+                  • 优先级：选择"中等"
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <strong style={{ color: '#262626' }}>3. 在 AI 客户端中测试</strong>
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
+                  • 重启您的 AI 客户端（Claude Desktop/Cursor 等）<br/>
+                  • 在对话中输入：<code>"请帮我查看 MCP 测试项目 的任务列表"</code><br/>
+                  • 如果配置成功，AI 应该能够：
+                  <ul style={{ marginTop: '8px', marginLeft: '16px' }}>
+                    <li>找到"MCP 测试项目"</li>
+                    <li>显示"测试 MCP 连接"任务</li>
+                    <li>显示任务的详细信息</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <strong style={{ color: '#262626' }}>4. 测试任务操作</strong>
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
+                  • 请 AI 帮您更新任务状态：<code>"请将'测试 MCP 连接'任务标记为进行中"</code><br/>
+                  • 请 AI 创建新任务：<code>"在 MCP 测试项目中创建一个新任务：完成 MCP 配置验证"</code><br/>
+                  • 如果这些操作都能成功执行，说明 MCP 配置完全正常！
+                </div>
+              </div>
             </div>
 
             <Alert
-              message="安装提示"
-              description="如果使用从源码安装的方式，请确保在项目根目录下执行命令。"
-              type="warning"
+              message="验证成功标志"
+              description={
+                <div>
+                  <p><strong>✅ 配置成功的标志：</strong></p>
+                  <ul style={{ marginBottom: 0, paddingLeft: '20px' }}>
+                    <li>AI 能够找到并列出您的项目</li>
+                    <li>AI 能够查看和显示任务详情</li>
+                    <li>AI 能够创建新任务</li>
+                    <li>AI 能够更新任务状态</li>
+                    <li>AI 能够应用项目的上下文规则</li>
+                  </ul>
+                </div>
+              }
+              type="success"
               style={{ marginTop: '16px' }}
               showIcon
             />
+
+            <Alert
+              message="常见问题排查"
+              description={
+                <div>
+                  <p><strong>❌ 如果验证失败，请检查：</strong></p>
+                  <ul style={{ marginBottom: 0, paddingLeft: '20px' }}>
+                    <li>API Token 是否正确配置且有效</li>
+                    <li>Todo for AI 后端服务是否正在运行</li>
+                    <li>网络连接是否正常（能否访问 http://localhost:50110）</li>
+                    <li>AI 客户端是否已重启</li>
+                    <li>MCP 配置 JSON 格式是否正确</li>
+                  </ul>
+                </div>
+              }
+              type="error"
+              style={{ marginTop: '16px' }}
+              showIcon
+            />
+
+
           </Card>
         </TabPane>
 
@@ -315,7 +659,7 @@ npm link`}
               style={{ marginBottom: '16px' }}
               showIcon
             />
-            <div style={configStyle}>
+            <CodeBlock language="json">
 {`{
   "mcpServers": {
     "todo-for-ai": {
@@ -327,13 +671,13 @@ npm link`}
     }
   }
 }`}
-            </div>
+            </CodeBlock>
 
             <Title level={4} style={{ marginTop: '24px' }}>源码开发配置</Title>
             <Paragraph>
               如果你正在开发或使用源码版本：
             </Paragraph>
-            <div style={configStyle}>
+            <CodeBlock language="json">
 {`{
   "mcpServers": {
     "todo-for-ai-dev": {
@@ -348,7 +692,7 @@ npm link`}
     }
   }
 }`}
-            </div>
+            </CodeBlock>
 
             <Title level={4} style={{ marginTop: '24px' }}>高级配置（带认证）</Title>
             <Alert
@@ -363,7 +707,7 @@ npm link`}
               style={{ marginBottom: '16px' }}
               showIcon
             />
-            <div style={configStyle}>
+            <CodeBlock language="json">
 {`{
   "mcpServers": {
     "todo-for-ai": {
@@ -378,7 +722,7 @@ npm link`}
     }
   }
 }`}
-            </div>
+            </CodeBlock>
 
             <Title level={5} style={{ marginTop: '16px' }}>或者使用环境变量方式：</Title>
             <div style={configStyle}>

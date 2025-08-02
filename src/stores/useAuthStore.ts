@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { fetchApiClient } from '../api/fetchClient'
+import {
+  isTokenExpired,
+  shouldRefreshToken,
+  getTokenRemainingTime,
+  parseJWT
+} from '../utils/jwtUtils'
 
 export interface User {
   id: number
@@ -45,6 +51,13 @@ interface AuthState {
   updateUser: (userData: Partial<User>) => Promise<void>
   checkAuth: () => Promise<boolean>
   clearAuth: () => void
+
+  // JWT相关操作
+  isTokenExpired: () => boolean
+  shouldRefreshToken: () => boolean
+  getTokenRemainingTime: () => number
+  refreshToken: () => Promise<boolean>
+  checkTokenExpiration: () => void
 }
 
 const initialState = {
@@ -203,11 +216,93 @@ export const useAuthStore = create<AuthState>()(
         clearAuth: () => {
           // 清除localStorage
           localStorage.removeItem('auth_token')
-          
+
           // 重置状态
           set({
             ...initialState
           })
+        },
+
+        // JWT相关操作
+        isTokenExpired: () => {
+          const { token } = get()
+          return !token || isTokenExpired(token)
+        },
+
+        shouldRefreshToken: () => {
+          const { token } = get()
+          return token ? shouldRefreshToken(token) : false
+        },
+
+        getTokenRemainingTime: () => {
+          const { token } = get()
+          return token ? getTokenRemainingTime(token) : 0
+        },
+
+        refreshToken: async () => {
+          const { token } = get()
+
+          if (!token || isTokenExpired(token)) {
+            console.log('[AuthStore] Token已过期，无法刷新')
+            get().clearAuth()
+            return false
+          }
+
+          try {
+            set({ isLoading: true, error: null })
+
+            const response = await fetchApiClient.post<{ access_token: string; token_type: string }>('/auth/refresh')
+            const newToken = response.access_token
+
+            if (newToken) {
+              get().setToken(newToken)
+              console.log('[AuthStore] Token刷新成功')
+              return true
+            } else {
+              throw new Error('刷新响应中没有新token')
+            }
+          } catch (error: any) {
+            console.error('[AuthStore] Token刷新失败:', error)
+
+            // 如果是401错误，清除认证状态
+            if (error.response?.status === 401) {
+              get().clearAuth()
+            }
+
+            set({
+              error: error.response?.data?.error?.message || 'Token刷新失败',
+              isLoading: false
+            })
+            return false
+          } finally {
+            set({ isLoading: false })
+          }
+        },
+
+        checkTokenExpiration: () => {
+          const { token } = get()
+
+          if (!token) {
+            return
+          }
+
+          // 检查token是否过期
+          if (isTokenExpired(token)) {
+            console.log('[AuthStore] Token已过期，清除认证状态')
+            get().clearAuth()
+
+            // 跳转到登录页面
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/todo-for-ai/pages/login'
+            }
+            return
+          }
+
+          // 检查是否需要刷新token（过期前5分钟）
+          if (shouldRefreshToken(token)) {
+            console.log('[AuthStore] Token即将过期，尝试刷新')
+            get().refreshToken()
+          }
         },
       }),
       {
@@ -235,26 +330,40 @@ export const useAuthStore = create<AuthState>()(
 // 初始化时检查认证状态
 const initializeAuth = () => {
   const { token, checkAuth } = useAuthStore.getState()
-  
+
   // 检查URL中是否有token参数（来自OAuth回调）
   const urlParams = new URLSearchParams(window.location.search)
   const urlToken = urlParams.get('token')
-  
+
   if (urlToken) {
     // 从URL中获取token并保存
     useAuthStore.getState().setToken(urlToken)
-    
+
     // 清除URL中的token参数
     const newUrl = new URL(window.location.href)
     newUrl.searchParams.delete('token')
     window.history.replaceState({}, '', newUrl.toString())
-    
+
     // 获取用户信息
     useAuthStore.getState().fetchCurrentUser()
+
+    // 启动token刷新服务
+    startTokenRefreshService()
   } else if (token) {
     // 如果有保存的token，验证其有效性
     checkAuth()
+
+    // 启动token刷新服务
+    startTokenRefreshService()
   }
+}
+
+// 启动token刷新服务
+const startTokenRefreshService = () => {
+  import('../services/TokenRefreshService').then(({ tokenRefreshService }) => {
+    tokenRefreshService.start()
+    console.log('[AuthStore] Token刷新服务已启动')
+  })
 }
 
 // 在模块加载时初始化

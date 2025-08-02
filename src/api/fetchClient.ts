@@ -1,6 +1,9 @@
 // 基础配置
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
 
+import { isTokenExpired, shouldRefreshToken } from '../utils/jwtUtils'
+import { handleTokenExpired, handleUnauthorized } from '../utils/authRedirect'
+
 // 创建fetch客户端
 class FetchApiClient {
   private baseURL: string
@@ -13,6 +16,9 @@ class FetchApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // 检查并刷新token（如果需要）
+    await this.checkAndRefreshToken(endpoint)
+
     const url = `${this.baseURL}${endpoint}`
 
     // 获取认证token
@@ -41,6 +47,10 @@ class FetchApiClient {
       })
 
       if (!response.ok) {
+        // 处理401错误
+        if (response.status === 401) {
+          await this.handle401Error()
+        }
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
@@ -51,6 +61,83 @@ class FetchApiClient {
       console.error(`[API Error] ${options.method || 'GET'} ${endpoint}`, error)
       throw error
     }
+  }
+
+  /**
+   * 检查并刷新token（如果需要）
+   */
+  private async checkAndRefreshToken(endpoint: string): Promise<void> {
+    // 跳过刷新接口本身
+    if (endpoint === '/auth/refresh') {
+      return
+    }
+
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      return
+    }
+
+    // 检查token是否过期
+    if (isTokenExpired(token)) {
+      console.log('[FetchClient] Token已过期，处理过期流程')
+      handleTokenExpired()
+      return
+    }
+
+    // 检查是否需要刷新token
+    if (shouldRefreshToken(token)) {
+      console.log('[FetchClient] Token即将过期，尝试刷新')
+      try {
+        await this.refreshToken()
+      } catch (error) {
+        console.error('[FetchClient] Token刷新失败:', error)
+        handleTokenExpired()
+      }
+    }
+  }
+
+  /**
+   * 刷新token
+   */
+  private async refreshToken(): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Refresh failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const newToken = data.access_token
+
+      if (newToken) {
+        localStorage.setItem('auth_token', newToken)
+        console.log('[FetchClient] Token刷新成功')
+
+        // 通知auth store更新token
+        const { useAuthStore } = await import('../stores/useAuthStore')
+        useAuthStore.getState().setToken(newToken)
+      } else {
+        throw new Error('刷新响应中没有新token')
+      }
+    } catch (error) {
+      console.error('[FetchClient] Token刷新失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 处理401错误
+   */
+  private async handle401Error(): Promise<void> {
+    console.log('[FetchClient] 收到401错误，处理未授权访问')
+    handleUnauthorized()
   }
 
   async get<T>(endpoint: string): Promise<T> {
