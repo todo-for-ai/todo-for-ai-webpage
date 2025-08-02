@@ -165,34 +165,38 @@ const TopNavigation: React.FC = () => {
           <span
             style={{
               position: 'relative',
-              display: 'inline-block'
+              display: 'inline-block',
+              lineHeight: '1.2'
             }}
           >
-            {pin.project?.name || tn('menu.pinnedProject', { projectId: pin.project_id })}
-            {taskCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: '-6px',
-                  right: '-6px',
-                  backgroundColor: projectColor,
-                  color: '#fff',
-                  fontSize: '10px',
-                  minWidth: '16px',
-                  height: '16px',
-                  lineHeight: '16px',
-                  borderRadius: '8px',
-                  boxShadow: '0 0 0 1px #fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  zIndex: 1
-                }}
-              >
-                {taskCount}
-              </span>
-            )}
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              {pin.project?.name || tn('menu.pinnedProject', { projectId: pin.project_id })}
+              {taskCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '100%',
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: projectColor,
+                    color: '#fff',
+                    fontSize: '10px',
+                    minWidth: '16px',
+                    height: '16px',
+                    lineHeight: '16px',
+                    borderRadius: '8px',
+                    boxShadow: '0 0 0 1px #fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    zIndex: 1
+                  }}
+                >
+                  {taskCount}
+                </span>
+              )}
+            </span>
           </span>
         ),
       }
