@@ -542,46 +542,143 @@ const MCPInstallation: React.FC = () => {
                 🎯 验证步骤
               </Title>
 
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '24px' }}>
                 <strong style={{ color: '#262626' }}>1. 创建测试项目</strong>
-                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
-                  • 访问 Todo for AI 系统<br/>
-                  • 点击"项目管理" → "创建项目"<br/>
-                  • 项目名称：<code>MCP 测试项目</code><br/>
-                  • 项目描述：<code>用于验证 MCP 配置是否正常工作</code>
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '8px', marginLeft: '16px' }}>
+                  <p>• 访问 Todo for AI 系统</p>
+                  <p>• 点击"项目管理" → "创建项目"</p>
+                  <p>• 项目名称：<code>MCP 测试项目</code></p>
+                  <p>• 项目描述：<code>用于验证 MCP 配置是否正常工作的测试项目</code></p>
+                </div>
+
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: '#fff',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
+                    📸 创建项目后的效果图：
+                  </div>
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    color: '#374151',
+                    fontFamily: 'monospace'
+                  }}>
+                    项目创建成功后，您将看到项目详情页面，显示项目名称、描述和任务统计信息。
+                  </div>
                 </div>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '24px' }}>
                 <strong style={{ color: '#262626' }}>2. 创建测试任务</strong>
-                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
-                  • 在刚创建的项目中点击"创建任务"<br/>
-                  • 任务标题：<code>测试 MCP 连接</code><br/>
-                  • 任务描述：<code>这是一个用于测试 MCP 功能的任务</code><br/>
-                  • 优先级：选择"中等"
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '8px', marginLeft: '16px' }}>
+                  <p>• 在项目详情页面点击"New Task"按钮</p>
+                  <p>• 任务标题：<code>测试 MCP 连接</code></p>
+                  <p>• 任务内容：包含测试目标和验证步骤的详细描述</p>
+                  <p>• 优先级：选择"Medium"（中等）</p>
+                  <p>• 点击"Create Task"创建任务</p>
+                </div>
+
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: '#fff',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
+                    📸 任务创建成功后的效果图：
+                  </div>
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    color: '#374151',
+                    fontFamily: 'monospace'
+                  }}>
+                    任务创建后，您将看到任务详情页面，包含任务信息、内容和项目上下文规则。
+                    在项目任务列表中也能看到新创建的"测试 MCP 连接"任务。
+                  </div>
                 </div>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '24px' }}>
                 <strong style={{ color: '#262626' }}>3. 在 AI 客户端中测试</strong>
-                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
-                  • 重启您的 AI 客户端（Claude Desktop/Cursor 等）<br/>
-                  • 在对话中输入：<code>"请帮我查看 MCP 测试项目 的任务列表"</code><br/>
-                  • 如果配置成功，AI 应该能够：
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '8px', marginLeft: '16px' }}>
+                  <p>• 重启您的 AI 客户端（Claude Desktop/Cursor 等）</p>
+                  <p>• 在对话中输入：<code>"请帮我查看 MCP 测试项目 的任务列表"</code></p>
+                  <p>• 如果配置成功，AI 应该能够：</p>
                   <ul style={{ marginTop: '8px', marginLeft: '16px' }}>
                     <li>找到"MCP 测试项目"</li>
                     <li>显示"测试 MCP 连接"任务</li>
                     <li>显示任务的详细信息</li>
                   </ul>
                 </div>
+
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: '#fff',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
+                    💡 AI 客户端测试示例：
+                  </div>
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    color: '#374151',
+                    fontFamily: 'monospace'
+                  }}>
+                    用户: "请帮我查看 MCP 测试项目 的任务列表"<br/>
+                    AI: "我来为您查看 MCP 测试项目的任务列表..."<br/>
+                    AI: "找到项目：MCP 测试项目"<br/>
+                    AI: "任务列表：#327 测试 MCP 连接 (状态: To Do, 优先级: Medium)"
+                  </div>
+                </div>
               </div>
 
               <div>
                 <strong style={{ color: '#262626' }}>4. 测试任务操作</strong>
-                <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', marginLeft: '16px' }}>
-                  • 请 AI 帮您更新任务状态：<code>"请将'测试 MCP 连接'任务标记为进行中"</code><br/>
-                  • 请 AI 创建新任务：<code>"在 MCP 测试项目中创建一个新任务：完成 MCP 配置验证"</code><br/>
-                  • 如果这些操作都能成功执行，说明 MCP 配置完全正常！
+                <div style={{ color: '#666', fontSize: '13px', marginTop: '8px', marginLeft: '16px' }}>
+                  <p>• 请 AI 帮您更新任务状态：<code>"请将'测试 MCP 连接'任务标记为进行中"</code></p>
+                  <p>• 请 AI 创建新任务：<code>"在 MCP 测试项目中创建一个新任务：完成 MCP 配置验证"</code></p>
+                  <p>• 如果这些操作都能成功执行，说明 MCP 配置完全正常！</p>
+                </div>
+
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: '#fff',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
+                    ✅ 成功验证的标志：
+                  </div>
+                  <div style={{
+                    background: '#f0f9ff',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    color: '#0369a1',
+                    border: '1px solid #bae6fd'
+                  }}>
+                    • AI 能够找到并列出您的项目<br/>
+                    • AI 能够查看和显示任务详情<br/>
+                    • AI 能够创建新任务<br/>
+                    • AI 能够更新任务状态<br/>
+                    • AI 能够应用项目的上下文规则
+                  </div>
                 </div>
               </div>
             </div>
@@ -673,26 +770,7 @@ const MCPInstallation: React.FC = () => {
 }`}
             </CodeBlock>
 
-            <Title level={4} style={{ marginTop: '24px' }}>源码开发配置</Title>
-            <Paragraph>
-              如果你正在开发或使用源码版本：
-            </Paragraph>
-            <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai-dev": {
-      "command": "node",
-      "args": [
-        "/path/to/your/todo-for-ai/todo-mcp/dist/index.js"
-      ],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "LOG_LEVEL": "debug"
-      }
-    }
-  }
-}`}
-            </CodeBlock>
+
 
             <Title level={4} style={{ marginTop: '24px' }}>高级配置（带认证）</Title>
             <Alert
@@ -789,32 +867,7 @@ const MCPInstallation: React.FC = () => {
 }`}
             </div>
 
-            <Title level={4} style={{ marginTop: '24px' }}>本地开发配置</Title>
-            <Paragraph>
-              如果你正在本地开发Todo for AI，可以使用以下配置：
-            </Paragraph>
-            <div style={configStyle}>
-{`{
-  "mcpServers": {
-    "todo-for-ai-local": {
-      "command": "node",
-      "args": ["/path/to/todo-for-ai/todo-mcp/dist/index.js"],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "LOG_LEVEL": "debug"
-      }
-    }
-  }
-}`}
-            </div>
 
-            <Alert
-              message="路径提醒"
-              description="请将 /path/to/todo-for-ai 替换为你的实际项目路径。"
-              type="warning"
-              style={{ marginTop: '16px' }}
-              showIcon
-            />
           </Card>
         </TabPane>
 
