@@ -33,7 +33,6 @@ import {
 } from '@ant-design/icons'
 import { useTaskStore, useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
-import { FeedbackTip } from '../components/FeedbackTip'
 import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import type { ApiResponse } from '../api/client'
@@ -947,9 +946,6 @@ ${task.content || '无详细内容'}
           </div>
         )}
       </Card>
-
-      {/* 用户体验反馈提示 */}
-      <FeedbackTip />
 
       {/* 任务执行反馈 */}
       {task.feedback_content && (

@@ -27,7 +27,6 @@ import {
 import { useTaskStore, useProjectStore } from '../stores'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
-import { FeedbackTip } from '../components/FeedbackTip'
 import { UnsavedChangesAlert } from '../components/UnsavedChangesAlert'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
 
@@ -849,9 +848,6 @@ const CreateTask: React.FC = () => {
           </div>
         </div>
       </Card>
-
-      {/* 用户反馈提示 */}
-      <FeedbackTip />
 
       {/* 未保存更改提示（仅在编辑模式下显示） */}
       {isEditMode && (
