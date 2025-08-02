@@ -57,7 +57,7 @@ const CreateTask: React.FC = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   const { createTask, updateTask, getTask } = useTaskStore()
-  const { projects, fetchProjects } = useProjectStore()
+  const { projects, fetchProjects, loading: projectsLoading } = useProjectStore()
   const { t: tc } = useTranslation('common')
   const { t, tp } = usePageTranslation('createTask')
 
@@ -249,6 +249,50 @@ const CreateTask: React.FC = () => {
     fetchProjects()
   }, [fetchProjects])
 
+  // 当projects加载完成且有defaultProjectId时，确保设置默认项目
+  useEffect(() => {
+    if (!projectsLoading && projects.length > 0 && defaultProjectId && !isEditMode) {
+      const projectId = parseInt(defaultProjectId, 10)
+      const projectExists = projects.find(p => p.id === projectId)
+
+      if (projectExists) {
+        const currentProjectId = form.getFieldValue('project_id')
+        // 只有当前表单中没有设置项目ID时才设置默认值
+        if (!currentProjectId) {
+          // 检查是否是特殊模式
+          const isCopyMode = searchParams.get('copy') === 'true'
+          const isContinueMode = searchParams.get('continue') === 'true'
+          const fromTaskId = searchParams.get('from_task')
+
+          // 如果不是特殊模式，设置默认项目
+          if (!isCopyMode && !isContinueMode && !fromTaskId) {
+            // 尝试加载草稿
+            const draft = loadDraft(projectId)
+            if (draft) {
+              form.setFieldsValue({
+                project_id: projectId,
+                ...draft
+              })
+              setEditorContent(draft.content || '')
+              message.info(tp('messages.draftLoaded'))
+            } else {
+              // 加载用户偏好设置
+              const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
+              const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
+
+              form.setFieldsValue({
+                project_id: projectId,
+                status: 'todo',
+                priority: savedPriority,
+                is_ai_task: savedIsAiTask
+              })
+            }
+          }
+        }
+      }
+    }
+  }, [projectsLoading, projects, defaultProjectId, isEditMode, form, searchParams, loadDraft, tp])
+
   // 单独处理编辑模式和默认项目设置
   useEffect(() => {
     // 检查是否为编辑模式
@@ -397,32 +441,8 @@ const CreateTask: React.FC = () => {
           })
         }
       } else {
-        // 设置默认项目
-        if (defaultProjectId) {
-          const projectId = parseInt(defaultProjectId, 10)
-
-          // 尝试加载草稿
-          const draft = loadDraft(projectId)
-          if (draft) {
-            form.setFieldsValue({
-              project_id: projectId,
-              ...draft
-            })
-            setEditorContent(draft.content || '')
-            message.info(tp('messages.draftLoaded'))
-          } else {
-            // 加载用户偏好设置
-            const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
-            const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
-
-            form.setFieldsValue({
-              project_id: projectId,
-              status: 'todo',
-              priority: savedPriority,
-              is_ai_task: savedIsAiTask
-            })
-          }
-        }
+        // 普通新建模式，默认项目设置已在专门的useEffect中处理
+        // 这里不需要重复设置，避免竞态条件
       }
     }
   }, [defaultProjectId, id])
