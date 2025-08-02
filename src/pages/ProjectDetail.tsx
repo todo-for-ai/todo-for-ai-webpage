@@ -67,14 +67,21 @@ const ProjectDetail = () => {
     try {
       const saved = localStorage.getItem('project-task-filters')
       if (saved) {
-        return { ...JSON.parse(saved) }
+        const parsed = JSON.parse(saved)
+        // 兼容旧的字符串格式，转换为数组格式
+        if (typeof parsed.status === 'string' && parsed.status) {
+          parsed.status = parsed.status.split(',').map((s: string) => s.trim()).filter(Boolean)
+        } else if (!Array.isArray(parsed.status)) {
+          parsed.status = []
+        }
+        return { ...parsed }
       }
     } catch (error) {
       console.warn('Failed to load task filters from localStorage:', error)
     }
     // 默认筛选条件：只显示待办任务
     return {
-      status: 'todo,in_progress,review',
+      status: ['todo', 'in_progress', 'review'],
       priority: '',
       search: '',
       sort_by: 'updated_at',
@@ -183,9 +190,13 @@ const ProjectDetail = () => {
     if (id) {
       fetchProject(parseInt(id))
       // 设置任务查询参数，使用保存的分页大小
+      const statusString = Array.isArray(taskFilters.status)
+        ? taskFilters.status.join(',')
+        : taskFilters.status || ''
+
       const queryParams = {
         project_id: parseInt(id),
-        status: taskFilters.status,
+        status: statusString,
         priority: taskFilters.priority,
         search: taskFilters.search,
         sort_by: taskFilters.sort_by,
@@ -302,9 +313,13 @@ const ProjectDetail = () => {
 
     try {
       // 使用当前的筛选和排序条件重新获取任务数据
+      const statusString = Array.isArray(taskFilters.status)
+        ? taskFilters.status.join(',')
+        : taskFilters.status || ''
+
       const queryParams = {
         project_id: parseInt(id),
-        status: taskFilters.status,
+        status: statusString,
         priority: taskFilters.priority,
         search: taskFilters.search,
         sort_by: taskFilters.sort_by,
@@ -372,9 +387,14 @@ const ProjectDetail = () => {
 
       // 更新查询参数并重新获取数据
       if (id) {
+        // 将状态数组转换为逗号分隔的字符串
+        const statusString = Array.isArray(newFilters.status)
+          ? newFilters.status.join(',')
+          : newFilters.status || ''
+
         const newQueryParams = {
           project_id: parseInt(id),
-          status: newFilters.status,
+          status: statusString,
           priority: newFilters.priority,
           search: newFilters.search,
           sort_by: newFilters.sort_by,
@@ -1062,15 +1082,16 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                 </Col>
                 <Col span={4}>
                   <Select
+                    mode="multiple"
                     size="small"
                     placeholder={tp('tasks.filters.status.placeholder')}
                     value={taskFilters.status}
                     onChange={(value) => handleFilterChange('status', value)}
-                    style={{ width: '100%', height: '22px' }}
+                    style={{ width: '100%', minHeight: '22px' }}
                     allowClear
+                    maxTagCount="responsive"
+                    showSearch={false}
                   >
-                    <Option value="">{tp('tasks.filters.status.all')}</Option>
-                    <Option value="todo,in_progress,review">{tp('tasks.filters.status.pendingDefault')}</Option>
                     <Option value="todo">{tp('tasks.filters.status.todo')}</Option>
                     <Option value="in_progress">{tp('tasks.filters.status.inProgress')}</Option>
                     <Option value="review">{tp('tasks.filters.status.review')}</Option>
@@ -1145,6 +1166,47 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                   >
                     {tp('buttons.refreshTasks')}
                   </Button>
+                </Col>
+              </Row>
+
+              {/* 快捷状态选择按钮 */}
+              <Row style={{ marginTop: '6px', paddingLeft: '12px' }}>
+                <Col span={24}>
+                  <Space size={4}>
+                    <span style={{ fontSize: '11px', color: '#666' }}>快捷选择:</span>
+                    <Button
+                      size="small"
+                      type={JSON.stringify(taskFilters.status) === JSON.stringify(['todo', 'in_progress', 'review']) ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', ['todo', 'in_progress', 'review'])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      待处理
+                    </Button>
+                    <Button
+                      size="small"
+                      type={JSON.stringify(taskFilters.status) === JSON.stringify(['done']) ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', ['done'])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      已完成
+                    </Button>
+                    <Button
+                      size="small"
+                      type={taskFilters.status.length === 0 ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', [])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      全部
+                    </Button>
+                    <Button
+                      size="small"
+                      type={JSON.stringify(taskFilters.status) === JSON.stringify(['todo', 'in_progress', 'review', 'done', 'cancelled']) ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', ['todo', 'in_progress', 'review', 'done', 'cancelled'])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      所有状态
+                    </Button>
+                  </Space>
                 </Col>
               </Row>
             </Card>
