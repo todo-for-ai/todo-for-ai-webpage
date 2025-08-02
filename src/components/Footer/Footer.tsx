@@ -14,7 +14,6 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ className, style }) => {
   const { tc } = useTranslation()
 
-  const currentYear = new Date().getFullYear()
   const version = 'v1.0'
 
   return (
@@ -32,23 +31,37 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
       }}
     >
       <div className="footer-content">
-        <span className="footer-version">
-          {tc('footer.version')} {version}
-        </span>
-        <span className="footer-separator">•</span>
-        <span className="footer-copyright">
-          {tc('footer.copyright')} © {currentYear}
-        </span>
-        <a
-          href="https://github.com/todo-for-ai/todo-for-ai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="footer-github-link"
-          title={tc('footer.visitGitHub')}
-        >
-          <GithubOutlined />
-          <span className="footer-github-text">Todo for AI</span>
-        </a>
+        {/* 第一行：版本信息 */}
+        <div className="footer-line footer-version-line">
+          <span className="footer-version">
+            {tc('footer.version')} {version}
+          </span>
+        </div>
+
+        {/* 第二行：版权信息 */}
+        <div className="footer-line footer-copyright-line">
+          <span className="footer-copyright-text">
+            <a
+              href="https://github.com/todo-for-ai/todo-for-ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-project-link"
+              title={tc('footer.visitGitHub')}
+            >
+              Todo for AI
+            </a>
+            {' '}Create By{' '}
+            <a
+              href="https://github.com/CC11001100"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-author-link"
+              title="Visit CC11001100's GitHub Profile"
+            >
+              CC11001100
+            </a>
+          </span>
+        </div>
       </div>
     </AntFooter>
   )

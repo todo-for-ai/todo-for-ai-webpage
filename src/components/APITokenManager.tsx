@@ -441,13 +441,7 @@ export const APITokenManager: React.FC = () => {
           </div>
         }
       >
-        <Alert
-          message={tp('apiTokens.description')}
-          description={tp('apiTokens.detailDescription')}
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
+
 
         <Table
           columns={columns}

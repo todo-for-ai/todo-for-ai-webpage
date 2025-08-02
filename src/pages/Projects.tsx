@@ -432,7 +432,7 @@ const Projects = () => {
               enterButton={<SearchOutlined />}
               size="middle"
               style={{
-                width: '400px',
+                width: '720px',
                 maxWidth: '80%'
               }}
               loading={loading}
@@ -883,9 +883,9 @@ const Projects = () => {
                 <Space direction="vertical" size="small">
                   <div style={{ fontSize: '12px', color: '#666' }}>
                     {t('pagination.cardTotal', {
-                      start: ((pagination?.page || 1) - 1) * (pagination?.per_page || 100) + 1,
-                      end: Math.min((pagination?.page || 1) * (pagination?.per_page || 100), pagination?.total || 0),
-                      total: pagination?.total || 0
+                      start: projects.length > 0 ? ((pagination?.page || 1) - 1) * (pagination?.per_page || 100) + 1 : 0,
+                      end: projects.length > 0 ? Math.min((pagination?.page || 1) * (pagination?.per_page || 100), pagination?.total || projects.length) : 0,
+                      total: pagination?.total || projects.length
                     })}
                   </div>
                   <Space>

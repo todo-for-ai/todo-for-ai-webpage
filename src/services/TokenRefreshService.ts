@@ -151,7 +151,7 @@ class TokenRefreshService {
       console.log('[TokenRefreshService] 开始刷新token')
 
       // 直接调用useAuthStore的refreshToken方法
-      const success = await useAuthStore.getState().refreshToken()
+      const success = await useAuthStore.getState().refreshTokens()
 
       if (success) {
         console.log('[TokenRefreshService] Token刷新成功')

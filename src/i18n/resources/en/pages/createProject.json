@@ -28,11 +28,8 @@
     },
     "color": {
       "label": "Project Color",
-      "presetLabel": "Recommended Colors",
       "randomButton": "Random Color",
-      "randomTitle": "Generate completely random color (full color space)",
-      "presetRandomButton": "Preset Random",
-      "presetRandomTitle": "Randomly select from preset colors"
+      "randomTitle": "Generate completely random color (full color space)"
     },
     "description": {
       "label": "Project Description",

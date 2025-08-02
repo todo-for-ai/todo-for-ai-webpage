@@ -37,7 +37,9 @@ import {
   PushpinOutlined,
   PushpinFilled,
   HomeOutlined,
-  DeploymentUnitOutlined
+  DeploymentUnitOutlined,
+  DesktopOutlined,
+  CloudOutlined
 } from '@ant-design/icons'
 import { useProjectStore, useTaskStore, useContextRuleStore } from '../stores'
 import { KanbanBoard } from '../components/Kanban'
@@ -776,7 +778,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                     <Button
                       type="text"
                       size="small"
-                      icon={<HomeOutlined />}
+                      icon={<DesktopOutlined />}
                       onClick={() => window.open(currentProject.local_url, '_blank')}
                       style={{
                         padding: '0 4px',
@@ -793,7 +795,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                     <Button
                       type="text"
                       size="small"
-                      icon={<DeploymentUnitOutlined />}
+                      icon={<CloudOutlined />}
                       onClick={() => window.open(currentProject.production_url, '_blank')}
                       style={{
                         padding: '0 4px',
@@ -1016,7 +1018,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                         <div style={{ marginTop: '4px' }}>
                           <Button
                             type="link"
-                            icon={<LinkOutlined />}
+                            icon={<DesktopOutlined />}
                             href={currentProject.local_url}
                             target="_blank"
                             style={{ padding: 0 }}
@@ -1036,7 +1038,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                         <div style={{ marginTop: '4px' }}>
                           <Button
                             type="link"
-                            icon={<GlobalOutlined />}
+                            icon={<CloudOutlined />}
                             href={currentProject.production_url}
                             target="_blank"
                             style={{ padding: 0 }}

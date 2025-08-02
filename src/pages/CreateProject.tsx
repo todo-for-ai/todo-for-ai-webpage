@@ -18,11 +18,11 @@ import {
   SaveOutlined,
   ArrowLeftOutlined,
   HomeOutlined,
-  ReloadOutlined,
   GithubOutlined,
   LinkOutlined,
   GlobalOutlined,
-  ImportOutlined
+  ImportOutlined,
+  BorderOutlined
 } from '@ant-design/icons'
 import { useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
@@ -32,13 +32,6 @@ import type { CreateProjectData, UpdateProjectData } from '../api/projects'
 const { Title } = Typography
 const { TextArea } = Input
 const { Option } = Select
-
-// 预定义的颜色选项
-const PRESET_COLORS = [
-  '#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1',
-  '#13c2c2', '#eb2f96', '#fa541c', '#a0d911', '#2f54eb',
-  '#fa8c16', '#096dd9', '#36cfc9', '#f759ab', '#40a9ff'
-]
 
 // 生成真正的随机颜色（在完整颜色空间中）
 const generateRandomColor = () => {
@@ -54,11 +47,6 @@ const generateRandomColor = () => {
   }
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-}
-
-// 从预设颜色中随机选择（保留原有功能作为备选）
-const generatePresetColor = () => {
-  return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]
 }
 
 const CreateProject = () => {
@@ -183,12 +171,6 @@ const CreateProject = () => {
 
   const handleRandomColor = () => {
     const newColor = generateRandomColor()
-    setCurrentColor(newColor)
-    form.setFieldsValue({ color: newColor })
-  }
-
-  const handlePresetColor = () => {
-    const newColor = generatePresetColor()
     setCurrentColor(newColor)
     form.setFieldsValue({ color: newColor })
   }
@@ -367,32 +349,15 @@ const CreateProject = () => {
                         value={currentColor}
                         onChange={handleColorChange}
                         showText
-                        presets={[
-                          {
-                            label: t('form.color.presetLabel'),
-                            colors: PRESET_COLORS
-                          }
-                        ]}
                       />
-                      <Space>
-                        <Button
-                          icon={<ReloadOutlined />}
-                          onClick={handleRandomColor}
-                          title={t('form.color.randomTitle')}
-                          size="small"
-                        >
-                          {t('form.color.randomButton')}
-                        </Button>
-                        <Button
-                          icon={<ReloadOutlined />}
-                          onClick={handlePresetColor}
-                          title={t('form.color.presetRandomTitle')}
-                          size="small"
-                          type="dashed"
-                        >
-                          {t('form.color.presetRandomButton')}
-                        </Button>
-                      </Space>
+                      <Button
+                        icon={<BorderOutlined />}
+                        onClick={handleRandomColor}
+                        title={t('form.color.randomTitle')}
+                        size="small"
+                      >
+                        {t('form.color.randomButton')}
+                      </Button>
                     </Space>
                   </Form.Item>
                 </Col>

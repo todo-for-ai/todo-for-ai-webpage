@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Layout, Menu, Typography, Badge } from 'antd'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
@@ -28,10 +28,27 @@ const TopNavigation: React.FC = () => {
   const [currentTaskProjectId, setCurrentTaskProjectId] = useState<number | null>(null)
   const [taskCounts, setTaskCounts] = useState<ProjectTaskCount[]>([])
   const { tn } = useTranslation()
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const pollingIntervalRef = useRef<number | null>(null)
+
+  // 加载Pin项目的任务数量
+  const loadTaskCounts = useCallback(async () => {
+    try {
+      const response = await pinsApi.getPinnedProjectsTaskCounts()
+      const data = response?.data || response
+
+      if (data && data.task_counts) {
+        setTaskCounts(data.task_counts)
+      } else {
+        setTaskCounts([])
+      }
+    } catch (error) {
+      console.error('Failed to load task counts:', error)
+      setTaskCounts([])
+    }
+  }, [])
 
   // 加载Pin的项目
-  const loadPinnedProjects = async () => {
+  const loadPinnedProjects = useCallback(async () => {
     try {
       console.log('开始加载Pin项目...')
       const response = await pinsApi.getUserPins()
@@ -68,24 +85,7 @@ const TopNavigation: React.FC = () => {
       setPinnedProjects([])
       setTaskCounts([])
     }
-  }
-
-  // 加载Pin项目的任务数量
-  const loadTaskCounts = async () => {
-    try {
-      const response = await pinsApi.getPinnedProjectsTaskCounts()
-      const data = response?.data || response
-
-      if (data && data.task_counts) {
-        setTaskCounts(data.task_counts)
-      } else {
-        setTaskCounts([])
-      }
-    } catch (error) {
-      console.error('Failed to load task counts:', error)
-      setTaskCounts([])
-    }
-  }
+  }, [loadTaskCounts])
 
   useEffect(() => {
     loadPinnedProjects()
@@ -269,9 +269,9 @@ const TopNavigation: React.FC = () => {
   }
 
   // 重新加载Pin项目列表
-  const reloadPinnedProjects = async () => {
+  const reloadPinnedProjects = useCallback(async () => {
     await loadPinnedProjects()
-  }
+  }, [])
 
   return (
     <Header

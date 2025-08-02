@@ -1,11 +1,28 @@
 {
   "title": "User Management",
-  "description": "Manage all users in the system, including viewing user information and managing user status",
+  "description": "Manage system users, roles, and permissions",
   "stats": {
     "totalUsers": "Total Users",
     "activeUsers": "Active Users",
     "suspendedUsers": "Suspended Users",
     "admins": "Administrators"
+  },
+  "search": {
+    "placeholder": "Search users by name, email, or username"
+  },
+  "filters": {
+    "status": "Filter by Status",
+    "role": "Filter by Role"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "inactive": "Inactive"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "user": "User",
+    "viewer": "Viewer"
   },
   "table": {
     "columns": {
@@ -13,46 +30,29 @@
       "role": "Role",
       "status": "Status",
       "lastLogin": "Last Login",
-      "createdAt": "Registered",
+      "createdAt": "Created At",
       "actions": "Actions"
     },
     "pagination": {
-      "total": "{{start}}-{{end}} of {{total}} items"
+      "total": "Showing {{start}}-{{end}} of {{total}} users"
     }
   },
-  "roles": {
-    "admin": "Administrator",
-    "user": "User",
-    "viewer": "Viewer"
-  },
-  "status": {
-    "active": "Active",
-    "inactive": "Inactive",
-    "suspended": "Suspended"
-  },
   "actions": {
+    "refresh": "Refresh",
     "suspend": "Suspend",
     "activate": "Activate",
-    "refresh": "Refresh",
     "self": "Self"
   },
-  "search": {
-    "placeholder": "Search by email, username or name"
-  },
-  "filters": {
-    "status": "Filter by Status",
-    "role": "Filter by Role"
-  },
   "confirm": {
-    "suspend": "Are you sure you want to suspend this user?",
-    "suspendDescription": "After suspension, the user will not be able to login or use the system",
-    "activate": "Are you sure you want to activate this user?",
-    "activateDescription": "After activation, the user can login and use the system normally",
-    "ok": "OK",
+    "suspend": "Suspend User",
+    "suspendDescription": "Are you sure you want to suspend this user?",
+    "activate": "Activate User",
+    "activateDescription": "Are you sure you want to activate this user?",
+    "ok": "Yes",
     "cancel": "Cancel"
   },
   "messages": {
-    "loadFailed": "Failed to load user list",
+    "loadFailed": "Failed to load users",
     "statusUpdated": "User status updated successfully",
     "updateFailed": "Failed to update user status"
   }

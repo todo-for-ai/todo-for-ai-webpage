@@ -22,6 +22,7 @@ import {
 import { useAuthStore } from '../stores/useAuthStore'
 import { APITokenManager } from '../components/APITokenManager'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { useSearchParams } from 'react-router-dom'
 
 const { Title, Text, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -31,6 +32,18 @@ const Profile = () => {
   const [form] = Form.useForm()
   const [isEditing, setIsEditing] = useState(false)
   const { tp } = usePageTranslation('profile')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 定义所有有效的标签页key
+  const validTabs = ['profile', 'tokens']
+
+  // 获取初始标签页，确保是有效的
+  const getInitialTab = () => {
+    const tabParam = searchParams.get('tab')
+    return validTabs.includes(tabParam || '') ? tabParam! : 'profile'
+  }
+
+  const [activeTab, setActiveTab] = useState(getInitialTab())
 
 
   useEffect(() => {
@@ -46,6 +59,17 @@ const Profile = () => {
     }
   }, [user, form])
 
+  // 监听URL参数变化，同步标签页状态
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && validTabs.includes(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam)
+    } else if (!tabParam && activeTab !== 'profile') {
+      // 如果URL中没有tab参数，默认显示profile
+      setActiveTab('profile')
+    }
+  }, [searchParams, activeTab, validTabs])
+
   // 设置网页标题
   useEffect(() => {
     document.title = tp('pageTitle')
@@ -55,6 +79,20 @@ const Profile = () => {
       document.title = 'Todo for AI'
     }
   }, [tp])
+
+  // 处理标签页切换
+  const handleTabChange = (key: string) => {
+    setActiveTab(key)
+    // 更新URL参数以保持标签页状态
+    const newSearchParams = new URLSearchParams(searchParams)
+    if (key === 'profile') {
+      // profile是默认标签页，不需要在URL中显示
+      newSearchParams.delete('tab')
+    } else {
+      newSearchParams.set('tab', key)
+    }
+    setSearchParams(newSearchParams, { replace: true })
+  }
 
   const handleUpdateProfile = async (values: any) => {
     try {
@@ -126,7 +164,11 @@ const Profile = () => {
         </Col>
 
         <Col xs={24} lg={16}>
-          <Tabs defaultActiveKey="profile" size="large">
+          <Tabs
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            size="large"
+          >
             <TabPane
               tab={
                 <span>

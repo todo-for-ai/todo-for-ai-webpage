@@ -38,6 +38,7 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  isInitializing: boolean
 
   // 操作
   setUser: (user: User | null) => void
@@ -59,7 +60,7 @@ interface AuthState {
   isTokenExpired: () => boolean
   shouldRefreshToken: () => boolean
   getTokenRemainingTime: () => number
-  refreshToken: () => Promise<boolean>
+  refreshTokens: () => Promise<boolean>
   checkTokenExpiration: () => void
 }
 
@@ -70,6 +71,7 @@ const initialState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  isInitializing: false,
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -178,35 +180,40 @@ export const useAuthStore = create<AuthState>()(
         },
 
         fetchCurrentUser: async () => {
-          const { token } = get()
-          
+          const { token, isLoading } = get()
+
           if (!token) {
             set({ user: null, isAuthenticated: false })
             return
           }
 
+          // 防止重复调用
+          if (isLoading) {
+            return
+          }
+
           try {
             set({ isLoading: true, error: null })
-            
+
             const response = await fetchApiClient.get('/auth/me')
             const user = response.data
-            
-            set({ 
-              user, 
+
+            set({
+              user,
               isAuthenticated: true,
-              isLoading: false 
+              isLoading: false
             })
           } catch (error: any) {
             console.error('Failed to fetch current user:', error)
-            
+
             // 如果是401错误，清除认证状态
             if (error.response?.status === 401) {
               get().clearAuth()
             }
-            
-            set({ 
+
+            set({
               error: error.response?.data?.error?.message || '获取用户信息失败',
-              isLoading: false 
+              isLoading: false
             })
           }
         },
@@ -232,13 +239,19 @@ export const useAuthStore = create<AuthState>()(
         },
 
         checkAuth: async () => {
-          const { token } = get()
-          
+          const { token, isInitializing } = get()
+
           if (!token) {
             return false
           }
 
+          // 防止重复调用
+          if (isInitializing) {
+            return get().isAuthenticated
+          }
+
           try {
+            set({ isInitializing: true })
             // 验证token是否有效
             await get().fetchCurrentUser()
             return get().isAuthenticated
@@ -246,6 +259,8 @@ export const useAuthStore = create<AuthState>()(
             console.error('Auth check failed:', error)
             get().clearAuth()
             return false
+          } finally {
+            set({ isInitializing: false })
           }
         },
 
@@ -276,7 +291,7 @@ export const useAuthStore = create<AuthState>()(
           return token ? getTokenRemainingTime(token) : 0
         },
 
-        refreshToken: async () => {
+        refreshTokens: async () => {
           const { refreshToken: currentRefreshToken } = get()
 
           if (!currentRefreshToken) {
@@ -351,7 +366,7 @@ export const useAuthStore = create<AuthState>()(
           // 检查是否需要刷新token（过期前5分钟）
           if (shouldRefreshToken(token)) {
             console.log('[AuthStore] Token即将过期，尝试刷新')
-            get().refreshToken()
+            get().refreshTokens()
           }
         },
       }),

@@ -157,19 +157,7 @@ const MCPInstallation: React.FC = () => {
         </Paragraph>
       </div>
 
-      <Alert
-        message="重要提示"
-        description={
-          <div>
-            <p>从版本1.1.0开始，API Token是必需的配置项。请先在个人中心创建API Token。</p>
-            <p>如果您在本地开发，请确保Todo for AI后端服务正在运行，默认地址为 http://localhost:50110</p>
-          </div>
-        }
-        type="warning"
-        icon={<InfoCircleOutlined />}
-        style={{ marginBottom: '24px' }}
-        showIcon
-      />
+
 
       <Tabs
         activeKey={activeTab}
@@ -247,10 +235,16 @@ const MCPInstallation: React.FC = () => {
           <Card>
             <Title level={3}>
               <KeyOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
-              API Token 配置
+              MCP 配置
             </Title>
 
-
+            <Alert
+              message="简单配置"
+              description="只需要复制下面的 JSON 配置到您的 AI 客户端即可，无需复杂的安装步骤！"
+              type="success"
+              style={{ marginBottom: '24px' }}
+              showIcon
+            />
 
             <Title level={4} style={{
               marginBottom: '16px',
@@ -262,134 +256,55 @@ const MCPInstallation: React.FC = () => {
               borderRadius: '4px'
             }}>
               <KeyOutlined style={{ marginRight: '8px' }} />
-              1. 创建API Token
+              1. 获取 API Token
             </Title>
 
-            <div style={{
-              background: '#fafafa',
-              padding: '20px',
-              borderRadius: '8px',
-              border: '1px solid #e8e8e8',
-              marginBottom: '24px'
+            <Paragraph>
+              前往 <a href="/todo-for-ai/pages/profile?tab=tokens" target="_blank">个人中心 → API Token</a> 创建您的专属 Token
+            </Paragraph>
+
+            <Title level={4} style={{
+              marginTop: '24px',
+              marginBottom: '16px',
+              color: '#1890ff',
+              borderLeft: '4px solid #1890ff',
+              paddingLeft: '12px',
+              background: 'linear-gradient(90deg, rgba(24, 144, 255, 0.05) 0%, transparent 100%)',
+              padding: '8px 12px',
+              borderRadius: '4px'
             }}>
-              <ol style={{
-                margin: 0,
-                paddingLeft: '20px',
-                lineHeight: '2',
-                fontSize: '14px'
-              }}>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>登录Todo for AI系统</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    访问系统主页并使用您的账户登录
-                  </div>
-                </li>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>点击右上角用户头像，选择"个人中心"</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    在导航栏右上角找到用户头像并点击
-                  </div>
-                </li>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>切换到"API Token"标签页</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    在个人中心页面中找到API Token管理选项
-                  </div>
-                </li>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>点击"创建Token"按钮</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    开始创建新的API访问令牌
-                  </div>
-                </li>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>填写Token名称（如：MCP Client Token）</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    为Token设置一个便于识别的名称
-                  </div>
-                </li>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>设置过期时间（可选，留空表示永不过期）</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    根据安全需要设置Token的有效期
-                  </div>
-                </li>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>点击"创建Token"</strong>
-                  <div style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>
-                    确认创建并生成Token
-                  </div>
-                </li>
-                <li style={{
-                  marginBottom: '0',
-                  padding: '12px',
-                  background: '#fff2e8',
-                  border: '1px solid #ffbb96',
-                  borderRadius: '6px',
-                  color: '#d4380d'
-                }}>
-                  <strong>⚠️ 重要：</strong>立即复制并保存Token，它只会显示一次
-                  <div style={{ color: '#ad2102', fontSize: '13px', marginTop: '4px' }}>
-                    Token创建后只显示一次，请务必立即复制并妥善保存
-                  </div>
-                </li>
-              </ol>
-            </div>
+              <CopyOutlined style={{ marginRight: '8px' }} />
+              2. 复制配置到 AI 客户端
+            </Title>
 
-            <Title level={4} style={{ marginTop: '24px' }}>2. 配置Token</Title>
             <Paragraph>
-              将获取的API Token配置到MCP客户端中，有两种方式：
+              将下面的 JSON 配置复制到您的 AI 客户端配置文件中，并替换 <code>${`{YOUR_API_TOKEN}`}</code> 为您的实际 Token：
             </Paragraph>
 
-            <Title level={5}>方式一：命令行参数（推荐）</Title>
-            <div style={codeStyle}>
-              node /path/to/your/todo-for-ai/todo-mcp/dist/index.js --api-token=tfa_your_token_here
-            </div>
-
-            <Title level={5}>方式二：环境变量</Title>
-            <div style={codeStyle}>
-              export TODO_API_TOKEN=tfa_your_token_here<br/>
-              node /path/to/your/todo-for-ai/todo-mcp/dist/index.js
-            </div>
-
-            <Title level={4} style={{ marginTop: '24px' }}>3. 权限说明</Title>
-            <ul>
-              <li><strong>项目访问：</strong>只能访问自己创建的项目</li>
-              <li><strong>任务管理：</strong>可以创建、查看、更新自己项目中的任务</li>
-              <li><strong>上下文规则：</strong>可以查看和应用项目的上下文规则</li>
-              <li><strong>管理员：</strong>拥有所有项目和任务的访问权限</li>
-            </ul>
-
-            <Title level={4} style={{ marginTop: '24px' }}>4. 完整配置示例</Title>
-            <Paragraph>
-              以下是一个完整的Claude Desktop配置示例：
-            </Paragraph>
             <CodeBlock language="json">
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "/Users/cc11001100/github/ai-coding-labs/todo-for-ai/todo-mcp/dist/index.js"
-      ],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "TODO_API_TOKEN": "AmXxPQulszHqGd_VbEiO748DSseIGJZppjtMI53lm84",
-        "LOG_LEVEL": "info"
-      }
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "\${YOUR_API_TOKEN}"
+      ]
     }
   }
 }`}
             </CodeBlock>
 
             <Alert
-              message="安全提醒"
+              message="配置说明"
               description={
                 <div>
-                  <p>• 请妥善保管您的API Token，不要分享给他人</p>
-                  <p>• 如果Token泄露，请立即在个人中心删除并重新创建</p>
-                  <p>• 建议定期更换API Token以提高安全性</p>
-                  <p>• 请将示例中的路径替换为你的实际项目路径</p>
+                  <p>• 使用 <code>npx</code> 命令自动下载最新版本的 MCP 服务器</p>
+                  <p>• 无需手动安装或配置路径</p>
+                  <p>• 支持所有兼容 MCP 协议的 AI 客户端</p>
+                  <p>• 请将 <code>${`{YOUR_API_TOKEN}`}</code> 替换为您在个人中心创建的实际 Token</p>
                 </div>
               }
               type="info"
