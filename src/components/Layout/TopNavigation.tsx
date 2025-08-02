@@ -381,6 +381,12 @@ const TopNavigation: React.FC = () => {
             {tn('menu.mcpDocs')}
           </LinkButton>
 
+          {/*
+            HTTP API文档菜单 - 暂时隐藏
+            注意：这只是暂时将这个功能下线，以后还会再上线的
+            当需要重新启用时，取消下面代码的注释即可
+          */}
+          {/*
           <LinkButton
             to="/todo-for-ai/pages/api-documentation"
             type="text"
@@ -395,6 +401,7 @@ const TopNavigation: React.FC = () => {
           >
             {tn('menu.apiDocs')}
           </LinkButton>
+          */}
         </div>
 
         <UserAvatar onPinUpdate={reloadPinnedProjects} />

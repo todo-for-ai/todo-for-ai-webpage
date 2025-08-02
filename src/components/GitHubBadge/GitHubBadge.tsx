@@ -59,8 +59,8 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
             fontSize: '18px',
             color: '#666',
             transition: 'color 0.2s ease',
-            marginTop: '-8px', // 调整图标位置，使其在三角形中更好地居中
-            marginLeft: '-8px'
+            marginTop: '-23px', // 继续往角落里移动15px，保证GitHub徽标能完全展示
+            marginLeft: '17px' // 向右移动40px：-23px + 40px = 17px，确保GitHub徽标完全显示不被遮挡
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#1890ff'

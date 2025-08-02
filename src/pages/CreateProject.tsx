@@ -21,8 +21,7 @@ import {
   GithubOutlined,
   LinkOutlined,
   GlobalOutlined,
-  ImportOutlined,
-  BorderOutlined
+  ImportOutlined
 } from '@ant-design/icons'
 import { useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
@@ -344,19 +343,26 @@ const CreateProject = () => {
                 </Col>
                 <Col span={8}>
                   <Form.Item label={t('form.color.label')} name="color">
-                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                    <Space size="small" style={{ width: '100%' }}>
                       <ColorPicker
                         value={currentColor}
                         onChange={handleColorChange}
                         showText
                       />
                       <Button
-                        icon={<BorderOutlined />}
                         onClick={handleRandomColor}
                         title={t('form.color.randomTitle')}
                         size="small"
+                        style={{
+                          fontSize: '16px',
+                          padding: '4px 8px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
                       >
-                        {t('form.color.randomButton')}
+                        🎲
                       </Button>
                     </Space>
                   </Form.Item>

@@ -46,8 +46,8 @@
 
   .github-badge-triangle .anticon {
     font-size: 16px !important;
-    margin-top: -6px !important;
-    margin-left: -6px !important;
+    margin-top: -21px !important;
+    margin-left: 19px !important; /* 向右移动40px：-21px + 40px = 19px，确保GitHub徽标完全显示 */
   }
 
   /* 保持旧样式兼容性 */
@@ -75,8 +75,8 @@
 
   .github-badge-triangle .anticon {
     font-size: 14px !important;
-    margin-top: -4px !important;
-    margin-left: -4px !important;
+    margin-top: -19px !important;
+    margin-left: 21px !important; /* 向右移动40px：-19px + 40px = 21px，确保GitHub徽标完全显示 */
   }
 
   /* 保持旧样式兼容性 */
