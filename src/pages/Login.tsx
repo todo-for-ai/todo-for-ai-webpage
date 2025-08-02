@@ -4,6 +4,7 @@ import { GithubOutlined, GoogleOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import LanguageSwitch from '../components/LanguageSwitch'
+import WeChatGroup from '../components/WeChatGroup/WeChatGroup'
 
 const { Title, Paragraph } = Typography
 
@@ -165,6 +166,9 @@ const Login: React.FC = () => {
           </div>
         </Space>
       </Card>
+
+      {/* 微信AI交流群 - 只在中文环境下显示 */}
+      <WeChatGroup />
     </div>
   )
 }

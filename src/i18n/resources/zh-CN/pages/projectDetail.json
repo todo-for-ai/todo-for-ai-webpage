@@ -42,6 +42,9 @@
     },
     "projectContext": {
       "title": "项目上下文"
+    },
+    "projectDescription": {
+      "title": "项目描述"
     }
   },
   "tasks": {

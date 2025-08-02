@@ -28,10 +28,12 @@ import {
   LeftOutlined,
   RightOutlined,
   SettingOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  BranchesOutlined
 } from '@ant-design/icons'
 import { useTaskStore, useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
+import { FeedbackTip } from '../components/FeedbackTip'
 import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import type { ApiResponse } from '../api/client'
@@ -225,6 +227,13 @@ const TaskDetail: React.FC = () => {
   const handleCreateTask = () => {
     if (task) {
       navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}`)
+    }
+  }
+
+  // 从此任务创建新任务
+  const handleCreateFromTask = () => {
+    if (task) {
+      navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}&from_task=${task.id}`)
     }
   }
 
@@ -632,6 +641,19 @@ ${task.content || '无详细内容'}
               >
                 {tp('actions.createTask')}
               </Button>
+              {/* 从此任务创建新任务按钮 - 蓝色系，表示基于现有任务的衍生操作 */}
+              <Button
+                type="primary"
+                icon={<BranchesOutlined />}
+                onClick={handleCreateFromTask}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
+                title="基于此任务创建新任务，将预填充项目信息和部分内容"
+              >
+                从此任务创建新任务
+              </Button>
               {/* 编辑任务按钮 - 橙色系，表示中性的修改操作 */}
               <Button
                 type="primary"
@@ -924,6 +946,9 @@ ${task.content || '无详细内容'}
           </div>
         )}
       </Card>
+
+      {/* 用户体验反馈提示 */}
+      <FeedbackTip />
 
       {/* 任务执行反馈 */}
       {task.feedback_content && (

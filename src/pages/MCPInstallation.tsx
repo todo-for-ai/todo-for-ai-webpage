@@ -159,8 +159,13 @@ const MCPInstallation: React.FC = () => {
 
       <Alert
         message="重要提示"
-        description="在配置MCP之前，请确保Todo for AI后端服务正在运行，默认地址为 http://localhost:50110"
-        type="info"
+        description={
+          <div>
+            <p>从版本1.1.0开始，API Token是必需的配置项。请先在个人中心创建API Token。</p>
+            <p>如果您在本地开发，请确保Todo for AI后端服务正在运行，默认地址为 http://localhost:50110</p>
+          </div>
+        }
+        type="warning"
         icon={<InfoCircleOutlined />}
         style={{ marginBottom: '24px' }}
         showIcon
@@ -748,10 +753,10 @@ const MCPInstallation: React.FC = () => {
               <li><strong>Linux:</strong> <code>~/.config/Claude/claude_desktop_config.json</code></li>
             </ul>
 
-            <Title level={4}>基础配置（使用npm包）</Title>
+            <Title level={4}>基础配置（推荐）</Title>
             <Alert
-              message="推荐配置"
-              description="使用npm包安装后，配置更加简单，无需指定复杂的路径。"
+              message="最新配置方式"
+              description="从版本1.1.0开始，API Token是必需的，API base URL默认为生产环境地址。"
               type="info"
               style={{ marginBottom: '16px' }}
               showIcon
@@ -760,11 +765,13 @@ const MCPInstallation: React.FC = () => {
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "@todo-for-ai/mcp",
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "LOG_LEVEL": "info"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "your-api-token-here"
+      ]
     }
   }
 }`}
@@ -772,13 +779,13 @@ const MCPInstallation: React.FC = () => {
 
 
 
-            <Title level={4} style={{ marginTop: '24px' }}>高级配置（带认证）</Title>
+            <Title level={4} style={{ marginTop: '24px' }}>本地开发配置</Title>
             <Alert
-              message="API Token 认证"
+              message="本地开发环境"
               description={
                 <div>
-                  <p>从版本2.0开始，MCP服务器支持API Token认证，提供更安全的访问控制。</p>
-                  <p>请在个人中心创建API Token，然后在配置中使用。</p>
+                  <p>如果您在本地运行Todo for AI后端服务，需要指定自定义的API base URL。</p>
+                  <p>请确保本地服务运行在 http://localhost:50110 端口。</p>
                 </div>
               }
               type="warning"
@@ -789,30 +796,50 @@ const MCPInstallation: React.FC = () => {
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "@todo-for-ai/mcp",
+      "command": "npx",
       "args": [
-        "--api-token=your-api-token-here"
-      ],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "LOG_LEVEL": "info"
-      }
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-base-url",
+        "http://localhost:50110/todo-for-ai/api/v1",
+        "--api-token",
+        "your-api-token-here"
+      ]
     }
   }
 }`}
             </CodeBlock>
 
-            <Title level={5} style={{ marginTop: '16px' }}>或者使用环境变量方式：</Title>
+            <Title level={5} style={{ marginTop: '16px' }}>使用环境变量方式：</Title>
             <div style={configStyle}>
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "@todo-for-ai/mcp",
+      "command": "npx",
+      "args": ["-y", "@todo-for-ai/mcp@latest"],
       "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "TODO_API_TOKEN": "your-api-token-here",
-        "LOG_LEVEL": "info"
+        "TODO_API_BASE_URL": "http://localhost:50110/todo-for-ai/api/v1",
+        "TODO_API_TOKEN": "your-api-token-here"
       }
+    }
+  }
+}`}
+            </div>
+
+            <Title level={5} style={{ marginTop: '16px' }}>调试模式配置：</Title>
+            <div style={configStyle}>
+{`{
+  "mcpServers": {
+    "todo-for-ai": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "your-api-token-here",
+        "--log-level",
+        "debug"
+      ]
     }
   }
 }`}
@@ -857,11 +884,12 @@ const MCPInstallation: React.FC = () => {
   "mcpServers": {
     "todo-for-ai": {
       "command": "npx",
-      "args": ["@todo-for-ai/mcp"],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "LOG_LEVEL": "info"
-      }
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "your-api-token-here"
+      ]
     }
   }
 }`}
@@ -891,10 +919,13 @@ const MCPInstallation: React.FC = () => {
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "@todo-for-ai/mcp",
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "your-api-token-here"
+      ]
     }
   }
 }`}
@@ -911,10 +942,13 @@ const MCPInstallation: React.FC = () => {
     "mcp": {
       "servers": {
         "todo-for-ai": {
-          "command": "@todo-for-ai/mcp",
-          "env": {
-            "TODO_API_BASE_URL": "http://localhost:50110"
-          }
+          "command": "npx",
+          "args": [
+            "-y",
+            "@todo-for-ai/mcp@latest",
+            "--api-token",
+            "your-api-token-here"
+          ]
         }
       }
     }
@@ -930,13 +964,34 @@ const MCPInstallation: React.FC = () => {
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "@todo-for-ai/mcp",
-      "args": [],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "TODO_API_TIMEOUT": "10000",
-        "LOG_LEVEL": "info"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "your-api-token-here"
+      ]
+    }
+  }
+}`}
+            </div>
+
+            <Title level={5} style={{ marginTop: '16px' }}>本地开发环境配置：</Title>
+            <div style={configStyle}>
+{`{
+  "mcpServers": {
+    "todo-for-ai": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-base-url",
+        "http://localhost:50110/todo-for-ai/api/v1",
+        "--api-token",
+        "your-api-token-here",
+        "--log-level",
+        "debug"
+      ]
     }
   }
 }`}
@@ -969,16 +1024,16 @@ const MCPInstallation: React.FC = () => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}><code>TODO_API_BASE_URL</code></td>
-                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>是</td>
+                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}><code>TODO_API_TOKEN</code></td>
+                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}><strong style={{ color: '#ff4d4f' }}>是</strong></td>
                     <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>-</td>
-                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>Todo API 服务器地址</td>
+                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>API 认证令牌（必需）</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}><code>TODO_API_TOKEN</code></td>
+                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}><code>TODO_API_BASE_URL</code></td>
                     <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>否</td>
-                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>""</td>
-                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>API 认证令牌</td>
+                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>https://todo4ai.org/todo-for-ai/api/v1</td>
+                    <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}>Todo API 服务器地址</td>
                   </tr>
                   <tr>
                     <td style={{ padding: '12px', border: '1px solid #d9d9d9' }}><code>TODO_API_TIMEOUT</code></td>
@@ -1002,11 +1057,22 @@ const MCPInstallation: React.FC = () => {
             </Paragraph>
             <div style={configStyle}>
 {`{
-  "apiBaseUrl": "http://localhost:50110",
+  "apiBaseUrl": "https://todo4ai.org/todo-for-ai/api/v1",
   "apiTimeout": 10000,
-  "apiToken": "",
+  "apiToken": "your-api-token-here",
   "logLevel": "info"
 }`}
+            </div>
+
+            <Title level={4} style={{ marginTop: '24px' }}>命令行参数</Title>
+            <Paragraph>
+              MCP服务器支持以下命令行参数：
+            </Paragraph>
+            <div style={configStyle}>
+{`--api-token          API认证令牌（必需）
+--api-base-url       API服务器地址（可选，默认：https://todo4ai.org/todo-for-ai/api/v1）
+--api-timeout        请求超时时间（可选，默认：10000ms）
+--log-level          日志级别（可选，默认：info）`}
             </div>
 
             <Title level={4} style={{ marginTop: '24px' }}>生产环境配置</Title>
@@ -1014,14 +1080,15 @@ const MCPInstallation: React.FC = () => {
 {`{
   "mcpServers": {
     "todo-for-ai": {
-      "command": "@todo-for-ai/mcp",
-      "env": {
-        "TODO_API_BASE_URL": "https://your-domain.com",
-        "TODO_API_TOKEN": "your-production-token",
-        "TODO_API_TIMEOUT": "15000",
-        "LOG_LEVEL": "warn",
-        "NODE_ENV": "production"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "your-production-token",
+        "--log-level",
+        "warn"
+      ]
     }
   }
 }`}

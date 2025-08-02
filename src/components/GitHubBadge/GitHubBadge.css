@@ -1,4 +1,25 @@
-/* GitHub徽标样式 */
+/* GitHub徽标三角形样式 */
+.github-badge-triangle {
+  position: relative;
+  overflow: hidden;
+}
+
+.github-badge-triangle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.github-badge-triangle:active {
+  transform: scale(1.02);
+  box-shadow: 0 1px 4px rgba(24, 144, 255, 0.1);
+}
+
+.github-badge-triangle:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 保持旧的github-badge类以兼容性 */
 .github-badge {
   position: relative;
   overflow: hidden;
@@ -18,29 +39,53 @@
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .github-badge-triangle {
+    width: 42px;
+    height: 42px;
+  }
+
+  .github-badge-triangle .anticon {
+    font-size: 16px !important;
+    margin-top: -6px !important;
+    margin-left: -6px !important;
+  }
+
+  /* 保持旧样式兼容性 */
   .github-badge {
     width: 36px;
     height: 36px;
     font-size: 16px;
   }
-  
+
   .github-badge::before {
     border-left: 10px solid transparent;
     border-top: 10px solid #666;
   }
-  
+
   .github-badge:hover::before {
     border-top-color: #1890ff;
   }
 }
 
 @media (max-width: 576px) {
+  .github-badge-triangle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .github-badge-triangle .anticon {
+    font-size: 14px !important;
+    margin-top: -4px !important;
+    margin-left: -4px !important;
+  }
+
+  /* 保持旧样式兼容性 */
   .github-badge {
     width: 32px;
     height: 32px;
     font-size: 14px;
   }
-  
+
   .github-badge::before {
     border-left: 8px solid transparent;
     border-top: 8px solid #666;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Tooltip } from 'antd'
 import { DragOutlined } from '@ant-design/icons'
+import { useTranslation } from '../i18n/hooks/useTranslation'
 
 interface ResizableContainerProps {
   children: React.ReactNode
@@ -21,6 +22,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
   className = '',
   style = {}
 }) => {
+  const { tc } = useTranslation()
   const [width, setWidth] = useState(defaultWidth)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
@@ -115,7 +117,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
       
       {/* 拖动手柄 - 仅在非移动端显示 */}
       {!isMobile && (
-        <Tooltip title="拖动调整宽度，双击重置为默认宽度" placement="left">
+        <Tooltip title={tc('resizableContainer.tooltip.dragToResize')} placement="left">
           <div
             ref={handleRef}
             className="resize-handle"
@@ -184,7 +186,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
             pointerEvents: 'none'
           }}
         >
-          宽度: {width}px
+          {tc('resizableContainer.widthIndicator.label')}: {width}px
         </div>
       )}
     </div>

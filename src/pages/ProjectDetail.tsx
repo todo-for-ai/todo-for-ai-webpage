@@ -786,11 +786,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                 )}
               </Space>
             </div>
-            {currentProject.description && (
-              <Paragraph className="page-description">
-                {currentProject.description}
-              </Paragraph>
-            )}
+
           </div>
           <Space size="small">
             <Button
@@ -912,6 +908,21 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         <TabPane tab={tp('tabs.overview')} key="overview">
           <Row gutter={[16, 16]}>
+            {/* 项目描述 */}
+            {currentProject.description && (
+              <Col span={24}>
+                <Card title={tp('overview.projectDescription.title')}>
+                  <MarkdownEditor
+                    value={currentProject.description}
+                    readOnly={true}
+                    hideToolbar={true}
+                    autoHeight={true}
+                    preview="preview"
+                  />
+                </Card>
+              </Col>
+            )}
+
             <Col span={24}>
               <Card title={tp('overview.basicInfo.title')}>
                 <Row gutter={[16, 16]}>

@@ -1,0 +1,8 @@
+{
+  "tooltip": {
+    "dragToResize": "Drag to adjust width, double-click to reset to default width"
+  },
+  "widthIndicator": {
+    "label": "Width"
+  }
+}

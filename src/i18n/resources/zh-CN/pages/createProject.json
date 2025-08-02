@@ -29,8 +29,10 @@
     "color": {
       "label": "项目颜色",
       "presetLabel": "推荐颜色",
-      "randomButton": "随机",
-      "randomTitle": "随机颜色"
+      "randomButton": "随机颜色",
+      "randomTitle": "生成完全随机颜色（全颜色空间）",
+      "presetRandomButton": "预设随机",
+      "presetRandomTitle": "从预设颜色中随机选择"
     },
     "description": {
       "label": "项目描述",

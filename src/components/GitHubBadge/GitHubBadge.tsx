@@ -22,26 +22,54 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
   }
 
   return (
-    <Tooltip title={tc('github.visitRepository')} placement="bottom">
-      <Button
-        type="text"
-        icon={<GithubOutlined />}
-        onClick={handleClick}
-        className={`github-badge ${className || ''}`}
+    <Tooltip title={tc('github.starRepository')} placement="bottom">
+      <div
+        className={`github-badge-triangle ${className || ''}`}
         style={{
+          width: '50px',
+          height: '50px',
+          background: 'rgba(102, 102, 102, 0.08)',
+          clipPath: 'polygon(100% 0%, 0% 0%, 100% 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '40px',
-          height: '40px',
-          borderRadius: '8px',
-          color: '#666',
-          fontSize: '18px',
+          cursor: 'pointer',
           transition: 'all 0.2s ease',
           ...style
         }}
-        aria-label={tc('github.visitRepository')}
-      />
+        onClick={handleClick}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(24, 144, 255, 0.12)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(102, 102, 102, 0.08)'
+        }}
+        aria-label={tc('github.starRepository')}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleClick()
+          }
+        }}
+      >
+        <GithubOutlined
+          style={{
+            fontSize: '18px',
+            color: '#666',
+            transition: 'color 0.2s ease',
+            marginTop: '-8px', // 调整图标位置，使其在三角形中更好地居中
+            marginLeft: '-8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#1890ff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#666'
+          }}
+        />
+      </div>
     </Tooltip>
   )
 }

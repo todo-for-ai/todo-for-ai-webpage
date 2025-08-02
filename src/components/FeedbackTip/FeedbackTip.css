@@ -1,18 +1,92 @@
 /* 反馈提示样式 */
-.feedback-tip {
+.feedback-tip-card {
   margin-bottom: 16px;
   border-radius: 8px;
   border: 1px solid #d6f7ff;
   background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
 }
 
-.feedback-tip .ant-alert-message {
-  font-weight: 600;
-  color: #0958d9;
+/* 折叠状态下的紧凑样式 */
+.feedback-tip-card.collapsed {
   margin-bottom: 8px;
 }
 
-.feedback-tip .ant-alert-description {
+.feedback-tip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+  min-height: 32px; /* 确保最小高度 */
+}
+
+/* 折叠状态下的紧凑header */
+.feedback-tip-card.collapsed .feedback-tip-header {
+  padding: 2px 0;
+  min-height: 24px; /* 减少折叠状态下的高度 */
+}
+
+.feedback-tip-header:hover {
+  background-color: rgba(24, 144, 255, 0.05);
+  border-radius: 4px;
+  margin: -4px;
+  padding: 4px;
+}
+
+/* 折叠状态下的hover效果也要紧凑 */
+.feedback-tip-card.collapsed .feedback-tip-header:hover {
+  margin: -2px;
+  padding: 2px;
+}
+
+.feedback-tip-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #0958d9;
+  font-size: 14px; /* 默认字体大小 */
+}
+
+/* 折叠状态下的小字体 */
+.feedback-tip-card.collapsed .feedback-tip-title {
+  font-size: 12px;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.feedback-tip-icon {
+  font-size: 16px;
+}
+
+/* 折叠状态下的小图标 */
+.feedback-tip-card.collapsed .feedback-tip-icon {
+  font-size: 12px;
+}
+
+.feedback-tip-toggle {
+  color: #0958d9;
+  border: none;
+  box-shadow: none;
+  min-width: 24px;
+  height: 24px;
+}
+
+/* 折叠状态下的小按钮 */
+.feedback-tip-card.collapsed .feedback-tip-toggle {
+  min-width: 20px;
+  height: 20px;
+  font-size: 10px;
+}
+
+.feedback-tip-toggle:hover {
+  color: #40a9ff !important;
+  background-color: rgba(24, 144, 255, 0.1) !important;
+}
+
+.feedback-tip-content {
+  margin-top: 12px;
   color: #434343;
   line-height: 1.6;
 }
@@ -63,21 +137,35 @@
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .feedback-tip {
+  .feedback-tip-card {
     margin-bottom: 12px;
   }
-  
+
+  /* 移动端折叠状态更紧凑 */
+  .feedback-tip-card.collapsed {
+    margin-bottom: 6px;
+  }
+
+  .feedback-tip-title {
+    font-size: 14px;
+  }
+
+  /* 移动端折叠状态下的更小字体 */
+  .feedback-tip-card.collapsed .feedback-tip-title {
+    font-size: 11px;
+  }
+
   .feedback-tip-content p {
     font-size: 13px;
     margin-bottom: 10px;
   }
-  
+
   .feedback-tip-github-link {
     padding: 5px 10px;
     font-size: 12px;
     gap: 4px;
   }
-  
+
   .feedback-tip-github-link .anticon {
     font-size: 12px;
   }

@@ -262,8 +262,99 @@ const CreateTask: React.FC = () => {
       // 检查是否是复制任务模式
       const isCopyMode = searchParams.get('copy') === 'true'
       const isContinueMode = searchParams.get('continue') === 'true'
+      const fromTaskId = searchParams.get('from_task')
 
-      if (isCopyMode) {
+      if (fromTaskId) {
+        // 从指定任务创建新任务模式
+        const loadSourceTask = async () => {
+          try {
+            console.log('🔄 开始加载源任务:', fromTaskId)
+            console.log('📡 调用getTask函数，参数:', parseInt(fromTaskId, 10))
+
+            const sourceTask = await getTask(parseInt(fromTaskId, 10))
+            console.log('📋 getTask返回结果:', sourceTask)
+            console.log('📋 sourceTask类型:', typeof sourceTask)
+            console.log('📋 sourceTask是否为null/undefined:', sourceTask == null)
+
+            if (!sourceTask) {
+              console.error('❌ getTask返回了null，可能API调用失败了')
+              message.error('获取源任务信息失败，请检查任务ID是否正确')
+              return
+            }
+
+            console.log('📋 源任务数据详情:', {
+              id: sourceTask.id,
+              title: sourceTask.title,
+              project_id: sourceTask.project_id,
+              priority: sourceTask.priority,
+              is_ai_task: sourceTask.is_ai_task
+            })
+
+            // 预填充部分信息，但不包括任务标题和内容的完整复制
+            const formValues = {
+              project_id: sourceTask.project_id,
+              priority: sourceTask.priority,
+              status: 'todo', // 新任务默认为待办状态
+              is_ai_task: sourceTask.is_ai_task,
+              tags: sourceTask.tags || []
+            }
+
+            console.log('📝 设置表单值:', formValues)
+            form.setFieldsValue(formValues)
+
+            // 设置一个基础的内容模板，引用源任务
+            const templateContent = `## 基于任务 #${sourceTask.id} 创建
+
+**源任务**: ${sourceTask.title}
+
+## 任务描述
+
+请在此处描述新任务的具体内容...
+
+## 与源任务的关系
+
+此任务基于任务 #${sourceTask.id} 创建，请说明两个任务之间的关系...`
+
+            console.log('📄 设置编辑器内容:', templateContent.substring(0, 100) + '...')
+
+            // 先显示成功消息
+            message.success('已基于源任务预填充信息，请完善任务标题和内容')
+            console.log('✅ 成功消息已显示')
+
+            // 延迟设置编辑器内容，确保编辑器已经完全初始化
+            // 增加延迟时间到1500ms，确保编辑器完全准备好
+            setTimeout(() => {
+              console.log('🔄 开始设置编辑器内容...')
+              console.log('📝 当前editorContent状态:', editorContent)
+
+              setEditorContent(templateContent)
+              console.log('✅ setEditorContent调用完成')
+
+              // 再次延迟检查内容是否设置成功
+              setTimeout(() => {
+                console.log('🔍 检查编辑器内容是否更新成功...')
+                // 这里可以通过DOM检查编辑器内容
+                const editor = document.querySelector('.milkdown');
+                if (editor) {
+                  console.log('📋 编辑器DOM内容:', editor.textContent);
+                }
+              }, 500)
+            }, 1500)
+
+            console.log('✅ 预填充逻辑完成')
+          } catch (error) {
+            console.error('❌ 加载源任务失败:', error)
+            console.error('❌ 错误详情:', {
+              message: error?.message,
+              stack: error?.stack,
+              name: error?.name,
+              toString: error?.toString()
+            })
+            message.error(`加载源任务信息失败: ${error?.message || '未知错误'}`)
+          }
+        }
+        loadSourceTask()
+      } else if (isCopyMode) {
         try {
           const copyDataStr = sessionStorage.getItem('copyTaskData')
           if (copyDataStr) {
@@ -357,7 +448,7 @@ const CreateTask: React.FC = () => {
 
   // 为没有默认项目ID的新建任务恢复用户偏好设置
   useEffect(() => {
-    if (!isEditMode && !defaultProjectId && !searchParams.get('copy') && !searchParams.get('continue')) {
+    if (!isEditMode && !defaultProjectId && !searchParams.get('copy') && !searchParams.get('continue') && !searchParams.get('from_task')) {
       // 只在普通新建任务模式下，且没有项目ID时恢复偏好设置
       const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
       const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'

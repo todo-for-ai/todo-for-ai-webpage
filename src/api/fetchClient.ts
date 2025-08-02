@@ -101,10 +101,15 @@ class FetchApiClient {
    */
   private async refreshToken(): Promise<void> {
     try {
+      const refreshToken = localStorage.getItem('refresh_token')
+      if (!refreshToken) {
+        throw new Error('No refresh token available')
+      }
+
       const response = await fetch(`${this.baseURL}/auth/refresh`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Authorization': `Bearer ${refreshToken}`,
           'Content-Type': 'application/json'
         }
       })
@@ -114,15 +119,16 @@ class FetchApiClient {
       }
 
       const data = await response.json()
-      const newToken = data.access_token
+      const { access_token, refresh_token } = data
 
-      if (newToken) {
-        localStorage.setItem('auth_token', newToken)
+      if (access_token && refresh_token) {
+        localStorage.setItem('auth_token', access_token)
+        localStorage.setItem('refresh_token', refresh_token)
         console.log('[FetchClient] Token刷新成功')
 
         // 通知auth store更新token
         const { useAuthStore } = await import('../stores/useAuthStore')
-        useAuthStore.getState().setToken(newToken)
+        useAuthStore.getState().setTokens(access_token, refresh_token)
       } else {
         throw new Error('刷新响应中没有新token')
       }

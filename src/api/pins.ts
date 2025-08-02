@@ -28,6 +28,14 @@ export interface PinOrderItem {
   pin_order: number
 }
 
+export interface ProjectTaskCount {
+  project_id: number
+  project_name: string
+  project_color: string
+  pending_tasks: number
+  pin_order: number
+}
+
 // Pin API接口
 export const pinsApi = {
   // 获取用户的Pin配置
@@ -63,5 +71,10 @@ export const pinsApi = {
   // 获取Pin统计信息
   getPinStats: async (): Promise<PinStats> => {
     return fetchApiClient.get('/pins/stats')
+  },
+
+  // 获取Pin项目的任务数量
+  getPinnedProjectsTaskCounts: async (): Promise<{ task_counts: ProjectTaskCount[]; total_pins: number }> => {
+    return fetchApiClient.get('/pins/task-counts')
   }
 }

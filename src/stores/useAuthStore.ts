@@ -34,6 +34,7 @@ interface AuthState {
   // 状态
   user: User | null
   token: string | null
+  refreshToken: string | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -41,6 +42,8 @@ interface AuthState {
   // 操作
   setUser: (user: User | null) => void
   setToken: (token: string | null) => void
+  setRefreshToken: (refreshToken: string | null) => void
+  setTokens: (accessToken: string | null, refreshToken: string | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   login: (redirectUri?: string) => void
@@ -63,6 +66,7 @@ interface AuthState {
 const initialState = {
   user: null,
   token: null,
+  refreshToken: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -83,12 +87,44 @@ export const useAuthStore = create<AuthState>()(
 
         setToken: (token) => {
           set({ token, isAuthenticated: !!token })
-          
+
           // 更新localStorage
           if (token) {
             localStorage.setItem('auth_token', token)
           } else {
             localStorage.removeItem('auth_token')
+          }
+        },
+
+        setRefreshToken: (refreshToken) => {
+          set({ refreshToken })
+
+          // 更新localStorage
+          if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken)
+          } else {
+            localStorage.removeItem('refresh_token')
+          }
+        },
+
+        setTokens: (accessToken, refreshToken) => {
+          set({
+            token: accessToken,
+            refreshToken,
+            isAuthenticated: !!accessToken
+          })
+
+          // 更新localStorage
+          if (accessToken) {
+            localStorage.setItem('auth_token', accessToken)
+          } else {
+            localStorage.removeItem('auth_token')
+          }
+
+          if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken)
+          } else {
+            localStorage.removeItem('refresh_token')
           }
         },
 
@@ -216,6 +252,7 @@ export const useAuthStore = create<AuthState>()(
         clearAuth: () => {
           // 清除localStorage
           localStorage.removeItem('auth_token')
+          localStorage.removeItem('refresh_token')
 
           // 重置状态
           set({
@@ -240,10 +277,10 @@ export const useAuthStore = create<AuthState>()(
         },
 
         refreshToken: async () => {
-          const { token } = get()
+          const { refreshToken: currentRefreshToken } = get()
 
-          if (!token || isTokenExpired(token)) {
-            console.log('[AuthStore] Token已过期，无法刷新')
+          if (!currentRefreshToken) {
+            console.log('[AuthStore] 没有refresh token，无法刷新')
             get().clearAuth()
             return false
           }
@@ -251,11 +288,24 @@ export const useAuthStore = create<AuthState>()(
           try {
             set({ isLoading: true, error: null })
 
-            const response = await fetchApiClient.post<{ access_token: string; token_type: string }>('/auth/refresh')
-            const newToken = response.access_token
+            // 使用refresh token进行刷新
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'}/auth/refresh`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${currentRefreshToken}`,
+                'Content-Type': 'application/json'
+              }
+            })
 
-            if (newToken) {
-              get().setToken(newToken)
+            if (!response.ok) {
+              throw new Error(`Refresh failed: ${response.status}`)
+            }
+
+            const data = await response.json()
+            const { access_token, refresh_token } = data
+
+            if (access_token && refresh_token) {
+              get().setTokens(access_token, refresh_token)
               console.log('[AuthStore] Token刷新成功')
               return true
             } else {
@@ -265,12 +315,12 @@ export const useAuthStore = create<AuthState>()(
             console.error('[AuthStore] Token刷新失败:', error)
 
             // 如果是401错误，清除认证状态
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 || (error.message && error.message.includes('401'))) {
               get().clearAuth()
             }
 
             set({
-              error: error.response?.data?.error?.message || 'Token刷新失败',
+              error: error.response?.data?.error?.message || error.message || 'Token刷新失败',
               isLoading: false
             })
             return false
@@ -309,13 +359,16 @@ export const useAuthStore = create<AuthState>()(
         name: 'auth-storage',
         partialize: (state) => ({
           token: state.token,
+          refreshToken: state.refreshToken,
           user: state.user,
         }),
         onRehydrateStorage: () => (state) => {
           // 从localStorage恢复token
           const token = localStorage.getItem('auth_token')
+          const refreshToken = localStorage.getItem('refresh_token')
           if (token && state) {
             state.token = token
+            state.refreshToken = refreshToken
             state.isAuthenticated = !!token
           }
         },
@@ -333,10 +386,28 @@ const initializeAuth = () => {
 
   // 检查URL中是否有token参数（来自OAuth回调）
   const urlParams = new URLSearchParams(window.location.search)
-  const urlToken = urlParams.get('token')
+  const urlAccessToken = urlParams.get('access_token')
+  const urlRefreshToken = urlParams.get('refresh_token')
+  const urlToken = urlParams.get('token') // 向后兼容旧格式
 
-  if (urlToken) {
-    // 从URL中获取token并保存
+  if (urlAccessToken && urlRefreshToken) {
+    // 新格式：从URL中获取access_token和refresh_token
+    useAuthStore.getState().setTokens(urlAccessToken, urlRefreshToken)
+
+    // 清除URL中的token参数
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.delete('access_token')
+    newUrl.searchParams.delete('refresh_token')
+    newUrl.searchParams.delete('token_type')
+    window.history.replaceState({}, '', newUrl.toString())
+
+    // 获取用户信息
+    useAuthStore.getState().fetchCurrentUser()
+
+    // 启动token刷新服务
+    startTokenRefreshService()
+  } else if (urlToken) {
+    // 旧格式：向后兼容单个token参数
     useAuthStore.getState().setToken(urlToken)
 
     // 清除URL中的token参数

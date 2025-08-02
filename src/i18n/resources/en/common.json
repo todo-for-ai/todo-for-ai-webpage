@@ -192,7 +192,8 @@
     "visitRepository": "Visit GitHub Repository",
     "openInNewTab": "Open GitHub repository in new tab",
     "repository": "Repository",
-    "sourceCode": "Source Code"
+    "sourceCode": "Source Code",
+    "starRepository": "Star our repository on GitHub to support us"
   },
   "footer": {
     "version": "Version",

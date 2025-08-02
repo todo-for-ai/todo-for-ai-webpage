@@ -42,6 +42,9 @@
     },
     "projectContext": {
       "title": "Project Context"
+    },
+    "projectDescription": {
+      "title": "Project Description"
     }
   },
   "tasks": {

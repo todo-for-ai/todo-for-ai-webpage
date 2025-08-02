@@ -40,8 +40,24 @@ const PRESET_COLORS = [
   '#fa8c16', '#096dd9', '#36cfc9', '#f759ab', '#40a9ff'
 ]
 
-// 生成随机颜色
+// 生成真正的随机颜色（在完整颜色空间中）
 const generateRandomColor = () => {
+  // 生成0-255范围内的随机RGB值
+  const r = Math.floor(Math.random() * 256)
+  const g = Math.floor(Math.random() * 256)
+  const b = Math.floor(Math.random() * 256)
+
+  // 转换为十六进制格式
+  const toHex = (value: number) => {
+    const hex = value.toString(16)
+    return hex.length === 1 ? '0' + hex : hex
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+// 从预设颜色中随机选择（保留原有功能作为备选）
+const generatePresetColor = () => {
   return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]
 }
 
@@ -167,6 +183,12 @@ const CreateProject = () => {
 
   const handleRandomColor = () => {
     const newColor = generateRandomColor()
+    setCurrentColor(newColor)
+    form.setFieldsValue({ color: newColor })
+  }
+
+  const handlePresetColor = () => {
+    const newColor = generatePresetColor()
     setCurrentColor(newColor)
     form.setFieldsValue({ color: newColor })
   }
@@ -340,7 +362,7 @@ const CreateProject = () => {
                 </Col>
                 <Col span={8}>
                   <Form.Item label={t('form.color.label')} name="color">
-                    <Space>
+                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
                       <ColorPicker
                         value={currentColor}
                         onChange={handleColorChange}
@@ -352,13 +374,25 @@ const CreateProject = () => {
                           }
                         ]}
                       />
-                      <Button
-                        icon={<ReloadOutlined />}
-                        onClick={handleRandomColor}
-                        title={t('form.color.randomTitle')}
-                      >
-                        {t('form.color.randomButton')}
-                      </Button>
+                      <Space>
+                        <Button
+                          icon={<ReloadOutlined />}
+                          onClick={handleRandomColor}
+                          title={t('form.color.randomTitle')}
+                          size="small"
+                        >
+                          {t('form.color.randomButton')}
+                        </Button>
+                        <Button
+                          icon={<ReloadOutlined />}
+                          onClick={handlePresetColor}
+                          title={t('form.color.presetRandomTitle')}
+                          size="small"
+                          type="dashed"
+                        >
+                          {t('form.color.presetRandomButton')}
+                        </Button>
+                      </Space>
                     </Space>
                   </Form.Item>
                 </Col>
