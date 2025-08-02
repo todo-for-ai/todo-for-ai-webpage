@@ -10,12 +10,12 @@ import {
   Progress,
   Breadcrumb,
   Spin,
-  message,
   Row,
   Col,
   Popconfirm,
   Select,
-  Collapse
+  Collapse,
+  App
 } from 'antd'
 import {
   EditOutlined,
@@ -44,6 +44,7 @@ import styles from './TaskDetail.module.css'
 const { Title, Paragraph } = Typography
 
 const TaskDetail: React.FC = () => {
+  const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [task, setTask] = useState<Task | null>(null)
