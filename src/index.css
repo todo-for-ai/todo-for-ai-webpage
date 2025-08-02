@@ -142,7 +142,7 @@ a:active {
   display: flex;
   align-items: center;
   gap: 8px; /* 亲密性原则：头像和用户信息紧密相邻 */
-  padding: 4px 8px;
+  padding: 4px 18px 4px 8px; /* 右侧间距增大10px：从8px增加到18px */
   border-radius: 6px;
   transition: all 0.2s ease;
   cursor: pointer;
