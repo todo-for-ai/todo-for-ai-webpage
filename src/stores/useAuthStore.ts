@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { fetchApiClient } from '../api/fetchClient'
+import { getApiBaseUrl } from '../utils/apiConfig'
 import {
   isTokenExpired,
   shouldRefreshToken,
@@ -140,7 +141,7 @@ export const useAuthStore = create<AuthState>()(
         },
 
         loginWithGitHub: (redirectUri) => {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
+          const baseUrl = getApiBaseUrl()
           const returnTo = redirectUri || window.location.href
 
           // 重定向到GitHub登录端点
@@ -148,7 +149,7 @@ export const useAuthStore = create<AuthState>()(
         },
 
         loginWithGoogle: (redirectUri) => {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
+          const baseUrl = getApiBaseUrl()
           const returnTo = redirectUri || window.location.href
 
           // 重定向到Google登录端点
@@ -304,7 +305,7 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: true, error: null })
 
             // 使用refresh token进行刷新
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'}/auth/refresh`, {
+            const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${currentRefreshToken}`,

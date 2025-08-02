@@ -1,8 +1,9 @@
-// 基础配置
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
-
+import { getApiBaseUrl } from '../utils/apiConfig'
 import { isTokenExpired, shouldRefreshToken } from '../utils/jwtUtils'
 import { handleTokenExpired, handleUnauthorized } from '../utils/authRedirect'
+
+// 基础配置 - 使用动态API地址
+const BASE_URL = getApiBaseUrl()
 
 // 创建fetch客户端
 class FetchApiClient {

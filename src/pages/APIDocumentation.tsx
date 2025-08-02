@@ -14,12 +14,17 @@ import {
 } from '@ant-design/icons'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { getApiBaseUrl, getMcpServerUrl } from '../utils/apiConfig'
 
 const { Title, Paragraph, Text } = Typography
 const { TabPane } = Tabs
 
 const APIDocumentation: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview')
+
+  // 动态生成API地址
+  const apiBaseUrl = getApiBaseUrl()
+  const mcpServerUrl = getMcpServerUrl()
 
   // const codeStyle = {
   //   backgroundColor: '#f6f8fa',
@@ -125,7 +130,7 @@ const APIDocumentation: React.FC = () => {
         message="API 基础信息"
         description={
           <div>
-            <p><strong>基础 URL:</strong> http://localhost:50110/todo-for-ai/api/v1</p>
+            <p><strong>基础 URL:</strong> {apiBaseUrl}</p>
             <p><strong>认证方式:</strong> Bearer Token</p>
             <p><strong>数据格式:</strong> JSON</p>
             <p><strong>字符编码:</strong> UTF-8</p>
@@ -276,7 +281,7 @@ const APIDocumentation: React.FC = () => {
             </Paragraph>
             
             <CodeBlock language="bash">
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/tokens \\
+{`curl -X POST ${apiBaseUrl}/tokens \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
   -d '{
@@ -297,7 +302,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={4} style={{ marginTop: '24px' }}>3. 完整请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X GET http://localhost:50110/todo-for-ai/api/v1/projects \\
+{`curl -X GET ${apiBaseUrl}/projects \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."`}
             </CodeBlock>
@@ -308,7 +313,7 @@ const APIDocumentation: React.FC = () => {
             </Paragraph>
             
             <CodeBlock language="bash">
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/tokens/verify \\
+{`curl -X POST ${apiBaseUrl}/tokens/verify \\
   -H "Content-Type: application/json" \\
   -d '{
     "token": "your_api_token_here"
@@ -351,7 +356,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X GET "http://localhost:50110/todo-for-ai/api/v1/projects?page=1&per_page=10&status=active" \\
+{`curl -X GET "${apiBaseUrl}/projects?page=1&per_page=10&status=active" \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
 
@@ -404,7 +409,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/projects \\
+{`curl -X POST ${apiBaseUrl}/projects \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{
@@ -421,7 +426,7 @@ const APIDocumentation: React.FC = () => {
             
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X GET http://localhost:50110/todo-for-ai/api/v1/projects/1 \\
+{`curl -X GET ${apiBaseUrl}/projects/1 \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
 
@@ -432,7 +437,7 @@ const APIDocumentation: React.FC = () => {
             
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X PUT http://localhost:50110/todo-for-ai/api/v1/projects/1 \\
+{`curl -X PUT ${apiBaseUrl}/projects/1 \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{
@@ -448,7 +453,7 @@ const APIDocumentation: React.FC = () => {
             
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X DELETE http://localhost:50110/todo-for-ai/api/v1/projects/1 \\
+{`curl -X DELETE ${apiBaseUrl}/projects/1 \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
           </Card>
@@ -484,7 +489,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X GET "http://localhost:50110/todo-for-ai/api/v1/tasks?project_id=1&status=todo&priority=high" \\
+{`curl -X GET "${apiBaseUrl}/tasks?project_id=1&status=todo&priority=high" \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
 
@@ -546,7 +551,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock language="bash">
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/tasks \\
+{`curl -X POST ${apiBaseUrl}/tasks \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{
@@ -565,7 +570,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X GET http://localhost:50110/todo-for-ai/api/v1/tasks/1 \\
+{`curl -X GET ${apiBaseUrl}/tasks/1 \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
 
@@ -576,7 +581,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X PUT http://localhost:50110/todo-for-ai/api/v1/tasks/1 \\
+{`curl -X PUT ${apiBaseUrl}/tasks/1 \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{
@@ -593,7 +598,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X DELETE http://localhost:50110/todo-for-ai/api/v1/tasks/1 \\
+{`curl -X DELETE ${apiBaseUrl}/tasks/1 \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
 
@@ -615,7 +620,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X PATCH http://localhost:50110/todo-for-ai/api/v1/tasks/batch \\
+{`curl -X PATCH ${apiBaseUrl}/tasks/batch \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{
@@ -654,7 +659,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X GET "http://localhost:50110/todo-for-ai/api/v1/context-rules?project_id=1" \\
+{`curl -X GET "${apiBaseUrl}/context-rules?project_id=1" \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
 
@@ -678,7 +683,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/context-rules \\
+{`curl -X POST ${apiBaseUrl}/context-rules \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{
@@ -704,7 +709,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X GET "http://localhost:50110/todo-for-ai/api/v1/context-rules/merged?project_id=1" \\
+{`curl -X GET "${apiBaseUrl}/context-rules/merged?project_id=1" \\
   -H "Authorization: Bearer YOUR_TOKEN"`}
             </CodeBlock>
           </Card>
@@ -727,7 +732,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X GET http://localhost:50110/todo-for-ai/api/v1/tokens \\
+{`curl -X GET ${apiBaseUrl}/tokens \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"`}
             </CodeBlock>
 
@@ -747,7 +752,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/tokens \\
+{`curl -X POST ${apiBaseUrl}/tokens \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
   -d '{
@@ -793,7 +798,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/tokens/verify \\
+{`curl -X POST ${apiBaseUrl}/tokens/verify \\
   -H "Content-Type: application/json" \\
   -d '{
     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -814,7 +819,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X POST http://localhost:50110/todo-for-ai/api/v1/tokens/1/renew \\
+{`curl -X POST ${apiBaseUrl}/tokens/1/renew \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
   -d '{
@@ -829,7 +834,7 @@ const APIDocumentation: React.FC = () => {
 
             <Title level={5}>请求示例</Title>
             <CodeBlock>
-{`curl -X DELETE http://localhost:50110/todo-for-ai/api/v1/tokens/1 \\
+{`curl -X DELETE ${apiBaseUrl}/tokens/1 \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"`}
             </CodeBlock>
           </Card>
@@ -889,7 +894,7 @@ class TodoAPIClient:
 
 # 使用示例
 client = TodoAPIClient(
-    'http://localhost:50110/todo-for-ai/api/v1',
+    '${apiBaseUrl}',
     'your_api_token_here'
 )
 
@@ -943,7 +948,7 @@ class TodoAPIClient {
 
 // 使用示例
 const client = new TodoAPIClient(
-    'http://localhost:50110/todo-for-ai/api/v1',
+    '${apiBaseUrl}',
     'your_api_token_here'
 );
 
@@ -979,7 +984,7 @@ const client = new TodoAPIClient(
 {`#!/bin/bash
 
 # 配置
-API_BASE="http://localhost:50110/todo-for-ai/api/v1"
+API_BASE="${apiBaseUrl}"
 TOKEN="your_api_token_here"
 
 # 通用请求函数

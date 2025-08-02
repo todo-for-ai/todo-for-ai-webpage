@@ -1,5 +1,6 @@
 import { fetchApiClient } from './fetchClient'
 import type { User } from '../stores/useAuthStore'
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 export interface LoginResponse {
   access_token: string
@@ -52,7 +53,7 @@ export class AuthAPI {
    * 启动GitHub登录流程
    */
   static loginWithGitHub(redirectUri?: string): void {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
+    const baseUrl = getApiBaseUrl()
     const returnTo = redirectUri || window.location.href
 
     window.location.href = `${baseUrl}/auth/login/github?return_to=${encodeURIComponent(returnTo)}`
@@ -62,7 +63,7 @@ export class AuthAPI {
    * 启动Google登录流程
    */
   static loginWithGoogle(redirectUri?: string): void {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
+    const baseUrl = getApiBaseUrl()
     const returnTo = redirectUri || window.location.href
 
     window.location.href = `${baseUrl}/auth/login/google?return_to=${encodeURIComponent(returnTo)}`

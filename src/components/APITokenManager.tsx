@@ -24,6 +24,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons'
 import { fetchApiClient } from '../api/fetchClient'
+import { getApiBaseUrl } from '../utils/apiConfig'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Text } = Typography
@@ -166,7 +167,7 @@ export const APITokenManager: React.FC = () => {
 
         // 由于fetchApiClient的限制，我们需要通过重新发起请求来获取错误详情
         try {
-          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'}/tokens/${token.id}/reveal`, {
+          const response = await fetch(`${getApiBaseUrl()}/tokens/${token.id}/reveal`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -259,7 +260,7 @@ export const APITokenManager: React.FC = () => {
 
       // 由于fetchApiClient的限制，我们需要通过重新发起请求来获取错误详情
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'}/tokens/${token.id}/reveal`, {
+        const response = await fetch(`${getApiBaseUrl()}/tokens/${token.id}/reveal`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`

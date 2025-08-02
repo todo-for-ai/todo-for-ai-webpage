@@ -50,6 +50,7 @@ import { LinkButton } from '../components/SmartLink'
 import type { Task } from '../api/tasks'
 import type { ContextRule } from '../api/contextRules'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
+import { getMcpServerUrl } from '../utils/apiConfig'
 
 const { Title, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -491,7 +492,7 @@ const ProjectDetail = () => {
 **${selectedTaskIds.length > 0 ? '指定' : '待执行'}任务数量**: ${targetTasks.length}个
 
 **执行指引**:
-1. 请使用MCP工具连接到Todo系统: http://localhost:50110
+1. 请使用MCP工具连接到Todo系统: ${getMcpServerUrl()}
 2. 使用get_project_tasks_by_name工具获取项目任务列表:
    - 项目名称: "${currentProject.name}"
    - 状态筛选: ["todo", "in_progress", "review"]

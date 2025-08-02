@@ -13,6 +13,7 @@ import {
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useSearchParams } from 'react-router-dom'
+import { getApiBaseUrl, getMcpServerUrl } from '../utils/apiConfig'
 
 const { Title, Paragraph, Text } = Typography
 const { TabPane } = Tabs
@@ -22,6 +23,46 @@ const MCPInstallation: React.FC = () => {
 
   // 定义所有有效的标签页key
   const validTabs = ['overview', 'api-token', 'installation', 'claude', 'cursor', 'other-ides', 'configuration', 'testing']
+
+  // 动态生成配置的函数
+  const generateMcpConfig = (apiToken: string = 'your-api-token-here', withLogLevel: boolean = false) => {
+    const baseUrl = getMcpServerUrl()
+    const config = {
+      "mcpServers": {
+        "todo-for-ai": {
+          "command": "npx",
+          "args": ["@todo-for-ai/mcp"],
+          "env": {
+            "TODO_API_BASE_URL": baseUrl,
+            "TODO_API_TOKEN": apiToken,
+            ...(withLogLevel && { "LOG_LEVEL": "info" })
+          }
+        }
+      }
+    }
+    return JSON.stringify(config, null, 2)
+  }
+
+  const generateMcpConfigWithArgs = (apiToken: string = 'your-api-token-here', withLogLevel: boolean = false) => {
+    const baseUrl = getApiBaseUrl()
+    const config = {
+      "mcpServers": {
+        "todo-for-ai": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@todo-for-ai/mcp@latest",
+            "--api-base-url",
+            baseUrl,
+            "--api-token",
+            apiToken,
+            ...(withLogLevel ? ["--log-level", "debug"] : [])
+          ]
+        }
+      }
+    }
+    return JSON.stringify(config, null, 2)
+  }
 
   // 获取初始标签页，确保是有效的
   const getInitialTab = () => {
@@ -361,18 +402,7 @@ const MCPInstallation: React.FC = () => {
               复制以下配置到 Claude Desktop 的配置文件中：
             </Paragraph>
             <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": ["@todo-for-ai/mcp"],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "TODO_API_TOKEN": "your-api-token-here"
-      }
-    }
-  }
-}`}
+{generateMcpConfig()}
             </CodeBlock>
 
             <Title level={5} style={{ marginTop: '20px', marginBottom: '12px' }}>
@@ -382,18 +412,7 @@ const MCPInstallation: React.FC = () => {
               在 Cursor IDE 的设置中添加以下 MCP 配置：
             </Paragraph>
             <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": ["@todo-for-ai/mcp"],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "TODO_API_TOKEN": "your-api-token-here"
-      }
-    }
-  }
-}`}
+{generateMcpConfig()}
             </CodeBlock>
 
             <Title level={5} style={{ marginTop: '20px', marginBottom: '12px' }}>
@@ -403,19 +422,7 @@ const MCPInstallation: React.FC = () => {
               对于其他支持 MCP 的 AI IDE，使用以下通用配置：
             </Paragraph>
             <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": ["@todo-for-ai/mcp"],
-      "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110",
-        "TODO_API_TOKEN": "your-api-token-here",
-        "LOG_LEVEL": "info"
-      }
-    }
-  }
-}`}
+{generateMcpConfig('your-api-token-here', true)}
             </CodeBlock>
 
             <Alert
@@ -423,7 +430,7 @@ const MCPInstallation: React.FC = () => {
               description={
                 <div>
                   <p>• 请将 <code>your-api-token-here</code> 替换为您在 "API Token" 标签页中创建的实际 Token</p>
-                  <p>• 确保 Todo for AI 后端服务正在 http://localhost:50110 运行</p>
+                  <p>• 确保 Todo for AI 后端服务正在 {getMcpServerUrl()} 运行</p>
                   <p>• 配置完成后需要重启您的 AI 客户端应用</p>
                 </div>
               }
@@ -630,7 +637,7 @@ const MCPInstallation: React.FC = () => {
                   <ul style={{ marginBottom: 0, paddingLeft: '20px' }}>
                     <li>API Token 是否正确配置且有效</li>
                     <li>Todo for AI 后端服务是否正在运行</li>
-                    <li>网络连接是否正常（能否访问 http://localhost:50110）</li>
+                    <li>网络连接是否正常（能否访问 {getMcpServerUrl()}）</li>
                     <li>AI 客户端是否已重启</li>
                     <li>MCP 配置 JSON 格式是否正确</li>
                   </ul>
@@ -700,7 +707,7 @@ const MCPInstallation: React.FC = () => {
               description={
                 <div>
                   <p>如果您在本地运行Todo for AI后端服务，需要指定自定义的API base URL。</p>
-                  <p>请确保本地服务运行在 http://localhost:50110 端口。</p>
+                  <p>请确保本地服务运行在 {getMcpServerUrl()} 端口。</p>
                 </div>
               }
               type="warning"
@@ -716,7 +723,7 @@ const MCPInstallation: React.FC = () => {
         "-y",
         "@todo-for-ai/mcp@latest",
         "--api-base-url",
-        "http://localhost:50110/todo-for-ai/api/v1",
+        "${getApiBaseUrl()}",
         "--api-token",
         "your-api-token-here"
       ]
@@ -733,7 +740,7 @@ const MCPInstallation: React.FC = () => {
       "command": "npx",
       "args": ["-y", "@todo-for-ai/mcp@latest"],
       "env": {
-        "TODO_API_BASE_URL": "http://localhost:50110/todo-for-ai/api/v1",
+        "TODO_API_BASE_URL": "${getApiBaseUrl()}",
         "TODO_API_TOKEN": "your-api-token-here"
       }
     }
@@ -901,7 +908,7 @@ const MCPInstallation: React.FC = () => {
         "-y",
         "@todo-for-ai/mcp@latest",
         "--api-base-url",
-        "http://localhost:50110/todo-for-ai/api/v1",
+        "${getApiBaseUrl()}",
         "--api-token",
         "your-api-token-here",
         "--log-level",
@@ -1028,7 +1035,7 @@ const MCPInstallation: React.FC = () => {
               首先确认Todo for AI后端服务正在运行：
             </Paragraph>
             <div style={codeStyle}>
-              curl http://localhost:50110/api/health
+              curl {getMcpServerUrl()}/api/health
             </div>
 
             <Title level={4} style={{ marginTop: '24px' }}>2. 测试MCP连接</Title>
