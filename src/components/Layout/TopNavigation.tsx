@@ -162,40 +162,38 @@ const TopNavigation: React.FC = () => {
         key: `/todo-for-ai/pages/projects/${projectId}`,
         icon: <PushpinOutlined style={{ color: projectColor }} />,
         label: (
-          <div style={{ display: 'inline-block' }}>
-            <span
-              style={{
-                position: 'relative',
-                display: 'inline-block'
-              }}
-            >
-              {pin.project?.name || tn('menu.pinnedProject', { projectId: pin.project_id })}
-              {taskCount > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: '-6px',
-                    right: '-6px',
-                    backgroundColor: projectColor,
-                    color: '#fff',
-                    fontSize: '10px',
-                    minWidth: '16px',
-                    height: '16px',
-                    lineHeight: '16px',
-                    borderRadius: '8px',
-                    boxShadow: '0 0 0 1px #fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold',
-                    zIndex: 1
-                  }}
-                >
-                  {taskCount}
-                </span>
-              )}
-            </span>
-          </div>
+          <span
+            style={{
+              position: 'relative',
+              display: 'inline-block'
+            }}
+          >
+            {pin.project?.name || tn('menu.pinnedProject', { projectId: pin.project_id })}
+            {taskCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: '-6px',
+                  right: '-6px',
+                  backgroundColor: projectColor,
+                  color: '#fff',
+                  fontSize: '10px',
+                  minWidth: '16px',
+                  height: '16px',
+                  lineHeight: '16px',
+                  borderRadius: '8px',
+                  boxShadow: '0 0 0 1px #fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  zIndex: 1
+                }}
+              >
+                {taskCount}
+              </span>
+            )}
+          </span>
         ),
       }
     })
