@@ -903,7 +903,7 @@ ${task.content || '无详细内容'}
                 label: (
                   <Space>
                     <span>{tp('projectContext.rulesLabel')}</span>
-                    <Tag color="blue">{projectContext.data.rules.length} 条规则</Tag>
+                    <Tag color="blue">{tp('projectContext.rulesCount', { count: projectContext.data.rules.length })}</Tag>
                   </Space>
                 ),
                 children: (

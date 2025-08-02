@@ -72,6 +72,7 @@
     "description": "The following are the project context rules that will be applied when this task is executed in MCP, these rules will be automatically appended to the task content.",
     "loading": "Loading project context rules...",
     "rulesLabel": "Project Context Rules",
+    "rulesCount": "{{count}} rules",
     "appliedRules": "Applied Rules List:",
     "empty": {
       "title": "No project context rules",

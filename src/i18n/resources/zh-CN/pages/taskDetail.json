@@ -72,6 +72,7 @@
     "description": "以下是此任务在MCP执行时会应用的项目上下文规则，这些规则会被自动拼接到任务内容后面。",
     "loading": "正在加载项目上下文规则...",
     "rulesLabel": "项目上下文规则",
+    "rulesCount": "{{count}} 条规则",
     "appliedRules": "应用的规则列表：",
     "empty": {
       "title": "暂无项目上下文规则",
