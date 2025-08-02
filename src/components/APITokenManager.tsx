@@ -133,16 +133,70 @@ export const APITokenManager: React.FC = () => {
           setRevealedTokenInView(data.token)
           setIsTokenRevealed(true)
           message.success(tp('apiTokens.messages.revealSuccess'))
-        } else if (data.success && data.data) {
+        } else if (data.success && data.data && data.data.token) {
           // 备用方案：如果数据结构是嵌套的
           setRevealedTokenInView(data.data.token)
           setIsTokenRevealed(true)
           message.success(tp('apiTokens.messages.revealSuccess'))
         } else {
-          message.error(data.error || tp('apiTokens.messages.revealFailed'))
+          // 显示具体的错误信息
+          const errorMessage = data.error || data.message || tp('apiTokens.messages.revealFailed')
+          message.error(errorMessage)
+
+          // 如果是旧Token的错误，显示更友好的提示
+          if (errorMessage.includes('before the encryption feature was enabled')) {
+            Modal.info({
+              title: 'Token查看功能说明',
+              content: (
+                <div>
+                  <p>此Token创建于加密功能启用之前，出于安全考虑无法显示完整内容。</p>
+                  <p>如需查看完整Token，请删除此Token并创建新的Token。</p>
+                  <p><strong>建议：</strong>创建新Token以启用查看功能。</p>
+                </div>
+              ),
+              okText: '我知道了'
+            })
+          }
         }
       } catch (error: any) {
-        message.error(tp('apiTokens.messages.revealFailedOldToken'))
+        console.error('Token reveal error:', error)
+
+        // 尝试获取详细的错误信息
+        let errorMessage = tp('apiTokens.messages.revealFailed')
+
+        // 由于fetchApiClient的限制，我们需要通过重新发起请求来获取错误详情
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'}/tokens/${token.id}/reveal`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+          })
+
+          if (!response.ok && response.status === 400) {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorData.message || errorMessage
+          }
+        } catch (fetchError) {
+          console.error('Failed to get detailed error:', fetchError)
+        }
+
+        message.error(errorMessage)
+
+        // 如果是旧Token的错误，显示更友好的提示
+        if (errorMessage.includes('before the encryption feature was enabled')) {
+          Modal.info({
+            title: 'Token查看功能说明',
+            content: (
+              <div>
+                <p>此Token创建于加密功能启用之前，出于安全考虑无法显示完整内容。</p>
+                <p>如需查看完整Token，请删除此Token并创建新的Token。</p>
+                <p><strong>建议：</strong>创建新Token以启用查看功能。</p>
+              </div>
+            ),
+            okText: '我知道了'
+          })
+        }
       } finally {
         setIsRevealingToken(false)
       }
@@ -172,16 +226,70 @@ export const APITokenManager: React.FC = () => {
       let fullToken = ''
       if (data.token) {
         fullToken = data.token
-      } else if (data.success && data.data) {
+      } else if (data.success && data.data && data.data.token) {
         fullToken = data.data.token
       } else {
-        message.error(data.error || tp('apiTokens.messages.revealFailed'))
+        // 显示具体的错误信息
+        const errorMessage = data.error || data.message || tp('apiTokens.messages.revealFailed')
+        message.error(errorMessage)
+
+        // 如果是旧Token的错误，显示更友好的提示
+        if (errorMessage.includes('before the encryption feature was enabled')) {
+          Modal.info({
+            title: 'Token复制功能说明',
+            content: (
+              <div>
+                <p>此Token创建于加密功能启用之前，出于安全考虑无法复制完整内容。</p>
+                <p>当前只能复制Token前缀：<code>{token.prefix}***</code></p>
+                <p>如需复制完整Token，请删除此Token并创建新的Token。</p>
+              </div>
+            ),
+            okText: '我知道了'
+          })
+        }
         return
       }
 
       copyToClipboard(fullToken)
     } catch (error: any) {
-      message.error(tp('apiTokens.messages.revealFailedOldToken'))
+      console.error('Token copy error:', error)
+
+      // 尝试获取详细的错误信息
+      let errorMessage = tp('apiTokens.messages.revealFailed')
+
+      // 由于fetchApiClient的限制，我们需要通过重新发起请求来获取错误详情
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'}/tokens/${token.id}/reveal`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        })
+
+        if (!response.ok && response.status === 400) {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorData.message || errorMessage
+        }
+      } catch (fetchError) {
+        console.error('Failed to get detailed error:', fetchError)
+      }
+
+      message.error(errorMessage)
+
+      // 如果是旧Token的错误，显示更友好的提示
+      if (errorMessage.includes('before the encryption feature was enabled')) {
+        Modal.info({
+          title: 'Token复制功能说明',
+          content: (
+            <div>
+              <p>此Token创建于加密功能启用之前，出于安全考虑无法复制完整内容。</p>
+              <p>当前只能复制Token前缀：<code>{token.prefix}***</code></p>
+              <p>如需复制完整Token，请删除此Token并创建新的Token。</p>
+            </div>
+          ),
+          okText: '我知道了'
+        })
+      }
     } finally {
       setIsCopyingToken(false)
     }
