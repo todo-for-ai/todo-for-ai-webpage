@@ -684,9 +684,9 @@ ${task.content || '无详细内容'}
         
       {/* 操作按钮组 - 符合UI设计亲密性原则，相关操作放在一起 */}
       <Card className={styles.actionCard}>
-        <Row gutter={[16, 16]} className={styles.actionGrid}>
+        <Row gutter={[16, 0]} align="top" wrap={false} className={styles.actionGrid}>
           {/* 任务状态快捷修改 */}
-          <Col xs={24} sm={8} md={6} className={styles.actionCol}>
+          <Col xs={24} sm={8} md={6} lg={5} xl={4} xxl={4} className={styles.actionCol}>
             <div className={styles.actionSection}>{tp('actions.taskStatus')}</div>
             <Select
               value={task.status}
@@ -702,7 +702,7 @@ ${task.content || '无详细内容'}
           </Col>
 
           {/* 任务操作 - 合并所有操作按钮 */}
-          <Col xs={24} sm={16} md={18} className={styles.actionCol}>
+          <Col xs={24} sm={16} md={18} lg={19} xl={20} xxl={20} className={styles.actionCol}>
             <div className={styles.actionSection}>{tp('actions.taskActions')}</div>
             <div className={styles.taskActionButtons}>
               {/* 创建任务按钮 - 绿色系，表示积极的创建操作 */}
