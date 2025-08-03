@@ -2,15 +2,13 @@ import { getApiBaseUrl } from '../utils/apiConfig'
 import { isTokenExpired, shouldRefreshToken } from '../utils/jwtUtils'
 import { handleTokenExpired, handleUnauthorized } from '../utils/authRedirect'
 
-// 基础配置 - 使用动态API地址
-const BASE_URL = getApiBaseUrl()
-
 // 创建fetch客户端
 class FetchApiClient {
   private baseURL: string
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL
+  constructor() {
+    // 在构造函数中动态获取API地址，确保在运行时正确检测环境
+    this.baseURL = getApiBaseUrl()
   }
 
   private async request<T>(
@@ -170,4 +168,4 @@ class FetchApiClient {
   }
 }
 
-export const fetchApiClient = new FetchApiClient(BASE_URL)
+export const fetchApiClient = new FetchApiClient()

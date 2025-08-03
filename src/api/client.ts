@@ -1,9 +1,10 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
-  baseURL: '/todo-for-ai/api/v1',
+  baseURL: getApiBaseUrl(),
   timeout: 30000,
   withCredentials: true,
   headers: {
