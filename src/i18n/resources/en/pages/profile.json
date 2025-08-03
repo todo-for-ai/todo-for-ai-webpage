@@ -123,7 +123,7 @@
       "tokenCreated": {
         "title": "Token Created Successfully",
         "saveWarning": "Please Save Your Token",
-        "saveDescription": "This is the only time your token will be displayed. Please copy and save it to a secure location immediately.",
+        "saveDescription": "Please save your token securely. You can view the complete token content anytime in the Token Management page.",
         "copyToken": "Copy Token"
       },
       "tokenDetails": {

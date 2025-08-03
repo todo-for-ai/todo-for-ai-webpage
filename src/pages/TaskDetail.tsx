@@ -33,6 +33,7 @@ import {
 } from '@ant-design/icons'
 import { useTaskStore, useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
+import TaskIdBadge from '../components/TaskIdBadge'
 import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import type { ApiResponse } from '../api/client'
@@ -630,9 +631,7 @@ ${task.content || '无详细内容'}
             {/* 任务标题行 - 单独一行，符合UI设计对齐原则 */}
             <div className={styles.taskTitleRow}>
               {/* 任务ID徽标 */}
-              <div className={styles.taskIdBadge}>
-                #{task.id}
-              </div>
+              <TaskIdBadge taskId={task.id} size="medium" />
               {/* 任务标题 - 支持省略号和tooltip */}
               <div className={styles.taskTitleContainer}>
                 <Title
@@ -728,9 +727,9 @@ ${task.content || '无详细内容'}
                   backgroundColor: '#1890ff',
                   borderColor: '#1890ff'
                 }}
-                title="基于此任务创建新任务，将预填充项目信息和部分内容"
+                title={tp('tooltips.createFromTask')}
               >
-                从此任务创建新任务
+                {tp('actions.createFromTask')}
               </Button>
               {/* 编辑任务按钮 - 橙色系，表示中性的修改操作 */}
               <Button

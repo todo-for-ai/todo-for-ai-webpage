@@ -123,7 +123,7 @@
       "tokenCreated": {
         "title": "Token创建成功",
         "saveWarning": "请保存您的Token",
-        "saveDescription": "这是您的Token唯一显示的机会，请立即复制并保存到安全的地方。",
+        "saveDescription": "请妥善保存您的Token。您可以随时在Token管理页面查看完整的Token内容。",
         "copyToken": "复制Token"
       },
       "tokenDetails": {

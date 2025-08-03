@@ -44,6 +44,7 @@ import {
 import { useProjectStore, useTaskStore, useContextRuleStore } from '../stores'
 import { KanbanBoard } from '../components/Kanban'
 import { TaskContentSummary } from '../components/TaskContentPreview'
+import TaskIdBadge from '../components/TaskIdBadge'
 import { pinsApi } from '../api/pins'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { LinkButton } from '../components/SmartLink'
@@ -577,9 +578,7 @@ const ProjectDetail = () => {
       width: 200,
       render: (text: string, record: Task) => (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-          <Tag color="blue" style={{ fontSize: '10px', padding: '2px 6px', margin: 0, flexShrink: 0 }}>
-            #{record.id}
-          </Tag>
+          <TaskIdBadge taskId={record.id} size="medium" />
           <div style={{ flex: 1, minWidth: 0, color: getTaskTitleColor(record.status) }}>
             <LinkButton
               to={`/todo-for-ai/pages/tasks/${record.id}`}

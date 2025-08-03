@@ -12,6 +12,7 @@
     "edit": "编辑",
     "delete": "删除任务",
     "createTask": "创建任务",
+    "createFromTask": "从此任务创建新任务",
     "taskStatus": "任务状态",
     "taskActions": "任务操作"
   },
@@ -106,6 +107,7 @@
     "nextTask": "下一个任务 (→键)",
     "returnToProjectTaskList": "返回项目任务列表",
     "createTask": "创建新任务 - 绿色表示积极的创建操作",
+    "createFromTask": "基于此任务创建新任务，将预填充项目信息和部分内容",
     "editTask": "编辑当前任务 - 橙色表示中性的修改操作",
     "deleteTask": "删除当前任务 - 红色表示危险的删除操作",
     "mcpPrompt": "复制MCP工具执行任务的提示词，适用于支持MCP协议的AI助手",

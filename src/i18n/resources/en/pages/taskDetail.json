@@ -12,6 +12,7 @@
     "edit": "Edit",
     "delete": "Delete Task",
     "createTask": "Create Task",
+    "createFromTask": "Create New Task from This Task",
     "taskStatus": "Task Status",
     "taskActions": "Task Actions"
   },
@@ -106,6 +107,7 @@
     "nextTask": "Next Task (→ key)",
     "returnToProjectTaskList": "Return to Project Task List",
     "createTask": "Create new task - Green indicates positive creation action",
+    "createFromTask": "Create new task based on this task, will pre-fill project information and some content",
     "editTask": "Edit current task - Orange indicates neutral modification action",
     "deleteTask": "Delete current task - Red indicates dangerous deletion action",
     "mcpPrompt": "Copy MCP tool execution task prompt, suitable for AI assistants that support MCP protocol",

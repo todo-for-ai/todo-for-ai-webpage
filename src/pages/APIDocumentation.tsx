@@ -778,7 +778,7 @@ const APIDocumentation: React.FC = () => {
 
             <Alert
               message="重要提醒"
-              description="完整的 Token 只在创建时返回一次，请妥善保存。后续查询只会返回 Token 前缀。"
+              description="创建Token后会返回完整的Token内容，请妥善保存。您也可以随时通过Token管理页面查看完整的Token。"
               type="warning"
               style={{ marginTop: '16px' }}
               showIcon
