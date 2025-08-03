@@ -1,0 +1,81 @@
+{
+  "title": "Custom Prompts",
+  "subtitle": "Customize your AI prompt templates to improve efficiency",
+  "pageTitle": "Custom Prompts - Todo for AI",
+  "description": "You can set prompts for project task execution and copy buttons on task detail pages.",
+  "tabs": {
+    "projectPrompts": "Project Task Execution Prompts",
+    "taskPrompts": "Task Detail Page Prompt Buttons"
+  },
+  "projectPrompts": {
+    "title": "Project Task Execution Prompts",
+    "description": "Here you can customize the content copied by the \\\"Copy AI Prompt\\\" button on project detail pages. Supports variables like ${project.name}.",
+    "placeholder": "Please enter your custom prompt template...",
+    "defaultTemplate": "Please help me execute all pending tasks in project \\\"${project.name}\\\":\\n\\n**Project Information**:\\n- Project Name: ${project.name}\\n- Project Description: ${project.description}\\n- GitHub Repository: ${project.github_repo}\\n- Project Context: ${project.context}\\n\\n**Number of Tasks to Execute**: ${tasks.count}\\n\\n**Execution Guidelines**:\\n1. Please use MCP tools to connect to Todo system: ${system.url}\\n2. Use get_project_tasks_by_name tool to get project task list:\\n   - Project Name: \\\"${project.name}\\\"\\n   - Status Filter: [\\\"todo\\\", \\\"in_progress\\\", \\\"review\\\"]\\n3. Execute tasks one by one in order of creation time\\n4. For each task, use get_task_by_id to get detailed information\\n5. After completing a task, use submit_task_feedback to submit feedback\\n6. Continue to the next task until all tasks are completed\\n\\n**Task Overview**:\\n${tasks.list}\\n\\nPlease start executing the tasks in this project and submit feedback after each task is completed."
+  },
+  "taskPrompts": {
+    "title": "Task Detail Page Prompt Buttons",
+    "description": "Here you can customize the copy prompt buttons on task detail pages, including the number of buttons, text, and copied content.",
+    "addButton": "Add Button",
+    "buttonConfig": {
+      "title": "Button Configuration",
+      "name": "Button Name",
+      "namePlaceholder": "Please enter the button display text",
+      "content": "Copy Content",
+      "contentPlaceholder": "Please enter the prompt content to copy when the button is clicked...",
+      "defaultContent": "Please help me execute the following task:\\n\\n**Task Information**:\\n- Task ID: ${task.id}\\n- Task Title: ${task.title}\\n- Task Content: ${task.content}\\n- Task Status: ${task.status}\\n- Priority: ${task.priority}\\n- Created At: ${task.created_at}\\n- Due Date: ${task.due_date}\\n- Estimated Hours: ${task.estimated_hours}\\n- Tags: ${task.tags}\\n- Related Files: ${task.related_files}\\n\\n**Project Information**:\\n- Project Name: ${project.name}\\n- Project Description: ${project.description}\\n\\nPlease execute this task and submit feedback."
+    }
+  },
+  "variables": {
+    "title": "Supported Variables",
+    "viewDocs": "View Variable Documentation",
+    "project": {
+      "title": "Project Variables",
+      "name": "Project Name",
+      "description": "Project Description",
+      "github_repo": "GitHub Repository URL",
+      "context": "Project Context",
+      "color": "Project Color"
+    },
+    "task": {
+      "title": "Task Variables",
+      "id": "Task ID",
+      "title": "Task Title",
+      "content": "Task Content",
+      "status": "Task Status",
+      "priority": "Priority",
+      "created_at": "Created At",
+      "due_date": "Due Date",
+      "estimated_hours": "Estimated Hours",
+      "tags": "Tag List",
+      "related_files": "Related Files"
+    },
+    "system": {
+      "title": "System Variables",
+      "url": "System URL",
+      "current_time": "Current Time"
+    },
+    "tasks": {
+      "title": "Task List Variables",
+      "count": "Task Count",
+      "list": "Task List"
+    }
+  },
+  "buttons": {
+    "save": "Save",
+    "reset": "Reset",
+    "preview": "Preview",
+    "copy": "Copy",
+    "edit": "Edit",
+    "delete": "Delete",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down"
+  },
+  "messages": {
+    "saveSuccess": "Saved successfully",
+    "resetConfirm": "Are you sure you want to reset to the default template?",
+    "deleteConfirm": "Are you sure you want to delete this button?",
+    "copySuccess": "Copied to clipboard",
+    "previewTitle": "Preview"
+  }
+}

@@ -48,6 +48,7 @@
     "help": "帮助中心",
     "logout": "退出登录",
     "contextRules": "全局上下文规则",
+    "customPrompts": "自定义提示词",
     "pinManager": "管理Pin项目",
     "userManagement": "用户管理",
     "admin": "管理员",

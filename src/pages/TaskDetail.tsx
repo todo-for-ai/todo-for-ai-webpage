@@ -37,6 +37,8 @@ import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import type { ApiResponse } from '../api/client'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
+import { customPromptsService } from '../services/customPromptsService'
+import { type RenderContext } from '../utils/promptRenderer'
 import dayjs from 'dayjs'
 import styles from './TaskDetail.module.css'
 
@@ -51,6 +53,7 @@ const TaskDetail: React.FC = () => {
   const [projectTasks, setProjectTasks] = useState<Task[]>([])
   const [projectContext, setProjectContext] = useState<ApiResponse<BuildContextResponse> | null>(null)
   const [contextLoading, setContextLoading] = useState(false)
+  const [customButtons, setCustomButtons] = useState<any[]>([])
 
   const { getTask, deleteTask, fetchTasksByParams } = useTaskStore()
   const { projects, fetchProjects } = useProjectStore()
@@ -67,6 +70,12 @@ const TaskDetail: React.FC = () => {
   useEffect(() => {
     fetchProjects()
   }, [fetchProjects])
+
+  // 加载自定义按钮配置
+  useEffect(() => {
+    const buttons = customPromptsService.getTaskPromptButtons()
+    setCustomButtons(buttons)
+  }, [])
 
   // 设置网页标题
   useEffect(() => {
@@ -272,25 +281,88 @@ const TaskDetail: React.FC = () => {
     }
   }
 
-  // 复制MCP执行任务的提示词
-  const handleCopyMCPPrompt = () => {
+  // 复制自定义提示词
+  const handleCopyCustomPrompt = (buttonId: string, buttonName: string) => {
     if (!task) return
 
-    const prompt = `请使用todo-for-ai MCP工具获取任务ID为${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`
+    try {
+      const project = projects.find(p => p.id === task.project_id)
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      message.success(tp('messages.mcpPromptCopied'))
-    }).catch(() => {
-      message.error(tp('messages.copyFailedManual'))
-    })
+      // 创建渲染上下文
+      const context: RenderContext = {
+        project: project ? {
+          id: project.id,
+          name: project.name,
+          description: project.description || '',
+          github_repo: project.github_url || '',
+          context: project.project_context || '',
+          color: project.color || '#1890ff',
+          status: 'active',
+          created_at: project.created_at,
+          updated_at: project.updated_at
+        } : undefined,
+        task: {
+          id: task.id,
+          title: task.title,
+          content: task.content || '',
+          status: task.status,
+          priority: task.priority,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
+          due_date: task.due_date || '',
+          estimated_hours: (task as any).estimated_hours || 0,
+          tags: (task as any).tags || [],
+          related_files: (task as any).related_files || [],
+          assignee: (task as any).assignee || '',
+          project_id: task.project_id
+        },
+        system: {
+          url: 'https://todo4ai.org',
+          current_time: new Date().toISOString()
+        }
+      }
+
+      // 使用自定义提示词服务渲染提示词
+      const prompt = customPromptsService.renderTaskPrompt(buttonId, context)
+
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(`${buttonName}提示词已复制到剪贴板`)
+      }).catch(() => {
+        message.error('复制失败，请手动复制')
+      })
+    } catch (error) {
+      console.error('Failed to copy custom prompt:', error)
+      message.error('复制失败，请稍后重试')
+    }
   }
 
-  // 复制AI助手执行任务的详细提示词
-  const handleCopyAIPrompt = () => {
-    if (!task) return
+  // 复制MCP执行任务的提示词（保持向后兼容）
+  const handleCopyMCPPrompt = () => {
+    const mcpButton = customButtons.find(b => b.id === 'mcp-execution')
+    if (mcpButton) {
+      handleCopyCustomPrompt('mcp-execution', mcpButton.name)
+    } else {
+      // 回退到原始实现
+      if (!task) return
+      const prompt = `请使用todo-for-ai MCP工具获取任务ID为${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(tp('messages.mcpPromptCopied'))
+      }).catch(() => {
+        message.error(tp('messages.copyFailedManual'))
+      })
+    }
+  }
 
-    const project = projects.find(p => p.id === task.project_id)
-    const prompt = `请帮我执行以下任务，这是一个完整的任务信息：
+  // 复制AI助手执行任务的详细提示词（保持向后兼容）
+  const handleCopyAIPrompt = () => {
+    const executeButton = customButtons.find(b => b.id === 'execute-task')
+    if (executeButton) {
+      handleCopyCustomPrompt('execute-task', executeButton.name)
+    } else {
+      // 回退到原始实现
+      if (!task) return
+      const project = projects.find(p => p.id === task.project_id)
+      const prompt = `请帮我执行以下任务，这是一个完整的任务信息：
 
 **项目信息**：
 - 项目名称：${project?.name || '未知项目'}
@@ -306,18 +378,23 @@ ${task.content || '无详细内容'}
 **执行要求**：
 请仔细阅读任务内容，按照要求完成任务，并在完成后提供详细的执行报告和结果说明。`
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      message.success(tp('messages.aiPromptCopied'))
-    }).catch(() => {
-      message.error(tp('messages.copyFailed'))
-    })
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(tp('messages.aiPromptCopied'))
+      }).catch(() => {
+        message.error(tp('messages.copyFailed'))
+      })
+    }
   }
 
-  // 复制任务完成确认提示词
+  // 复制任务完成确认提示词（保持向后兼容）
   const handleCopyTaskCompletionPrompt = () => {
-    if (!task) return
-
-    const prompt = `请检查并确认任务ID为${task.id}的任务执行状态：
+    const completionButton = customButtons.find(b => b.id === 'completion-check')
+    if (completionButton) {
+      handleCopyCustomPrompt('completion-check', completionButton.name)
+    } else {
+      // 回退到原始实现
+      if (!task) return
+      const prompt = `请检查并确认任务ID为${task.id}的任务执行状态：
 
 **任务信息**：
 - 任务ID：${task.id}
@@ -341,11 +418,12 @@ ${task.content || '无详细内容'}
 
 请开始检查并执行相应操作。`
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      message.success(tp('messages.completionPromptCopied'))
-    }).catch(() => {
-      message.error(tp('messages.copyFailed'))
-    })
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(tp('messages.completionPromptCopied'))
+      }).catch(() => {
+        message.error(tp('messages.copyFailed'))
+      })
+    }
   }
 
   // 复制快速完成任务提示词
@@ -693,92 +771,99 @@ ${task.content || '无详细内容'}
         </Row>
       </Card>
 
-      {/* 复制提示词面板 - 符合UI设计重复原则，统一按钮样式 */}
+      {/* 复制提示词面板 - 动态显示自定义按钮 */}
       <Card className={styles.actionCard}>
         <Title level={4} style={{ marginBottom: '16px', color: '#1890ff' }}>
           <CopyOutlined style={{ marginRight: '8px' }} />
           {tp('copyPrompts.title')}
         </Title>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.mcpExecution')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyMCPPrompt}
-              block
-              title={tp('tooltips.mcpPrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.mcpPromptButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.mcpPromptDesc')}
-            </div>
-          </Col>
+          {customButtons.map((button, index) => (
+            <Col xs={24} sm={12} md={6} key={button.id}>
+              <div className={styles.actionSection}>{button.name}</div>
+              <Button
+                type="primary"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopyCustomPrompt(button.id, button.name)}
+                block
+                title={`复制${button.name}提示词`}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
+              >
+                {button.name}
+              </Button>
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                点击复制{button.name}提示词到剪贴板
+              </div>
+            </Col>
+          ))}
 
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.aiExecution')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyAIPrompt}
-              block
-              title={tp('tooltips.aiPrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.aiPromptButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.aiPromptDesc')}
-            </div>
-          </Col>
+          {/* 如果没有自定义按钮，显示默认按钮 */}
+          {customButtons.length === 0 && (
+            <>
+              <Col xs={24} sm={12} md={6}>
+                <div className={styles.actionSection}>{tp('copyPrompts.mcpExecution')}</div>
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyMCPPrompt}
+                  block
+                  title={tp('tooltips.mcpPrompt')}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  {tp('copyPrompts.mcpPromptButton')}
+                </Button>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {tp('copyPrompts.mcpPromptDesc')}
+                </div>
+              </Col>
 
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.taskCompletion')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyTaskCompletionPrompt}
-              block
-              title={tp('tooltips.completionPrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.completionPromptButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.completionPromptDesc')}
-            </div>
-          </Col>
+              <Col xs={24} sm={12} md={6}>
+                <div className={styles.actionSection}>{tp('copyPrompts.aiExecution')}</div>
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyAIPrompt}
+                  block
+                  title={tp('tooltips.aiPrompt')}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  {tp('copyPrompts.aiPromptButton')}
+                </Button>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {tp('copyPrompts.aiPromptDesc')}
+                </div>
+              </Col>
 
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.quickComplete')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyQuickCompletePrompt}
-              block
-              title={tp('tooltips.quickCompletePrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.quickCompleteButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.quickCompleteDesc')}
-            </div>
-          </Col>
+              <Col xs={24} sm={12} md={6}>
+                <div className={styles.actionSection}>{tp('copyPrompts.taskCompletion')}</div>
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyTaskCompletionPrompt}
+                  block
+                  title={tp('tooltips.completionPrompt')}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  {tp('copyPrompts.completionPromptButton')}
+                </Button>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {tp('copyPrompts.completionPromptDesc')}
+                </div>
+              </Col>
+            </>
+          )}
         </Row>
       </Card>
 

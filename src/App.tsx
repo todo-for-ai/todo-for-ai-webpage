@@ -19,7 +19,9 @@ import {
   CreateContextRule,
   RuleMarketplace,
   MCPInstallation,
-  APIDocumentation
+  APIDocumentation,
+  CustomPrompts,
+  VariableDocs
 } from './pages'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
@@ -85,6 +87,8 @@ function App() {
               <Route path="rule-marketplace" element={<RuleMarketplace />} />
               <Route path="mcp-installation" element={<MCPInstallation />} />
               <Route path="api-documentation" element={<APIDocumentation />} />
+              <Route path="custom-prompts" element={<CustomPrompts />} />
+              <Route path="variable-docs" element={<VariableDocs />} />
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />
               <Route path="user-management" element={<UserManagement />} />

@@ -51,6 +51,8 @@ import type { Task } from '../api/tasks'
 import type { ContextRule } from '../api/contextRules'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
 import { getMcpServerUrl } from '../utils/apiConfig'
+import { customPromptsService } from '../services/customPromptsService'
+import { formatTasksList, type RenderContext } from '../utils/promptRenderer'
 
 const { Title, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -467,46 +469,45 @@ const ProjectDetail = () => {
 
     // 根据是否有选中任务来决定要执行的任务
     let targetTasks: Task[]
-    let promptTitle: string
 
     if (selectedTaskIds.length > 0) {
       // 如果有选中任务，只处理选中的任务
       targetTasks = tasks.filter(task => selectedTaskIds.includes(task.id))
-      promptTitle = `请帮我执行项目"${currentProject.name}"中的指定任务：`
     } else {
       // 如果没有选中任务，处理所有待执行任务
       targetTasks = tasks.filter(task =>
         ['todo', 'in_progress', 'review'].includes(task.status)
       )
-      promptTitle = `请帮我执行项目"${currentProject.name}"中的所有待办任务：`
     }
 
-    const prompt = `${promptTitle}
+    // 创建渲染上下文
+    const context: RenderContext = {
+      project: {
+        id: currentProject.id,
+        name: currentProject.name,
+        description: currentProject.description || '',
+        github_repo: currentProject.github_url || '',
+        context: currentProject.project_context || '',
+        color: currentProject.color || '#1890ff',
+        status: 'active',
+        created_at: currentProject.created_at,
+        updated_at: currentProject.updated_at
+      },
+      system: {
+        url: getMcpServerUrl(),
+        current_time: new Date().toISOString()
+      },
+      tasks: {
+        count: targetTasks.length,
+        list: formatTasksList(targetTasks),
+        pending_count: targetTasks.filter(t => t.status === 'todo').length,
+        in_progress_count: targetTasks.filter(t => t.status === 'in_progress').length,
+        review_count: targetTasks.filter(t => t.status === 'review').length
+      }
+    }
 
-**项目信息**:
-- 项目名称: ${currentProject.name}
-- 项目描述: ${currentProject.description || '无'}
-- GitHub仓库: ${currentProject.github_url || '无'}
-- 项目上下文: ${currentProject.project_context || '无'}
-
-**${selectedTaskIds.length > 0 ? '指定' : '待执行'}任务数量**: ${targetTasks.length}个
-
-**执行指引**:
-1. 请使用MCP工具连接到Todo系统: ${getMcpServerUrl()}
-2. 使用get_project_tasks_by_name工具获取项目任务列表:
-   - 项目名称: "${currentProject.name}"
-   - 状态筛选: ["todo", "in_progress", "review"]
-3. 按照任务的创建时间顺序，逐个执行任务
-4. 对于每个任务，使用get_task_by_id获取详细信息
-5. 完成任务后，使用submit_task_feedback提交反馈
-6. 继续执行下一个任务，直到所有任务完成
-
-**任务概览**:
-${targetTasks.length > 0 ? targetTasks.map((task, index) =>
-  `${index + 1}. [${task.priority === 'low' ? '低' : task.priority === 'medium' ? '中' : task.priority === 'high' ? '高' : '紧急'}] ${task.title} (ID: ${task.id})`
-).join('\n') : '暂无待执行任务'}
-
-请开始执行这个项目的任务，并在每个任务完成后提交反馈。`
+    // 使用自定义提示词服务渲染提示词
+    const prompt = customPromptsService.renderProjectPrompt(context)
 
     navigator.clipboard.writeText(prompt).then(() => {
       const message_text = selectedTaskIds.length > 0

@@ -1,0 +1,81 @@
+{
+  "title": "自定义提示词",
+  "subtitle": "自定义您的AI提示词模板，提升工作效率",
+  "pageTitle": "自定义提示词 - Todo for AI",
+  "description": "您可以设置项目执行任务的提示词，以及任务详情页面的复制按钮。",
+  "tabs": {
+    "projectPrompts": "项目执行任务提示词",
+    "taskPrompts": "任务详情页提示词按钮"
+  },
+  "projectPrompts": {
+    "title": "项目执行任务提示词",
+    "description": "在这里您可以自定义项目详情页面\"复制AI提示词\"按钮复制的内容。支持使用变量如 ${project.name} 等。",
+    "placeholder": "请输入您的自定义提示词模板...",
+    "defaultTemplate": "请帮我执行项目\\\"${project.name}\\\"中的所有待办任务：\\n\\n**项目信息**:\\n- 项目名称: ${project.name}\\n- 项目描述: ${project.description}\\n- GitHub仓库: ${project.github_repo}\\n- 项目上下文: ${project.context}\\n\\n**待执行任务数量**: ${tasks.count}个\\n\\n**执行指引**:\\n1. 请使用MCP工具连接到Todo系统: ${system.url}\\n2. 使用get_project_tasks_by_name工具获取项目任务列表:\\n   - 项目名称: \\\"${project.name}\\\"\\n   - 状态筛选: [\\\"todo\\\", \\\"in_progress\\\", \\\"review\\\"]\\n3. 按照任务的创建时间顺序，逐个执行任务\\n4. 对于每个任务，使用get_task_by_id获取详细信息\\n5. 完成任务后，使用submit_task_feedback提交反馈\\n6. 继续执行下一个任务，直到所有任务完成\\n\\n**任务概览**:\\n${tasks.list}\\n\\n请开始执行这个项目的任务，并在每个任务完成后提交反馈。"
+  },
+  "taskPrompts": {
+    "title": "任务详情页提示词按钮",
+    "description": "在这里您可以自定义任务详情页面的复制提示词按钮，包括按钮的数量、文案和复制的内容。",
+    "addButton": "添加按钮",
+    "buttonConfig": {
+      "title": "按钮配置",
+      "name": "按钮名称",
+      "namePlaceholder": "请输入按钮显示的文案",
+      "content": "复制内容",
+      "contentPlaceholder": "请输入点击按钮后复制的提示词内容...",
+      "defaultContent": "请帮我执行以下任务：\\n\\n**任务信息**:\\n- 任务ID: ${task.id}\\n- 任务标题: ${task.title}\\n- 任务内容: ${task.content}\\n- 任务状态: ${task.status}\\n- 优先级: ${task.priority}\\n- 创建时间: ${task.created_at}\\n- 截止时间: ${task.due_date}\\n- 预估工时: ${task.estimated_hours}\\n- 标签: ${task.tags}\\n- 相关文件: ${task.related_files}\\n\\n**项目信息**:\\n- 项目名称: ${project.name}\\n- 项目描述: ${project.description}\\n\\n请执行这个任务并提交反馈。"
+    }
+  },
+  "variables": {
+    "title": "支持的变量",
+    "viewDocs": "查看变量文档",
+    "project": {
+      "title": "项目变量",
+      "name": "项目名称",
+      "description": "项目描述",
+      "github_repo": "GitHub仓库地址",
+      "context": "项目上下文",
+      "color": "项目颜色"
+    },
+    "task": {
+      "title": "任务变量",
+      "id": "任务ID",
+      "title": "任务标题",
+      "content": "任务内容",
+      "status": "任务状态",
+      "priority": "优先级",
+      "created_at": "创建时间",
+      "due_date": "截止时间",
+      "estimated_hours": "预估工时",
+      "tags": "标签列表",
+      "related_files": "相关文件"
+    },
+    "system": {
+      "title": "系统变量",
+      "url": "系统URL",
+      "current_time": "当前时间"
+    },
+    "tasks": {
+      "title": "任务列表变量",
+      "count": "任务数量",
+      "list": "任务列表"
+    }
+  },
+  "buttons": {
+    "save": "保存",
+    "reset": "重置",
+    "preview": "预览",
+    "copy": "复制",
+    "edit": "编辑",
+    "delete": "删除",
+    "moveUp": "上移",
+    "moveDown": "下移"
+  },
+  "messages": {
+    "saveSuccess": "保存成功",
+    "resetConfirm": "确定要重置为默认模板吗？",
+    "deleteConfirm": "确定要删除这个按钮吗？",
+    "copySuccess": "已复制到剪贴板",
+    "previewTitle": "预览效果"
+  }
+}
