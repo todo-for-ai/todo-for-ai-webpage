@@ -55,6 +55,12 @@
     "online": "在线",
     "offline": "离线"
   },
+  "kanban": {
+    "todo": "待办",
+    "in_progress": "进行中",
+    "review": "待审核",
+    "done": "已完成"
+  },
   "time": {
     "now": "刚刚",
     "today": "今天",

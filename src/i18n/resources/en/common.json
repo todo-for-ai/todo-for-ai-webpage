@@ -55,6 +55,12 @@
     "online": "Online",
     "offline": "Offline"
   },
+  "kanban": {
+    "todo": "To Do",
+    "in_progress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  },
   "time": {
     "now": "Just now",
     "today": "Today",
