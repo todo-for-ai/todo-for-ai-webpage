@@ -2,7 +2,8 @@ import React from 'react'
 import { Select } from 'antd'
 import { GlobalOutlined } from '@ant-design/icons'
 import { useTranslation } from '../i18n/hooks/useTranslation'
-import { changeLanguage, getLanguageDisplayName, type SupportedLanguage } from '../i18n'
+import { getLanguageDisplayName, type SupportedLanguage } from '../i18n'
+import { useLanguage } from '../contexts/LanguageContext'
 
 const { Option } = Select
 
@@ -12,26 +13,31 @@ interface LanguageSwitchProps {
   showIcon?: boolean
 }
 
-const LanguageSwitch: React.FC<LanguageSwitchProps> = ({ 
-  style, 
-  size = 'middle', 
-  showIcon = true 
+const LanguageSwitch: React.FC<LanguageSwitchProps> = ({
+  style,
+  size = 'middle',
+  showIcon = true
 }) => {
-  const { language } = useTranslation()
+  const { language: currentLanguage, setLanguage, isLoading } = useLanguage()
 
   const handleLanguageChange = async (newLanguage: SupportedLanguage) => {
-    await changeLanguage(newLanguage)
-    // 刷新页面以确保所有组件都使用新语言
-    window.location.reload()
+    try {
+      await setLanguage(newLanguage)
+      // 不需要手动刷新页面，LanguageContext会处理语言切换
+    } catch (error) {
+      console.error('Failed to change language:', error)
+    }
   }
 
   return (
     <Select
-      value={language}
+      value={currentLanguage}
       onChange={handleLanguageChange}
       style={{ minWidth: 120, ...style }}
       size={size}
       suffixIcon={showIcon ? <GlobalOutlined /> : undefined}
+      loading={isLoading}
+      disabled={isLoading}
     >
       <Option value="zh-CN">{getLanguageDisplayName('zh-CN')}</Option>
       <Option value="en">{getLanguageDisplayName('en')}</Option>

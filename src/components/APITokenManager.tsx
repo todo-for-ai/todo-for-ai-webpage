@@ -42,6 +42,9 @@ interface APIToken {
 }
 
 export const APITokenManager: React.FC = () => {
+  console.log('🔍 APITokenManager component rendered!')
+  console.log('🔍 Component is starting...')
+
   const [tokens, setTokens] = useState<APIToken[]>([])
   const [loading, setLoading] = useState(false)
   const [createModalVisible, setCreateModalVisible] = useState(false)
@@ -55,18 +58,20 @@ export const APITokenManager: React.FC = () => {
   // 用于显示加载状态
   const [isRevealingToken, setIsRevealingToken] = useState(false)
   const [isCopyingToken, setIsCopyingToken] = useState(false)
+  // 用于跟踪哪个token正在复制（表格中的复制操作）
+  const [copyingTokenId, setCopyingTokenId] = useState<number | null>(null)
   const [form] = Form.useForm()
   const { tp } = usePageTranslation('profile')
-
-  useEffect(() => {
-    fetchTokens()
-  }, [])
 
   const fetchTokens = async () => {
     setLoading(true)
     try {
-      const data = await apiClient.get<{ tokens: any[] }>('/tokens')
-      const tokens = data?.tokens || []
+      const response = await apiClient.get<{ items: any[], pagination: any }>('/tokens')
+      console.log('🔍 fetchTokens response:', response)
+      console.log('🔍 response:', response)
+      // 修复数据提取逻辑：直接从response获取items，而不是response.data
+      const tokens = response?.items || []
+      console.log('🔍 extracted tokens:', tokens)
       setTokens(tokens)
     } catch (error: any) {
       message.error(tp('apiTokens.messages.fetchFailed'))
@@ -75,6 +80,12 @@ export const APITokenManager: React.FC = () => {
       setLoading(false)
     }
   }
+
+  // 使用正确的useEffect来在组件挂载时调用fetchTokens
+  useEffect(() => {
+    console.log('🔍 useEffect triggered, calling fetchTokens...')
+    fetchTokens()
+  }, [])
 
   const handleCreateToken = async (values: any) => {
     try {
@@ -189,18 +200,19 @@ export const APITokenManager: React.FC = () => {
     }
   }
 
-  const handleCopyTokenPrefix = (token: APIToken) => {
-    // 复制Token前缀（这是我们能安全显示的部分）
-    copyToClipboard(`${token.prefix}***`)
-    message.info(tp('apiTokens.messages.copyPrefixSuccess'))
-  }
+
 
   // 复制完整Token的函数
-  const handleCopyFullToken = async (token: APIToken) => {
-    setIsCopyingToken(true)
+  const handleCopyFullToken = async (token: APIToken, fromTable = false) => {
+    if (fromTable) {
+      setCopyingTokenId(token.id)
+    } else {
+      setIsCopyingToken(true)
+    }
+
     try {
       // 如果已经显示了完整token，直接复制
-      if (isTokenRevealed && revealedTokenInView) {
+      if (isTokenRevealed && revealedTokenInView && !fromTable) {
         copyToClipboard(revealedTokenInView)
         return
       }
@@ -266,7 +278,11 @@ export const APITokenManager: React.FC = () => {
         })
       }
     } finally {
-      setIsCopyingToken(false)
+      if (fromTable) {
+        setCopyingTokenId(null)
+      } else {
+        setIsCopyingToken(false)
+      }
     }
   }
 
@@ -368,12 +384,13 @@ export const APITokenManager: React.FC = () => {
               {tp('apiTokens.actions.view')}
             </Button>
           </Tooltip>
-          <Tooltip title={tp('apiTokens.actions.copyPrefix')}>
+          <Tooltip title={tp('apiTokens.actions.copyToken')}>
             <Button
               type="text"
               icon={<CopyOutlined />}
               size="small"
-              onClick={() => handleCopyTokenPrefix(record)}
+              loading={copyingTokenId === record.id}
+              onClick={() => handleCopyFullToken(record, true)}
             >
               {tp('apiTokens.actions.copy')}
             </Button>
@@ -552,6 +569,7 @@ export const APITokenManager: React.FC = () => {
           setRevealedTokenInView('')
           setIsRevealingToken(false)
           setIsCopyingToken(false)
+          setCopyingTokenId(null)
         }}
         footer={[
           <Button key="close" onClick={() => {
@@ -561,6 +579,7 @@ export const APITokenManager: React.FC = () => {
             setRevealedTokenInView('')
             setIsRevealingToken(false)
             setIsCopyingToken(false)
+            setCopyingTokenId(null)
           }}>
             {tp('buttons.close')}
           </Button>

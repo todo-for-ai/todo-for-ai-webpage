@@ -641,7 +641,7 @@ const ProjectDetail = () => {
       },
     },
     {
-      title: '任务内容',
+      title: tp('tasks.table.columns.content'),
       dataIndex: 'content',
       key: 'content',
       width: 400,
@@ -1140,7 +1140,7 @@ const ProjectDetail = () => {
                     <Option value="asc">{tp('tasks.filters.sortOrder.asc')}</Option>
                   </Select>
                 </Col>
-                <Col span={4}>
+                <Col span={3}>
                   <Search
                     size="small"
                     placeholder={tp('tasks.filters.search.placeholder')}
@@ -1164,20 +1164,16 @@ const ProjectDetail = () => {
                     {tp('buttons.refreshTasks')}
                   </Button>
                 </Col>
-              </Row>
-
-              {/* 快捷状态选择按钮 */}
-              <Row style={{ marginTop: '6px', paddingLeft: '12px' }}>
-                <Col span={24}>
-                  <Space size={4}>
-                    <span style={{ fontSize: '11px', color: '#666' }}>快捷选择:</span>
+                <Col span={5}>
+                  <Space size={4} align="center">
+                    <span style={{ fontSize: '11px', color: '#666', lineHeight: '22px' }}>{tp('tasks.filters.quickSelect.label')}</span>
                     <Button
                       size="small"
                       type={JSON.stringify(taskFilters.status) === JSON.stringify(['todo', 'in_progress', 'review']) ? 'primary' : 'default'}
                       onClick={() => handleFilterChange('status', ['todo', 'in_progress', 'review'])}
                       style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
                     >
-                      待处理
+                      {tp('tasks.filters.quickSelect.pending')}
                     </Button>
                     <Button
                       size="small"
@@ -1185,7 +1181,7 @@ const ProjectDetail = () => {
                       onClick={() => handleFilterChange('status', ['done'])}
                       style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
                     >
-                      已完成
+                      {tp('tasks.filters.quickSelect.completed')}
                     </Button>
                     <Button
                       size="small"
@@ -1193,15 +1189,7 @@ const ProjectDetail = () => {
                       onClick={() => handleFilterChange('status', [])}
                       style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
                     >
-                      全部
-                    </Button>
-                    <Button
-                      size="small"
-                      type={JSON.stringify(taskFilters.status) === JSON.stringify(['todo', 'in_progress', 'review', 'done', 'cancelled']) ? 'primary' : 'default'}
-                      onClick={() => handleFilterChange('status', ['todo', 'in_progress', 'review', 'done', 'cancelled'])}
-                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
-                    >
-                      所有状态
+                      {tp('tasks.filters.quickSelect.all')}
                     </Button>
                   </Space>
                 </Col>

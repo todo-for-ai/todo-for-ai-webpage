@@ -84,6 +84,12 @@
       },
       "search": {
         "placeholder": "搜索任务标题或描述"
+      },
+      "quickSelect": {
+        "label": "快捷选择:",
+        "pending": "待处理",
+        "completed": "已完成",
+        "all": "全部"
       }
     },
     "table": {
@@ -91,6 +97,7 @@
         "title": "任务标题",
         "status": "状态",
         "lastModified": "最后修改时间",
+        "content": "任务内容",
         "actions": "操作"
       },
       "actions": {

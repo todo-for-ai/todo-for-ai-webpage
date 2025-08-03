@@ -84,6 +84,12 @@
       },
       "search": {
         "placeholder": "Search task title or description"
+      },
+      "quickSelect": {
+        "label": "Quick Select:",
+        "pending": "Pending",
+        "completed": "Completed",
+        "all": "All"
       }
     },
     "table": {
@@ -91,6 +97,7 @@
         "title": "Task Title",
         "status": "Status",
         "lastModified": "Last Modified",
+        "content": "Task Content",
         "actions": "Actions"
       },
       "actions": {

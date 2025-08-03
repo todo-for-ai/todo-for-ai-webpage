@@ -18,8 +18,9 @@ export const useTranslation = (namespace?: string) => {
     // 当前语言
     language: i18n.language as SupportedLanguage,
 
-    // 切换语言
-    changeLanguage: (language: SupportedLanguage) => i18n.changeLanguage(language),
+    // 注意：不要直接使用这个方法切换语言！
+    // 请使用 LanguageContext 的 setLanguage 方法来确保语言设置正确保存
+    // changeLanguage: (language: SupportedLanguage) => i18n.changeLanguage(language),
 
     // 便利的翻译函数
     tc: (key: string, options?: any) => t(`common:${key}`, options) as string,
