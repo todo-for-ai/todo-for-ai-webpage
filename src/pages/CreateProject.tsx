@@ -213,7 +213,7 @@ const CreateProject = () => {
 
     setImportLoading(true)
     try {
-      // 调用GitHub API获取仓库信息
+      // 调用外部GitHub API获取仓库信息（不使用apiClient，因为这是外部API）
       const response = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`)
 
       if (!response.ok) {

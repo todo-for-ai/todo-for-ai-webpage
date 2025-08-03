@@ -1,4 +1,4 @@
-import { fetchApiClient } from './fetchClient'
+import { apiClient } from './client'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -108,60 +108,57 @@ export class TasksApi {
     }
 
     const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return fetchApiClient.get<PaginatedResponse<Task>>(url)
+    return apiClient.get<PaginatedResponse<Task>>(url)
   }
 
   // 获取单个任务
   async getTask(id: number) {
-    return fetchApiClient.get<Task>(`/tasks/${id}`)
+    return apiClient.get<Task>(`/tasks/${id}`)
   }
 
   // 创建任务
   async createTask(data: CreateTaskData) {
-    return fetchApiClient.post<Task>('/tasks', data)
+    return apiClient.post<Task>('/tasks', data)
   }
 
   // 更新任务
   async updateTask(id: number, data: UpdateTaskData) {
-    return fetchApiClient.put<Task>(`/tasks/${id}`, data)
+    return apiClient.put<Task>(`/tasks/${id}`, data)
   }
 
   // 删除任务
   async deleteTask(id: number) {
-    return fetchApiClient.delete(`/tasks/${id}`)
+    return apiClient.delete(`/tasks/${id}`)
   }
 
   // 更新任务状态
   async updateTaskStatus(id: number, status: Task['status']) {
-    return fetchApiClient.put<Task>(`/tasks/${id}`, { status })
+    return apiClient.put<Task>(`/tasks/${id}`, { status })
   }
 
   // 更新任务进度
   async updateTaskProgress(id: number, completion_rate: number) {
-    return fetchApiClient.put<Task>(`/tasks/${id}`, { completion_rate })
+    return apiClient.put<Task>(`/tasks/${id}`, { completion_rate })
   }
-
-
 
   // 获取任务历史
   async getTaskHistory(id: number) {
-    return fetchApiClient.get(`/tasks/${id}/history`)
+    return apiClient.get(`/tasks/${id}/history`)
   }
 
   // 获取任务附件
   async getTaskAttachments(id: number) {
-    return fetchApiClient.get(`/tasks/${id}/attachments`)
+    return apiClient.get(`/tasks/${id}/attachments`)
   }
 
   // 上传任务附件
-  async uploadTaskAttachment(_id: number, _file: File, _onProgress?: (progress: number) => void) {
-    // TODO: 实现文件上传功能
-    throw new Error('File upload not implemented with fetch client')
+  async uploadTaskAttachment(id: number, file: File, onProgress?: (progress: number) => void) {
+    return apiClient.upload<{ file_path: string; original_filename: string; file_size: number }>(`/tasks/${id}/attachments`, file, onProgress)
   }
 
   // 删除任务附件
   async deleteTaskAttachment(taskId: number, attachmentId: number) {
-    return fetchApiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}`)
+    return apiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}`)
   }
 }
 

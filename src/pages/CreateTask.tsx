@@ -28,6 +28,7 @@ import { useTaskStore, useProjectStore } from '../stores'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
 import { UnsavedChangesAlert } from '../components/UnsavedChangesAlert'
+import ProjectSelector from '../components/ProjectSelector'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
 
 import type { CreateTaskData } from '../api/tasks'
@@ -924,24 +925,13 @@ const CreateTask: React.FC = () => {
                     name="project_id"
                     rules={[{ required: true, message: tp('form.project.required') }]}
                   >
-                    <Select placeholder={tp('form.project.placeholder')}>
-                      {projects.map(project => (
-                        <Option key={project.id} value={project.id}>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <div
-                              style={{
-                                width: '12px',
-                                height: '12px',
-                                borderRadius: '50%',
-                                backgroundColor: project.color,
-                                marginRight: '8px'
-                              }}
-                            />
-                            {project.name}
-                          </div>
-                        </Option>
-                      ))}
-                    </Select>
+                    <ProjectSelector
+                      placeholder={tp('form.project.placeholder')}
+                      showSearch
+                      allowClear={false}
+                      loading={projectsLoading}
+                      simpleMode
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={10}>

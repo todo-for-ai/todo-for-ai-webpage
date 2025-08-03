@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import { fetchApiClient } from '../api/fetchClient'
+import { apiClient } from '../api'
 import { getApiBaseUrl } from '../utils/apiConfig'
 import {
   isTokenExpired,
@@ -164,7 +164,7 @@ export const useAuthStore = create<AuthState>()(
             
             if (token) {
               // 调用后端登出接口
-              await fetchApiClient.post('/auth/logout', {
+              await apiClient.post('/auth/logout', {
                 return_to: window.location.origin + '/todo-for-ai/pages'
               })
             }
@@ -196,8 +196,8 @@ export const useAuthStore = create<AuthState>()(
           try {
             set({ isLoading: true, error: null })
 
-            const response = await fetchApiClient.get('/auth/me')
-            const user = response.data
+            const response = await apiClient.get<User>('/auth/me')
+            const user = response
 
             set({
               user,
@@ -223,8 +223,8 @@ export const useAuthStore = create<AuthState>()(
           try {
             set({ isLoading: true, error: null })
             
-            const response = await fetchApiClient.put('/auth/me', userData)
-            const updatedUser = response.data
+            const response = await apiClient.put<User>('/auth/me', userData)
+            const updatedUser = response
             
             set({ 
               user: updatedUser,
@@ -305,6 +305,7 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: true, error: null })
 
             // 使用refresh token进行刷新
+            // 注意：这里不能使用 apiClient，因为会触发循环调用
             const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
               method: 'POST',
               headers: {

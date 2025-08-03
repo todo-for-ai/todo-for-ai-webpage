@@ -128,7 +128,7 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
     try {
       const response = await pinsApi.getUserPins()
       // 处理标准API响应格式
-      const data = response?.data || response
+      const data = response
       if (data && data.pins) {
         setPins(data.pins.sort((a, b) => (a.pin_order || 0) - (b.pin_order || 0)))
       }

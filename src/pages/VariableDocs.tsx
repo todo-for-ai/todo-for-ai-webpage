@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import { Card, Typography, Table, Space, Tag, Button, message, Anchor } from 'antd'
-import { BookOutlined, CopyOutlined } from '@ant-design/icons'
+import { BookOutlined, CopyOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { useNavigate } from 'react-router-dom'
 
 const { Title, Paragraph, Text } = Typography
 const { Link } = Anchor
@@ -15,11 +16,22 @@ interface VariableInfo {
 
 const VariableDocs: React.FC = () => {
   const { tp } = usePageTranslation('customPrompts')
+  const navigate = useNavigate()
 
   // 设置页面标题
   useEffect(() => {
     document.title = '变量文档 - Todo for AI'
   }, [])
+
+  // 返回上一页
+  const handleGoBack = () => {
+    // 优先返回到自定义提示词页面，如果没有历史记录则使用navigate
+    if (window.history.length > 1) {
+      window.history.back()
+    } else {
+      navigate('/todo-for-ai/pages/custom-prompts')
+    }
+  }
 
   // 变量数据
   const projectVariables: VariableInfo[] = [
@@ -113,10 +125,20 @@ const VariableDocs: React.FC = () => {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* 页面标题 */}
         <div>
-          <Title level={2}>
-            <BookOutlined style={{ marginRight: '8px' }} />
-            变量文档
-          </Title>
+          <Space align="center" style={{ marginBottom: '16px' }}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={handleGoBack}
+              size="large"
+            >
+              返回
+            </Button>
+            <Title level={2} style={{ margin: 0 }}>
+              <BookOutlined style={{ marginRight: '8px' }} />
+              变量文档
+            </Title>
+          </Space>
           <Paragraph type="secondary">
             这里列出了在自定义提示词中可以使用的所有变量。您可以在提示词模板中使用这些变量，系统会在生成提示词时自动替换为实际值。
           </Paragraph>

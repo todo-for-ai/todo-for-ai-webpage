@@ -23,8 +23,7 @@ import {
   CopyOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons'
-import { fetchApiClient } from '../api/fetchClient'
-import { getApiBaseUrl } from '../utils/apiConfig'
+import { apiClient } from '../api'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Text } = Typography
@@ -66,9 +65,7 @@ export const APITokenManager: React.FC = () => {
   const fetchTokens = async () => {
     setLoading(true)
     try {
-      const response = await fetchApiClient.get('/tokens')
-      // 处理标准API响应格式
-      const data = response?.data || response
+      const data = await apiClient.get<{ tokens: any[] }>('/tokens')
       const tokens = data?.tokens || []
       setTokens(tokens)
     } catch (error: any) {
@@ -81,8 +78,7 @@ export const APITokenManager: React.FC = () => {
 
   const handleCreateToken = async (values: any) => {
     try {
-      const response = await fetchApiClient.post('/tokens', values)
-      const data = response?.data || response
+      const data = await apiClient.post<{ token?: string; raw_token?: string }>('/tokens', values)
 
       // 显示新创建的token
       setNewToken(data.token || data.raw_token)
@@ -100,7 +96,7 @@ export const APITokenManager: React.FC = () => {
 
   const handleDeleteToken = async (tokenId: number) => {
     try {
-      await fetchApiClient.delete(`/tokens/${tokenId}`)
+      await apiClient.delete(`/tokens/${tokenId}`)
       message.success('Token删除成功')
       fetchTokens()
     } catch (error: any) {
@@ -126,10 +122,9 @@ export const APITokenManager: React.FC = () => {
       // 如果未显示，则获取并显示完整Token
       setIsRevealingToken(true)
       try {
-        const response = await fetchApiClient.get(`/tokens/${token.id}/reveal`)
-        const data = response?.data || response
+        const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/tokens/${token.id}/reveal`)
 
-        // 检查是否有token字段（fetchApiClient可能已经解包了data）
+        // 检查是否有token字段（apiClient可能已经解包了data）
         if (data.token) {
           setRevealedTokenInView(data.token)
           setIsTokenRevealed(true)
@@ -162,24 +157,14 @@ export const APITokenManager: React.FC = () => {
       } catch (error: any) {
         console.error('Token reveal error:', error)
 
-        // 尝试获取详细的错误信息
+        // 显示错误信息
         let errorMessage = tp('apiTokens.messages.revealFailed')
 
-        // 由于fetchApiClient的限制，我们需要通过重新发起请求来获取错误详情
-        try {
-          const response = await fetch(`${getApiBaseUrl()}/tokens/${token.id}/reveal`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
-          })
-
-          if (!response.ok && response.status === 400) {
-            const errorData = await response.json()
-            errorMessage = errorData.error || errorData.message || errorMessage
-          }
-        } catch (fetchError) {
-          console.error('Failed to get detailed error:', fetchError)
+        // 尝试从错误响应中获取详细信息
+        if (error?.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error?.response?.data?.error) {
+          errorMessage = error.response.data.error
         }
 
         message.error(errorMessage)
@@ -221,8 +206,7 @@ export const APITokenManager: React.FC = () => {
       }
 
       // 否则先获取完整token再复制
-      const response = await fetchApiClient.get(`/tokens/${token.id}/reveal`)
-      const data = response?.data || response
+      const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/tokens/${token.id}/reveal`)
 
       let fullToken = ''
       if (data.token) {
@@ -255,24 +239,14 @@ export const APITokenManager: React.FC = () => {
     } catch (error: any) {
       console.error('Token copy error:', error)
 
-      // 尝试获取详细的错误信息
+      // 显示错误信息
       let errorMessage = tp('apiTokens.messages.revealFailed')
 
-      // 由于fetchApiClient的限制，我们需要通过重新发起请求来获取错误详情
-      try {
-        const response = await fetch(`${getApiBaseUrl()}/tokens/${token.id}/reveal`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        })
-
-        if (!response.ok && response.status === 400) {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorData.message || errorMessage
-        }
-      } catch (fetchError) {
-        console.error('Failed to get detailed error:', fetchError)
+      // 尝试从错误响应中获取详细信息
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error
       }
 
       message.error(errorMessage)

@@ -2,7 +2,7 @@
  * 仪表盘API客户端
  */
 
-import { fetchApiClient } from './fetchClient'
+import { apiClient } from './client'
 
 // 仪表盘统计数据类型
 export interface DashboardStats {
@@ -116,24 +116,21 @@ export class DashboardApi {
    * 获取仪表盘统计数据
    */
   async getStats(): Promise<DashboardStats> {
-    const response = await fetchApiClient.get<DashboardStats>('/dashboard/stats')
-    return (response as any).data
+    return await apiClient.get<DashboardStats>('/dashboard/stats')
   }
 
   /**
    * 获取活跃度热力图数据
    */
   async getActivityHeatmap(): Promise<ActivityHeatmapResponse> {
-    const response = await fetchApiClient.get<ActivityHeatmapResponse>('/dashboard/activity-heatmap')
-    return (response as any).data
+    return await apiClient.get<ActivityHeatmapResponse>('/dashboard/activity-heatmap')
   }
 
   /**
    * 获取活跃度摘要统计
    */
   async getActivitySummary(): Promise<ActivitySummary> {
-    const response = await fetchApiClient.get<ActivitySummary>('/dashboard/activity-summary')
-    return (response as any).data
+    return await apiClient.get<ActivitySummary>('/dashboard/activity-summary')
   }
 }
 

@@ -1,4 +1,4 @@
-import { fetchApiClient } from './fetchClient'
+import { apiClient } from './client'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -92,37 +92,37 @@ export class ProjectsApi {
     }
 
     const url = `/projects${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return fetchApiClient.get<PaginatedResponse<Project>>(url)
+    return apiClient.get<PaginatedResponse<Project>>(url)
   }
 
   // 获取单个项目
   async getProject(id: number) {
-    return fetchApiClient.get<Project>(`/projects/${id}`)
+    return apiClient.get<Project>(`/projects/${id}`)
   }
 
   // 创建项目
   async createProject(data: CreateProjectData) {
-    return fetchApiClient.post<Project>('/projects', data)
+    return apiClient.post<Project>('/projects', data)
   }
 
   // 更新项目
   async updateProject(id: number, data: UpdateProjectData) {
-    return fetchApiClient.put<Project>(`/projects/${id}`, data)
+    return apiClient.put<Project>(`/projects/${id}`, data)
   }
 
   // 删除项目
   async deleteProject(id: number) {
-    return fetchApiClient.delete(`/projects/${id}`)
+    return apiClient.delete(`/projects/${id}`)
   }
 
   // 归档项目
   async archiveProject(id: number) {
-    return fetchApiClient.post<Project>(`/projects/${id}/archive`)
+    return apiClient.post<Project>(`/projects/${id}/archive`)
   }
 
   // 恢复项目
   async restoreProject(id: number) {
-    return fetchApiClient.post<Project>(`/projects/${id}/restore`)
+    return apiClient.post<Project>(`/projects/${id}/restore`)
   }
 
   // 获取项目任务
@@ -146,12 +146,12 @@ export class ProjectsApi {
     }
 
     const url = `/projects/${id}/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return fetchApiClient.get(url)
+    return apiClient.get(url)
   }
 
   // 获取项目上下文规则
   async getProjectContextRules(id: number) {
-    return fetchApiClient.get(`/projects/${id}/context-rules`)
+    return apiClient.get(`/projects/${id}/context-rules`)
   }
 }
 

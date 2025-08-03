@@ -1,8 +1,15 @@
-// 导出所有API服务
-export * from './client'
+/**
+ * API模块统一入口
+ */
+
+// API客户端 - 唯一的请求客户端
+export { apiClient } from './client'
+
+// 类型定义
+export type { ApiResponse, ApiClientConfig, PerformanceStats } from './client'
+
+// API服务
 export { projectsApi, type Project } from './projects'
 export { tasksApi, type Task } from './tasks'
 export { contextRulesApi, type ContextRule } from './contextRules'
-
-// 重新导出常用的API实例
-export { api as default } from './client'
+export { AuthAPI } from './auth'

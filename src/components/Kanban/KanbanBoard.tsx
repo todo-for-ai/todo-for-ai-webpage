@@ -61,8 +61,10 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
         sort_order: 'desc'
       })
 
-      if (response.data && response.data.items) {
-        setTasks(response.data.items)
+      if (response && (response as any).items) {
+        setTasks((response as any).items)
+      } else if (response) {
+        setTasks(response as any)
       } else {
         setTasks([])
       }
@@ -128,7 +130,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
   const updateTaskStatus = async (taskId: number, newStatus: Task['status']) => {
     try {
       const response = await tasksApi.updateTask(taskId, { status: newStatus })
-      if (response.data) {
+      if (response) {
         // 更新本地状态
         setTasks(prevTasks =>
           prevTasks.map(task =>

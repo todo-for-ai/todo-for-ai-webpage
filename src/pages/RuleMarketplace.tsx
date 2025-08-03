@@ -32,7 +32,7 @@ import {
   BranchesOutlined
 } from '@ant-design/icons'
 import { useContextRuleStore, useProjectStore } from '../stores'
-import { fetchApiClient } from '../api/fetchClient'
+import { apiClient } from '../api'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 
@@ -111,7 +111,7 @@ const RuleMarketplace: React.FC = () => {
       queryParams.append('per_page', String(pageSize))
 
       const url = `/context-rules/marketplace?${queryParams.toString()}`
-      const response = await fetchApiClient.get(url)
+      const response = await apiClient.get(url)
 
       console.log('API Response data:', response)
       setRules((response as any).data.rules || [])
@@ -401,7 +401,7 @@ const RuleMarketplace: React.FC = () => {
                       placeholder={t('copy.modal.targetProjectPlaceholder')}
                       showSearch
                       filterOption={(input, option) =>
-                        (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                        (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
                       }
                     >
                       {projects.map(project => (

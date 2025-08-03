@@ -51,7 +51,7 @@ const TaskDetail: React.FC = () => {
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [projectTasks, setProjectTasks] = useState<Task[]>([])
-  const [projectContext, setProjectContext] = useState<ApiResponse<BuildContextResponse> | null>(null)
+  const [projectContext, setProjectContext] = useState<BuildContextResponse | null>(null)
   const [contextLoading, setContextLoading] = useState(false)
   const [customButtons, setCustomButtons] = useState<any[]>([])
 
@@ -980,7 +980,7 @@ ${task.content || '无详细内容'}
             <Spin size="large" />
             <div style={{ marginTop: '16px' }}>{tp('projectContext.loading')}</div>
           </div>
-        ) : projectContext && projectContext.data && projectContext.data.context_string ? (
+        ) : projectContext && projectContext.context_string ? (
           <Collapse
             items={[
               {
@@ -988,14 +988,14 @@ ${task.content || '无详细内容'}
                 label: (
                   <Space>
                     <span>{tp('projectContext.rulesLabel')}</span>
-                    <Tag color="blue">{tp('projectContext.rulesCount', { count: projectContext.data.rules.length })}</Tag>
+                    <Tag color="blue">{tp('projectContext.rulesCount', { count: projectContext.rules.length })}</Tag>
                   </Space>
                 ),
                 children: (
                   <div>
                     <div style={{ marginBottom: '16px' }}>
                       <Tag color="green">{tp('projectContext.appliedRules')}</Tag>
-                      {projectContext.data.rules.map(rule => (
+                      {projectContext.rules.map(rule => (
                         <Tag
                           key={rule.id}
                           color={rule.is_global ? 'purple' : 'blue'}
@@ -1009,7 +1009,7 @@ ${task.content || '无详细内容'}
                     <div className={styles.markdownContainer}>
                       <MarkdownEditor
                         key={`project-context-${task.id}`}
-                        value={projectContext.data.context_string}
+                        value={projectContext.context_string}
                         readOnly
                         autoHeight={true}
                         hideToolbar

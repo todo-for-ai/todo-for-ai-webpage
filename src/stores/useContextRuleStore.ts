@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 import { contextRulesApi } from '../api/contextRules'
 import type {
   ContextRule,
@@ -74,7 +74,8 @@ const initialState = {
 
 export const useContextRuleStore = create<ContextRuleState>()(
   devtools(
-    (set, get) => ({
+    persist(
+      (set, get) => ({
       ...initialState,
 
       setLoading: (loading) => set({ loading }),
@@ -93,8 +94,8 @@ export const useContextRuleStore = create<ContextRuleState>()(
         try {
           const response = await contextRulesApi.getContextRules(queryParams)
           set({
-            contextRules: response.data?.items || [],
-            pagination: response.data?.pagination || null,
+            contextRules: (response as any)?.items || response || [],
+            pagination: (response as any)?.pagination || null,
             loading: false,
           })
         } catch (error: any) {
@@ -111,7 +112,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
         try {
           const response = await contextRulesApi.getContextRule(id)
           set({
-            currentContextRule: response.data || null,
+            currentContextRule: response || null,
             loading: false,
           })
         } catch (error: any) {
@@ -127,7 +128,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
         
         try {
           const response = await contextRulesApi.createContextRule(data)
-          const newRule = response.data
+          const newRule = response
           
           if (newRule) {
             set((state) => ({
@@ -151,7 +152,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
         
         try {
           const response = await contextRulesApi.updateContextRule(id, data)
-          const updatedRule = response.data
+          const updatedRule = response
           
           if (updatedRule) {
             set((state) => ({
@@ -196,7 +197,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
       toggleContextRule: async (id, is_active) => {
         try {
           const response = await contextRulesApi.toggleContextRule(id, is_active)
-          const updatedRule = response.data
+          const updatedRule = response
           
           if (updatedRule) {
             set((state) => ({
@@ -221,7 +222,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
 
         try {
           const response = await contextRulesApi.copyContextRule(id, data)
-          const newRule = response.data
+          const newRule = response
 
           if (newRule) {
             set((state) => ({
@@ -245,7 +246,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
 
         try {
           const response = await contextRulesApi.copyRuleFromMarketplace(id, data)
-          const newRule = response.data
+          const newRule = response
 
           if (newRule) {
             set((state) => ({
@@ -270,8 +271,8 @@ export const useContextRuleStore = create<ContextRuleState>()(
         try {
           const response = await contextRulesApi.previewMergedRules(projectId)
           set({
-            previewContent: response.data?.content || '',
-            previewRules: response.data?.rules || [],
+            previewContent: (response as any)?.content || '',
+            previewRules: (response as any)?.rules || [],
             previewLoading: false,
           })
         } catch (error: any) {
@@ -285,7 +286,7 @@ export const useContextRuleStore = create<ContextRuleState>()(
       getMergedContextRules: async (projectId) => {
         try {
           const response = await contextRulesApi.getMergedContextRules(projectId)
-          return response.data || null
+          return response || null
         } catch (error: any) {
           set({
             error: error.response?.data?.error?.message || '获取合并规则失败',
@@ -295,8 +296,16 @@ export const useContextRuleStore = create<ContextRuleState>()(
       },
 
       clearError: () => set({ error: null }),
-      
+
       reset: () => set(initialState),
+    }),
+    {
+      name: 'context-rule-store',
+      partialize: (state) => ({
+        queryParams: state.queryParams,
+        // 不持久化contextRules数据，因为需要实时从服务器获取
+        // 只持久化用户的查询参数
+      }),
     }),
     {
       name: 'context-rule-store',

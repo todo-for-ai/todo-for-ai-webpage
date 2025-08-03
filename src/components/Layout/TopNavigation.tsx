@@ -34,7 +34,7 @@ const TopNavigation: React.FC = () => {
   const loadTaskCounts = useCallback(async () => {
     try {
       const response = await pinsApi.getPinnedProjectsTaskCounts()
-      const data = response?.data || response
+      const data = response
 
       if (data && data.task_counts) {
         setTaskCounts(data.task_counts)
@@ -57,7 +57,7 @@ const TopNavigation: React.FC = () => {
       console.log('Response keys:', response ? Object.keys(response) : 'null')
 
       // 处理标准API响应格式 {data: {...}, message: ..., success: ...}
-      const data = response?.data || response
+      const data = response
 
       if (data && data.pins) {
         console.log('Pin projects:', data.pins)
@@ -225,8 +225,8 @@ const TopNavigation: React.FC = () => {
         if (taskId) {
           try {
             const response = await tasksApi.getTask(taskId)
-            if (response.data && response.data.project_id) {
-              setCurrentTaskProjectId(response.data.project_id)
+            if (response && (response as any).project_id) {
+              setCurrentTaskProjectId((response as any).project_id)
             } else {
               setCurrentTaskProjectId(null)
             }

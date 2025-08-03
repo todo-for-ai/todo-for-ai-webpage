@@ -73,7 +73,7 @@ const UserManagement: React.FC = () => {
   // 只在组件挂载时获取一次当前用户ID
   useEffect(() => {
     const currentUser = useAuthStore.getState().user
-    currentUserIdRef.current = currentUser?.id || null
+    currentUserIdRef.current = currentUser?.id?.toString() || null
   }, [])
 
   // 加载用户列表
@@ -88,7 +88,7 @@ const UserManagement: React.FC = () => {
       }
 
       const response = await AuthAPI.getUsers(queryParams)
-      const data = response.data || response // 兼容不同的响应格式
+      const data = response // 兼容不同的响应格式
       setUsers(data.users)
 
       // 只在total真正变化时更新pagination，避免无限循环
@@ -233,7 +233,7 @@ const UserManagement: React.FC = () => {
       fixed: 'right' as const,
       render: (record: User) => {
         // 不能对自己进行操作
-        if (record.id === currentUserIdRef.current) {
+        if (record.id.toString() === currentUserIdRef.current) {
           return <span style={{ color: '#999' }}>{t('actions.self')}</span>
         }
 

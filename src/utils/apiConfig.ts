@@ -10,8 +10,8 @@
 export function getApiBaseUrl(): string {
   // 检查是否在浏览器环境中
   if (typeof window === 'undefined') {
-    console.warn('[API Config] Running in non-browser environment, using default localhost URL')
-    return 'http://localhost:50110/todo-for-ai/api/v1'
+    console.warn('[API Config] Running in non-browser environment, using relative URL')
+    return '/todo-for-ai/api/v1'
   }
 
   // 如果有环境变量配置，优先使用
@@ -33,9 +33,9 @@ export function getApiBaseUrl(): string {
     console.log('[API Config] Production environment detected, using:', prodUrl)
     return prodUrl
   } else {
-    // 开发环境或其他环境
-    const devUrl = 'http://localhost:50110/todo-for-ai/api/v1'
-    console.log('[API Config] Development environment detected, using:', devUrl)
+    // 开发环境 - 使用Vite代理，避免跨域问题
+    const devUrl = '/todo-for-ai/api/v1'
+    console.log('[API Config] Development environment detected, using Vite proxy:', devUrl)
     return devUrl
   }
 }
@@ -54,6 +54,7 @@ export function getMcpServerUrl(): string {
   if (currentHost.includes('todo4ai.org')) {
     return `${protocol}//todo4ai.org`
   } else {
-    return 'http://localhost:50110'
+    // 开发环境使用相对路径，避免写死localhost
+    return ''
   }
 }

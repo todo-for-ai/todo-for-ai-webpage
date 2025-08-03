@@ -1,4 +1,4 @@
-import { fetchApiClient } from './fetchClient'
+import { apiClient } from './client'
 
 // Pin相关类型定义
 export interface UserProjectPin {
@@ -40,12 +40,12 @@ export interface ProjectTaskCount {
 export const pinsApi = {
   // 获取用户的Pin配置
   getUserPins: async (): Promise<{ pins: UserProjectPin[]; total: number }> => {
-    return fetchApiClient.get<{ pins: UserProjectPin[]; total: number }>('/pins')
+    return await apiClient.get<{ pins: UserProjectPin[]; total: number }>('/pins')
   },
 
   // Pin一个项目
   pinProject: async (projectId: number, pinOrder?: number): Promise<{ message: string; pin: UserProjectPin }> => {
-    return fetchApiClient.post('/pins', {
+    return await apiClient.post<{ message: string; pin: UserProjectPin }>('/pins', {
       project_id: projectId,
       pin_order: pinOrder
     })
@@ -53,28 +53,28 @@ export const pinsApi = {
 
   // 取消Pin一个项目
   unpinProject: async (projectId: number): Promise<{ message: string }> => {
-    return fetchApiClient.delete(`/pins/${projectId}`)
+    return await apiClient.delete<{ message: string }>(`/pins/${projectId}`)
   },
 
   // 重新排序Pin
   reorderPins: async (pinOrders: PinOrderItem[]): Promise<{ message: string }> => {
-    return fetchApiClient.put('/pins/reorder', {
+    return await apiClient.put<{ message: string }>('/pins/reorder', {
       pin_orders: pinOrders
     })
   },
 
   // 检查项目的Pin状态
   checkPinStatus: async (projectId: number): Promise<{ project_id: number; is_pinned: boolean }> => {
-    return fetchApiClient.get(`/pins/check/${projectId}`)
+    return await apiClient.get<{ project_id: number; is_pinned: boolean }>(`/pins/check/${projectId}`)
   },
 
   // 获取Pin统计信息
   getPinStats: async (): Promise<PinStats> => {
-    return fetchApiClient.get('/pins/stats')
+    return await apiClient.get<PinStats>('/pins/stats')
   },
 
   // 获取Pin项目的任务数量
   getPinnedProjectsTaskCounts: async (): Promise<{ task_counts: ProjectTaskCount[]; total_pins: number }> => {
-    return fetchApiClient.get('/pins/task-counts')
+    return await apiClient.get<{ task_counts: ProjectTaskCount[]; total_pins: number }>('/pins/task-counts')
   }
 }

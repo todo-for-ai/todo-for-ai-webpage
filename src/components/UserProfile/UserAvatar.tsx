@@ -33,7 +33,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       try {
         const response = await pinsApi.getUserPins()
         // 处理标准API响应格式
-        const data = response?.data || response
+        const data = response
         setHasPins(data && data.pins && data.pins.length > 0)
       } catch (error) {
         console.error('Failed to check pins:', error)
@@ -78,7 +78,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     try {
       const response = await pinsApi.getUserPins()
       // 处理标准API响应格式
-      const data = response?.data || response
+      const data = response
       setHasPins(data && data.pins && data.pins.length > 0)
     } catch (error) {
       console.error('Failed to check pins after update:', error)

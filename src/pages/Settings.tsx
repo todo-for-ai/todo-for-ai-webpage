@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Typography, Card, Form, Button, Select, message } from 'antd'
 import { SaveOutlined } from '@ant-design/icons'
-import { fetchApiClient } from '../api/fetchClient'
+import { apiClient } from '../api'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useLanguage } from '../contexts/LanguageContext'
 import type { SupportedLanguage } from '../i18n'
@@ -35,10 +35,10 @@ const Settings = () => {
 
   const loadUserSettings = async () => {
     try {
-      const response = await fetchApiClient.get('/user-settings')
-      setSettings(response.data)
+      const response = await apiClient.get('/user-settings')
+      setSettings(response as any)
       form.setFieldsValue({
-        language: response.data.language || language
+        language: (response as any).language || language
       })
     } catch (error) {
       console.error('Failed to load user settings:', error)
@@ -57,7 +57,7 @@ const Settings = () => {
         await setLanguage(values.language as SupportedLanguage)
       } else {
         // 如果语言没有变化，直接保存其他设置
-        await fetchApiClient.put('/user-settings', values)
+        await apiClient.put('/user-settings', values)
       }
 
       message.success(tp('messages.saveSuccess'))

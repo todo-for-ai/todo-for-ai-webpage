@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 import { tasksApi } from '../api/tasks'
 import type { Task, TaskQueryParams, CreateTaskData, UpdateTaskData } from '../api/tasks'
 
@@ -59,7 +59,8 @@ const initialState = {
 
 export const useTaskStore = create<TaskState>()(
   devtools(
-    (set, get) => ({
+    persist(
+      (set, get) => ({
       ...initialState,
 
       setLoading: (loading) => set({ loading }),
@@ -78,8 +79,8 @@ export const useTaskStore = create<TaskState>()(
         try {
           const response = await tasksApi.getTasks(queryParams)
           set({
-            tasks: response.data?.items || [],
-            pagination: response.data?.pagination || null,
+            tasks: (response as any)?.items || response || [],
+            pagination: (response as any)?.pagination || null,
             loading: false,
           })
         } catch (error: any) {
@@ -93,7 +94,7 @@ export const useTaskStore = create<TaskState>()(
       fetchTasksByParams: async (params) => {
         try {
           const response = await tasksApi.getTasks(params)
-          return response.data?.items || []
+          return (response as any)?.items || response || []
         } catch (error: any) {
           console.error('获取任务列表失败:', error)
           return []
@@ -106,7 +107,7 @@ export const useTaskStore = create<TaskState>()(
         try {
           const response = await tasksApi.getTask(id)
           set({
-            currentTask: response.data || null,
+            currentTask: response || null,
             loading: false,
           })
         } catch (error: any) {
@@ -120,7 +121,7 @@ export const useTaskStore = create<TaskState>()(
       getTask: async (id) => {
         try {
           const response = await tasksApi.getTask(id)
-          return response.data || null
+          return response || null
         } catch (error: any) {
           console.error('获取任务失败:', error)
           return null
@@ -132,7 +133,7 @@ export const useTaskStore = create<TaskState>()(
         
         try {
           const response = await tasksApi.createTask(data)
-          const newTask = response.data
+          const newTask = response
           
           if (newTask) {
             set((state) => ({
@@ -156,7 +157,7 @@ export const useTaskStore = create<TaskState>()(
         
         try {
           const response = await tasksApi.updateTask(id, data)
-          const updatedTask = response.data
+          const updatedTask = response
           
           if (updatedTask) {
             set((state) => ({
@@ -201,7 +202,7 @@ export const useTaskStore = create<TaskState>()(
       updateTaskStatus: async (id, status) => {
         try {
           const response = await tasksApi.updateTaskStatus(id, status)
-          const updatedTask = response.data
+          const updatedTask = response
           
           if (updatedTask) {
             set((state) => ({
@@ -224,7 +225,7 @@ export const useTaskStore = create<TaskState>()(
       updateTaskProgress: async (id, completion_rate) => {
         try {
           const response = await tasksApi.updateTaskProgress(id, completion_rate)
-          const updatedTask = response.data
+          const updatedTask = response
           
           if (updatedTask) {
             set((state) => ({
@@ -249,7 +250,7 @@ export const useTaskStore = create<TaskState>()(
           // 暂时注释掉assignTask调用，因为API中没有这个方法
           // const response = await tasksApi.assignTask(id, assignee)
           const response = await tasksApi.updateTask(id, { created_by: assignee })
-          const updatedTask = response.data
+          const updatedTask = response
           
           if (updatedTask) {
             set((state) => ({
@@ -270,8 +271,16 @@ export const useTaskStore = create<TaskState>()(
       },
 
       clearError: () => set({ error: null }),
-      
+
       reset: () => set(initialState),
+    }),
+    {
+      name: 'task-store',
+      partialize: (state) => ({
+        queryParams: state.queryParams,
+        // 不持久化tasks数据，因为需要实时从服务器获取
+        // 只持久化用户的查询参数
+      }),
     }),
     {
       name: 'task-store',

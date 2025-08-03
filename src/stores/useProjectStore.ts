@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 import { projectsApi } from '../api/projects'
 import type { Project, ProjectQueryParams, CreateProjectData, UpdateProjectData } from '../api/projects'
 
@@ -56,7 +56,8 @@ const initialState = {
 
 export const useProjectStore = create<ProjectState>()(
   devtools(
-    (set, get) => ({
+    persist(
+      (set, get) => ({
       ...initialState,
 
       setLoading: (loading) => set({ loading }),
@@ -74,9 +75,10 @@ export const useProjectStore = create<ProjectState>()(
         
         try {
           const response = await projectsApi.getProjects(queryParams)
+          // 统一的API响应结构: { code, message, data: {items: [...], pagination: {...}}, timestamp, path }
           set({
-            projects: Array.isArray(response.data) ? response.data : (response.data as any)?.data || [],
-            pagination: (response.data as any)?.pagination || null,
+            projects: (response as any)?.items || response || [],
+            pagination: (response as any)?.pagination || null,
             loading: false,
           })
         } catch (error: any) {
@@ -93,7 +95,7 @@ export const useProjectStore = create<ProjectState>()(
         try {
           const response = await projectsApi.getProject(id)
           set({
-            currentProject: response.data || null,
+            currentProject: response || null,
             loading: false,
           })
         } catch (error: any) {
@@ -109,7 +111,7 @@ export const useProjectStore = create<ProjectState>()(
         
         try {
           const response = await projectsApi.createProject(data)
-          const newProject = response.data
+          const newProject = response
           
           if (newProject) {
             set((state) => ({
@@ -133,7 +135,7 @@ export const useProjectStore = create<ProjectState>()(
         
         try {
           const response = await projectsApi.updateProject(id, data)
-          const updatedProject = response.data
+          const updatedProject = response
           
           if (updatedProject) {
             set((state) => ({
@@ -180,7 +182,7 @@ export const useProjectStore = create<ProjectState>()(
         
         try {
           const response = await projectsApi.archiveProject(id)
-          const archivedProject = response.data
+          const archivedProject = response
           
           if (archivedProject) {
             set((state) => ({
@@ -207,7 +209,7 @@ export const useProjectStore = create<ProjectState>()(
         
         try {
           const response = await projectsApi.restoreProject(id)
-          const restoredProject = response.data
+          const restoredProject = response
           
           if (restoredProject) {
             set((state) => ({
@@ -230,8 +232,16 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       clearError: () => set({ error: null }),
-      
+
       reset: () => set(initialState),
+    }),
+    {
+      name: 'project-store',
+      partialize: (state) => ({
+        queryParams: state.queryParams,
+        // 不持久化projects数据，因为需要实时从服务器获取
+        // 只持久化用户的查询参数
+      }),
     }),
     {
       name: 'project-store',

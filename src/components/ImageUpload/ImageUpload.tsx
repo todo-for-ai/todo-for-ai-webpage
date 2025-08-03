@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Upload, message, Modal, Progress } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { UploadFile, UploadProps } from 'antd'
-import { api } from '../../api'
+import { apiClient } from '../../api'
 
 interface ImageUploadProps {
   value?: string[]
@@ -81,8 +81,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadProgress(0)
 
     try {
-      const response = await api.upload(
-        `/api/tasks/${taskId}/attachments`,
+      const response = await apiClient.upload<{ file_path: string; original_filename: string }>(
+        `/tasks/${taskId}/attachments`,
         file as File,
         (progress) => {
           setUploadProgress(progress)
@@ -90,19 +90,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }
       )
 
-      if (response.data) {
-        const imageUrl = response.data.file_path
+      if (response) {
+        const imageUrl = response.file_path
         const newUrls = [...value, imageUrl]
         onChange?.(newUrls)
-        
+
         // 自动插入Markdown
         if (onInsertMarkdown) {
-          const filename = response.data.original_filename
+          const filename = response.original_filename
           const markdown = `![${filename}](${imageUrl})`
           onInsertMarkdown(markdown)
         }
 
-        onSuccess?.(response.data)
+        onSuccess?.(response)
         message.success('图片上传成功')
       }
     } catch (error: any) {

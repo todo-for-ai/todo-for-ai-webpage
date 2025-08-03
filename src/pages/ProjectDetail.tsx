@@ -173,8 +173,8 @@ const ProjectDetail = () => {
           isPinnedValue = response.is_pinned
         }
         // 包装响应格式：{data: {is_pinned: true, project_id: 24}, ...}
-        else if (response.data && typeof response.data.is_pinned === 'boolean') {
-          isPinnedValue = response.data.is_pinned
+        else if ((response as any).data && typeof (response as any).data.is_pinned === 'boolean') {
+          isPinnedValue = (response as any).data.is_pinned
         }
         // 其他可能的格式
         else if (typeof response === 'boolean') {
@@ -725,13 +725,7 @@ const ProjectDetail = () => {
             {tp('breadcrumb.projectManagement')}
           </Button>
         </Breadcrumb.Item>
-        <Breadcrumb.Item
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            lineHeight: 1
-          }}
-        >
+        <Breadcrumb.Item>
           {currentProject.name}
         </Breadcrumb.Item>
       </Breadcrumb>
