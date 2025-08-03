@@ -114,8 +114,8 @@ const RuleMarketplace: React.FC = () => {
       const response = await apiClient.get(url)
 
       console.log('API Response data:', response)
-      setRules((response as any).data.rules || [])
-      setTotal((response as any).data.pagination?.total || 0)
+      setRules((response as any).items || [])
+      setTotal((response as any).pagination?.total || 0)
     } catch (error) {
       console.error('获取规则列表失败:', error)
       message.error(t('messages.fetchError'))
