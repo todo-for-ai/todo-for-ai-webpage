@@ -246,6 +246,10 @@ const MCPInstallation: React.FC = () => {
                   <Tag color="cyan">get_project_info</Tag>
                   <Text>获取项目详细信息，包括统计数据和配置</Text>
                 </div>
+                <div>
+                  <Tag color="gold">list_user_projects</Tag>
+                  <Text>列出API Token有权限访问的所有项目，支持状态筛选和排序</Text>
+                </div>
               </Space>
             </div>
 
@@ -992,6 +996,7 @@ node verify.js`}
               <li>询问AI助手："请获取'ToDo For AI'项目的任务列表"</li>
               <li>请求AI助手："帮我查看任务ID为233的详细信息"</li>
               <li>让AI助手："为任务233提交完成反馈"</li>
+              <li>测试项目列表："请列出我有权限访问的所有项目"</li>
             </ul>
 
             <Title level={5}>高级功能测试</Title>
@@ -999,6 +1004,7 @@ node verify.js`}
               <li>创建任务："在'ToDo For AI'项目中创建一个新的测试任务"</li>
               <li>项目信息："获取'ToDo For AI'项目的详细信息和统计数据"</li>
               <li>批量操作："获取所有待办状态的任务并逐个处理"</li>
+              <li>项目筛选："列出所有活跃状态的项目，按最后活动时间排序"</li>
             </ul>
 
             <Title level={5}>测试示例对话</Title>
@@ -1010,7 +1016,13 @@ AI: 我来为您获取ToDo For AI项目的待办任务...
 AI: 我来为您提交任务反馈...
 
 用户: "在ToDo For AI项目中创建一个新任务：优化前端性能"
-AI: 我来为您创建新任务...`}
+AI: 我来为您创建新任务...
+
+用户: "请列出我有权限访问的所有项目"
+AI: 我来为您获取项目列表...
+
+用户: "显示所有活跃状态的项目，按最后活动时间排序"
+AI: 我来为您筛选活跃项目...`}
             </div>
 
             <Title level={4} style={{ marginTop: '24px' }}>4. 常见问题排查</Title>

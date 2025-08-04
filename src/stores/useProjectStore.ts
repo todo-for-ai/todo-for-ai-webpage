@@ -48,9 +48,8 @@ const initialState = {
   pagination: null,
   queryParams: {
     page: 1,
-    per_page: 20,
-    sort_by: 'created_at',
-    sort_order: 'desc' as const,
+    per_page: 1000,
+    status: 'active',
   },
 }
 
@@ -71,17 +70,54 @@ export const useProjectStore = create<ProjectState>()(
 
       fetchProjects: async () => {
         const { queryParams } = get()
+        console.log('[useProjectStore] fetchProjects called with queryParams:', queryParams)
         set({ loading: true, error: null })
-        
+
         try {
           const response = await projectsApi.getProjects(queryParams)
-          // 统一的API响应结构: { code, message, data: {items: [...], pagination: {...}}, timestamp, path }
+          console.log('[useProjectStore] API response received:', response)
+          console.log('[useProjectStore] Response type:', typeof response)
+          console.log('[useProjectStore] Response keys:', response ? Object.keys(response) : 'null')
+
+          // 统一的API响应结构: { success, message, data: {items: [...], pagination: {...}}, timestamp, path }
+          // 处理不同的API响应格式，与ProjectSelector保持一致
+          let projects: any[] = []
+          let pagination: any = null
+
+          if (response && Array.isArray((response as any)?.items)) {
+            // 新的API格式：{items: Array, pagination: Object}
+            projects = (response as any).items
+            pagination = (response as any).pagination
+          } else if (response && Array.isArray((response as any)?.data)) {
+            // 标准API格式：{data: Array}
+            projects = (response as any).data
+          } else if (response && Array.isArray(response)) {
+            // 直接数组格式
+            projects = response as any[]
+          } else {
+            // 如果都不匹配，尝试从response中提取
+            projects = []
+            console.warn('[useProjectStore] Unexpected response format:', response)
+          }
+
+          console.log('[useProjectStore] Extracted projects:', projects)
+          console.log('[useProjectStore] Extracted pagination:', pagination)
+
           set({
-            projects: (response as any)?.items || response || [],
-            pagination: (response as any)?.pagination || null,
+            projects,
+            pagination,
             loading: false,
           })
+
+          console.log('[useProjectStore] State updated, projects length:', projects.length)
         } catch (error: any) {
+          console.error('[useProjectStore] fetchProjects error:', error)
+          console.error('[useProjectStore] Error details:', {
+            message: error.message,
+            response: error.response,
+            status: error.response?.status,
+            data: error.response?.data
+          })
           set({
             error: error.response?.data?.error?.message || '获取项目列表失败',
             loading: false,

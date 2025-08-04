@@ -91,7 +91,11 @@ function App() {
               <Route path="rule-marketplace" element={<RuleMarketplace />} />
               <Route path="mcp-installation" element={<MCPInstallation />} />
               <Route path="api-documentation" element={<APIDocumentation />} />
-              <Route path="custom-prompts" element={<CustomPrompts />} />
+              <Route path="custom-prompts" element={<CustomPrompts />}>
+                <Route index element={<Navigate to="project-prompts" replace />} />
+                <Route path="project-prompts" element={<CustomPrompts />} />
+                <Route path="task-prompts" element={<CustomPrompts />} />
+              </Route>
               <Route path="variable-docs" element={<VariableDocs />} />
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Tabs, Typography, Space } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { ProjectPromptEditor, TaskPromptButtons } from '../components/CustomPrompts'
@@ -12,12 +12,39 @@ const CustomPrompts: React.FC = () => {
   const { t } = useTranslation()
   const { tp } = usePageTranslation('customPrompts')
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('project-prompts')
+  const location = useLocation()
+
+  // 根据当前路径确定活跃的标签页
+  const getActiveTabFromPath = () => {
+    const path = location.pathname
+    if (path.includes('/task-prompts')) {
+      return 'task-prompts'
+    } else {
+      return 'project-prompts' // 默认为项目提示词
+    }
+  }
+
+  const [activeTab, setActiveTab] = useState(getActiveTabFromPath())
+
+  // 监听路径变化，更新活跃标签页
+  useEffect(() => {
+    const newActiveTab = getActiveTabFromPath()
+    if (newActiveTab !== activeTab) {
+      setActiveTab(newActiveTab)
+    }
+  }, [location.pathname])
 
   // 设置页面标题
   useEffect(() => {
     document.title = tp('pageTitle')
   }, [tp])
+
+  // 处理标签页切换
+  const handleTabChange = (key: string) => {
+    setActiveTab(key)
+    // 更新URL路径
+    navigate(`/todo-for-ai/pages/custom-prompts/${key}`, { replace: true })
+  }
 
   // 处理变量文档点击
   const handleVariableDocsClick = () => {
@@ -42,7 +69,7 @@ const CustomPrompts: React.FC = () => {
         <Card>
           <Tabs
             activeKey={activeTab}
-            onChange={setActiveTab}
+            onChange={handleTabChange}
             items={[
               {
                 key: 'project-prompts',

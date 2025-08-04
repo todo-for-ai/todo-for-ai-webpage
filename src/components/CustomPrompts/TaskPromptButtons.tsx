@@ -1,11 +1,104 @@
 import React, { useState, useEffect } from 'react'
 import { Space, Button, Card, Input, Modal, List, message, Popconfirm } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined, BookOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, BookOutlined, HolderOutlined } from '@ant-design/icons'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import MilkdownEditor from '../MilkdownEditor'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { customPromptsService, type TaskPromptButton } from '../../services/customPromptsService'
 
 const { TextArea } = Input
+
+interface SortableButtonItemProps {
+  id: string
+  button: TaskPromptButton
+  index: number
+  onEdit: (button: TaskPromptButton) => void
+  onDelete: (buttonId: string) => void
+}
+
+const SortableButtonItem: React.FC<SortableButtonItemProps> = ({
+  id,
+  button,
+  index,
+  onEdit,
+  onDelete
+}) => {
+  const { tp } = usePageTranslation('customPrompts')
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <List.Item>
+        <Card
+          size="small"
+          style={{
+            width: '100%',
+            border: '1px solid #f0f0f0',
+            borderRadius: '6px',
+            backgroundColor: '#fff',
+            cursor: isDragging ? 'grabbing' : 'default'
+          }}
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div {...attributes} {...listeners} style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
+                <HolderOutlined style={{ color: '#999' }} />
+              </div>
+              <span>{button.name || '未命名按钮'}</span>
+            </div>
+          }
+          extra={
+            <Space>
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => onEdit(button)}
+              />
+              <Popconfirm
+                title={tp('messages.deleteConfirm')}
+                onConfirm={() => onDelete(button.id)}
+              >
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  danger
+                />
+              </Popconfirm>
+            </Space>
+          }
+        >
+          <div style={{
+            maxHeight: '100px',
+            overflow: 'hidden',
+            color: '#666',
+            fontSize: '12px',
+            lineHeight: '1.4'
+          }}>
+            {button.content?.substring(0, 200)}
+            {button.content && button.content.length > 200 && '...'}
+          </div>
+        </Card>
+      </List.Item>
+    </div>
+  )
+}
 
 interface TaskPromptButtonsProps {
   onVariableDocsClick?: () => void
@@ -22,6 +115,14 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
 
   // 默认按钮内容
   const defaultContent = tp('taskPrompts.buttonConfig.defaultContent')
+
+  // 拖拽传感器
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // 初始化按钮列表
   useEffect(() => {
@@ -93,24 +194,32 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
     }
   }
 
-  // 移动按钮位置
-  const handleMoveButton = async (buttonId: string, direction: 'up' | 'down') => {
-    const index = buttons.findIndex(b => b.id === buttonId)
-    if (index === -1) return
+  // 拖拽结束处理
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event
 
-    const newButtons = [...buttons]
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (active.id !== over?.id) {
+      const newButtons = [...buttons]
+      const oldIndex = newButtons.findIndex((item) => item.id === active.id)
+      const newIndex = newButtons.findIndex((item) => item.id === over.id)
 
-    if (targetIndex >= 0 && targetIndex < newButtons.length) {
-      [newButtons[index], newButtons[targetIndex]] = [newButtons[targetIndex], newButtons[index]]
+      const reorderedButtons = arrayMove(newButtons, oldIndex, newIndex)
 
       // 更新order
-      newButtons.forEach((button, idx) => {
+      reorderedButtons.forEach((button, idx) => {
         button.order = idx + 1
       })
 
-      setButtons(newButtons)
-      await customPromptsService.setTaskPromptButtons(newButtons)
+      setButtons(reorderedButtons)
+
+      try {
+        await customPromptsService.setTaskPromptButtons(reorderedButtons)
+        message.success(tp('messages.reorderSuccess'))
+      } catch (error) {
+        // 如果保存失败，恢复原来的顺序
+        setButtons(buttons)
+        message.error(tp('messages.reorderFailed'))
+      }
     }
   }
 
@@ -136,63 +245,36 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
         </Button>
       </div>
 
-      <List
-        dataSource={buttons}
-        renderItem={(button, index) => (
-          <List.Item>
-            <Card 
-              size="small" 
-              style={{ width: '100%' }}
-              title={button.name || '未命名按钮'}
-              extra={
-                <Space>
-                  <Button 
-                    type="text" 
-                    size="small"
-                    icon={<ArrowUpOutlined />}
-                    disabled={index === 0}
-                    onClick={() => handleMoveButton(button.id, 'up')}
-                  />
-                  <Button 
-                    type="text" 
-                    size="small"
-                    icon={<ArrowDownOutlined />}
-                    disabled={index === buttons.length - 1}
-                    onClick={() => handleMoveButton(button.id, 'down')}
-                  />
-                  <Button 
-                    type="text" 
-                    size="small"
-                    icon={<EditOutlined />}
-                    onClick={() => handleEditButton(button)}
-                  />
-                  <Popconfirm
-                    title={tp('messages.deleteConfirm')}
-                    onConfirm={() => handleDeleteButton(button.id)}
-                  >
-                    <Button 
-                      type="text" 
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      danger
-                    />
-                  </Popconfirm>
-                </Space>
-              }
-            >
-              <div style={{ 
-                maxHeight: '100px', 
-                overflow: 'hidden',
-                color: '#666',
-                fontSize: '12px'
-              }}>
-                {button.content.substring(0, 200)}
-                {button.content.length > 200 && '...'}
-              </div>
-            </Card>
-          </List.Item>
-        )}
-      />
+      {buttons.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+          {tp('taskPrompts.noButtons')}
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={buttons.map(button => button.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <List
+              dataSource={buttons}
+              renderItem={(button, index) => (
+                <SortableButtonItem
+                  key={button.id}
+                  id={button.id}
+                  button={button}
+                  index={index}
+                  onEdit={handleEditButton}
+                  onDelete={handleDeleteButton}
+                />
+              )}
+            />
+          </SortableContext>
+        </DndContext>
+      )}
 
       {/* 编辑按钮模态框 */}
       <Modal

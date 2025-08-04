@@ -15,8 +15,9 @@
   },
   "taskPrompts": {
     "title": "任务详情页提示词按钮",
-    "description": "在这里您可以自定义任务详情页面的复制提示词按钮，包括按钮的数量、文案和复制的内容。",
+    "description": "在这里您可以自定义任务详情页面的复制提示词按钮，包括按钮的数量、文案和复制的内容。拖拽按钮可以调整显示顺序。",
     "addButton": "添加按钮",
+    "noButtons": "暂无自定义按钮，点击上方\"添加按钮\"创建",
     "buttonConfig": {
       "title": "按钮配置",
       "name": "按钮名称",
@@ -166,7 +167,9 @@
     "projectDescription": "项目描述：",
     "close": "关闭",
     "noDescription": "无描述",
-    "none": "无"
+    "none": "无",
+    "reorderSuccess": "按钮顺序已更新",
+    "reorderFailed": "更新按钮顺序失败"
   },
   "sampleData": {
     "projectName": "示例项目",

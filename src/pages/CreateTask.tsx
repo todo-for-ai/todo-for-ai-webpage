@@ -24,7 +24,7 @@ import {
   FileAddOutlined,
   EyeOutlined
 } from '@ant-design/icons'
-import { useTaskStore, useProjectStore } from '../stores'
+import { useTaskStore } from '../stores'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
 import { TaskEditStatus } from '../components/TaskEditStatus'
@@ -62,7 +62,7 @@ const CreateTask: React.FC = () => {
   const autoSaveTimeoutRef = useRef<number | undefined>(undefined)
 
   const { createTask, updateTask, getTask } = useTaskStore()
-  const { projects, fetchProjects, loading: projectsLoading } = useProjectStore()
+  // 移除useProjectStore的依赖，因为ProjectSelector有自己独立的项目加载逻辑
   const { t: tc } = useTranslation('common')
   const { t, tp } = usePageTranslation('createTask')
 
@@ -273,53 +273,85 @@ const CreateTask: React.FC = () => {
     return draft.content !== originalTaskContent
   }
 
-  useEffect(() => {
-    fetchProjects()
-  }, [fetchProjects])
+  // 移除fetchProjects调用，因为ProjectSelector有自己独立的项目加载逻辑
+  // 这样可以避免项目列表页面的搜索状态影响创建任务页面
+  // useEffect(() => {
+  //   console.log('[CreateTask] Calling fetchProjects...')
+  //   fetchProjects()
+  // }, [fetchProjects])
 
-  // 当projects加载完成且有defaultProjectId时，确保设置默认项目
+  // 简化的自动选择项目逻辑，不依赖useProjectStore的数据
   useEffect(() => {
-    if (!projectsLoading && projects.length > 0 && defaultProjectId && !isEditMode) {
+    console.log('[CreateTask] Auto-select project useEffect triggered:', {
+      defaultProjectId,
+      isEditMode
+    })
+
+    // 如果有默认项目ID且不是编辑模式，直接设置到表单中
+    if (defaultProjectId && !isEditMode) {
       const projectId = parseInt(defaultProjectId, 10)
-      const projectExists = projects.find(p => p.id === projectId)
+      const currentProjectId = form.getFieldValue('project_id')
 
-      if (projectExists) {
-        const currentProjectId = form.getFieldValue('project_id')
-        // 只有当前表单中没有设置项目ID时才设置默认值
-        if (!currentProjectId) {
-          // 检查是否是特殊模式
-          const isCopyMode = searchParams.get('copy') === 'true'
-          const isContinueMode = searchParams.get('continue') === 'true'
-          const fromTaskId = searchParams.get('from_task')
+      console.log('[CreateTask] Setting default project:', {
+        projectId,
+        currentProjectId
+      })
 
-          // 如果不是特殊模式，设置默认项目
-          if (!isCopyMode && !isContinueMode && !fromTaskId) {
-            // 尝试加载草稿
-            const draft = loadDraft(projectId)
-            if (draft) {
-              form.setFieldsValue({
-                project_id: projectId,
-                ...draft
-              })
-              setEditorContent(draft.content || '')
-              message.info(tp('messages.draftLoaded'))
-            } else {
-              // 加载用户偏好设置
-              const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
-              const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
+      // 只有当前表单中没有设置项目ID时才设置默认值
+      if (!currentProjectId) {
+        // 检查是否是特殊模式
+        const isCopyMode = searchParams.get('copy') === 'true'
+        const isContinueMode = searchParams.get('continue') === 'true'
+        const fromTaskId = searchParams.get('from_task')
 
-              form.setFieldsValue({
-                project_id: projectId,
-                status: 'todo',
-                priority: savedPriority,
-                is_ai_task: savedIsAiTask
-              })
-            }
+        console.log('[CreateTask] Special modes check:', {
+          isCopyMode,
+          isContinueMode,
+          fromTaskId
+        })
+
+        // 如果不是特殊模式，设置默认项目
+        if (!isCopyMode && !isContinueMode && !fromTaskId) {
+          console.log('[CreateTask] Setting default project:', projectId)
+
+          // 尝试加载草稿
+          const draft = loadDraft(projectId)
+          if (draft) {
+            console.log('[CreateTask] Loading draft for project:', projectId)
+            form.setFieldsValue({
+              project_id: projectId,
+              ...draft
+            })
+            setEditorContent(draft.content || '')
+            message.info(tp('messages.draftLoaded'))
+          } else {
+            console.log('[CreateTask] No draft found, setting default values for project:', projectId)
+            // 加载用户偏好设置
+            const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
+            const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
+
+            form.setFieldsValue({
+              project_id: projectId,
+              status: 'todo',
+              priority: savedPriority,
+              is_ai_task: savedIsAiTask
+            })
+
+            console.log('[CreateTask] Form values set:', {
+              project_id: projectId,
+              status: 'todo',
+              priority: savedPriority,
+              is_ai_task: savedIsAiTask
+            })
           }
+        } else {
+          console.log('[CreateTask] Skipping auto-select due to special mode')
         }
+      } else {
+        console.log('[CreateTask] Skipping auto-select, form already has project_id:', currentProjectId)
       }
     }
-  }, [projectsLoading, projects, defaultProjectId, isEditMode, form, searchParams, loadDraft, tp])
+  }, [defaultProjectId, isEditMode, form, searchParams, loadDraft, tp])
 
   // 单独处理编辑模式和默认项目设置
   useEffect(() => {
@@ -490,24 +522,16 @@ ${sourceTask.content || '无内容'}
     }
   }, [defaultProjectId, id])
 
-  // 设置网页标题
+  // 设置网页标题 - 简化版本，不依赖项目数据
   useEffect(() => {
-    const projectId = form.getFieldValue('project_id') || defaultProjectId
-    if (projectId && projects.length > 0) {
-      const project = projects.find(p => p.id === parseInt(projectId, 10))
-      const projectName = project?.name || tp('unknownProject')
-      const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
-      document.title = `${projectName} - ${pageTitle} - Todo for AI`
-    } else {
-      const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
-      document.title = `${pageTitle} - Todo for AI`
-    }
+    const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
+    document.title = `${pageTitle} - Todo for AI`
 
     // 组件卸载时恢复默认标题
     return () => {
       document.title = 'Todo for AI'
     }
-  }, [projects, isEditMode, form, defaultProjectId, tp])
+  }, [isEditMode, tp])
 
   // 为没有默认项目ID的新建任务恢复用户偏好设置
   useEffect(() => {
@@ -979,7 +1003,6 @@ ${sourceTask.content || '无内容'}
                       placeholder={tp('form.project.placeholder')}
                       showSearch
                       allowClear={false}
-                      loading={projectsLoading}
                       simpleMode
                     />
                   </Form.Item>

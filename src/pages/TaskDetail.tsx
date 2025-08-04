@@ -169,13 +169,37 @@ const TaskDetail: React.FC = () => {
           loadProjectContext(result.project_id)
         }
       } else {
-        message.error(tp('messages.taskNotFound'))
+        const errorMsg = tp('messages.taskNotFound')
+        message.error(errorMsg)
         navigate('/todo-for-ai/pages/tasks')
+        throw new Error(errorMsg)
       }
     } catch (error) {
       console.error('加载任务失败:', error)
-      message.error(tp('messages.loadTaskFailed'))
+
+      // 如果错误已经被处理过（比如任务不存在），直接抛出
+      if (error instanceof Error && error.message === tp('messages.taskNotFound')) {
+        throw error
+      }
+
+      // 构建详细的错误信息
+      let errorMessage = tp('messages.loadTaskFailed')
+      if (error instanceof Error) {
+        errorMessage = `${tp('messages.loadTaskFailed')}: ${error.message}`
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any
+        if (errorObj.response?.data?.message) {
+          errorMessage = `${tp('messages.loadTaskFailed')}: ${errorObj.response.data.message}`
+        } else if (errorObj.response?.statusText) {
+          errorMessage = `${tp('messages.loadTaskFailed')}: ${errorObj.response.status} ${errorObj.response.statusText}`
+        } else if (errorObj.message) {
+          errorMessage = `${tp('messages.loadTaskFailed')}: ${errorObj.message}`
+        }
+      }
+
+      message.error(errorMessage)
       navigate('/todo-for-ai/pages/tasks')
+      throw new Error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -262,14 +286,26 @@ const TaskDetail: React.FC = () => {
 
       // 重新加载任务数据
       await loadTask(parseInt(id, 10))
-      // 重新加载项目任务列表
-      if (task) {
-        await loadProjectTasks(task.project_id)
-      }
       message.success(tp('messages.refreshSuccess'))
     } catch (error) {
       console.error('刷新任务失败:', error)
-      message.error(tp('messages.refreshFailed'))
+
+      // 显示具体的错误信息
+      let errorMessage = tp('messages.refreshFailed')
+      if (error instanceof Error) {
+        errorMessage = `${tp('messages.refreshFailed')}: ${error.message}`
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any
+        if (errorObj.response?.data?.message) {
+          errorMessage = `${tp('messages.refreshFailed')}: ${errorObj.response.data.message}`
+        } else if (errorObj.response?.statusText) {
+          errorMessage = `${tp('messages.refreshFailed')}: ${errorObj.response.status} ${errorObj.response.statusText}`
+        } else if (errorObj.message) {
+          errorMessage = `${tp('messages.refreshFailed')}: ${errorObj.message}`
+        }
+      }
+
+      message.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -733,15 +769,15 @@ ${task.content || '无详细内容'}
           <Col xs={24} sm={16} md={18} lg={19} xl={20} xxl={20} className={styles.actionCol}>
             <div className={styles.actionSection}>{tp('actions.taskActions')}</div>
             <div className={styles.taskActionButtons}>
-              {/* 刷新任务按钮 - 蓝色系，表示数据刷新操作 */}
+              {/* 刷新任务按钮 - 紫色系，表示数据刷新操作 */}
               <Button
                 type="primary"
                 icon={<ReloadOutlined />}
                 onClick={handleRefreshTask}
                 loading={loading}
                 style={{
-                  backgroundColor: '#1890ff',
-                  borderColor: '#1890ff'
+                  backgroundColor: '#722ed1',
+                  borderColor: '#722ed1'
                 }}
                 title={tp('tooltips.refreshTask')}
               >

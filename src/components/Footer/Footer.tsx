@@ -14,7 +14,30 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ className, style }) => {
   const { tc } = useTranslation()
 
-  const version = 'v1.0'
+  // 获取git信息和构建时间
+  const gitTag = __GIT_TAG__
+  const commitId = __COMMIT_ID__
+  const buildTime = __BUILD_TIME__
+
+  // 格式化构建时间
+  const formatBuildTime = (isoString: string) => {
+    try {
+      const date = new Date(isoString)
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Shanghai'
+      })
+    } catch {
+      return isoString
+    }
+  }
+
+  // 构建版本信息字符串
+  const versionInfo = `${tc('footer.version')} ${gitTag}, build ${commitId} at ${formatBuildTime(buildTime)}`
 
   return (
     <AntFooter
@@ -34,7 +57,7 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
         {/* 第一行：版本信息 */}
         <div className="footer-line footer-version-line">
           <span className="footer-version">
-            {tc('footer.version')} {version}
+            {versionInfo}
           </span>
         </div>
 
@@ -60,6 +83,7 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
             >
               CC11001100
             </a>
+            {' '}With ❤️
           </span>
         </div>
       </div>
