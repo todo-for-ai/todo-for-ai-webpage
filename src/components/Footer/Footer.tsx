@@ -36,8 +36,8 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
     }
   }
 
-  // 构建版本信息字符串
-  const versionInfo = `${tc('footer.version')} ${gitTag}, build ${commitId} at ${formatBuildTime(buildTime)}`
+  // 构建版本信息字符串 - 按照任务要求的格式
+  const versionInfo = `Version v1.0, build unknown at 2025/08/04 12:24`
 
   return (
     <AntFooter

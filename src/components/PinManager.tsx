@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Modal,
   List,
@@ -114,6 +114,7 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
   const { t } = useTranslation('pinManager')
   const [pins, setPins] = useState<PinnedProject[]>([])
   const [loading, setLoading] = useState(false)
+  const [screenHeight, setScreenHeight] = useState(window.innerHeight)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -121,6 +122,30 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  // 监听屏幕高度变化
+  useEffect(() => {
+    const handleResize = () => setScreenHeight(window.innerHeight)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // 计算内容区域的动态高度
+  const calculateContentHeight = useMemo(() => {
+    const ITEM_HEIGHT = 68 // 每个Pin项目的高度（包括padding和margin）
+    const MODAL_OVERHEAD = 200 // Modal的header、footer、padding等占用的高度
+    const MAX_HEIGHT_RATIO = 0.7 // 最大高度占屏幕高度的比例
+
+    if (pins.length === 0) {
+      return 'auto' // 空状态时自动高度
+    }
+
+    const contentHeight = pins.length * ITEM_HEIGHT
+    const maxAllowedHeight = (screenHeight * MAX_HEIGHT_RATIO) - MODAL_OVERHEAD
+
+    // 如果内容高度小于最大允许高度，则不限制高度；否则限制为最大允许高度
+    return contentHeight <= maxAllowedHeight ? 'auto' : maxAllowedHeight
+  }, [pins.length, screenHeight])
 
   // 加载Pin列表
   const loadPins = async () => {
@@ -245,7 +270,10 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
             items={pins.map(pin => pin.id.toString())} 
             strategy={verticalListSortingStrategy}
           >
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <div style={{
+              maxHeight: calculateContentHeight === 'auto' ? 'none' : `${calculateContentHeight}px`,
+              overflowY: calculateContentHeight === 'auto' ? 'visible' : 'auto'
+            }}>
               {pins.map((pin) => (
                 <SortableItem
                   key={pin.id}

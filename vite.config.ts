@@ -5,11 +5,14 @@ import { execSync } from 'child_process'
 // 获取git信息和构建时间
 function getGitInfo() {
   try {
+    // 设置git命令的执行选项，确保从正确的仓库根目录获取信息
+    const gitOptions = { encoding: 'utf8' as const, cwd: '..' }
+
     // 获取最新的git tag
-    const gitTag = execSync('git tag --sort=-version:refname | head -1', { encoding: 'utf8' }).trim() || 'v1.0'
+    const gitTag = execSync('git tag --sort=-version:refname | head -1', gitOptions).trim() || 'v1.0'
 
     // 获取当前commit id (短版本)
-    const commitId = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()
+    const commitId = execSync('git rev-parse --short HEAD', gitOptions).trim()
 
     // 获取构建时间
     const buildTime = new Date().toISOString()
