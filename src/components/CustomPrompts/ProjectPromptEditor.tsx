@@ -3,11 +3,12 @@ import { Space, Button, message, Modal, Spin, Alert } from 'antd'
 import { SaveOutlined, ReloadOutlined, EyeOutlined, BookOutlined, PlusOutlined } from '@ant-design/icons'
 import MilkdownEditor from '../MilkdownEditor'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
-import { renderPromptTemplate, type RenderContext } from '../../utils/promptRenderer'
+import { renderPromptTemplate, buildContextRulesData, type RenderContext, type ContextRuleData } from '../../utils/promptRenderer'
 import { customPromptsService } from '../../services/customPromptsService'
 import VariableSelector from './VariableSelector'
 import ProjectSelector from '../ProjectSelector'
 import { apiClient } from '../../api'
+import { contextRulesApi } from '../../api/contextRules'
 import type { Project, Task } from '../../api'
 
 interface ProjectPromptEditorProps {
@@ -27,6 +28,8 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [projectTasks, setProjectTasks] = useState<Task[]>([])
+  const [globalContextRules, setGlobalContextRules] = useState<ContextRuleData[]>([])
+  const [projectContextRules, setProjectContextRules] = useState<ContextRuleData[]>([])
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
 
@@ -38,9 +41,86 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
     // 从服务加载用户自定义的提示词
     const template = customPromptsService.getProjectPromptTemplate()
     setContent(template)
+
+    // 加载全局上下文规则
+    loadGlobalContextRules()
   }, [])
 
+  // 加载全局上下文规则
+  const loadGlobalContextRules = async () => {
+    try {
+      const response = await contextRulesApi.getGlobalContextRules()
+      if (response && Array.isArray(response)) {
+        setGlobalContextRules(response.map(rule => ({
+          id: rule.id,
+          name: rule.name,
+          description: rule.description,
+          content: rule.content,
+          priority: rule.priority,
+          is_active: rule.is_active,
+          is_global: rule.is_global,
+          project_id: rule.project_id
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to load global context rules:', error)
+      // 创建一些示例全局规则用于演示
+      setGlobalContextRules([
+        {
+          id: 1,
+          name: tp('sampleData.contextRules.codingStandards.name'),
+          description: tp('sampleData.contextRules.codingStandards.description'),
+          content: '* 使用TypeScript进行开发\n* 遵循ESLint规则\n* 代码需要有适当的注释',
+          priority: 10,
+          is_active: true,
+          is_global: true
+        },
+        {
+          id: 2,
+          name: tp('sampleData.contextRules.testRequirements.name'),
+          description: tp('sampleData.contextRules.testRequirements.description'),
+          content: '* 所有功能都需要编写单元测试\n* 使用Jest作为测试框架\n* 测试覆盖率需要达到80%以上',
+          priority: 5,
+          is_active: true,
+          is_global: true
+        }
+      ])
+    }
+  }
 
+  // 加载项目上下文规则
+  const loadProjectContextRules = async (projectId: number) => {
+    try {
+      const response = await contextRulesApi.getContextRules({ project_id: projectId })
+      if (response && response.items && Array.isArray(response.items)) {
+        setProjectContextRules(response.items.map(rule => ({
+          id: rule.id,
+          name: rule.name,
+          description: rule.description,
+          content: rule.content,
+          priority: rule.priority,
+          is_active: rule.is_active,
+          is_global: rule.is_global,
+          project_id: rule.project_id
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to load project context rules:', error)
+      // 创建一些示例项目规则用于演示
+      setProjectContextRules([
+        {
+          id: 101,
+          name: tp('sampleData.contextRules.projectSpecific.name'),
+          description: tp('sampleData.contextRules.projectSpecific.description'),
+          content: '* 使用React Hooks进行状态管理\n* 组件需要支持国际化\n* 所有API调用需要错误处理',
+          priority: 15,
+          is_active: true,
+          is_global: false,
+          project_id: projectId
+        }
+      ])
+    }
+  }
 
   // 加载项目任务
   const loadProjectTasks = async (projectId: number) => {
@@ -60,7 +140,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
         {
           id: 101,
           project_id: projectId || 1,
-          title: '实现用户登录功能',
+          title: tp('sampleData.tasks.loginFeature'),
           content: '需要实现用户登录功能，包括GitHub和Google OAuth',
           status: 'todo',
           priority: 'high',
@@ -73,7 +153,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
         {
           id: 102,
           project_id: projectId || 1,
-          title: '优化数据库查询性能',
+          title: tp('sampleData.tasks.dbOptimization'),
           content: '分析慢查询，优化数据库索引',
           status: 'in_progress',
           priority: 'medium',
@@ -86,7 +166,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
         {
           id: 103,
           project_id: projectId || 1,
-          title: '编写API文档',
+          title: tp('sampleData.tasks.apiDocs'),
           content: '为所有API接口编写详细的文档',
           status: 'review',
           priority: 'low',
@@ -110,7 +190,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
       message.success(tp('messages.saveSuccess'))
     } catch (error) {
       console.error('Failed to save project prompt:', error)
-      message.error('保存失败，请稍后重试')
+      message.error(tp('messages.saveFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -119,17 +199,17 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
   // 重置为默认模板
   const handleReset = () => {
     Modal.confirm({
-      title: '确认重置',
+      title: tp('messages.resetTitle'),
       content: tp('messages.resetConfirm'),
       onOk: async () => {
         try {
           await customPromptsService.resetToDefaults()
           const template = customPromptsService.getProjectPromptTemplate()
           setContent(template)
-          message.success('已重置为默认模板')
+          message.success(tp('messages.resetSuccess'))
         } catch (error) {
           console.error('Failed to reset:', error)
-          message.error('重置失败，请稍后重试')
+          message.error(tp('messages.resetFailed'))
         }
       }
     })
@@ -150,45 +230,87 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
 
     if (projectId && project) {
       try {
-        // 加载项目任务
-        await loadProjectTasks(projectId)
+        // 加载项目任务和上下文规则
+        await Promise.all([
+          loadProjectTasks(projectId),
+          loadProjectContextRules(projectId)
+        ])
       } catch (error) {
         console.error('Failed to load project data:', error)
-        setPreviewError('加载项目数据失败')
+        setPreviewError(tp('messages.previewLoadFailed'))
       }
     } else {
-      // 清空任务列表
+      // 清空任务列表和项目规则
       setProjectTasks([])
+      setProjectContextRules([])
     }
 
     setPreviewLoading(false)
   }
 
   // 创建示例渲染上下文
-  const createSampleContext = (): RenderContext => ({
-    project: {
-      id: 1,
-      name: '示例项目',
-      description: '这是一个示例项目的描述',
-      github_repo: 'https://github.com/example/project',
-      context: '项目上下文信息',
-      color: '#1890ff',
-      status: 'active',
-      created_at: '2024-01-01T10:00:00Z',
-      updated_at: '2024-01-01T10:00:00Z'
-    },
-    system: {
-      url: 'https://todo4ai.org',
-      current_time: new Date().toISOString()
-    },
-    tasks: {
-      count: 5,
-      list: '1. [高] 示例任务1 (ID: 1)\n2. [中] 示例任务2 (ID: 2)\n3. [低] 示例任务3 (ID: 3)',
-      pending_count: 3,
-      in_progress_count: 1,
-      review_count: 1
+  const createSampleContext = (): RenderContext => {
+    // 创建示例上下文规则数据
+    const sampleGlobalRules: ContextRuleData[] = [
+      {
+        id: 1,
+        name: tp('sampleData.contextRules.codingStandards.name'),
+        description: tp('sampleData.contextRules.codingStandards.description'),
+        content: '* 使用TypeScript进行开发\n* 遵循ESLint规则\n* 代码需要有适当的注释',
+        priority: 10,
+        is_active: true,
+        is_global: true
+      },
+      {
+        id: 2,
+        name: tp('sampleData.contextRules.testRequirements.name'),
+        description: tp('sampleData.contextRules.testRequirements.description'),
+        content: '* 所有功能都需要编写单元测试\n* 使用Jest作为测试框架\n* 测试覆盖率需要达到80%以上',
+        priority: 5,
+        is_active: true,
+        is_global: true
+      }
+    ]
+
+    const sampleProjectRules: ContextRuleData[] = [
+      {
+        id: 101,
+        name: tp('sampleData.contextRules.projectSpecific.name'),
+        description: tp('sampleData.contextRules.projectSpecific.description'),
+        content: '* 使用React Hooks进行状态管理\n* 组件需要支持国际化\n* 所有API调用需要错误处理',
+        priority: 15,
+        is_active: true,
+        is_global: false,
+        project_id: 1
+      }
+    ]
+
+    return {
+      project: {
+        id: 1,
+        name: tp('sampleData.projectName'),
+        description: tp('sampleData.projectDescription'),
+        github_repo: 'https://github.com/example/project',
+        context: tp('sampleData.projectContext'),
+        color: '#1890ff',
+        status: 'active',
+        created_at: '2024-01-01T10:00:00Z',
+        updated_at: '2024-01-01T10:00:00Z'
+      },
+      system: {
+        url: 'https://todo4ai.org',
+        current_time: new Date().toISOString()
+      },
+      tasks: {
+        count: 5,
+        list: tp('sampleData.taskList'),
+        pending_count: 3,
+        in_progress_count: 1,
+        review_count: 1
+      },
+      context_rules: buildContextRulesData(sampleGlobalRules, sampleProjectRules)
     }
-  })
+  }
 
   // 创建真实数据渲染上下文
   const createRealContext = (): RenderContext | null => {
@@ -203,10 +325,10 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
     const formatTasksList = (tasks: Task[]) => {
       return tasks.map((task, index) => {
         const priorityMap: Record<string, string> = {
-          'high': '高',
-          'medium': '中',
-          'low': '低',
-          'urgent': '紧急'
+          'high': tp('priority.high'),
+          'medium': tp('priority.medium'),
+          'low': tp('priority.low'),
+          'urgent': tp('priority.urgent')
         }
         const priority = priorityMap[task.priority] || task.priority
         return `${index + 1}. [${priority}] ${task.title} (ID: ${task.id})`
@@ -217,9 +339,9 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
       project: {
         id: selectedProject.id,
         name: selectedProject.name,
-        description: selectedProject.description || '无描述',
-        github_repo: (selectedProject as any).github_repo || '无',
-        context: (selectedProject as any).context || '无',
+        description: selectedProject.description || tp('messages.noDescription'),
+        github_repo: (selectedProject as any).github_repo || tp('messages.none'),
+        context: (selectedProject as any).context || tp('messages.none'),
         color: selectedProject.color || '#1890ff',
         status: selectedProject.status,
         created_at: selectedProject.created_at,
@@ -235,14 +357,15 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
         pending_count: todoTasks.length,
         in_progress_count: inProgressTasks.length,
         review_count: reviewTasks.length
-      }
+      },
+      context_rules: buildContextRulesData(globalContextRules, projectContextRules)
     }
   }
 
   // 渲染预览
   const renderPreview = (template: string) => {
-    // 如果选择了项目且有数据，使用真实数据
-    if (selectedProject && projectTasks.length >= 0) {
+    // 如果选择了项目且数据加载完成且没有错误，使用真实数据
+    if (selectedProject && !previewLoading && !previewError) {
       const realContext = createRealContext()
       if (realContext) {
         return renderPromptTemplate(template, realContext)
@@ -275,7 +398,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
           icon={<PlusOutlined />}
           onClick={() => setVariableSelectorVisible(true)}
         >
-          插入变量
+          {tp('variables.insertVariable')}
         </Button>
       </Space>
 
@@ -331,7 +454,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
             setProjectTasks([])
             setPreviewError(null)
           }}>
-            关闭
+            {tp('messages.close')}
           </Button>,
           <Button
             key="copy"
@@ -349,11 +472,11 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
       >
         <div style={{ marginBottom: '16px' }}>
           <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
-            选择项目进行预览（可选）：
+            {tp('messages.selectProjectForPreview')}
           </div>
           <ProjectSelector
             style={{ width: '100%' }}
-            placeholder="选择一个项目来使用真实数据预览，或留空使用示例数据"
+            placeholder={tp('messages.selectProjectPlaceholder')}
             allowClear
             value={selectedProjectId}
             onChange={handleProjectSelect}
@@ -368,12 +491,12 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
               borderRadius: '4px',
               fontSize: '12px'
             }}>
-              已选择项目：<strong>{selectedProject.name}</strong> |
-              任务数量：<strong>{projectTasks.length}</strong>
+              {tp('messages.selectedProject')}<strong>{selectedProject.name}</strong> |
+              {tp('messages.taskCount')}<strong>{projectTasks.length}</strong>
               {selectedProject.description && (
                 <>
                   <br />
-                  项目描述：<span style={{ color: '#666' }}>{selectedProject.description}</span>
+                  {tp('messages.projectDescription')}<span style={{ color: '#666' }}>{selectedProject.description}</span>
                 </>
               )}
             </div>
@@ -382,7 +505,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
 
         {previewError && (
           <Alert
-            message="预览错误"
+            message={tp('messages.previewError')}
             description={previewError}
             type="error"
             style={{ marginBottom: '16px' }}

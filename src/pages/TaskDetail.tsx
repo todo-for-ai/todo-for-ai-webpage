@@ -29,7 +29,8 @@ import {
   RightOutlined,
   SettingOutlined,
   CheckCircleOutlined,
-  BranchesOutlined
+  BranchesOutlined,
+  ReloadOutlined
 } from '@ant-design/icons'
 import { useTaskStore, useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
@@ -42,6 +43,7 @@ import { customPromptsService } from '../services/customPromptsService'
 import { type RenderContext } from '../utils/promptRenderer'
 import dayjs from 'dayjs'
 import styles from './TaskDetail.module.css'
+import { analytics } from '../utils/analytics'
 
 const { Title, Paragraph } = Typography
 
@@ -64,6 +66,8 @@ const TaskDetail: React.FC = () => {
   useEffect(() => {
     if (id) {
       loadTask(parseInt(id, 10))
+      // 追踪任务查看事件
+      analytics.task.view(id)
     }
   }, [id])
 
@@ -244,6 +248,30 @@ const TaskDetail: React.FC = () => {
   const handleCreateFromTask = () => {
     if (task) {
       navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}&from_task=${task.id}`)
+    }
+  }
+
+  // 刷新任务数据
+  const handleRefreshTask = async () => {
+    if (!id) return
+
+    try {
+      setLoading(true)
+      // 追踪刷新事件
+      analytics.task.view(id, task?.project_id?.toString())
+
+      // 重新加载任务数据
+      await loadTask(parseInt(id, 10))
+      // 重新加载项目任务列表
+      if (task) {
+        await loadProjectTasks(task.project_id)
+      }
+      message.success(tp('messages.refreshSuccess'))
+    } catch (error) {
+      console.error('刷新任务失败:', error)
+      message.error(tp('messages.refreshFailed'))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -705,6 +733,20 @@ ${task.content || '无详细内容'}
           <Col xs={24} sm={16} md={18} lg={19} xl={20} xxl={20} className={styles.actionCol}>
             <div className={styles.actionSection}>{tp('actions.taskActions')}</div>
             <div className={styles.taskActionButtons}>
+              {/* 刷新任务按钮 - 蓝色系，表示数据刷新操作 */}
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={handleRefreshTask}
+                loading={loading}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
+                title={tp('tooltips.refreshTask')}
+              >
+                {tp('actions.refresh')}
+              </Button>
               {/* 创建任务按钮 - 绿色系，表示积极的创建操作 */}
               <Button
                 type="primary"
@@ -992,19 +1034,75 @@ ${task.content || '无详细内容'}
                 ),
                 children: (
                   <div>
-                    <div style={{ marginBottom: '16px' }}>
-                      <Tag color="green">{tp('projectContext.appliedRules')}</Tag>
-                      {projectContext.rules.map(rule => (
-                        <Tag
-                          key={rule.id}
-                          color={rule.is_global ? 'purple' : 'blue'}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
-                        >
-                          {rule.is_global ? '🌐' : '📁'} {rule.name}
+                    {/* 项目级别规则 */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <Tag color="blue" icon={<span>📁</span>}>
+                          {tp('projectContext.projectRules')}
                         </Tag>
-                      ))}
+                        <Tag color="geekblue">
+                          {tp('projectContext.projectRulesCount', {
+                            count: projectContext.rules.filter(rule => !rule.is_global).length
+                          })}
+                        </Tag>
+                      </div>
+                      <div style={{ marginLeft: '16px', marginBottom: '16px' }}>
+                        {projectContext.rules.filter(rule => !rule.is_global).length > 0 ? (
+                          projectContext.rules
+                            .filter(rule => !rule.is_global)
+                            .map(rule => (
+                              <Tag
+                                key={rule.id}
+                                color="blue"
+                                style={{ cursor: 'pointer', marginBottom: '4px' }}
+                                onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
+                              >
+                                📁 {rule.name}
+                              </Tag>
+                            ))
+                        ) : (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>
+                            {tp('projectContext.noProjectRules')}
+                          </span>
+                        )}
+                      </div>
                     </div>
+
+                    {/* 用户全局规则 */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <Tag color="purple" icon={<span>🌐</span>}>
+                          {tp('projectContext.globalRules')}
+                        </Tag>
+                        <Tag color="magenta">
+                          {tp('projectContext.globalRulesCount', {
+                            count: projectContext.rules.filter(rule => rule.is_global).length
+                          })}
+                        </Tag>
+                      </div>
+                      <div style={{ marginLeft: '16px', marginBottom: '16px' }}>
+                        {projectContext.rules.filter(rule => rule.is_global).length > 0 ? (
+                          projectContext.rules
+                            .filter(rule => rule.is_global)
+                            .map(rule => (
+                              <Tag
+                                key={rule.id}
+                                color="purple"
+                                style={{ cursor: 'pointer', marginBottom: '4px' }}
+                                onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
+                              >
+                                🌐 {rule.name}
+                              </Tag>
+                            ))
+                        ) : (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>
+                            {tp('projectContext.noGlobalRules')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 合并后的上下文内容 */}
                     <div className={styles.markdownContainer}>
                       <MarkdownEditor
                         key={`project-context-${task.id}`}

@@ -31,31 +31,45 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
   // 变量分类
   const variableCategories = {
     project: [
-      { name: 'project.name', description: tp('variables.project.name'), example: '示例项目' },
-      { name: 'project.description', description: tp('variables.project.description'), example: '这是一个示例项目' },
-      { name: 'project.github_repo', description: tp('variables.project.github_repo'), example: 'https://github.com/example/project' },
-      { name: 'project.context', description: tp('variables.project.context'), example: '项目上下文信息' },
-      { name: 'project.color', description: tp('variables.project.color'), example: '#1890ff' },
+      { name: 'project.name', description: tp('variables.project.name'), example: tp('variables.examples.project.name') },
+      { name: 'project.description', description: tp('variables.project.description'), example: tp('variables.examples.project.description') },
+      { name: 'project.github_repo', description: tp('variables.project.github_repo'), example: tp('variables.examples.project.github_repo') },
+      { name: 'project.context', description: tp('variables.project.context'), example: tp('variables.examples.project.context') },
+      { name: 'project.color', description: tp('variables.project.color'), example: tp('variables.examples.project.color') },
     ],
     task: [
-      { name: 'task.id', description: tp('variables.task.id'), example: '123' },
-      { name: 'task.title', description: tp('variables.task.title'), example: '示例任务' },
-      { name: 'task.content', description: tp('variables.task.content'), example: '任务详细内容' },
-      { name: 'task.status', description: tp('variables.task.status'), example: 'todo' },
-      { name: 'task.priority', description: tp('variables.task.priority'), example: 'high' },
-      { name: 'task.created_at', description: tp('variables.task.created_at'), example: '2024-01-01 10:00:00' },
-      { name: 'task.due_date', description: tp('variables.task.due_date'), example: '2024-01-31 18:00:00' },
-      { name: 'task.estimated_hours', description: tp('variables.task.estimated_hours'), example: '8' },
-      { name: 'task.tags', description: tp('variables.task.tags'), example: 'frontend, urgent' },
-      { name: 'task.related_files', description: tp('variables.task.related_files'), example: 'file1.js, file2.css' },
+      { name: 'task.id', description: tp('variables.task.id'), example: tp('variables.examples.task.id') },
+      { name: 'task.title', description: tp('variables.task.title'), example: tp('variables.examples.task.title') },
+      { name: 'task.content', description: tp('variables.task.content'), example: tp('variables.examples.task.content') },
+      { name: 'task.status', description: tp('variables.task.status'), example: tp('variables.examples.task.status') },
+      { name: 'task.priority', description: tp('variables.task.priority'), example: tp('variables.examples.task.priority') },
+      { name: 'task.created_at', description: tp('variables.task.created_at'), example: tp('variables.examples.task.created_at') },
+      { name: 'task.due_date', description: tp('variables.task.due_date'), example: tp('variables.examples.task.due_date') },
+      { name: 'task.estimated_hours', description: tp('variables.task.estimated_hours'), example: tp('variables.examples.task.estimated_hours') },
+      { name: 'task.tags', description: tp('variables.task.tags'), example: tp('variables.examples.task.tags') },
+      { name: 'task.related_files', description: tp('variables.task.related_files'), example: tp('variables.examples.task.related_files') },
     ],
     system: [
-      { name: 'system.url', description: tp('variables.system.url'), example: 'https://todo4ai.org' },
-      { name: 'system.current_time', description: tp('variables.system.current_time'), example: '2024-01-01 10:00:00' },
+      { name: 'system.url', description: tp('variables.system.url'), example: tp('variables.examples.system.url') },
+      { name: 'system.current_time', description: tp('variables.system.current_time'), example: tp('variables.examples.system.current_time') },
     ],
     tasks: [
-      { name: 'tasks.count', description: tp('variables.tasks.count'), example: '5' },
-      { name: 'tasks.list', description: tp('variables.tasks.list'), example: '1. [高] 任务1\n2. [中] 任务2' },
+      { name: 'tasks.count', description: tp('variables.tasks.count'), example: tp('variables.examples.tasks.count') },
+      { name: 'tasks.list', description: tp('variables.tasks.list'), example: tp('variables.examples.tasks.list') },
+    ],
+    context_rules: [
+      { name: 'context_rules.global.all', description: tp('variables.contextRules.global.all'), example: tp('variables.examples.contextRules.global.all') },
+      { name: 'context_rules.global.count', description: tp('variables.contextRules.global.count'), example: tp('variables.examples.contextRules.global.count') },
+      { name: 'context_rules.global.names', description: tp('variables.contextRules.global.names'), example: tp('variables.examples.contextRules.global.names') },
+      { name: `context_rules.global.by_name.${tp('variableNames.ruleName')}`, description: tp('variables.contextRules.global.byName'), example: tp('variables.examples.contextRules.global.byName') },
+      { name: 'context_rules.project.all', description: tp('variables.contextRules.project.all'), example: tp('variables.examples.contextRules.project.all') },
+      { name: 'context_rules.project.count', description: tp('variables.contextRules.project.count'), example: tp('variables.examples.contextRules.project.count') },
+      { name: 'context_rules.project.names', description: tp('variables.contextRules.project.names'), example: tp('variables.examples.contextRules.project.names') },
+      { name: `context_rules.project.by_name.${tp('variableNames.ruleName')}`, description: tp('variables.contextRules.project.byName'), example: tp('variables.examples.contextRules.project.byName') },
+      { name: 'context_rules.merged.all', description: tp('variables.contextRules.merged.all'), example: tp('variables.examples.contextRules.merged.all') },
+      { name: 'context_rules.merged.count', description: tp('variables.contextRules.merged.count'), example: tp('variables.examples.contextRules.merged.count') },
+      { name: 'context_rules.merged.names', description: tp('variables.contextRules.merged.names'), example: tp('variables.examples.contextRules.merged.names') },
+      { name: `context_rules.merged.by_name.${tp('variableNames.ruleName')}`, description: tp('variables.contextRules.merged.byName'), example: tp('variables.examples.contextRules.merged.byName') },
     ]
   }
 
@@ -97,7 +111,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
                 size="small"
                 onClick={() => handleInsertVariable(variable.name)}
               >
-                插入
+                {tp('variables.insert')}
               </Button>,
               <Button
                 key="copy"
@@ -106,7 +120,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
                 icon={<CopyOutlined />}
                 onClick={() => handleCopyVariable(variable.name)}
               >
-                复制
+                {tp('variables.copy')}
               </Button>
             ]}
           >
@@ -119,7 +133,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
               }
               description={
                 <Text type="secondary" style={{ fontSize: '12px' }}>
-                  示例: {variable.example}
+                  {tp('variables.example')}: {variable.example}
                 </Text>
               }
             />
@@ -136,7 +150,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
       onCancel={onClose}
       footer={[
         <Button key="close" onClick={onClose}>
-          关闭
+          {tp('variables.close')}
         </Button>
       ]}
       width={800}
@@ -144,7 +158,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
     >
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <Search
-          placeholder="搜索变量..."
+          placeholder={tp('variables.searchPlaceholder')}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: '100%' }}
@@ -155,17 +169,21 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
           <Panel header={tp('variables.project.title')} key="project">
             {renderVariableList(variableCategories.project)}
           </Panel>
-          
+
           <Panel header={tp('variables.task.title')} key="task">
             {renderVariableList(variableCategories.task)}
           </Panel>
-          
+
           <Panel header={tp('variables.system.title')} key="system">
             {renderVariableList(variableCategories.system)}
           </Panel>
-          
+
           <Panel header={tp('variables.tasks.title')} key="tasks">
             {renderVariableList(variableCategories.tasks)}
+          </Panel>
+
+          <Panel header={tp('variables.contextRules.title')} key="context_rules">
+            {renderVariableList(variableCategories.context_rules)}
           </Panel>
         </Collapse>
       </Space>

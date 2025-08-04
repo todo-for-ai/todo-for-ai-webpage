@@ -6,6 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthGuard } from './components/AuthGuard'
 import { tokenRefreshService } from './services/TokenRefreshService'
 import { useAuthStore } from './stores/useAuthStore'
+import PageTracker from './components/PageTracker'
 import {
   Dashboard,
   Projects,
@@ -28,6 +29,7 @@ import Profile from './pages/Profile'
 import UserManagement from './pages/UserManagement'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import TestTelegramGroup from './pages/TestTelegramGroup'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -57,6 +59,7 @@ function App() {
         storageKey: 'milkdown-theme-id'
       }}>
         <Router>
+          <PageTracker />
           <Routes>
             {/* 根目录重定向 */}
             <Route path="/" element={<Navigate to="/todo-for-ai/pages" replace />} />
@@ -65,6 +68,7 @@ function App() {
             <Route path="/todo-for-ai/pages/login" element={<Login />} />
             <Route path="/todo-for-ai/pages/terms" element={<TermsOfService />} />
             <Route path="/todo-for-ai/pages/privacy" element={<PrivacyPolicy />} />
+            <Route path="/todo-for-ai/pages/test-telegram" element={<TestTelegramGroup />} />
 
             {/* 主应用 - 需要认证 */}
             <Route path="/todo-for-ai/pages" element={

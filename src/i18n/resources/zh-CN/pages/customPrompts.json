@@ -29,6 +29,12 @@
   "variables": {
     "title": "支持的变量",
     "viewDocs": "查看变量文档",
+    "insertVariable": "插入变量",
+    "searchPlaceholder": "搜索变量...",
+    "close": "关闭",
+    "insert": "插入",
+    "copy": "复制",
+    "example": "示例",
     "project": {
       "title": "项目变量",
       "name": "项目名称",
@@ -59,6 +65,76 @@
       "title": "任务列表变量",
       "count": "任务数量",
       "list": "任务列表"
+    },
+    "examples": {
+      "project": {
+        "name": "示例项目",
+        "description": "这是一个示例项目",
+        "github_repo": "https://github.com/example/project",
+        "context": "项目上下文信息",
+        "color": "#1890ff"
+      },
+      "task": {
+        "id": "123",
+        "title": "示例任务",
+        "content": "任务详细内容",
+        "status": "todo",
+        "priority": "high",
+        "created_at": "2024-01-01 10:00:00",
+        "due_date": "2024-01-31 18:00:00",
+        "estimated_hours": "8",
+        "tags": "frontend, urgent",
+        "related_files": "file1.js, file2.css"
+      },
+      "system": {
+        "url": "https://todo4ai.org",
+        "current_time": "2024-01-01 10:00:00"
+      },
+      "tasks": {
+        "count": "5",
+        "list": "1. [高] 任务1\n2. [中] 任务2"
+      },
+      "contextRules": {
+        "global": {
+          "all": "### 规则1\n内容1\n\n### 规则2\n内容2",
+          "count": "3",
+          "names": "规则1, 规则2, 规则3",
+          "byName": "具体规则的内容"
+        },
+        "project": {
+          "all": "### 项目规则1\n内容1",
+          "count": "2",
+          "names": "项目规则1, 项目规则2",
+          "byName": "具体项目规则的内容"
+        },
+        "merged": {
+          "all": "### 规则1\n内容1\n\n### 项目规则1\n内容2",
+          "count": "5",
+          "names": "规则1, 规则2, 项目规则1",
+          "byName": "具体规则的内容"
+        }
+      }
+    },
+    "contextRules": {
+      "title": "上下文规则变量",
+      "global": {
+        "all": "所有全局上下文规则的内容",
+        "count": "全局上下文规则数量",
+        "names": "全局上下文规则名称列表",
+        "byName": "按名称获取特定全局规则"
+      },
+      "project": {
+        "all": "当前项目所有上下文规则的内容",
+        "count": "项目上下文规则数量",
+        "names": "项目上下文规则名称列表",
+        "byName": "按名称获取特定项目规则"
+      },
+      "merged": {
+        "all": "全局和项目规则合并后的内容",
+        "count": "合并后的规则总数",
+        "names": "合并后的规则名称列表",
+        "byName": "按名称获取合并后的特定规则"
+      }
     }
   },
   "buttons": {
@@ -73,9 +149,57 @@
   },
   "messages": {
     "saveSuccess": "保存成功",
+    "saveFailed": "保存失败，请稍后重试",
     "resetConfirm": "确定要重置为默认模板吗？",
+    "resetSuccess": "已重置为默认模板",
+    "resetFailed": "重置失败，请稍后重试",
+    "resetTitle": "确认重置",
     "deleteConfirm": "确定要删除这个按钮吗？",
     "copySuccess": "已复制到剪贴板",
-    "previewTitle": "预览效果"
+    "previewTitle": "预览效果",
+    "previewError": "预览错误",
+    "previewLoadFailed": "加载项目数据失败",
+    "selectProjectForPreview": "选择项目进行预览（可选）：",
+    "selectProjectPlaceholder": "选择一个项目来使用真实数据预览，或留空使用示例数据",
+    "selectedProject": "已选择项目：",
+    "taskCount": "任务数量：",
+    "projectDescription": "项目描述：",
+    "close": "关闭",
+    "noDescription": "无描述",
+    "none": "无"
+  },
+  "sampleData": {
+    "projectName": "示例项目",
+    "projectDescription": "这是一个示例项目的描述",
+    "projectContext": "项目上下文信息",
+    "taskList": "1. [高] 示例任务1 (ID: 1)\n2. [中] 示例任务2 (ID: 2)\n3. [低] 示例任务3 (ID: 3)",
+    "contextRules": {
+      "codingStandards": {
+        "name": "编码规范",
+        "description": "通用编码规范"
+      },
+      "testRequirements": {
+        "name": "测试要求",
+        "description": "测试相关要求"
+      },
+      "projectSpecific": {
+        "name": "项目特定规范",
+        "description": "当前项目的特定规范"
+      }
+    },
+    "tasks": {
+      "loginFeature": "实现用户登录功能",
+      "dbOptimization": "优化数据库查询性能",
+      "apiDocs": "编写API文档"
+    }
+  },
+  "priority": {
+    "high": "高",
+    "medium": "中",
+    "low": "低",
+    "urgent": "紧急"
+  },
+  "variableNames": {
+    "ruleName": "规则名"
   }
 }

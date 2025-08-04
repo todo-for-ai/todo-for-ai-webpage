@@ -56,10 +56,17 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
       })
 
       let projectList: Project[] = []
-      if (response.data && Array.isArray(response.data)) {
-        projectList = response.data
-      } else if (response.data && Array.isArray((response.data as any)?.data)) {
-        projectList = (response.data as any).data
+
+      // 处理不同的API响应格式
+      if (response && Array.isArray((response as any)?.items)) {
+        // 新的API格式：{items: Array, pagination: Object}
+        projectList = (response as any).items
+      } else if (response && Array.isArray((response as any)?.data)) {
+        // 标准API格式：{data: Array}
+        projectList = (response as any).data
+      } else if (response && Array.isArray(response)) {
+        // 直接数组格式
+        projectList = response as Project[]
       }
 
       setProjects(projectList)

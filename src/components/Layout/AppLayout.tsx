@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 import TopNavigation from './TopNavigation'
 import { Footer } from '../Footer'
 import WeChatGroup from '../WeChatGroup'
+import TelegramGroup from '../TelegramGroup'
 
 const { Content } = Layout
 
@@ -40,6 +41,9 @@ const AppLayout = () => {
 
       {/* 微信群组件 - 悬浮在右下角 */}
       <WeChatGroup />
+
+      {/* Telegram群组件 - 悬浮在右下角 */}
+      <TelegramGroup />
     </Layout>
   )
 }

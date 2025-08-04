@@ -22,7 +22,7 @@ const MCPInstallation: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // 定义所有有效的标签页key
-  const validTabs = ['overview', 'api-token', 'installation', 'claude', 'cursor', 'other-ides', 'configuration', 'testing']
+  const validTabs = ['overview', 'installation', 'claude', 'cursor', 'other-ides', 'configuration', 'testing']
 
   // 动态生成配置的函数
   const generateMcpConfig = (apiToken: string = 'your-api-token-here', withLogLevel: boolean = false) => {
@@ -264,96 +264,7 @@ const MCPInstallation: React.FC = () => {
           </Card>
         </TabPane>
 
-        <TabPane
-          tab={
-            <span>
-              <KeyOutlined />
-              API Token
-            </span>
-          }
-          key="api-token"
-        >
-          <Card>
-            <Title level={3}>
-              <KeyOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
-              MCP 配置
-            </Title>
 
-            <Alert
-              message="简单配置"
-              description="只需要复制下面的 JSON 配置到您的 AI 客户端即可，无需复杂的安装步骤！"
-              type="success"
-              style={{ marginBottom: '24px' }}
-              showIcon
-            />
-
-            <Title level={4} style={{
-              marginBottom: '16px',
-              color: '#1890ff',
-              borderLeft: '4px solid #1890ff',
-              paddingLeft: '12px',
-              background: 'linear-gradient(90deg, rgba(24, 144, 255, 0.05) 0%, transparent 100%)',
-              padding: '8px 12px',
-              borderRadius: '4px'
-            }}>
-              <KeyOutlined style={{ marginRight: '8px' }} />
-              1. 获取 API Token
-            </Title>
-
-            <Paragraph>
-              前往 <a href="/todo-for-ai/pages/profile?tab=tokens" target="_blank">个人中心 → API Token</a> 创建您的专属 Token
-            </Paragraph>
-
-            <Title level={4} style={{
-              marginTop: '24px',
-              marginBottom: '16px',
-              color: '#1890ff',
-              borderLeft: '4px solid #1890ff',
-              paddingLeft: '12px',
-              background: 'linear-gradient(90deg, rgba(24, 144, 255, 0.05) 0%, transparent 100%)',
-              padding: '8px 12px',
-              borderRadius: '4px'
-            }}>
-              <CopyOutlined style={{ marginRight: '8px' }} />
-              2. 复制配置到 AI 客户端
-            </Title>
-
-            <Paragraph>
-              将下面的 JSON 配置复制到您的 AI 客户端配置文件中，并替换 <code>${`{YOUR_API_TOKEN}`}</code> 为您的实际 Token：
-            </Paragraph>
-
-            <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-token",
-        "\${YOUR_API_TOKEN}"
-      ]
-    }
-  }
-}`}
-            </CodeBlock>
-
-            <Alert
-              message="配置说明"
-              description={
-                <div>
-                  <p>• 使用 <code>npx</code> 命令自动下载最新版本的 MCP 服务器</p>
-                  <p>• 无需手动安装或配置路径</p>
-                  <p>• 支持所有兼容 MCP 协议的 AI 客户端</p>
-                  <p>• 请将 <code>${`{YOUR_API_TOKEN}`}</code> 替换为您在个人中心创建的实际 Token</p>
-                </div>
-              }
-              type="info"
-              style={{ marginTop: '16px' }}
-              showIcon
-            />
-          </Card>
-        </TabPane>
 
         <TabPane
           tab={
@@ -387,8 +298,26 @@ const MCPInstallation: React.FC = () => {
               padding: '8px 12px',
               borderRadius: '4px'
             }}>
+              <KeyOutlined style={{ marginRight: '8px' }} />
+              第一步：获取 API Token
+            </Title>
+
+            <Paragraph>
+              前往 <a href="/todo-for-ai/pages/profile?tab=tokens" target="_blank">个人中心 → API Token</a> 创建您的专属 Token
+            </Paragraph>
+
+            <Title level={4} style={{
+              marginTop: '24px',
+              marginBottom: '16px',
+              color: '#1890ff',
+              borderLeft: '4px solid #1890ff',
+              paddingLeft: '12px',
+              background: 'linear-gradient(90deg, rgba(24, 144, 255, 0.05) 0%, transparent 100%)',
+              padding: '8px 12px',
+              borderRadius: '4px'
+            }}>
               <SettingOutlined style={{ marginRight: '8px' }} />
-              第一步：获取 MCP 配置
+              第二步：获取 MCP 配置
             </Title>
 
             <Paragraph style={{ fontSize: '14px', color: '#666', marginBottom: '16px' }}>
@@ -429,7 +358,7 @@ const MCPInstallation: React.FC = () => {
               message="重要提醒"
               description={
                 <div>
-                  <p>• 请将 <code>your-api-token-here</code> 替换为您在 "API Token" 标签页中创建的实际 Token</p>
+                  <p>• 请将 <code>your-api-token-here</code> 替换为您在第一步中创建的实际 Token</p>
                   <p>• 确保 Todo for AI 后端服务正在 {getMcpServerUrl()} 运行</p>
                   <p>• 配置完成后需要重启您的 AI 客户端应用</p>
                 </div>
@@ -451,7 +380,7 @@ const MCPInstallation: React.FC = () => {
               borderRadius: '4px'
             }}>
               <CheckCircleOutlined style={{ marginRight: '8px' }} />
-              第二步：验证 MCP 配置
+              第三步：验证 MCP 配置
             </Title>
 
             <Paragraph style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>

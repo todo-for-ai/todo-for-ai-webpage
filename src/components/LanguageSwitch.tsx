@@ -4,6 +4,7 @@ import { GlobalOutlined } from '@ant-design/icons'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import { getLanguageDisplayName, type SupportedLanguage } from '../i18n'
 import { useLanguage } from '../contexts/LanguageContext'
+import { analytics } from '../utils/analytics'
 
 const { Option } = Select
 
@@ -22,6 +23,8 @@ const LanguageSwitch: React.FC<LanguageSwitchProps> = ({
 
   const handleLanguageChange = async (newLanguage: SupportedLanguage) => {
     try {
+      // 追踪语言切换事件
+      analytics.settings.changeLanguage(newLanguage)
       await setLanguage(newLanguage)
       // 不需要手动刷新页面，LanguageContext会处理语言切换
     } catch (error) {

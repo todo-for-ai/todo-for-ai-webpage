@@ -66,7 +66,7 @@ export const APITokenManager: React.FC = () => {
   const fetchTokens = async () => {
     setLoading(true)
     try {
-      const response = await apiClient.get<{ items: any[], pagination: any }>('/tokens')
+      const response = await apiClient.get<{ items: any[], pagination: any }>('/api-tokens')
       console.log('🔍 fetchTokens response:', response)
       console.log('🔍 response:', response)
       // 修复数据提取逻辑：直接从response获取items，而不是response.data
@@ -89,7 +89,7 @@ export const APITokenManager: React.FC = () => {
 
   const handleCreateToken = async (values: any) => {
     try {
-      const data = await apiClient.post<{ token?: string; raw_token?: string }>('/tokens', values)
+      const data = await apiClient.post<{ token?: string; raw_token?: string }>('/api-tokens', values)
 
       // 显示新创建的token
       setNewToken(data.token || data.raw_token)
@@ -107,7 +107,7 @@ export const APITokenManager: React.FC = () => {
 
   const handleDeleteToken = async (tokenId: number) => {
     try {
-      await apiClient.delete(`/tokens/${tokenId}`)
+      await apiClient.delete(`/api-tokens/${tokenId}`)
       message.success('Token删除成功')
       fetchTokens()
     } catch (error: any) {
@@ -133,7 +133,7 @@ export const APITokenManager: React.FC = () => {
       // 如果未显示，则获取并显示完整Token
       setIsRevealingToken(true)
       try {
-        const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/tokens/${token.id}/reveal`)
+        const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/api-tokens/${token.id}/reveal`)
 
         // 检查是否有token字段（apiClient可能已经解包了data）
         if (data.token) {
@@ -218,7 +218,7 @@ export const APITokenManager: React.FC = () => {
       }
 
       // 否则先获取完整token再复制
-      const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/tokens/${token.id}/reveal`)
+      const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/api-tokens/${token.id}/reveal`)
 
       let fullToken = ''
       if (data.token) {

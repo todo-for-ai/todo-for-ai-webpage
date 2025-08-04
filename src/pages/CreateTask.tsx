@@ -27,7 +27,7 @@ import {
 import { useTaskStore, useProjectStore } from '../stores'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
-import { UnsavedChangesAlert } from '../components/UnsavedChangesAlert'
+import { TaskEditStatus } from '../components/TaskEditStatus'
 import ProjectSelector from '../components/ProjectSelector'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
 
@@ -53,8 +53,13 @@ const CreateTask: React.FC = () => {
   const saveEditDraftTimeoutRef = useRef<number | undefined>(undefined)
   // 原始任务内容（用于版本对比）
   const [originalTaskContent, setOriginalTaskContent] = useState('')
-  // 是否有未保存的更改
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // 自动保存状态
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  // 上次保存时间
+  const [lastSavedTime, setLastSavedTime] = useState<string>()
+  // 自动保存定时器
+  const autoSaveTimeoutRef = useRef<number | undefined>(undefined)
 
   const { createTask, updateTask, getTask } = useTaskStore()
   const { projects, fetchProjects, loading: projectsLoading } = useProjectStore()
@@ -114,24 +119,7 @@ const CreateTask: React.FC = () => {
     }
   }
 
-  // 检查当前是否有未保存的更改
-  const checkUnsavedChanges = useCallback(() => {
-    if (!isEditMode || !id) {
-      setHasUnsavedChanges(false)
-      return
-    }
 
-    const currentValues = form.getFieldsValue()
-    const currentContent = editorContent
-
-    // 比较当前内容与原始内容
-    const hasChanges = currentContent !== originalTaskContent ||
-                      currentValues.title !== form.getFieldValue('title') ||
-                      currentValues.status !== form.getFieldValue('status') ||
-                      currentValues.priority !== form.getFieldValue('priority')
-
-    setHasUnsavedChanges(hasChanges)
-  }, [isEditMode, id, form, editorContent, originalTaskContent])
 
   // 编辑模式的防抖保存函数
   const debouncedSaveEditDraft = useCallback((content: string) => {
@@ -156,10 +144,8 @@ const CreateTask: React.FC = () => {
         is_ai_task: currentValues.is_ai_task,
       }
       saveEditDraft(taskId, draftData)
-      // 检查未保存更改
-      checkUnsavedChanges()
     }, 500) // 500ms防抖延迟
-  }, [isEditMode, id, form, saveEditDraft, checkUnsavedChanges])
+  }, [isEditMode, id, form, saveEditDraft])
 
   // 实时保存草稿功能
   const getDraftKey = (projectId: number) => {
@@ -235,6 +221,48 @@ const CreateTask: React.FC = () => {
       console.warn('Failed to clear edit draft:', error)
     }
   }
+
+  // 自动保存函数
+  const performAutoSave = useCallback(async () => {
+    if (!isEditMode || !id || isAutoSaving) return
+
+    const autoSaveEnabled = localStorage.getItem('taskEdit_autoSave') === 'true'
+    if (!autoSaveEnabled) return
+
+    try {
+      setIsAutoSaving(true)
+      const formValues = form.getFieldsValue()
+      const taskData = {
+        title: formValues.title,
+        content: editorContent,
+        status: formValues.status,
+        priority: formValues.priority,
+        due_date: formValues.due_date,
+        tags: formValues.tags || [],
+        is_ai_task: formValues.is_ai_task
+      }
+
+      await updateTask(parseInt(id), taskData)
+      setLastSavedTime(new Date().toISOString())
+      setOriginalTaskContent(editorContent)
+      console.log('🔄 自动保存成功')
+    } catch (error) {
+      console.error('自动保存失败:', error)
+    } finally {
+      setIsAutoSaving(false)
+    }
+  }, [isEditMode, id, isAutoSaving, form, editorContent, updateTask])
+
+  // 防抖自动保存
+  const debouncedAutoSave = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    autoSaveTimeoutRef.current = window.setTimeout(() => {
+      performAutoSave()
+    }, 2000) // 2秒防抖延迟
+  }, [performAutoSave])
 
   // 检查是否有未提交的编辑草稿
   const hasUnsavedEditChanges = (taskId: number, currentContent: string) => {
@@ -334,30 +362,45 @@ const CreateTask: React.FC = () => {
               is_ai_task: sourceTask.is_ai_task
             })
 
-            // 预填充部分信息，但不包括任务标题和内容的完整复制
+            // 预填充完整信息，包括任务标题和内容
             const formValues = {
               project_id: sourceTask.project_id,
+              title: `基于任务#${sourceTask.id} - ${sourceTask.title}`, // 预填充标题
               priority: sourceTask.priority,
               status: 'todo', // 新任务默认为待办状态
               is_ai_task: sourceTask.is_ai_task,
-              tags: sourceTask.tags || []
+              tags: sourceTask.tags || [],
+              due_date: sourceTask.due_date ? dayjs(sourceTask.due_date) : null // 预填充截止日期
             }
 
             console.log('📝 设置表单值:', formValues)
             form.setFieldsValue(formValues)
 
-            // 设置一个基础的内容模板，引用源任务
+            // 设置包含源任务完整信息的内容模板
             const templateContent = `## 基于任务 #${sourceTask.id} 创建
 
 **源任务**: ${sourceTask.title}
+**源任务状态**: ${sourceTask.status}
+**源任务优先级**: ${sourceTask.priority}
+${sourceTask.due_date ? `**源任务截止日期**: ${dayjs(sourceTask.due_date).format('YYYY-MM-DD')}` : ''}
 
-## 任务描述
+## 源任务内容
+
+${sourceTask.content || '无内容'}
+
+---
+
+## 新任务描述
 
 请在此处描述新任务的具体内容...
 
 ## 与源任务的关系
 
-此任务基于任务 #${sourceTask.id} 创建，请说明两个任务之间的关系...`
+此任务基于任务 #${sourceTask.id} 创建，请说明两个任务之间的关系...
+
+## 任务要求
+
+请根据源任务的内容和要求，制定新任务的具体执行计划...`
 
             console.log('📄 设置编辑器内容:', templateContent.substring(0, 100) + '...')
 
@@ -591,6 +634,8 @@ const CreateTask: React.FC = () => {
 
         // 保存原始内容用于版本对比
         setOriginalTaskContent(task.content || '')
+        // 设置上次保存时间
+        setLastSavedTime(task.updated_at || task.created_at)
 
         // 检查是否有编辑草稿
         const editDraft = loadEditDraft(taskId)
@@ -654,6 +699,9 @@ const CreateTask: React.FC = () => {
         if (result) {
           // 清除编辑草稿
           clearEditDraft(parseInt(id, 10))
+          // 更新保存时间和原始内容
+          setLastSavedTime(new Date().toISOString())
+          setOriginalTaskContent(editorContent)
           message.success(tp('messages.updateSuccess'))
           navigate(`/todo-for-ai/pages/tasks/${id}`)
         }
@@ -850,13 +898,16 @@ const CreateTask: React.FC = () => {
         </div>
       </Card>
 
-      {/* 未保存更改提示（仅在编辑模式下显示） */}
-      {isEditMode && (
-        <UnsavedChangesAlert
-          visible={hasUnsavedChanges}
-          onSave={handleSubmitAndEdit}
-        />
-      )}
+      {/* 任务编辑状态（仅在编辑模式下显示） */}
+      <TaskEditStatus
+        currentContent={editorContent}
+        originalContent={originalTaskContent}
+        lastSavedTime={lastSavedTime}
+        onSave={handleSubmit}
+        onAutoSave={performAutoSave}
+        isSaving={loading || isAutoSaving}
+        enabled={isEditMode}
+      />
 
       {/* 表单内容 */}
       <Card>
@@ -894,8 +945,7 @@ const CreateTask: React.FC = () => {
                 tags: allValues.tags,
                 is_ai_task: allValues.is_ai_task
               })
-              // 检查未保存更改
-              checkUnsavedChanges()
+
             }
 
             // 保存用户偏好设置（仅在新建模式下）
@@ -1153,6 +1203,8 @@ const CreateTask: React.FC = () => {
                         } else {
                           // 编辑模式：使用编辑草稿保存
                           debouncedSaveEditDraft(newValue)
+                          // 触发自动保存（如果启用）
+                          debouncedAutoSave()
                         }
                       }
                     }}

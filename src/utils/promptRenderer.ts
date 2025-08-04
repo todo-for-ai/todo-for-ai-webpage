@@ -45,11 +45,47 @@ export interface TasksListData {
   review_count: number
 }
 
+export interface ContextRuleData {
+  id: number
+  name: string
+  description: string
+  content: string
+  priority: number
+  is_active: boolean
+  is_global: boolean
+  project_id?: number
+}
+
+export interface ContextRulesData {
+  global: {
+    all: string
+    count: number
+    names: string[]
+    rules: ContextRuleData[]
+    by_name: Record<string, string>
+  }
+  project: {
+    all: string
+    count: number
+    names: string[]
+    rules: ContextRuleData[]
+    by_name: Record<string, string>
+  }
+  merged: {
+    all: string
+    count: number
+    names: string[]
+    rules: ContextRuleData[]
+    by_name: Record<string, string>
+  }
+}
+
 export interface RenderContext {
   project?: ProjectData
   task?: TaskData
   system?: SystemData
   tasks?: TasksListData
+  context_rules?: ContextRulesData
 }
 
 /**
@@ -97,6 +133,30 @@ const getNestedProperty = (obj: any, path: string): any => {
 }
 
 /**
+ * 渲染上下文规则变量
+ */
+const renderContextRulesVariable = (contextRules: ContextRulesData, property: string): any => {
+  const [scope, ...propertyPath] = property.split('.')
+  const subProperty = propertyPath.join('.')
+
+  // 处理不同的作用域
+  switch (scope) {
+    case 'global':
+      return getNestedProperty(contextRules.global, subProperty)
+
+    case 'project':
+      return getNestedProperty(contextRules.project, subProperty)
+
+    case 'merged':
+      return getNestedProperty(contextRules.merged, subProperty)
+
+    default:
+      // 如果没有指定作用域，默认返回合并的规则
+      return getNestedProperty(contextRules.merged, property)
+  }
+}
+
+/**
  * 渲染单个变量
  */
 const renderVariable = (variable: string, context: RenderContext): string => {
@@ -113,19 +173,23 @@ const renderVariable = (variable: string, context: RenderContext): string => {
     case 'project':
       value = context.project ? getNestedProperty(context.project, property) : undefined
       break
-      
+
     case 'task':
       value = context.task ? getNestedProperty(context.task, property) : undefined
       break
-      
+
     case 'system':
       value = context.system ? getNestedProperty(context.system, property) : undefined
       break
-      
+
     case 'tasks':
       value = context.tasks ? getNestedProperty(context.tasks, property) : undefined
       break
-      
+
+    case 'context_rules':
+      value = context.context_rules ? renderContextRulesVariable(context.context_rules, property) : undefined
+      break
+
     default:
       return variable // 返回原始变量如果无法识别
   }
@@ -175,7 +239,16 @@ const renderVariable = (variable: string, context: RenderContext): string => {
     'tasks.count': '0',
     'tasks.list': '暂无任务',
     'system.url': 'https://todo4ai.org',
-    'system.current_time': new Date().toLocaleString('zh-CN')
+    'system.current_time': new Date().toLocaleString('zh-CN'),
+    'context_rules.global.all': '暂无全局规则',
+    'context_rules.global.count': '0',
+    'context_rules.global.names': '暂无规则',
+    'context_rules.project.all': '暂无项目规则',
+    'context_rules.project.count': '0',
+    'context_rules.project.names': '暂无规则',
+    'context_rules.merged.all': '暂无规则',
+    'context_rules.merged.count': '0',
+    'context_rules.merged.names': '暂无规则'
   }
   
   return placeholders[cleanVariable] || `[${cleanVariable}]`
@@ -215,7 +288,7 @@ export const extractVariables = (template: string): string[] => {
  * 验证变量是否有效
  */
 export const validateVariable = (variable: string): boolean => {
-  const validCategories = ['project', 'task', 'system', 'tasks']
+  const validCategories = ['project', 'task', 'system', 'tasks', 'context_rules']
   const [category] = variable.split('.')
   return validCategories.includes(category)
 }
@@ -255,8 +328,70 @@ export const getVariableDescription = (variable: string): string => {
     'tasks.list': '任务列表',
     'tasks.pending_count': '待处理任务数',
     'tasks.in_progress_count': '进行中任务数',
-    'tasks.review_count': '待审核任务数'
+    'tasks.review_count': '待审核任务数',
+
+    'context_rules.global.all': '所有全局上下文规则的内容',
+    'context_rules.global.count': '全局上下文规则数量',
+    'context_rules.global.names': '全局上下文规则名称列表',
+    'context_rules.project.all': '当前项目所有上下文规则的内容',
+    'context_rules.project.count': '项目上下文规则数量',
+    'context_rules.project.names': '项目上下文规则名称列表',
+    'context_rules.merged.all': '全局和项目规则合并后的内容',
+    'context_rules.merged.count': '合并后的规则总数',
+    'context_rules.merged.names': '合并后的规则名称列表'
   }
-  
+
   return descriptions[variable] || variable
+}
+
+/**
+ * 构建上下文规则数据
+ */
+export const buildContextRulesData = (
+  globalRules: ContextRuleData[] = [],
+  projectRules: ContextRuleData[] = []
+): ContextRulesData => {
+  // 构建全局规则数据
+  const globalData = {
+    all: globalRules.map(rule => `### ${rule.name}\n${rule.content}`).join('\n\n'),
+    count: globalRules.length,
+    names: globalRules.map(rule => rule.name),
+    rules: globalRules,
+    by_name: globalRules.reduce((acc, rule) => {
+      acc[rule.name] = rule.content
+      return acc
+    }, {} as Record<string, string>)
+  }
+
+  // 构建项目规则数据
+  const projectData = {
+    all: projectRules.map(rule => `### ${rule.name}\n${rule.content}`).join('\n\n'),
+    count: projectRules.length,
+    names: projectRules.map(rule => rule.name),
+    rules: projectRules,
+    by_name: projectRules.reduce((acc, rule) => {
+      acc[rule.name] = rule.content
+      return acc
+    }, {} as Record<string, string>)
+  }
+
+  // 构建合并规则数据（全局规则优先级较低，项目规则优先级较高）
+  const mergedRules = [...globalRules, ...projectRules].sort((a, b) => b.priority - a.priority)
+  const mergedData = {
+    all: mergedRules.map(rule => `### ${rule.name}\n${rule.content}`).join('\n\n'),
+    count: mergedRules.length,
+    names: mergedRules.map(rule => rule.name),
+    rules: mergedRules,
+    by_name: mergedRules.reduce((acc, rule) => {
+      // 如果有重名规则，项目规则会覆盖全局规则
+      acc[rule.name] = rule.content
+      return acc
+    }, {} as Record<string, string>)
+  }
+
+  return {
+    global: globalData,
+    project: projectData,
+    merged: mergedData
+  }
 }

@@ -5,6 +5,8 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import LanguageSwitch from '../components/LanguageSwitch'
 import WeChatGroup from '../components/WeChatGroup/WeChatGroup'
+import TelegramGroup from '../components/TelegramGroup/TelegramGroup'
+import { analytics } from '../utils/analytics'
 
 const { Title, Paragraph } = Typography
 
@@ -30,10 +32,12 @@ const Login: React.FC = () => {
   }, [t])
 
   const handleGitHubLogin = () => {
+    analytics.auth.login('github')
     loginWithGitHub('/todo-for-ai/pages')
   }
 
   const handleGoogleLogin = () => {
+    analytics.auth.login('google')
     loginWithGoogle('/todo-for-ai/pages')
   }
 
@@ -169,6 +173,9 @@ const Login: React.FC = () => {
 
       {/* 微信AI交流群 - 只在中文环境下显示 */}
       <WeChatGroup />
+
+      {/* Telegram AI交流群 - 只在英文环境下显示 */}
+      <TelegramGroup />
     </div>
   )
 }

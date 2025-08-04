@@ -11,6 +11,7 @@
   "actions": {
     "edit": "Edit",
     "delete": "Delete Task",
+    "refresh": "Refresh",
     "createTask": "Create Task",
     "createFromTask": "Create New Task from This Task",
     "taskStatus": "Task Status",
@@ -75,6 +76,12 @@
     "rulesLabel": "Project Context Rules",
     "rulesCount": "{{count}} rules",
     "appliedRules": "Applied Rules List:",
+    "projectRules": "Project-Level Rules",
+    "globalRules": "User Global Rules",
+    "projectRulesCount": "{{count}} project rules",
+    "globalRulesCount": "{{count}} global rules",
+    "noProjectRules": "No project-level rules",
+    "noGlobalRules": "No global rules",
     "empty": {
       "title": "No project context rules",
       "subtitle": "This project has not configured context rules yet"
@@ -100,12 +107,15 @@
     "completionPromptCopied": "Task completion confirmation prompt copied to clipboard",
     "quickCompletePromptCopied": "Quick complete task prompt copied to clipboard",
     "copyFailed": "Copy failed",
-    "copyFailedManual": "Copy failed, please copy manually"
+    "copyFailedManual": "Copy failed, please copy manually",
+    "refreshSuccess": "Task data refreshed successfully",
+    "refreshFailed": "Failed to refresh task data"
   },
   "tooltips": {
     "previousTask": "Previous Task (← key)",
     "nextTask": "Next Task (→ key)",
     "returnToProjectTaskList": "Return to Project Task List",
+    "refreshTask": "Refresh task data - Reload the latest task information from server",
     "createTask": "Create new task - Green indicates positive creation action",
     "createFromTask": "Create new task based on this task, will pre-fill project information and some content",
     "editTask": "Edit current task - Orange indicates neutral modification action",

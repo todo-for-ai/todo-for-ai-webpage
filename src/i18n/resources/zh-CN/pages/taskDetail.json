@@ -11,6 +11,7 @@
   "actions": {
     "edit": "编辑",
     "delete": "删除任务",
+    "refresh": "刷新",
     "createTask": "创建任务",
     "createFromTask": "从此任务创建新任务",
     "taskStatus": "任务状态",
@@ -75,6 +76,12 @@
     "rulesLabel": "项目上下文规则",
     "rulesCount": "{{count}} 条规则",
     "appliedRules": "应用的规则列表：",
+    "projectRules": "项目级别规则",
+    "globalRules": "用户全局规则",
+    "projectRulesCount": "{{count}} 条项目规则",
+    "globalRulesCount": "{{count}} 条全局规则",
+    "noProjectRules": "暂无项目级别规则",
+    "noGlobalRules": "暂无全局规则",
     "empty": {
       "title": "暂无项目上下文规则",
       "subtitle": "此项目尚未配置上下文规则"
@@ -100,12 +107,15 @@
     "completionPromptCopied": "任务完成确认提示词已复制到剪贴板",
     "quickCompletePromptCopied": "快速完成任务提示词已复制到剪贴板",
     "copyFailed": "复制失败",
-    "copyFailedManual": "复制失败，请手动复制"
+    "copyFailedManual": "复制失败，请手动复制",
+    "refreshSuccess": "任务数据已刷新",
+    "refreshFailed": "刷新任务数据失败"
   },
   "tooltips": {
     "previousTask": "上一个任务 (←键)",
     "nextTask": "下一个任务 (→键)",
     "returnToProjectTaskList": "返回项目任务列表",
+    "refreshTask": "刷新任务数据 - 重新从服务器获取最新的任务信息",
     "createTask": "创建新任务 - 绿色表示积极的创建操作",
     "createFromTask": "基于此任务创建新任务，将预填充项目信息和部分内容",
     "editTask": "编辑当前任务 - 橙色表示中性的修改操作",
