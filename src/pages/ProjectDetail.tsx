@@ -48,6 +48,7 @@ import TaskIdBadge from '../components/TaskIdBadge'
 import { pinsApi } from '../api/pins'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { LinkButton } from '../components/SmartLink'
+import { analytics } from '../utils/analytics'
 import type { Task } from '../api/tasks'
 import type { ContextRule } from '../api/contextRules'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
@@ -195,6 +196,9 @@ const ProjectDetail = () => {
   useEffect(() => {
     if (id) {
       fetchProject(parseInt(id))
+      // 追踪项目查看事件
+      analytics.project.view(id)
+
       // 设置任务查询参数，使用保存的分页大小
       const statusString = Array.isArray(taskFilters.status)
         ? taskFilters.status.join(',')
@@ -768,13 +772,13 @@ const ProjectDetail = () => {
                   </Tooltip>
                 )}
 
-                {currentProject.local_url && (
-                  <Tooltip title={tp('tooltips.localUrl')}>
+                {currentProject.production_url && (
+                  <Tooltip title={tp('tooltips.productionUrl')}>
                     <Button
                       type="text"
                       size="small"
-                      icon={<DesktopOutlined />}
-                      onClick={() => window.open(currentProject.local_url, '_blank')}
+                      icon={<CloudOutlined />}
+                      onClick={() => window.open(currentProject.production_url, '_blank')}
                       style={{
                         padding: '0 4px',
                         height: '24px',
@@ -785,13 +789,13 @@ const ProjectDetail = () => {
                   </Tooltip>
                 )}
 
-                {currentProject.production_url && (
-                  <Tooltip title={tp('tooltips.productionUrl')}>
+                {currentProject.local_url && (
+                  <Tooltip title={tp('tooltips.localUrl')}>
                     <Button
                       type="text"
                       size="small"
-                      icon={<CloudOutlined />}
-                      onClick={() => window.open(currentProject.production_url, '_blank')}
+                      icon={<DesktopOutlined />}
+                      onClick={() => window.open(currentProject.local_url, '_blank')}
                       style={{
                         padding: '0 4px',
                         height: '24px',
