@@ -88,6 +88,16 @@
   border-color: #24292e;
 }
 
+/* 禁用GitHub登录按钮的焦点和悬停颜色变化 */
+.login-button-github:hover,
+.login-button-github:focus,
+.login-button-github:active {
+  background-color: #24292e !important;
+  border-color: #24292e !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
 .login-button-google {
   width: 100%;
   height: 40px;
@@ -96,6 +106,16 @@
   background-color: #db4437;
   border-color: #db4437;
   color: white;
+}
+
+/* 禁用Google登录按钮的焦点和悬停颜色变化 */
+.login-button-google:hover,
+.login-button-google:focus,
+.login-button-google:active {
+  background-color: #db4437 !important;
+  border-color: #db4437 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 .login-divider {
