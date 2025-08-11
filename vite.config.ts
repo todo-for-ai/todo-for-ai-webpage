@@ -45,6 +45,30 @@ export default defineConfig(() => {
       __COMMIT_ID__: JSON.stringify(gitInfo.commitId),
       __BUILD_TIME__: JSON.stringify(gitInfo.buildTime),
     },
+    build: {
+      // 启用代码分割，减小单个文件大小
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // 将大型依赖分离到单独的chunk
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-antd': ['antd'],
+            'vendor-utils': ['axios', 'dayjs', 'lodash-es'],
+            'vendor-icons': ['@ant-design/icons'],
+          }
+        }
+      },
+      // 设置chunk大小警告限制
+      chunkSizeWarningLimit: 1000,
+      // 启用压缩
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true, // 生产环境移除console
+          drop_debugger: true
+        }
+      }
+    },
     server: {
       port: 50111,
       host: '0.0.0.0',
