@@ -26,17 +26,17 @@ const MCPInstallation: React.FC = () => {
 
   // 动态生成配置的函数
   const generateMcpConfig = (apiToken: string = 'your-api-token-here', withLogLevel: boolean = false) => {
-    const baseUrl = getMcpServerUrl()
     const config = {
       "mcpServers": {
         "todo-for-ai": {
           "command": "npx",
-          "args": ["@todo-for-ai/mcp"],
-          "env": {
-            "TODO_API_BASE_URL": baseUrl,
-            "TODO_API_TOKEN": apiToken,
-            ...(withLogLevel && { "LOG_LEVEL": "info" })
-          }
+          "args": [
+            "--yes",
+            "@todo-for-ai/mcp@latest",
+            "--api-token",
+            apiToken,
+            ...(withLogLevel ? ["--log-level", "info"] : [])
+          ]
         }
       }
     }
@@ -50,7 +50,7 @@ const MCPInstallation: React.FC = () => {
         "todo-for-ai": {
           "command": "npx",
           "args": [
-            "-y",
+            "--yes",
             "@todo-for-ai/mcp@latest",
             "--api-base-url",
             baseUrl,
@@ -617,19 +617,7 @@ const MCPInstallation: React.FC = () => {
               showIcon
             />
             <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-token",
-        "your-api-token-here"
-      ]
-    }
-  }
-}`}
+{generateMcpConfig()}
             </CodeBlock>
 
 
@@ -648,21 +636,7 @@ const MCPInstallation: React.FC = () => {
               showIcon
             />
             <CodeBlock language="json">
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-base-url",
-        "${getApiBaseUrl()}",
-        "--api-token",
-        "your-api-token-here"
-      ]
-    }
-  }
-}`}
+{generateMcpConfigWithArgs()}
             </CodeBlock>
 
             <Title level={5} style={{ marginTop: '16px' }}>使用环境变量方式：</Title>
@@ -671,7 +645,7 @@ const MCPInstallation: React.FC = () => {
   "mcpServers": {
     "todo-for-ai": {
       "command": "npx",
-      "args": ["-y", "@todo-for-ai/mcp@latest"],
+      "args": ["--yes", "@todo-for-ai/mcp@latest"],
       "env": {
         "TODO_API_BASE_URL": "${getApiBaseUrl()}",
         "TODO_API_TOKEN": "your-api-token-here"
@@ -683,21 +657,7 @@ const MCPInstallation: React.FC = () => {
 
             <Title level={5} style={{ marginTop: '16px' }}>调试模式配置：</Title>
             <div style={configStyle}>
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-token",
-        "your-api-token-here",
-        "--log-level",
-        "debug"
-      ]
-    }
-  }
-}`}
+{generateMcpConfig('your-api-token-here', true)}
             </div>
 
             <Alert
@@ -735,19 +695,7 @@ const MCPInstallation: React.FC = () => {
             </Paragraph>
 
             <div style={configStyle}>
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-token",
-        "your-api-token-here"
-      ]
-    }
-  }
-}`}
+{generateMcpConfig()}
             </div>
 
 
@@ -771,19 +719,7 @@ const MCPInstallation: React.FC = () => {
               Continue 是一个开源的AI代码助手，支持多种IDE集成。
             </Paragraph>
             <div style={configStyle}>
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-token",
-        "your-api-token-here"
-      ]
-    }
-  }
-}`}
+{generateMcpConfig()}
             </div>
 
             <Title level={4} style={{ marginTop: '24px' }}>Zed Editor</Title>
@@ -799,7 +735,7 @@ const MCPInstallation: React.FC = () => {
         "todo-for-ai": {
           "command": "npx",
           "args": [
-            "-y",
+            "--yes",
             "@todo-for-ai/mcp@latest",
             "--api-token",
             "your-api-token-here"
@@ -816,40 +752,12 @@ const MCPInstallation: React.FC = () => {
               对于其他支持MCP的IDE，可以参考以下通用配置模板：
             </Paragraph>
             <div style={configStyle}>
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-token",
-        "your-api-token-here"
-      ]
-    }
-  }
-}`}
+{generateMcpConfig()}
             </div>
 
             <Title level={5} style={{ marginTop: '16px' }}>本地开发环境配置：</Title>
             <div style={configStyle}>
-{`{
-  "mcpServers": {
-    "todo-for-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@todo-for-ai/mcp@latest",
-        "--api-base-url",
-        "${getApiBaseUrl()}",
-        "--api-token",
-        "your-api-token-here",
-        "--log-level",
-        "debug"
-      ]
-    }
-  }
-}`}
+{generateMcpConfigWithArgs('your-api-token-here', true)}
             </div>
           </Card>
         </TabPane>
@@ -937,7 +845,7 @@ const MCPInstallation: React.FC = () => {
     "todo-for-ai": {
       "command": "npx",
       "args": [
-        "-y",
+        "--yes",
         "@todo-for-ai/mcp@latest",
         "--api-token",
         "your-production-token",
