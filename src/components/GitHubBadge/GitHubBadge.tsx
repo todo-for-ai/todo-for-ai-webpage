@@ -85,9 +85,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     }
   }
 
-  const tooltipTitle = repoInfo
-    ? `${repoInfo.full_name}\n${repoInfo.description}\n⭐ ${repoInfo.stargazers_count} stars`
-    : `${finalOwner}/${finalRepo}\n${tc('github.starRepository')}`
+  const tooltipTitle = tc('github.badgeTooltip')
 
   // 三角形样式（原有样式，保持向后兼容）
   if (variant === 'triangle') {
@@ -158,12 +156,11 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     return (
       <Space size="small" className="github-badge-content">
         <GithubOutlined className="github-badge-icon" />
-        <span className="github-badge-text">GitHub</span>
-        {showStars && repoInfo && (
+        {showStars && (
           <Space size={2} className="github-badge-stats">
             <StarOutlined className="github-badge-star-icon" />
             <span className="github-badge-star-count">
-              {formatNumber(repoInfo.stargazers_count)}
+              {repoInfo ? formatNumber(repoInfo.stargazers_count) : '0'}
             </span>
           </Space>
         )}
@@ -185,7 +182,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
         type="default"
         size={getButtonSize()}
         onClick={handleClick}
-        className={`github-badge ${className || ''}`}
+        className={`github-badge github-badge-compact ${className || ''}`}
         style={style}
         loading={loading}
       >

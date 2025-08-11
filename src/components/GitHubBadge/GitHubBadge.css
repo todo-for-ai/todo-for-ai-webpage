@@ -40,6 +40,70 @@
   box-shadow: 0 2px 6px rgba(24, 144, 255, 0.1);
 }
 
+/* GitHub徽标紧凑按钮样式 */
+.github-badge-compact {
+  border-radius: 20px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: auto !important;
+}
+
+.github-badge-compact.ant-btn-sm {
+  height: 28px !important;
+  padding: 0 10px !important;
+  border-radius: 16px !important;
+}
+
+.github-badge-compact.ant-btn-lg {
+  height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 22px !important;
+}
+
+.github-badge-compact .github-badge-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.github-badge-compact .github-badge-icon {
+  font-size: 16px;
+  color: #333;
+  transition: color 0.2s ease;
+}
+
+.github-badge-compact.ant-btn-sm .github-badge-icon {
+  font-size: 14px;
+}
+
+.github-badge-compact.ant-btn-lg .github-badge-icon {
+  font-size: 18px;
+}
+
+.github-badge-compact:hover .github-badge-icon {
+  color: #1890ff;
+}
+
+.github-badge-compact .github-badge-stats {
+  background: rgba(24, 144, 255, 0.1) !important;
+  border-radius: 10px !important;
+  padding: 1px 4px !important;
+  margin-left: 0 !important;
+}
+
+.github-badge-compact.ant-btn-sm .github-badge-stats {
+  padding: 1px 3px !important;
+  border-radius: 8px !important;
+}
+
+.github-badge-compact.ant-btn-lg .github-badge-stats {
+  padding: 2px 5px !important;
+  border-radius: 12px !important;
+}
+
 .github-badge-content {
   display: flex;
   align-items: center;

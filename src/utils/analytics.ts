@@ -87,13 +87,16 @@ export const trackPageView = (path: string, title?: string): void => {
   }
 
   try {
-    window.gtag('config', GA_CONFIG.MEASUREMENT_ID, {
+    // 发送页面浏览事件
+    window.gtag('event', 'page_view', {
       page_path: path,
       page_title: title || document.title,
+      page_location: window.location.href,
+      debug_mode: GA_CONFIG.DEBUG_MODE
     })
 
     if (GA_CONFIG.DEBUG_MODE) {
-      console.log('[GA] Page view tracked:', { path, title })
+      console.log('[GA] Page view tracked:', { path, title, location: window.location.href })
     }
   } catch (error) {
     console.error('[GA] Failed to track page view:', error)

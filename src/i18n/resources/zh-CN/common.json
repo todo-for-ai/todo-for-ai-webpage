@@ -199,7 +199,8 @@
     "openInNewTab": "在新标签页中打开GitHub仓库",
     "repository": "代码仓库",
     "sourceCode": "源代码",
-    "starRepository": "在GitHub上Star仓库支持我们"
+    "starRepository": "在GitHub上Star仓库支持我们",
+    "badgeTooltip": "此系统是开源的，计划支持私有部署，请star支持我们"
   },
   "footer": {
     "version": "版本",
