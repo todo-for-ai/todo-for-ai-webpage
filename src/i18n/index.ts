@@ -109,15 +109,15 @@ const resources = {
 const languageDetectorOptions = {
   // 检测顺序：localStorage > 用户设置 > 浏览器语言 > 默认语言
   order: ['localStorage', 'navigator', 'htmlTag'],
-  
+
   // 缓存用户语言选择
   caches: ['localStorage'],
-  
+
   // localStorage的key
   lookupLocalStorage: 'i18nextLng',
-  
-  // 检查所有可用的语言
-  checkWhitelist: true,
+
+  // 检查所有可用的语言 (新版本使用 checkForSupportedLanguage)
+  checkForSupportedLanguage: true,
 }
 
 // 初始化i18n
@@ -138,6 +138,12 @@ i18n
     
     // 调试模式（生产环境应设为false）
     debug: import.meta.env.DEV,
+
+    // 确保语言切换正常工作
+    cleanCode: true,
+
+    // 非严格模式，允许回退
+    nonExplicitSupportedLngs: false,
     
     // 插值配置
     interpolation: {
