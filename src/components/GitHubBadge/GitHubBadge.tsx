@@ -1,47 +1,193 @@
-import React from 'react'
-import { Button, Tooltip } from 'antd'
-import { GithubOutlined } from '@ant-design/icons'
+import React, { useState, useEffect } from 'react'
+import { Button, Tooltip, Space } from 'antd'
+import { GithubOutlined, StarOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
+import { githubService, DEFAULT_REPO, type GitHubRepoInfo } from '../../services/githubService'
 import './GitHubBadge.css'
 
 interface GitHubBadgeProps {
-  repositoryUrl?: string
+  owner?: string
+  repo?: string
+  repositoryUrl?: string // 保持向后兼容
+  size?: 'small' | 'middle' | 'large'
+  showStars?: boolean
+  showForks?: boolean
+  variant?: 'triangle' | 'button' // 支持两种样式
   className?: string
   style?: React.CSSProperties
 }
 
 const GitHubBadge: React.FC<GitHubBadgeProps> = ({
-  repositoryUrl = 'https://github.com/todo-for-ai/todo-for-ai',
+  owner,
+  repo,
+  repositoryUrl,
+  size = 'middle',
+  showStars = true,
+  showForks = false,
+  variant = 'triangle',
   className,
   style
 }) => {
   const { tc } = useTranslation()
+  const [repoInfo, setRepoInfo] = useState<GitHubRepoInfo | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // 解析owner和repo从repositoryUrl（向后兼容）
+  const parseRepoFromUrl = (url: string) => {
+    const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/)
+    return match ? { owner: match[1], repo: match[2] } : null
+  }
+
+  const finalOwner = owner || (repositoryUrl ? parseRepoFromUrl(repositoryUrl)?.owner : DEFAULT_REPO.owner) || DEFAULT_REPO.owner
+  const finalRepo = repo || (repositoryUrl ? parseRepoFromUrl(repositoryUrl)?.repo : DEFAULT_REPO.repo) || DEFAULT_REPO.repo
+  const finalUrl = repositoryUrl || `https://github.com/${finalOwner}/${finalRepo}`
+
+  useEffect(() => {
+    if (showStars || showForks) {
+      const loadRepoInfo = async () => {
+        try {
+          setLoading(true)
+          setError(null)
+          const info = await githubService.getRepoInfo(finalOwner, finalRepo)
+          setRepoInfo(info)
+        } catch (err) {
+          console.error('Failed to load GitHub repo info:', err)
+          setError(err instanceof Error ? err.message : '获取仓库信息失败')
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      loadRepoInfo()
+    }
+  }, [finalOwner, finalRepo, showStars, showForks])
 
   const handleClick = () => {
-    window.open(repositoryUrl, '_blank', 'noopener,noreferrer')
+    window.open(finalUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const formatNumber = (num: number): string => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}k`
+    }
+    return num.toString()
+  }
+
+  const getButtonSize = () => {
+    switch (size) {
+      case 'small':
+        return 'small' as const
+      case 'large':
+        return 'large' as const
+      default:
+        return 'middle' as const
+    }
+  }
+
+  const tooltipTitle = tc('github.badgeTooltip')
+
+  // 三角形样式（原有样式，保持向后兼容）
+  if (variant === 'triangle') {
+    return (
+      <Tooltip title={tooltipTitle} placement="bottom">
+        <div
+          className={`github-badge-triangle ${className || ''}`}
+          style={{
+            width: '50px',
+            height: '50px',
+            background: 'rgba(102, 102, 102, 0.08)',
+            clipPath: 'polygon(100% 0%, 0% 0%, 100% 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            ...style
+          }}
+          onClick={handleClick}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(24, 144, 255, 0.12)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(102, 102, 102, 0.08)'
+          }}
+          aria-label={tc('github.starRepository')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleClick()
+            }
+          }}
+        >
+          <GithubOutlined
+            style={{
+              fontSize: '18px',
+              color: '#666',
+              transition: 'color 0.2s ease',
+              marginTop: '-23px',
+              marginLeft: '17px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#1890ff'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#666'
+            }}
+          />
+        </div>
+      </Tooltip>
+    )
+  }
+
+  // 按钮样式（新样式，支持显示star数）
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Space size="small">
+          <LoadingOutlined />
+          <span>加载中...</span>
+        </Space>
+      )
+    }
+
+    return (
+      <Space size="small" className="github-badge-content">
+        <GithubOutlined className="github-badge-icon" />
+        {showStars && (
+          <Space size={2} className="github-badge-stats">
+            <StarOutlined className="github-badge-star-icon" />
+            <span className="github-badge-star-count">
+              {repoInfo ? formatNumber(repoInfo.stargazers_count) : '0'}
+            </span>
+          </Space>
+        )}
+        {showForks && repoInfo && repoInfo.forks_count > 0 && (
+          <Space size={2} className="github-badge-stats">
+            <span className="github-badge-fork-icon">⑂</span>
+            <span className="github-badge-fork-count">
+              {formatNumber(repoInfo.forks_count)}
+            </span>
+          </Space>
+        )}
+      </Space>
+    )
   }
 
   return (
-    <Tooltip title={tc('github.visitRepository')} placement="bottom">
+    <Tooltip title={tooltipTitle} placement="top">
       <Button
-        type="text"
-        icon={<GithubOutlined />}
+        type="default"
+        size={getButtonSize()}
         onClick={handleClick}
-        className={`github-badge ${className || ''}`}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '40px',
-          height: '40px',
-          borderRadius: '8px',
-          color: '#666',
-          fontSize: '18px',
-          transition: 'all 0.2s ease',
-          ...style
-        }}
-        aria-label={tc('github.visitRepository')}
-      />
+        className={`github-badge github-badge-compact ${className || ''}`}
+        style={style}
+        loading={loading}
+      >
+        {renderContent()}
+      </Button>
     </Tooltip>
   )
 }

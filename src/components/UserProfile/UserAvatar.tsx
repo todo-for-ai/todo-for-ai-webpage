@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Avatar, Dropdown, Button } from 'antd'
-import { UserOutlined, LogoutOutlined, SettingOutlined, UserSwitchOutlined, FileTextOutlined, PushpinOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, SettingOutlined, UserSwitchOutlined, FileTextOutlined, PushpinOutlined, EditOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -33,7 +33,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       try {
         const response = await pinsApi.getUserPins()
         // 处理标准API响应格式
-        const data = response?.data || response
+        const data = response
         setHasPins(data && data.pins && data.pins.length > 0)
       } catch (error) {
         console.error('Failed to check pins:', error)
@@ -78,7 +78,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     try {
       const response = await pinsApi.getUserPins()
       // 处理标准API响应格式
-      const data = response?.data || response
+      const data = response
       setHasPins(data && data.pins && data.pins.length > 0)
     } catch (error) {
       console.error('Failed to check pins after update:', error)
@@ -118,6 +118,14 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       label: tn('userMenu.contextRules'),
       onClick: () => {
         navigate('/todo-for-ai/pages/context-rules')
+      },
+    },
+    {
+      key: 'custom-prompts',
+      icon: <EditOutlined />,
+      label: tn('userMenu.customPrompts'),
+      onClick: () => {
+        navigate('/todo-for-ai/pages/custom-prompts')
       },
     },
     ...(hasPins ? [{

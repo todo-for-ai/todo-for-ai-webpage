@@ -55,6 +55,12 @@
     "online": "Online",
     "offline": "Offline"
   },
+  "kanban": {
+    "todo": "To Do",
+    "in_progress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  },
   "time": {
     "now": "Just now",
     "today": "Today",
@@ -178,7 +184,9 @@
     "noData": "No data",
     "noResults": "No results found",
     "noContent": "No content",
-    "noItems": "No items"
+    "noItems": "No items",
+    "noProjects": "No project data",
+    "noTasks": "No task data"
   },
   "wechatGroup": {
     "tooltip": "Join AI Discussion Group",
@@ -190,7 +198,9 @@
     "visitRepository": "Visit GitHub Repository",
     "openInNewTab": "Open GitHub repository in new tab",
     "repository": "Repository",
-    "sourceCode": "Source Code"
+    "sourceCode": "Source Code",
+    "starRepository": "Star our repository on GitHub to support us",
+    "badgeTooltip": "This system is open source and plans to support private deployment. Please star to support us"
   },
   "footer": {
     "version": "Version",

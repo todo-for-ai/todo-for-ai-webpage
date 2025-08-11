@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Card,
   Table,
@@ -26,8 +26,8 @@ import {
   TeamOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import AuthAPI, { type User, type UserListParams } from '../api/auth'
-import { useAuthStore } from '../stores/useAuthStore'
+import AuthAPI, { type UserListParams } from '../api/auth'
+import { useAuthStore, type User } from '../stores/useAuthStore'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import { AuthGuard } from '../components/AuthGuard'
 
@@ -44,9 +44,8 @@ interface UserStats {
 
 const UserManagement: React.FC = () => {
   const navigate = useNavigate()
-  const { user: currentUser } = useAuthStore()
-  const { tp } = useTranslation('userManagement')
-  
+  const { t } = useTranslation('userManagement')
+
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState({
@@ -66,45 +65,72 @@ const UserManagement: React.FC = () => {
     admins: 0
   })
 
+  // 使用ref来避免useEffect依赖问题
+  const isInitialLoad = useRef(true)
+  // 使用ref存储当前用户ID，避免重新渲染
+  const currentUserIdRef = useRef<string | null>(null)
+
+  // 只在组件挂载时获取一次当前用户ID
+  useEffect(() => {
+    const currentUser = useAuthStore.getState().user
+    currentUserIdRef.current = currentUser?.id?.toString() || null
+  }, [])
+
   // 加载用户列表
-  const loadUsers = async (params?: Partial<UserListParams>) => {
+  const loadUsers = useCallback(async (params?: Partial<UserListParams>) => {
     setLoading(true)
     try {
       const queryParams = {
         ...filters,
         ...params,
-        page: pagination.current,
-        per_page: pagination.pageSize
+        page: params?.page || pagination.current,
+        per_page: params?.per_page || pagination.pageSize
       }
-      
+
       const response = await AuthAPI.getUsers(queryParams)
-      setUsers(response.users)
-      setPagination(prev => ({
-        ...prev,
-        total: response.pagination.total
-      }))
-      
+      const data = response // 兼容不同的响应格式
+      setUsers(data.users)
+
+      // 只在total真正变化时更新pagination，避免无限循环
+      if (data.pagination.total !== pagination.total) {
+        setPagination(prev => ({
+          ...prev,
+          total: data.pagination.total
+        }))
+      }
+
       // 计算统计数据
       const newStats: UserStats = {
-        total: response.pagination.total,
-        active: response.users.filter(u => u.status === 'active').length,
-        suspended: response.users.filter(u => u.status === 'suspended').length,
-        admins: response.users.filter(u => u.role === 'admin').length
+        total: data.pagination.total,
+        active: data.users.filter(u => u.status === 'active').length,
+        suspended: data.users.filter(u => u.status === 'suspended').length,
+        admins: data.users.filter(u => u.role === 'admin').length
       }
       setStats(newStats)
       
     } catch (error) {
       console.error('Failed to load users:', error)
-      message.error(tp('messages.loadFailed'))
+      message.error(t('messages.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, pagination.current, pagination.pageSize])
 
   // 初始加载
   useEffect(() => {
-    loadUsers()
-  }, [pagination.current, pagination.pageSize])
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false
+      loadUsers()
+    }
+  }, []) // 移除loadUsers依赖，避免循环
+
+  // 分页变化时重新加载
+  useEffect(() => {
+    // 只有在非初始加载且页码或页面大小改变时才重新加载
+    if (!isInitialLoad.current && (pagination.current > 1 || pagination.pageSize !== 20)) {
+      loadUsers()
+    }
+  }, [pagination.current, pagination.pageSize]) // 移除loadUsers依赖，避免循环
 
   // 搜索用户
   const handleSearch = (value: string) => {
@@ -131,18 +157,18 @@ const UserManagement: React.FC = () => {
   const handleUpdateUserStatus = async (userId: number, status: 'active' | 'suspended') => {
     try {
       await AuthAPI.updateUserStatus(userId, status)
-      message.success(tp('messages.statusUpdated'))
+      message.success(t('messages.statusUpdated'))
       loadUsers()
     } catch (error) {
       console.error('Failed to update user status:', error)
-      message.error(tp('messages.updateFailed'))
+      message.error(t('messages.updateFailed'))
     }
   }
 
   // 表格列定义
   const columns = [
     {
-      title: tp('table.columns.user'),
+      title: t('table.columns.user'),
       key: 'user',
       width: 250,
       render: (record: User) => (
@@ -165,61 +191,61 @@ const UserManagement: React.FC = () => {
       )
     },
     {
-      title: tp('table.columns.role'),
+      title: t('table.columns.role'),
       dataIndex: 'role',
       key: 'role',
       width: 100,
       render: (role: string) => (
         <Tag color={role === 'admin' ? 'gold' : 'blue'}>
-          {tp(`roles.${role}`)}
+          {t(`roles.${role}`)}
         </Tag>
       )
     },
     {
-      title: tp('table.columns.status'),
+      title: t('table.columns.status'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => (
         <Tag color={status === 'active' ? 'green' : status === 'suspended' ? 'red' : 'orange'}>
-          {tp(`status.${status}`)}
+          {t(`status.${status}`)}
         </Tag>
       )
     },
     {
-      title: tp('table.columns.lastLogin'),
+      title: t('table.columns.lastLogin'),
       dataIndex: 'last_login_at',
       key: 'last_login_at',
       width: 150,
       render: (date: string) => date ? new Date(date).toLocaleString() : '-'
     },
     {
-      title: tp('table.columns.createdAt'),
+      title: t('table.columns.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
       render: (date: string) => new Date(date).toLocaleString()
     },
     {
-      title: tp('table.columns.actions'),
+      title: t('table.columns.actions'),
       key: 'actions',
       width: 200,
       fixed: 'right' as const,
       render: (record: User) => {
         // 不能对自己进行操作
-        if (record.id === currentUser?.id) {
-          return <span style={{ color: '#999' }}>{tp('actions.self')}</span>
+        if (record.id.toString() === currentUserIdRef.current) {
+          return <span style={{ color: '#999' }}>{t('actions.self')}</span>
         }
 
         return (
           <Space size="small">
             {record.status === 'active' ? (
               <Popconfirm
-                title={tp('confirm.suspend')}
-                description={tp('confirm.suspendDescription')}
+                title={t('confirm.suspend')}
+                description={t('confirm.suspendDescription')}
                 onConfirm={() => handleUpdateUserStatus(record.id, 'suspended')}
-                okText={tp('confirm.ok')}
-                cancelText={tp('confirm.cancel')}
+                okText={t('confirm.ok')}
+                cancelText={t('confirm.cancel')}
               >
                 <Button
                   type="text"
@@ -227,23 +253,23 @@ const UserManagement: React.FC = () => {
                   icon={<StopOutlined />}
                   size="small"
                 >
-                  {tp('actions.suspend')}
+                  {t('actions.suspend')}
                 </Button>
               </Popconfirm>
             ) : (
               <Popconfirm
-                title={tp('confirm.activate')}
-                description={tp('confirm.activateDescription')}
+                title={t('confirm.activate')}
+                description={t('confirm.activateDescription')}
                 onConfirm={() => handleUpdateUserStatus(record.id, 'active')}
-                okText={tp('confirm.ok')}
-                cancelText={tp('confirm.cancel')}
+                okText={t('confirm.ok')}
+                cancelText={t('confirm.cancel')}
               >
                 <Button
                   type="text"
                   icon={<PlayCircleOutlined />}
                   size="small"
                 >
-                  {tp('actions.activate')}
+                  {t('actions.activate')}
                 </Button>
               </Popconfirm>
             )}
@@ -257,8 +283,8 @@ const UserManagement: React.FC = () => {
     <AuthGuard requireAuth requireAdmin>
       <div className="page-container">
         <div className="page-header">
-          <Title level={2}>{tp('title')}</Title>
-          <p>{tp('description')}</p>
+          <Title level={2}>{t('title')}</Title>
+          <p>{t('description')}</p>
         </div>
 
         {/* 统计卡片 */}
@@ -266,7 +292,7 @@ const UserManagement: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title={tp('stats.totalUsers')}
+                title={t('stats.totalUsers')}
                 value={stats.total}
                 prefix={<TeamOutlined />}
                 valueStyle={{ color: '#1890ff' }}
@@ -276,7 +302,7 @@ const UserManagement: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title={tp('stats.activeUsers')}
+                title={t('stats.activeUsers')}
                 value={stats.active}
                 prefix={<UserOutlined />}
                 valueStyle={{ color: '#52c41a' }}
@@ -286,7 +312,7 @@ const UserManagement: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title={tp('stats.suspendedUsers')}
+                title={t('stats.suspendedUsers')}
                 value={stats.suspended}
                 prefix={<StopOutlined />}
                 valueStyle={{ color: '#ff4d4f' }}
@@ -296,7 +322,7 @@ const UserManagement: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title={tp('stats.admins')}
+                title={t('stats.admins')}
                 value={stats.admins}
                 prefix={<CrownOutlined />}
                 valueStyle={{ color: '#faad14' }}
@@ -310,7 +336,7 @@ const UserManagement: React.FC = () => {
           <Row gutter={16} align="middle">
             <Col flex="auto">
               <Search
-                placeholder={tp('search.placeholder')}
+                placeholder={t('search.placeholder')}
                 allowClear
                 onSearch={handleSearch}
                 style={{ width: 300 }}
@@ -319,27 +345,27 @@ const UserManagement: React.FC = () => {
             </Col>
             <Col>
               <Select
-                placeholder={tp('filters.status')}
+                placeholder={t('filters.status')}
                 allowClear
                 style={{ width: 120 }}
                 onChange={handleStatusFilter}
                 value={filters.status}
               >
-                <Option value="active">{tp('status.active')}</Option>
-                <Option value="suspended">{tp('status.suspended')}</Option>
-                <Option value="inactive">{tp('status.inactive')}</Option>
+                <Option value="active">{t('status.active')}</Option>
+                <Option value="suspended">{t('status.suspended')}</Option>
+                <Option value="inactive">{t('status.inactive')}</Option>
               </Select>
             </Col>
             <Col>
               <Select
-                placeholder={tp('filters.role')}
+                placeholder={t('filters.role')}
                 allowClear
                 style={{ width: 120 }}
                 onChange={handleRoleFilter}
                 value={filters.role}
               >
-                <Option value="admin">{tp('roles.admin')}</Option>
-                <Option value="user">{tp('roles.user')}</Option>
+                <Option value="admin">{t('roles.admin')}</Option>
+                <Option value="user">{t('roles.user')}</Option>
               </Select>
             </Col>
             <Col>
@@ -348,7 +374,7 @@ const UserManagement: React.FC = () => {
                 onClick={() => loadUsers()}
                 loading={loading}
               >
-                {tp('actions.refresh')}
+                {t('actions.refresh')}
               </Button>
             </Col>
           </Row>
@@ -368,7 +394,7 @@ const UserManagement: React.FC = () => {
               showSizeChanger: true,
               showQuickJumper: true,
               showTotal: (total, range) => 
-                tp('table.pagination.total', { 
+                t('table.pagination.total', { 
                   start: range[0], 
                   end: range[1], 
                   total 

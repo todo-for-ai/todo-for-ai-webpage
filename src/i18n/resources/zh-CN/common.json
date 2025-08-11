@@ -55,6 +55,12 @@
     "online": "在线",
     "offline": "离线"
   },
+  "kanban": {
+    "todo": "待办",
+    "in_progress": "进行中",
+    "review": "待审核",
+    "done": "已完成"
+  },
   "time": {
     "now": "刚刚",
     "today": "今天",
@@ -178,7 +184,9 @@
     "noData": "暂无数据",
     "noResults": "没有找到相关结果",
     "noContent": "暂无内容",
-    "noItems": "暂无项目"
+    "noItems": "暂无项目",
+    "noProjects": "暂无项目数据",
+    "noTasks": "暂无任务数据"
   },
   "wechatGroup": {
     "tooltip": "加入AI交流群",
@@ -190,7 +198,9 @@
     "visitRepository": "访问GitHub仓库",
     "openInNewTab": "在新标签页中打开GitHub仓库",
     "repository": "代码仓库",
-    "sourceCode": "源代码"
+    "sourceCode": "源代码",
+    "starRepository": "在GitHub上Star仓库支持我们",
+    "badgeTooltip": "此系统是开源的，计划支持私有部署，请star支持我们"
   },
   "footer": {
     "version": "版本",

@@ -1,4 +1,4 @@
-import { fetchApiClient } from './fetchClient'
+import { apiClient } from './client'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -107,42 +107,42 @@ export class ContextRulesApi {
     }
     
     const url = `/context-rules${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return fetchApiClient.get<PaginatedResponse<ContextRule>>(url)
+    return apiClient.get<PaginatedResponse<ContextRule>>(url)
   }
 
   // 获取单个上下文规则
   async getContextRule(id: number) {
-    return fetchApiClient.get<ContextRule>(`/context-rules/${id}`)
+    return apiClient.get<ContextRule>(`/context-rules/${id}`)
   }
 
   // 创建上下文规则
   async createContextRule(data: CreateContextRuleData) {
-    return fetchApiClient.post<ContextRule>('/context-rules', data)
+    return apiClient.post<ContextRule>('/context-rules', data)
   }
 
   // 更新上下文规则
   async updateContextRule(id: number, data: UpdateContextRuleData) {
-    return fetchApiClient.put<ContextRule>(`/context-rules/${id}`, data)
+    return apiClient.put<ContextRule>(`/context-rules/${id}`, data)
   }
 
   // 删除上下文规则
   async deleteContextRule(id: number) {
-    return fetchApiClient.delete(`/context-rules/${id}`)
+    return apiClient.delete(`/context-rules/${id}`)
   }
 
   // 切换上下文规则状态
   async toggleContextRule(id: number, is_active: boolean) {
-    return fetchApiClient.put<ContextRule>(`/context-rules/${id}`, { is_active })
+    return apiClient.put<ContextRule>(`/context-rules/${id}`, { is_active })
   }
 
   // 获取项目的上下文规则
   async getProjectContextRules(projectId: number) {
-    return fetchApiClient.get<ContextRule[]>(`/projects/${projectId}/context-rules`)
+    return apiClient.get<ContextRule[]>(`/projects/${projectId}/context-rules`)
   }
 
   // 获取全局上下文规则
   async getGlobalContextRules() {
-    return fetchApiClient.get<ContextRule[]>('/context-rules/global')
+    return apiClient.get<ContextRule[]>('/context-rules/global')
   }
 
   // 获取合并后的上下文规则（用于AI）
@@ -150,7 +150,7 @@ export class ContextRulesApi {
     const url = projectId
       ? `/context-rules/merged?project_id=${projectId}`
       : '/context-rules/merged'
-    return fetchApiClient.get<{ content: string; rules: ContextRule[] }>(url)
+    return apiClient.get<{ content: string; rules: ContextRule[] }>(url)
   }
 
   // 预览合并后的上下文规则
@@ -158,18 +158,17 @@ export class ContextRulesApi {
     const url = projectId
       ? `/context-rules/preview?project_id=${projectId}`
       : '/context-rules/preview'
-    return fetchApiClient.get<{ content: string; rules: ContextRule[] }>(url)
+    return apiClient.get<{ content: string; rules: ContextRule[] }>(url)
   }
 
   // 复制上下文规则
   async copyContextRule(id: number, data: { name: string; project_id?: number }) {
-    return fetchApiClient.post<ContextRule>(`/context-rules/${id}/copy`, data)
+    return apiClient.post<ContextRule>(`/context-rules/${id}/copy`, data)
   }
 
   // 导入上下文规则
-  async importContextRules(_file: File) {
-    // TODO: 实现文件上传功能
-    throw new Error('File upload not implemented with fetch client')
+  async importContextRules(file: File) {
+    return apiClient.upload<{ imported_count: number; skipped_count: number; total_count: number }>('/context-rules/import', file)
   }
 
   // 导出上下文规则
@@ -191,7 +190,7 @@ export class ContextRulesApi {
 
   // 构建项目上下文字符串（用于任务详情页预览）
   async buildProjectContext(projectId: number, forTasks: boolean = true, forProjects: boolean = false) {
-    return fetchApiClient.post<BuildContextResponse>('/context-rules/build-context', {
+    return apiClient.post<BuildContextResponse>('/context-rules/build-context', {
       project_id: projectId,
       for_tasks: forTasks,
       for_projects: forProjects
@@ -204,7 +203,7 @@ export class ContextRulesApi {
     copy_as_global: boolean;
     target_project_id?: number
   }) {
-    return fetchApiClient.post<ContextRule>(`/context-rules/${ruleId}/copy`, data)
+    return apiClient.post<ContextRule>(`/context-rules/${ruleId}/copy`, data)
   }
 }
 

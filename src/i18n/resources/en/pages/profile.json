@@ -56,7 +56,7 @@
   "apiTokens": {
     "title": "API Token Management",
     "description": "API tokens for MCP client authentication",
-    "detailDescription": "Please keep your tokens safe after creation. Tokens are only shown once when created. You can use tokens to access Todo for AI features via MCP protocol. Click 'View' button to see token details.",
+    "detailDescription": "Please keep your tokens safe after creation. You can use tokens to access Todo for AI features via MCP protocol. Click 'View' button to see token details.",
     "createToken": "Create Token",
     "createTitle": "Create API Token",
     "tokenName": "Token Name",
@@ -109,6 +109,7 @@
       "copySuccess": "Copied to clipboard",
       "copyFailed": "Failed to copy",
       "copyPrefixSuccess": "Token prefix copied to clipboard",
+      "revealSuccess": "Token revealed",
       "revealFailed": "Failed to get token",
       "revealFailedOldToken": "Failed to get token, this may be an old token that doesn't support this feature"
     },
@@ -122,7 +123,7 @@
       "tokenCreated": {
         "title": "Token Created Successfully",
         "saveWarning": "Please Save Your Token",
-        "saveDescription": "This is the only time your token will be displayed. Please copy and save it to a secure location immediately.",
+        "saveDescription": "Please save your token securely. You can view the complete token content anytime in the Token Management page.",
         "copyToken": "Copy Token"
       },
       "tokenDetails": {
@@ -136,7 +137,7 @@
         "lastUsed": "Last Used:",
         "usageCount": "Usage Count:",
         "securityTip": "Security Notice",
-        "securityDescription": "For security reasons, the complete token is only shown once when created. If you forget your token, please delete this token and create a new one.",
+        "securityDescription": "For security reasons, please keep your tokens safe. You can view the complete token by clicking the eye icon. If you no longer need this token, please delete it.",
         "neverExpires": "Never expires",
         "statusLabels": {
           "active": "Active",

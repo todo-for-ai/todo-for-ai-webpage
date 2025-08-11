@@ -1,5 +1,6 @@
-import { fetchApiClient } from './fetchClient'
+import { apiClient } from './client'
 import type { User } from '../stores/useAuthStore'
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 export interface LoginResponse {
   access_token: string
@@ -52,7 +53,7 @@ export class AuthAPI {
    * 启动GitHub登录流程
    */
   static loginWithGitHub(redirectUri?: string): void {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
+    const baseUrl = getApiBaseUrl()
     const returnTo = redirectUri || window.location.href
 
     window.location.href = `${baseUrl}/auth/login/github?return_to=${encodeURIComponent(returnTo)}`
@@ -62,7 +63,7 @@ export class AuthAPI {
    * 启动Google登录流程
    */
   static loginWithGoogle(redirectUri?: string): void {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50110/todo-for-ai/api/v1'
+    const baseUrl = getApiBaseUrl()
     const returnTo = redirectUri || window.location.href
 
     window.location.href = `${baseUrl}/auth/login/google?return_to=${encodeURIComponent(returnTo)}`
@@ -72,7 +73,7 @@ export class AuthAPI {
    * 登出
    */
   static async logout(returnTo?: string): Promise<LogoutResponse> {
-    return fetchApiClient.post<LogoutResponse>('/auth/logout', {
+    return await apiClient.post<LogoutResponse>('/auth/logout', {
       return_to: returnTo || window.location.origin + '/todo-for-ai/pages'
     })
   }
@@ -81,21 +82,21 @@ export class AuthAPI {
    * 获取当前用户信息
    */
   static async getCurrentUser(): Promise<User> {
-    return fetchApiClient.get<User>('/auth/me')
+    return await apiClient.get<User>('/auth/me')
   }
 
   /**
    * 更新当前用户信息
    */
   static async updateCurrentUser(userData: Partial<User>): Promise<User> {
-    return fetchApiClient.put<User>('/auth/me', userData)
+    return await apiClient.put<User>('/auth/me', userData)
   }
 
   /**
    * 验证token
    */
   static async verifyToken(token: string): Promise<{ valid: boolean; message: string }> {
-    return fetchApiClient.post<{ valid: boolean; message: string }>('/auth/verify', {
+    return await apiClient.post<{ valid: boolean; message: string }>('/auth/verify', {
       token
     })
   }
@@ -104,7 +105,7 @@ export class AuthAPI {
    * 刷新访问令牌
    */
   static async refreshToken(): Promise<{ access_token: string; token_type: string }> {
-    return fetchApiClient.post<{ access_token: string; token_type: string }>('/auth/refresh')
+    return await apiClient.post<{ access_token: string; token_type: string }>('/auth/refresh')
   }
 
   /**
@@ -118,21 +119,21 @@ export class AuthAPI {
       }
     })
     const url = `/auth/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return fetchApiClient.get<UserListResponse>(url)
+    return await apiClient.get<UserListResponse>(url)
   }
 
   /**
    * 获取指定用户信息
    */
   static async getUser(userId: number): Promise<User> {
-    return fetchApiClient.get<User>(`/auth/users/${userId}`)
+    return await apiClient.get<User>(`/auth/users/${userId}`)
   }
 
   /**
    * 更新用户状态（管理员功能）
    */
   static async updateUserStatus(userId: number, status: UpdateUserStatusRequest['status']): Promise<User> {
-    return fetchApiClient.put<User>(`/auth/users/${userId}/status`, { status })
+    return await apiClient.put<User>(`/auth/users/${userId}/status`, { status })
   }
 }
 

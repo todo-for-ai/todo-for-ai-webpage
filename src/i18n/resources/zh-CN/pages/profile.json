@@ -56,7 +56,7 @@
   "apiTokens": {
     "title": "API Token 管理",
     "description": "API Token 用于MCP客户端认证",
-    "detailDescription": "创建Token后请妥善保管，Token只在创建时显示一次。您可以使用Token通过MCP协议访问Todo for AI的功能。点击'查看'按钮可以查看Token的详细信息。",
+    "detailDescription": "创建Token后请妥善保管。您可以使用Token通过MCP协议访问Todo for AI的功能。点击'查看'按钮可以查看Token的详细信息。",
     "createToken": "创建Token",
     "createTitle": "创建API Token",
     "tokenName": "Token名称",
@@ -109,6 +109,7 @@
       "copySuccess": "已复制到剪贴板",
       "copyFailed": "复制失败",
       "copyPrefixSuccess": "已复制Token前缀到剪贴板",
+      "revealSuccess": "Token已显示",
       "revealFailed": "获取Token失败",
       "revealFailedOldToken": "获取Token失败，可能是旧版本Token不支持此功能"
     },
@@ -122,7 +123,7 @@
       "tokenCreated": {
         "title": "Token创建成功",
         "saveWarning": "请保存您的Token",
-        "saveDescription": "这是您的Token唯一显示的机会，请立即复制并保存到安全的地方。",
+        "saveDescription": "请妥善保存您的Token。您可以随时在Token管理页面查看完整的Token内容。",
         "copyToken": "复制Token"
       },
       "tokenDetails": {
@@ -136,7 +137,7 @@
         "lastUsed": "最后使用：",
         "usageCount": "使用次数：",
         "securityTip": "安全提示",
-        "securityDescription": "出于安全考虑，完整的Token只在创建时显示一次。如果您忘记了Token，请删除此Token并创建新的。",
+        "securityDescription": "出于安全考虑，请妥善保管您的Token。您可以点击眼睛图标查看完整的Token。如果不再需要此Token，请删除它。",
         "neverExpires": "永不过期",
         "statusLabels": {
           "active": "活跃",

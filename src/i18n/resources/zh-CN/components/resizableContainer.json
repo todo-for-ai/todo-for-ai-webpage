@@ -1,0 +1,8 @@
+{
+  "tooltip": {
+    "dragToResize": "拖动调整宽度，双击重置为默认宽度"
+  },
+  "widthIndicator": {
+    "label": "宽度"
+  }
+}

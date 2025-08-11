@@ -19,7 +19,7 @@
 .header-user-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px; /* 减少间距到8px */
 }
 
 .welcome-text {

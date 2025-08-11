@@ -4,6 +4,12 @@ import { GithubOutlined, GoogleOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import LanguageSwitch from '../components/LanguageSwitch'
+import WeChatGroup from '../components/WeChatGroup/WeChatGroup'
+import TelegramGroup from '../components/TelegramGroup/TelegramGroup'
+import { Footer } from '../components/Footer'
+import GitHubBadge from '../components/GitHubBadge/GitHubBadge'
+import { analytics } from '../utils/analytics'
+import './Login.css'
 
 const { Title, Paragraph } = Typography
 
@@ -29,142 +35,148 @@ const Login: React.FC = () => {
   }, [t])
 
   const handleGitHubLogin = () => {
+    analytics.auth.login('github')
     loginWithGitHub('/todo-for-ai/pages')
   }
 
   const handleGoogleLogin = () => {
+    analytics.auth.login('google')
     loginWithGoogle('/todo-for-ai/pages')
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '20px',
-      position: 'relative'
-    }}>
-      {/* 语言切换按钮 */}
-      <div style={{ position: 'absolute', top: 20, right: 20 }}>
-        <LanguageSwitch size="small" />
-      </div>
-
-      <Card
-        style={{
-          width: '100%',
-          maxWidth: 400,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          borderRadius: 12,
-        }}
-        bodyStyle={{ padding: '40px 32px' }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
-            {t('title')}
-          </Title>
-          <Paragraph style={{ margin: '8px 0 0 0', color: '#666' }}>
-            {t('subtitle')}
-          </Paragraph>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="login-container" style={{ flex: 1 }}>
+        {/* 语言切换按钮和GitHub徽标 */}
+        <div className="login-header-controls">
+          <div className="login-language-switch">
+            <LanguageSwitch size="small" />
+          </div>
+          <div className="login-github-badge">
+            <GitHubBadge
+              variant="button"
+              size="small"
+              showStars={true}
+              showForks={false}
+              owner="todo-for-ai"
+              repo="todo-for-ai"
+            />
+          </div>
         </div>
 
-        {error && (
-          <Alert
-            message={t('loginFailed')}
-            description={error}
-            type="error"
-            showIcon
-            style={{ marginBottom: 24 }}
-          />
-        )}
-
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div>
-            <Title level={4} style={{ textAlign: 'center', marginBottom: 16 }}>
-              {t('chooseLoginMethod')}
+        <Card
+          className="login-card"
+          styles={{ body: { padding: '24px 20px' } }}
+        >
+          <div className="login-header">
+            <Title level={2} className="login-title">
+              {t('title')}
             </Title>
-
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Button
-                type="primary"
-                size="large"
-                icon={<GithubOutlined />}
-                loading={isLoading}
-                onClick={handleGitHubLogin}
-                style={{
-                  width: '100%',
-                  height: 48,
-                  fontSize: 16,
-                  borderRadius: 8,
-                  backgroundColor: '#24292e',
-                  borderColor: '#24292e',
-                }}
-              >
-                {t('loginWithGitHub')}
-              </Button>
-
-              <Button
-                size="large"
-                icon={<GoogleOutlined />}
-                loading={isLoading}
-                onClick={handleGoogleLogin}
-                style={{
-                  width: '100%',
-                  height: 48,
-                  fontSize: 16,
-                  borderRadius: 8,
-                  backgroundColor: '#db4437',
-                  borderColor: '#db4437',
-                  color: 'white',
-                }}
-              >
-                {t('loginWithGmail')}
-              </Button>
-            </Space>
-          </div>
-
-          <Divider style={{ margin: '16px 0' }}>
-            <span style={{ color: '#999', fontSize: 12 }}>{t('supportedMethods')}</span>
-          </Divider>
-
-          <div style={{ textAlign: 'center' }}>
-            <Space size="large">
-              <div style={{ textAlign: 'center' }}>
-                <GithubOutlined style={{ fontSize: 24, color: '#333' }} />
-                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>GitHub</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <GoogleOutlined style={{ fontSize: 24, color: '#db4437' }} />
-                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>Gmail</div>
-              </div>
-            </Space>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <Paragraph style={{ fontSize: 12, color: '#999', margin: 0 }}>
-              {t('agreement.text')}
-              <a
-                href="/todo-for-ai/pages/terms"
+            <Paragraph className="login-subtitle">
+              {t('subtitle')} · <a
+                href="https://site.todo4ai.org/"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#1890ff', textDecoration: 'none' }}
+                className="login-learn-more-inline"
               >
-                {t('agreement.terms')}
-              </a>
-              {t('agreement.and')}
-              <a
-                href="/todo-for-ai/pages/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#1890ff', textDecoration: 'none' }}
-              >
-                {t('agreement.privacy')}
+                {t('learnMore.link')}
               </a>
             </Paragraph>
           </div>
-        </Space>
-      </Card>
+
+          {error && (
+            <Alert
+              message={t('loginFailed')}
+              description={error}
+              type="error"
+              showIcon
+              className="login-error"
+            />
+          )}
+
+          <Space direction="vertical" size="middle" className="login-methods">
+            <div>
+              <Title level={4} className="login-methods-title">
+                {t('chooseLoginMethod')}
+              </Title>
+
+              <Space direction="vertical" size="small" className="login-buttons">
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<GithubOutlined />}
+                  loading={isLoading}
+                  onClick={handleGitHubLogin}
+                  className="login-button-github"
+                >
+                  {t('loginWithGitHub')}
+                </Button>
+
+                <Button
+                  size="large"
+                  icon={<GoogleOutlined />}
+                  loading={isLoading}
+                  onClick={handleGoogleLogin}
+                  className="login-button-google"
+                >
+                  {t('loginWithGmail')}
+                </Button>
+              </Space>
+            </div>
+
+            <Divider className="login-divider">
+              <span className="login-divider-text">{t('supportedMethods')}</span>
+            </Divider>
+
+            <div className="login-supported-methods">
+              <Space size="large">
+                <div className="login-method-icon">
+                  <GithubOutlined className="login-method-icon-github" />
+                  <div className="login-method-label">GitHub</div>
+                </div>
+                <div className="login-method-icon">
+                  <GoogleOutlined className="login-method-icon-google" />
+                  <div className="login-method-label">Gmail</div>
+                </div>
+              </Space>
+            </div>
+
+            <div className="login-agreement">
+              <Paragraph className="login-agreement-text">
+                {t('agreement.text')}
+                <a
+                  href="/todo-for-ai/pages/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="login-agreement-link"
+                >
+                  {t('agreement.terms')}
+                </a>
+                {t('agreement.and')}
+                <a
+                  href="/todo-for-ai/pages/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="login-agreement-link"
+                >
+                  {t('agreement.privacy')}
+                </a>
+              </Paragraph>
+            </div>
+
+
+          </Space>
+        </Card>
+
+        {/* 微信AI交流群 - 只在中文环境下显示 */}
+        <WeChatGroup />
+
+        {/* Telegram AI交流群 - 只在英文环境下显示 */}
+        <TelegramGroup />
+      </div>
+
+      {/* 页脚 */}
+      <Footer />
     </div>
   )
 }

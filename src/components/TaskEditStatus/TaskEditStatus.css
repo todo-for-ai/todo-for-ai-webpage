@@ -1,0 +1,98 @@
+/* 任务编辑状态组件样式 */
+.task-edit-status {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f6f8fa 0%, #f1f3f4 100%);
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.task-edit-status:hover {
+  border-color: #d0d7de;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* 未保存警告样式 */
+.task-edit-status .unsaved-warning {
+  animation: fadeInPulse 0.5s ease-in-out;
+  padding: 4px 8px;
+  background: rgba(250, 173, 20, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(250, 173, 20, 0.2);
+}
+
+/* 淡入脉冲动画 */
+@keyframes fadeInPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 自动保存复选框样式 */
+.task-edit-status .ant-checkbox-wrapper {
+  font-weight: 500;
+}
+
+.task-edit-status .ant-checkbox-wrapper:hover .ant-checkbox-inner {
+  border-color: #1890ff;
+}
+
+/* 时间显示样式 */
+.task-edit-status .ant-typography {
+  margin: 0;
+}
+
+/* 保存按钮样式 */
+.task-edit-status .ant-btn-link {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.task-edit-status .ant-btn-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .task-edit-status {
+    padding: 8px 12px;
+  }
+  
+  .task-edit-status .ant-space {
+    flex-wrap: wrap;
+  }
+  
+  .task-edit-status .ant-space-item {
+    margin-bottom: 4px;
+  }
+}
+
+/* 深色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .task-edit-status {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .task-edit-status:hover {
+    border-color: #6b7280;
+  }
+  
+  .task-edit-status .unsaved-warning {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+}

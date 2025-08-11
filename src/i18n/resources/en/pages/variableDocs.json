@@ -1,0 +1,116 @@
+{
+  "title": "Variable Documentation",
+  "pageTitle": "Variable Documentation - Todo for AI",
+  "subtitle": "This page lists all variables that can be used in custom prompts. You can use these variables in prompt templates, and the system will automatically replace them with actual values when generating prompts.",
+  "navigation": {
+    "back": "Back"
+  },
+  "sections": {
+    "project": {
+      "title": "Project Variables",
+      "description": "Project-related variables containing basic project information and configuration."
+    },
+    "task": {
+      "title": "Task Variables", 
+      "description": "Task-related variables containing detailed task information and status."
+    },
+    "system": {
+      "title": "System Variables",
+      "description": "System-related variables containing system configuration and runtime information."
+    },
+    "tasks": {
+      "title": "Task List Variables",
+      "description": "Task list related variables for displaying task statistics and lists in the project."
+    },
+    "contextRules": {
+      "title": "Context Rules Variables",
+      "description": "Context rules related variables for referencing user's global rules or project-level rules. You can reference all rules or reference individual rules by name."
+    }
+  },
+  "table": {
+    "columns": {
+      "variable": "Variable",
+      "description": "Description", 
+      "type": "Type",
+      "example": "Example"
+    }
+  },
+  "examples": {
+    "title": "Usage Examples",
+    "globalRules": "Reference all global rules:",
+    "projectRules": "Reference all current project rules:",
+    "mergedRules": "Reference all merged rules (recommended):",
+    "specificRule": "Reference specific rule by name:",
+    "ruleNamePlaceholder": "Rule Name"
+  },
+  "usage": {
+    "title": "Usage Instructions",
+    "basicSyntax": {
+      "title": "Basic Syntax",
+      "description": "Variables use the format ${variable.property}, where:",
+      "variableDesc": "variable is the variable category (project, task, system, tasks, context_rules)",
+      "propertyDesc": "property is the specific property name"
+    },
+    "exampleUsage": {
+      "title": "Examples",
+      "projectName": "Get project name",
+      "taskTitle": "Get task title", 
+      "currentTime": "Get current time",
+      "allRules": "Get all context rules"
+    },
+    "notes": {
+      "title": "Notes",
+      "item1": "Variable names are case-sensitive",
+      "item2": "If a variable does not exist or is empty, it will display as an empty string",
+      "item3": "It is recommended to test variables in the preview function before use to ensure they display correctly",
+      "item4": "Context rules variables support referencing by name, and the name must exactly match the actual rule name"
+    }
+  },
+  "sampleData": {
+    "project": {
+      "name": "Sample Project",
+      "description": "This is a sample project",
+      "context": "Project context information"
+    },
+    "task": {
+      "title": "Sample Task",
+      "content": "Task detailed content"
+    },
+    "tasks": {
+      "list": "1. [High] Task 1\n2. [Medium] Task 2"
+    }
+  },
+  "variables": {
+    "project": {
+      "title": "Project Variables",
+      "name": "Project Name",
+      "description": "Project Description",
+      "github_repo": "GitHub Repository URL",
+      "context": "Project Context",
+      "color": "Project Color"
+    },
+    "task": {
+      "title": "Task Variables",
+      "id": "Task ID",
+      "title": "Task Title",
+      "content": "Task Content",
+      "status": "Task Status",
+      "priority": "Priority",
+      "created_at": "Created At",
+      "due_date": "Due Date",
+      "estimated_hours": "Estimated Hours",
+      "tags": "Tag List",
+      "related_files": "Related Files"
+    },
+    "system": {
+      "title": "System Variables",
+      "url": "System URL",
+      "current_time": "Current Time"
+    },
+    "tasks": {
+      "title": "Task List Variables",
+      "count": "Task Count",
+      "list": "Task List"
+    }
+  }
+}

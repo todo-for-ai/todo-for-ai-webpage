@@ -12,6 +12,32 @@
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo for AI</title>
+
+    <!-- Google Analytics 4 -->
+    <script>
+      // 检查是否启用GA
+      const gaEnabled = '%VITE_GA_ENABLED%' === 'true';
+      const gaMeasurementId = '%VITE_GA_MEASUREMENT_ID%';
+
+      if (gaEnabled && gaMeasurementId && gaMeasurementId !== 'G-XXXXXXXXXX' && !gaMeasurementId.includes('%VITE_GA_MEASUREMENT_ID%')) {
+        // 异步加载GA脚本
+        (function() {
+          const script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaMeasurementId;
+          document.head.appendChild(script);
+
+          // 初始化dataLayer和gtag
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', gaMeasurementId, {
+            send_page_view: false // 由React应用控制页面浏览事件
+          });
+        })();
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

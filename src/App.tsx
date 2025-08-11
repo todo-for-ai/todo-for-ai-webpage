@@ -1,7 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { App as AntdApp } from 'antd'
 import { AppLayout } from './components/Layout'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthGuard } from './components/AuthGuard'
+import { tokenRefreshService } from './services/TokenRefreshService'
+import { useAuthStore } from './stores/useAuthStore'
+import PageTracker from './components/PageTracker'
 import {
   Dashboard,
   Projects,
@@ -15,63 +20,94 @@ import {
   CreateContextRule,
   RuleMarketplace,
   MCPInstallation,
-  APIDocumentation
+  APIDocumentation,
+  CustomPrompts,
+  VariableDocs
 } from './pages'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import UserManagement from './pages/UserManagement'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import TestTelegramGroup from './pages/TestTelegramGroup'
 
 function App() {
+  const { isAuthenticated } = useAuthStore()
+
+  // 初始化token刷新服务
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('[App] 启动token刷新服务')
+      tokenRefreshService.start()
+    } else {
+      console.log('[App] 停止token刷新服务')
+      tokenRefreshService.stop()
+    }
+
+    // 清理函数
+    return () => {
+      tokenRefreshService.stop()
+    }
+  }, [isAuthenticated])
+
   return (
-    <ThemeProvider options={{
-      enablePersistence: true,
-      defaultThemeId: 'default',
-      followSystemDarkMode: true,
-      storageKey: 'milkdown-theme-id'
-    }}>
-      <Router>
-        <Routes>
-          {/* 根目录重定向 */}
-          <Route path="/" element={<Navigate to="/todo-for-ai/pages" replace />} />
+    <AntdApp>
+      <ThemeProvider options={{
+        enablePersistence: true,
+        defaultThemeId: 'default',
+        followSystemDarkMode: true,
+        storageKey: 'milkdown-theme-id'
+      }}>
+        <Router>
+          <PageTracker />
+          <Routes>
+            {/* 根目录重定向 */}
+            <Route path="/" element={<Navigate to="/todo-for-ai/pages" replace />} />
 
-          {/* 公开页面 - 不需要认证 */}
-          <Route path="/todo-for-ai/pages/login" element={<Login />} />
-          <Route path="/todo-for-ai/pages/terms" element={<TermsOfService />} />
-          <Route path="/todo-for-ai/pages/privacy" element={<PrivacyPolicy />} />
+            {/* 公开页面 - 不需要认证 */}
+            <Route path="/todo-for-ai/pages/login" element={<Login />} />
+            <Route path="/todo-for-ai/pages/terms" element={<TermsOfService />} />
+            <Route path="/todo-for-ai/pages/privacy" element={<PrivacyPolicy />} />
+            <Route path="/todo-for-ai/pages/test-telegram" element={<TestTelegramGroup />} />
 
-          {/* 主应用 - 需要认证 */}
-          <Route path="/todo-for-ai/pages" element={
-            <AuthGuard>
-              <AppLayout />
-            </AuthGuard>
-          }>
-            <Route index element={<Dashboard />} />
-            <Route path="projects" element={<Projects />} />
-            <Route path="projects/create" element={<CreateProject />} />
-            <Route path="projects/:id" element={<ProjectDetail />} />
-            <Route path="projects/:id/edit" element={<CreateProject />} />
-            <Route path="tasks/create" element={<CreateTask />} />
-            <Route path="tasks/:id" element={<TaskDetail />} />
-            <Route path="tasks/:id/edit" element={<CreateTask />} />
-            <Route path="kanban" element={<Kanban />} />
-            <Route path="context-rules" element={<ContextRules />} />
-            <Route path="context-rules/create" element={<CreateContextRule />} />
-            <Route path="context-rules/:id/edit" element={<CreateContextRule />} />
-            <Route path="rule-marketplace" element={<RuleMarketplace />} />
-            <Route path="mcp-installation" element={<MCPInstallation />} />
-            <Route path="api-documentation" element={<APIDocumentation />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="user-management" element={<UserManagement />} />
-          </Route>
+            {/* 主应用 - 需要认证 */}
+            <Route path="/todo-for-ai/pages" element={
+              <AuthGuard>
+                <AppLayout />
+              </AuthGuard>
+            }>
+              <Route index element={<Dashboard />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="projects/create" element={<CreateProject />} />
+              <Route path="projects/:id" element={<ProjectDetail />} />
+              <Route path="projects/:id/edit" element={<CreateProject />} />
+              <Route path="tasks/create" element={<CreateTask />} />
+              <Route path="tasks/:id" element={<TaskDetail />} />
+              <Route path="tasks/:id/edit" element={<CreateTask />} />
+              <Route path="kanban" element={<Kanban />} />
+              <Route path="context-rules" element={<ContextRules />} />
+              <Route path="context-rules/create" element={<CreateContextRule />} />
+              <Route path="context-rules/:id/edit" element={<CreateContextRule />} />
+              <Route path="rule-marketplace" element={<RuleMarketplace />} />
+              <Route path="mcp-installation" element={<MCPInstallation />} />
+              <Route path="api-documentation" element={<APIDocumentation />} />
+              <Route path="custom-prompts" element={<CustomPrompts />}>
+                <Route index element={<Navigate to="project-prompts" replace />} />
+                <Route path="project-prompts" element={<CustomPrompts />} />
+                <Route path="task-prompts" element={<CustomPrompts />} />
+              </Route>
+              <Route path="variable-docs" element={<VariableDocs />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="user-management" element={<UserManagement />} />
+            </Route>
 
-          {/* 捕获所有未匹配的路由，重定向到首页 */}
-          <Route path="*" element={<Navigate to="/todo-for-ai/pages" replace />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+            {/* 捕获所有未匹配的路由，重定向到首页 */}
+            <Route path="*" element={<Navigate to="/todo-for-ai/pages" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    </AntdApp>
   )
 }
 

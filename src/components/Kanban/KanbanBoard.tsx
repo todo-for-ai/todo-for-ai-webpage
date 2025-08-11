@@ -22,6 +22,7 @@ import { tasksApi } from '../../api/tasks'
 import type { Task } from '../../api/tasks'
 import KanbanColumn from './KanbanColumn'
 import KanbanCard from './KanbanCard'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 // const { Title } = Typography
 
@@ -35,6 +36,7 @@ export interface KanbanBoardRef {
 }
 
 const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, onTaskClick }, ref) => {
+  const { t } = useTranslation()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
@@ -61,8 +63,10 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
         sort_order: 'desc'
       })
 
-      if (response.data && response.data.items) {
-        setTasks(response.data.items)
+      if (response && (response as any).items) {
+        setTasks((response as any).items)
+      } else if (response) {
+        setTasks(response as any)
       } else {
         setTasks([])
       }
@@ -106,10 +110,10 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
 
   // 定义看板列
   const columns = [
-    { id: 'todo', title: '待办', color: '#f0f0f0' },
-    { id: 'in_progress', title: '进行中', color: '#e6f7ff' },
-    { id: 'review', title: '待审核', color: '#fff7e6' },
-    { id: 'done', title: '已完成', color: '#f6ffed' },
+    { id: 'todo', title: t('common:kanban.todo'), color: '#f0f0f0' },
+    { id: 'in_progress', title: t('common:kanban.in_progress'), color: '#e6f7ff' },
+    { id: 'review', title: t('common:kanban.review'), color: '#fff7e6' },
+    { id: 'done', title: t('common:kanban.done'), color: '#f6ffed' },
   ]
 
 
@@ -128,7 +132,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
   const updateTaskStatus = async (taskId: number, newStatus: Task['status']) => {
     try {
       const response = await tasksApi.updateTask(taskId, { status: newStatus })
-      if (response.data) {
+      if (response) {
         // 更新本地状态
         setTasks(prevTasks =>
           prevTasks.map(task =>

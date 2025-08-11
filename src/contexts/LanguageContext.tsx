@@ -4,7 +4,7 @@ import zhCN from 'antd/locale/zh_CN'
 import enUS from 'antd/locale/en_US'
 import { useTranslation } from 'react-i18next'
 import type { SupportedLanguage } from '../i18n'
-import { fetchApiClient } from '../api/fetchClient'
+import { apiClient } from '../api'
 
 // AntDesign语言包映射
 const antdLocales = {
@@ -38,7 +38,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   // 从用户设置加载语言
   const loadUserLanguage = useCallback(async () => {
     try {
-      const response = await fetchApiClient.get('/user-settings') as any
+      const response = await apiClient.get('/user-settings') as any
       const userLanguage = response.data?.language
 
       if (userLanguage && (userLanguage === 'zh-CN' || userLanguage === 'en')) {
@@ -58,7 +58,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   // 保存语言到用户设置
   const saveUserLanguage = useCallback(async (newLanguage: SupportedLanguage) => {
     try {
-      await fetchApiClient.put('/user-settings', { language: newLanguage })
+      await apiClient.put('/user-settings', { language: newLanguage })
     } catch (error) {
       console.warn('Failed to save user language settings:', error)
     }

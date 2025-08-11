@@ -18,7 +18,6 @@ import {
   SaveOutlined,
   ArrowLeftOutlined,
   HomeOutlined,
-  ReloadOutlined,
   GithubOutlined,
   LinkOutlined,
   GlobalOutlined,
@@ -33,16 +32,20 @@ const { Title } = Typography
 const { TextArea } = Input
 const { Option } = Select
 
-// 预定义的颜色选项
-const PRESET_COLORS = [
-  '#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1',
-  '#13c2c2', '#eb2f96', '#fa541c', '#a0d911', '#2f54eb',
-  '#fa8c16', '#096dd9', '#36cfc9', '#f759ab', '#40a9ff'
-]
-
-// 生成随机颜色
+// 生成真正的随机颜色（在完整颜色空间中）
 const generateRandomColor = () => {
-  return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]
+  // 生成0-255范围内的随机RGB值
+  const r = Math.floor(Math.random() * 256)
+  const g = Math.floor(Math.random() * 256)
+  const b = Math.floor(Math.random() * 256)
+
+  // 转换为十六进制格式
+  const toHex = (value: number) => {
+    const hex = value.toString(16)
+    return hex.length === 1 ? '0' + hex : hex
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
 const CreateProject = () => {
@@ -210,7 +213,7 @@ const CreateProject = () => {
 
     setImportLoading(true)
     try {
-      // 调用GitHub API获取仓库信息
+      // 调用外部GitHub API获取仓库信息（不使用apiClient，因为这是外部API）
       const response = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`)
 
       if (!response.ok) {
@@ -340,24 +343,26 @@ const CreateProject = () => {
                 </Col>
                 <Col span={8}>
                   <Form.Item label={t('form.color.label')} name="color">
-                    <Space>
+                    <Space size="small" style={{ width: '100%' }}>
                       <ColorPicker
                         value={currentColor}
                         onChange={handleColorChange}
                         showText
-                        presets={[
-                          {
-                            label: t('form.color.presetLabel'),
-                            colors: PRESET_COLORS
-                          }
-                        ]}
                       />
                       <Button
-                        icon={<ReloadOutlined />}
                         onClick={handleRandomColor}
                         title={t('form.color.randomTitle')}
+                        size="small"
+                        style={{
+                          fontSize: '16px',
+                          padding: '4px 8px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
                       >
-                        {t('form.color.randomButton')}
+                        🎲
                       </Button>
                     </Space>
                   </Form.Item>

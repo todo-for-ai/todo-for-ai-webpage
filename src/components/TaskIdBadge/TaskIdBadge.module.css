@@ -1,0 +1,119 @@
+/* 任务ID徽标基础样式 - 符合UI设计四个基本原则 */
+.taskIdBadge {
+  /* 基础样式 */
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+  flex-shrink: 0; /* 防止压缩 */
+  display: inline-block;
+  line-height: 1.2;
+  min-width: auto;
+  
+  /* 交互效果 */
+  transition: all 0.2s ease;
+  cursor: default;
+  
+  /* 防止文本选择 */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 可点击状态 */
+.taskIdBadge[role="button"] {
+  cursor: pointer;
+}
+
+.taskIdBadge[role="button"]:hover {
+  background: linear-gradient(135deg, #40a9ff, #69c0ff);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.taskIdBadge[role="button"]:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+}
+
+.taskIdBadge[role="button"]:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 尺寸变体 - 符合重复原则，保持一致性 */
+
+/* 小尺寸 - 用于看板卡片等紧凑场景 */
+.size-small {
+  padding: 1px 4px;
+  font-size: 10px;
+  border-radius: 3px;
+  min-width: 24px;
+}
+
+/* 中等尺寸 - 用于任务详情页面标题 */
+.size-medium {
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  min-width: 32px;
+}
+
+/* 大尺寸 - 用于特殊强调场景 */
+.size-large {
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  min-width: 40px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .taskIdBadge {
+    /* 移动端稍微调整尺寸 */
+    font-size: 11px;
+  }
+  
+  .size-small {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+  
+  .size-medium {
+    font-size: 11px;
+    padding: 2px 5px;
+  }
+  
+  .size-large {
+    font-size: 13px;
+    padding: 3px 7px;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .taskIdBadge {
+    background: #000;
+    color: #fff;
+    border: 1px solid #fff;
+    box-shadow: none;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .taskIdBadge {
+    transition: none;
+  }
+  
+  .taskIdBadge[role="button"]:hover {
+    transform: none;
+  }
+  
+  .taskIdBadge[role="button"]:active {
+    transform: none;
+  }
+}

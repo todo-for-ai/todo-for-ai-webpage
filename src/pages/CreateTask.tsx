@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import {
   Typography,
@@ -24,11 +24,11 @@ import {
   FileAddOutlined,
   EyeOutlined
 } from '@ant-design/icons'
-import { useTaskStore, useProjectStore } from '../stores'
+import { useTaskStore } from '../stores'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
-import { FeedbackTip } from '../components/FeedbackTip'
-import { UnsavedChangesAlert } from '../components/UnsavedChangesAlert'
+import { TaskEditStatus } from '../components/TaskEditStatus'
+import ProjectSelector from '../components/ProjectSelector'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
 
 import type { CreateTaskData } from '../api/tasks'
@@ -53,11 +53,16 @@ const CreateTask: React.FC = () => {
   const saveEditDraftTimeoutRef = useRef<number | undefined>(undefined)
   // 原始任务内容（用于版本对比）
   const [originalTaskContent, setOriginalTaskContent] = useState('')
-  // 是否有未保存的更改
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // 自动保存状态
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  // 上次保存时间
+  const [lastSavedTime, setLastSavedTime] = useState<string>()
+  // 自动保存定时器
+  const autoSaveTimeoutRef = useRef<number | undefined>(undefined)
 
   const { createTask, updateTask, getTask } = useTaskStore()
-  const { projects, fetchProjects } = useProjectStore()
+  // 移除useProjectStore的依赖，因为ProjectSelector有自己独立的项目加载逻辑
   const { t: tc } = useTranslation('common')
   const { t, tp } = usePageTranslation('createTask')
 
@@ -114,24 +119,7 @@ const CreateTask: React.FC = () => {
     }
   }
 
-  // 检查当前是否有未保存的更改
-  const checkUnsavedChanges = useCallback(() => {
-    if (!isEditMode || !id) {
-      setHasUnsavedChanges(false)
-      return
-    }
 
-    const currentValues = form.getFieldsValue()
-    const currentContent = editorContent
-
-    // 比较当前内容与原始内容
-    const hasChanges = currentContent !== originalTaskContent ||
-                      currentValues.title !== form.getFieldValue('title') ||
-                      currentValues.status !== form.getFieldValue('status') ||
-                      currentValues.priority !== form.getFieldValue('priority')
-
-    setHasUnsavedChanges(hasChanges)
-  }, [isEditMode, id, form, editorContent, originalTaskContent])
 
   // 编辑模式的防抖保存函数
   const debouncedSaveEditDraft = useCallback((content: string) => {
@@ -156,10 +144,8 @@ const CreateTask: React.FC = () => {
         is_ai_task: currentValues.is_ai_task,
       }
       saveEditDraft(taskId, draftData)
-      // 检查未保存更改
-      checkUnsavedChanges()
     }, 500) // 500ms防抖延迟
-  }, [isEditMode, id, form, saveEditDraft, checkUnsavedChanges])
+  }, [isEditMode, id, form, saveEditDraft])
 
   // 实时保存草稿功能
   const getDraftKey = (projectId: number) => {
@@ -236,6 +222,48 @@ const CreateTask: React.FC = () => {
     }
   }
 
+  // 自动保存函数
+  const performAutoSave = useCallback(async () => {
+    if (!isEditMode || !id || isAutoSaving) return
+
+    const autoSaveEnabled = localStorage.getItem('taskEdit_autoSave') === 'true'
+    if (!autoSaveEnabled) return
+
+    try {
+      setIsAutoSaving(true)
+      const formValues = form.getFieldsValue()
+      const taskData = {
+        title: formValues.title,
+        content: editorContent,
+        status: formValues.status,
+        priority: formValues.priority,
+        due_date: formValues.due_date,
+        tags: formValues.tags || [],
+        is_ai_task: formValues.is_ai_task
+      }
+
+      await updateTask(parseInt(id), taskData)
+      setLastSavedTime(new Date().toISOString())
+      setOriginalTaskContent(editorContent)
+      console.log('🔄 自动保存成功')
+    } catch (error) {
+      console.error('自动保存失败:', error)
+    } finally {
+      setIsAutoSaving(false)
+    }
+  }, [isEditMode, id, isAutoSaving, form, editorContent, updateTask])
+
+  // 防抖自动保存
+  const debouncedAutoSave = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    autoSaveTimeoutRef.current = window.setTimeout(() => {
+      performAutoSave()
+    }, 2000) // 2秒防抖延迟
+  }, [performAutoSave])
+
   // 检查是否有未提交的编辑草稿
   const hasUnsavedEditChanges = (taskId: number, currentContent: string) => {
     const draft = loadEditDraft(taskId)
@@ -245,9 +273,85 @@ const CreateTask: React.FC = () => {
     return draft.content !== originalTaskContent
   }
 
+  // 移除fetchProjects调用，因为ProjectSelector有自己独立的项目加载逻辑
+  // 这样可以避免项目列表页面的搜索状态影响创建任务页面
+  // useEffect(() => {
+  //   console.log('[CreateTask] Calling fetchProjects...')
+  //   fetchProjects()
+  // }, [fetchProjects])
+
+  // 简化的自动选择项目逻辑，不依赖useProjectStore的数据
   useEffect(() => {
-    fetchProjects()
-  }, [fetchProjects])
+    console.log('[CreateTask] Auto-select project useEffect triggered:', {
+      defaultProjectId,
+      isEditMode
+    })
+
+    // 如果有默认项目ID且不是编辑模式，直接设置到表单中
+    if (defaultProjectId && !isEditMode) {
+      const projectId = parseInt(defaultProjectId, 10)
+      const currentProjectId = form.getFieldValue('project_id')
+
+      console.log('[CreateTask] Setting default project:', {
+        projectId,
+        currentProjectId
+      })
+
+      // 只有当前表单中没有设置项目ID时才设置默认值
+      if (!currentProjectId) {
+        // 检查是否是特殊模式
+        const isCopyMode = searchParams.get('copy') === 'true'
+        const isContinueMode = searchParams.get('continue') === 'true'
+        const fromTaskId = searchParams.get('from_task')
+
+        console.log('[CreateTask] Special modes check:', {
+          isCopyMode,
+          isContinueMode,
+          fromTaskId
+        })
+
+        // 如果不是特殊模式，设置默认项目
+        if (!isCopyMode && !isContinueMode && !fromTaskId) {
+          console.log('[CreateTask] Setting default project:', projectId)
+
+          // 尝试加载草稿
+          const draft = loadDraft(projectId)
+          if (draft) {
+            console.log('[CreateTask] Loading draft for project:', projectId)
+            form.setFieldsValue({
+              project_id: projectId,
+              ...draft
+            })
+            setEditorContent(draft.content || '')
+            message.info(tp('messages.draftLoaded'))
+          } else {
+            console.log('[CreateTask] No draft found, setting default values for project:', projectId)
+            // 加载用户偏好设置
+            const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
+            const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
+
+            form.setFieldsValue({
+              project_id: projectId,
+              status: 'todo',
+              priority: savedPriority,
+              is_ai_task: savedIsAiTask
+            })
+
+            console.log('[CreateTask] Form values set:', {
+              project_id: projectId,
+              status: 'todo',
+              priority: savedPriority,
+              is_ai_task: savedIsAiTask
+            })
+          }
+        } else {
+          console.log('[CreateTask] Skipping auto-select due to special mode')
+        }
+      } else {
+        console.log('[CreateTask] Skipping auto-select, form already has project_id:', currentProjectId)
+      }
+    }
+  }, [defaultProjectId, isEditMode, form, searchParams, loadDraft, tp])
 
   // 单独处理编辑模式和默认项目设置
   useEffect(() => {
@@ -262,8 +366,114 @@ const CreateTask: React.FC = () => {
       // 检查是否是复制任务模式
       const isCopyMode = searchParams.get('copy') === 'true'
       const isContinueMode = searchParams.get('continue') === 'true'
+      const fromTaskId = searchParams.get('from_task')
 
-      if (isCopyMode) {
+      if (fromTaskId) {
+        // 从指定任务创建新任务模式
+        const loadSourceTask = async () => {
+          try {
+            console.log('🔄 开始加载源任务:', fromTaskId)
+            console.log('📡 调用getTask函数，参数:', parseInt(fromTaskId, 10))
+
+            const sourceTask = await getTask(parseInt(fromTaskId, 10))
+            console.log('📋 getTask返回结果:', sourceTask)
+            console.log('📋 sourceTask类型:', typeof sourceTask)
+            console.log('📋 sourceTask是否为null/undefined:', sourceTask == null)
+
+            if (!sourceTask) {
+              console.error('❌ getTask返回了null，可能API调用失败了')
+              message.error('获取源任务信息失败，请检查任务ID是否正确')
+              return
+            }
+
+            console.log('📋 源任务数据详情:', {
+              id: sourceTask.id,
+              title: sourceTask.title,
+              project_id: sourceTask.project_id,
+              priority: sourceTask.priority,
+              is_ai_task: sourceTask.is_ai_task
+            })
+
+            // 预填充完整信息，包括任务标题和内容
+            const formValues = {
+              project_id: sourceTask.project_id,
+              title: `基于任务#${sourceTask.id} - ${sourceTask.title}`, // 预填充标题
+              priority: sourceTask.priority,
+              status: 'todo', // 新任务默认为待办状态
+              is_ai_task: sourceTask.is_ai_task,
+              tags: sourceTask.tags || [],
+              due_date: sourceTask.due_date ? dayjs(sourceTask.due_date) : null // 预填充截止日期
+            }
+
+            console.log('📝 设置表单值:', formValues)
+            form.setFieldsValue(formValues)
+
+            // 设置包含源任务完整信息的内容模板
+            const templateContent = `## 基于任务 #${sourceTask.id} 创建
+
+**源任务**: ${sourceTask.title}
+**源任务状态**: ${sourceTask.status}
+**源任务优先级**: ${sourceTask.priority}
+${sourceTask.due_date ? `**源任务截止日期**: ${dayjs(sourceTask.due_date).format('YYYY-MM-DD')}` : ''}
+
+## 源任务内容
+
+${sourceTask.content || '无内容'}
+
+---
+
+## 新任务描述
+
+请在此处描述新任务的具体内容...
+
+## 与源任务的关系
+
+此任务基于任务 #${sourceTask.id} 创建，请说明两个任务之间的关系...
+
+## 任务要求
+
+请根据源任务的内容和要求，制定新任务的具体执行计划...`
+
+            console.log('📄 设置编辑器内容:', templateContent.substring(0, 100) + '...')
+
+            // 先显示成功消息
+            message.success('已基于源任务预填充信息，请完善任务标题和内容')
+            console.log('✅ 成功消息已显示')
+
+            // 延迟设置编辑器内容，确保编辑器已经完全初始化
+            // 增加延迟时间到1500ms，确保编辑器完全准备好
+            setTimeout(() => {
+              console.log('🔄 开始设置编辑器内容...')
+              console.log('📝 当前editorContent状态:', editorContent)
+
+              setEditorContent(templateContent)
+              console.log('✅ setEditorContent调用完成')
+
+              // 再次延迟检查内容是否设置成功
+              setTimeout(() => {
+                console.log('🔍 检查编辑器内容是否更新成功...')
+                // 这里可以通过DOM检查编辑器内容
+                const editor = document.querySelector('.milkdown');
+                if (editor) {
+                  console.log('📋 编辑器DOM内容:', editor.textContent);
+                }
+              }, 500)
+            }, 1500)
+
+            console.log('✅ 预填充逻辑完成')
+          } catch (error) {
+            console.error('❌ 加载源任务失败:', error)
+            console.error('❌ 错误详情:', {
+              message: error?.message,
+              stack: error?.stack,
+              name: error?.name,
+              toString: error?.toString()
+            })
+            message.error(`加载源任务信息失败: ${error?.message || '未知错误'}`)
+          }
+        }
+        loadSourceTask()
+      } else if (isCopyMode) {
         try {
           const copyDataStr = sessionStorage.getItem('copyTaskData')
           if (copyDataStr) {
@@ -306,58 +516,26 @@ const CreateTask: React.FC = () => {
           })
         }
       } else {
-        // 设置默认项目
-        if (defaultProjectId) {
-          const projectId = parseInt(defaultProjectId, 10)
-
-          // 尝试加载草稿
-          const draft = loadDraft(projectId)
-          if (draft) {
-            form.setFieldsValue({
-              project_id: projectId,
-              ...draft
-            })
-            setEditorContent(draft.content || '')
-            message.info(tp('messages.draftLoaded'))
-          } else {
-            // 加载用户偏好设置
-            const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
-            const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
-
-            form.setFieldsValue({
-              project_id: projectId,
-              status: 'todo',
-              priority: savedPriority,
-              is_ai_task: savedIsAiTask
-            })
-          }
-        }
+        // 普通新建模式，默认项目设置已在专门的useEffect中处理
+        // 这里不需要重复设置，避免竞态条件
       }
     }
   }, [defaultProjectId, id])
 
-  // 设置网页标题
+  // 设置网页标题 - 简化版本，不依赖项目数据
   useEffect(() => {
-    const projectId = form.getFieldValue('project_id') || defaultProjectId
-    if (projectId && projects.length > 0) {
-      const project = projects.find(p => p.id === parseInt(projectId, 10))
-      const projectName = project?.name || tp('unknownProject')
-      const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
-      document.title = `${projectName} - ${pageTitle} - Todo for AI`
-    } else {
-      const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
-      document.title = `${pageTitle} - Todo for AI`
-    }
+    const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
+    document.title = `${pageTitle} - Todo for AI`
 
     // 组件卸载时恢复默认标题
     return () => {
       document.title = 'Todo for AI'
     }
-  }, [projects, isEditMode, form, defaultProjectId, tp])
+  }, [isEditMode, tp])
 
   // 为没有默认项目ID的新建任务恢复用户偏好设置
   useEffect(() => {
-    if (!isEditMode && !defaultProjectId && !searchParams.get('copy') && !searchParams.get('continue')) {
+    if (!isEditMode && !defaultProjectId && !searchParams.get('copy') && !searchParams.get('continue') && !searchParams.get('from_task')) {
       // 只在普通新建任务模式下，且没有项目ID时恢复偏好设置
       const savedPriority = localStorage.getItem('createTask_priority') || 'medium'
       const savedIsAiTask = localStorage.getItem('createTask_isAiTask') === 'true'
@@ -398,8 +576,6 @@ const CreateTask: React.FC = () => {
           clearEditDraft(parseInt(id, 10))
           // 更新原始内容
           setOriginalTaskContent(taskData.content || '')
-          // 重置未保存更改状态
-          setHasUnsavedChanges(false)
           message.success(tp('messages.saveSuccess'))
           // 留在当前编辑页面，不跳转
         }
@@ -480,6 +656,8 @@ const CreateTask: React.FC = () => {
 
         // 保存原始内容用于版本对比
         setOriginalTaskContent(task.content || '')
+        // 设置上次保存时间
+        setLastSavedTime(task.updated_at || task.created_at)
 
         // 检查是否有编辑草稿
         const editDraft = loadEditDraft(taskId)
@@ -543,6 +721,9 @@ const CreateTask: React.FC = () => {
         if (result) {
           // 清除编辑草稿
           clearEditDraft(parseInt(id, 10))
+          // 更新保存时间和原始内容
+          setLastSavedTime(new Date().toISOString())
+          setOriginalTaskContent(editorContent)
           message.success(tp('messages.updateSuccess'))
           navigate(`/todo-for-ai/pages/tasks/${id}`)
         }
@@ -739,16 +920,16 @@ const CreateTask: React.FC = () => {
         </div>
       </Card>
 
-      {/* 用户反馈提示 */}
-      <FeedbackTip />
-
-      {/* 未保存更改提示（仅在编辑模式下显示） */}
-      {isEditMode && (
-        <UnsavedChangesAlert
-          visible={hasUnsavedChanges}
-          onSave={handleSubmitAndEdit}
-        />
-      )}
+      {/* 任务编辑状态（仅在编辑模式下显示） */}
+      <TaskEditStatus
+        currentContent={editorContent}
+        originalContent={originalTaskContent}
+        lastSavedTime={lastSavedTime}
+        onSave={handleSubmit}
+        onAutoSave={performAutoSave}
+        isSaving={loading || isAutoSaving}
+        enabled={isEditMode}
+      />
 
       {/* 表单内容 */}
       <Card>
@@ -786,8 +967,7 @@ const CreateTask: React.FC = () => {
                 tags: allValues.tags,
                 is_ai_task: allValues.is_ai_task
               })
-              // 检查未保存更改
-              checkUnsavedChanges()
+
             }
 
             // 保存用户偏好设置（仅在新建模式下）
@@ -817,24 +997,12 @@ const CreateTask: React.FC = () => {
                     name="project_id"
                     rules={[{ required: true, message: tp('form.project.required') }]}
                   >
-                    <Select placeholder={tp('form.project.placeholder')}>
-                      {projects.map(project => (
-                        <Option key={project.id} value={project.id}>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <div
-                              style={{
-                                width: '12px',
-                                height: '12px',
-                                borderRadius: '50%',
-                                backgroundColor: project.color,
-                                marginRight: '8px'
-                              }}
-                            />
-                            {project.name}
-                          </div>
-                        </Option>
-                      ))}
-                    </Select>
+                    <ProjectSelector
+                      placeholder={tp('form.project.placeholder')}
+                      showSearch
+                      allowClear={false}
+                      simpleMode
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={10}>
@@ -926,8 +1094,8 @@ const CreateTask: React.FC = () => {
                         loading={loading}
                         onClick={handleSubmit}
                         style={{
-                          backgroundColor: '#1890ff',
-                          borderColor: '#1890ff',
+                          backgroundColor: '#52c41a',
+                          borderColor: '#52c41a',
                           fontWeight: 'bold'
                         }}
                       >
@@ -941,8 +1109,8 @@ const CreateTask: React.FC = () => {
                         loading={loading}
                         onClick={handleSubmitAndEdit}
                         style={{
-                          backgroundColor: '#52c41a',
-                          borderColor: '#52c41a',
+                          backgroundColor: '#1890ff',
+                          borderColor: '#1890ff',
                           fontWeight: 'bold'
                         }}
                       >
@@ -1033,12 +1201,21 @@ const CreateTask: React.FC = () => {
                       // 修复：避免循环更新，使用更智能的状态管理
                       const newValue = value || ''
 
-                      // 只有在内容真正变化时才更新状态
-                      if (newValue !== editorContent) {
-                        setEditorContent(newValue)
+                      // 更严格的内容比较，避免不必要的状态更新
+                      const normalizedNewValue = newValue.replace(/\r\n/g, '\n').trim()
+                      const normalizedCurrentValue = (editorContent || '').replace(/\r\n/g, '\n').trim()
 
-                        // 使用静默更新，避免触发onValuesChange
-                        form.setFieldValue('content', newValue)
+                      // 只有在内容真正变化时才更新状态
+                      if (normalizedNewValue !== normalizedCurrentValue) {
+                        console.log('📝 编辑器内容变化:', { from: normalizedCurrentValue, to: normalizedNewValue })
+
+                        // 使用批量更新，减少重渲染次数
+                        React.startTransition(() => {
+                          setEditorContent(newValue)
+
+                          // 使用静默更新，避免触发onValuesChange
+                          form.setFieldValue('content', newValue)
+                        })
 
                         // 手动触发实时保存
                         if (!isEditMode) {
@@ -1047,6 +1224,8 @@ const CreateTask: React.FC = () => {
                         } else {
                           // 编辑模式：使用编辑草稿保存
                           debouncedSaveEditDraft(newValue)
+                          // 触发自动保存（如果启用）
+                          debouncedAutoSave()
                         }
                       }
                     }}

@@ -188,13 +188,13 @@
 }
 
 /* 列表样式 */
-.milkdown-theme-container.theme-handwriting-kraft,
+.milkdown-theme-container.theme-handwriting-kraft ul,
 .milkdown-editor-themed.theme-handwriting-kraft ul {
   margin: 2em 0 !important;
-  padding-left: 3.5em !important;
+  padding-left: 1.5em !important;
 }
 
-.milkdown-theme-container.theme-handwriting-kraft,
+.milkdown-theme-container.theme-handwriting-kraft ul li,
 .milkdown-editor-themed.theme-handwriting-kraft ul li {
   color: #654321 !important;
   position: relative;
@@ -202,30 +202,30 @@
   list-style: none !important;
 }
 
-.milkdown-theme-container.theme-handwriting-kraft,
+.milkdown-theme-container.theme-handwriting-kraft ul li::before,
 .milkdown-editor-themed.theme-handwriting-kraft ul li::before {
   content: "❋";
   color: #8B4513;
   font-size: 1.3em;
   position: absolute;
-  left: -2em;
+  left: -1em;
   top: 0;
   text-shadow: 1px 1px 1px rgba(139, 69, 19, 0.3);
 }
 
-.milkdown-theme-container.theme-handwriting-kraft,
+.milkdown-theme-container.theme-handwriting-kraft ol,
 .milkdown-editor-themed.theme-handwriting-kraft ol {
   margin: 2em 0 !important;
-  padding-left: 3.5em !important;
+  padding-left: 1.5em !important;
 }
 
-.milkdown-theme-container.theme-handwriting-kraft,
+.milkdown-theme-container.theme-handwriting-kraft ol li,
 .milkdown-editor-themed.theme-handwriting-kraft ol li {
   color: #654321 !important;
   margin-bottom: 1.2em !important;
 }
 
-.milkdown-theme-container.theme-handwriting-kraft,
+.milkdown-theme-container.theme-handwriting-kraft ol li::marker,
 .milkdown-editor-themed.theme-handwriting-kraft ol li::marker {
   font-family: "Brush Script MT", serif;
   font-weight: 700;

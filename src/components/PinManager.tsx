@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Modal,
   List,
@@ -114,6 +114,7 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
   const { t } = useTranslation('pinManager')
   const [pins, setPins] = useState<PinnedProject[]>([])
   const [loading, setLoading] = useState(false)
+  const [screenHeight, setScreenHeight] = useState(window.innerHeight)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -122,13 +123,37 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
     })
   )
 
+  // 监听屏幕高度变化
+  useEffect(() => {
+    const handleResize = () => setScreenHeight(window.innerHeight)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // 计算内容区域的动态高度
+  const calculateContentHeight = useMemo(() => {
+    const ITEM_HEIGHT = 68 // 每个Pin项目的高度（包括padding和margin）
+    const MODAL_OVERHEAD = 200 // Modal的header、footer、padding等占用的高度
+    const MAX_HEIGHT_RATIO = 0.7 // 最大高度占屏幕高度的比例
+
+    if (pins.length === 0) {
+      return 'auto' // 空状态时自动高度
+    }
+
+    const contentHeight = pins.length * ITEM_HEIGHT
+    const maxAllowedHeight = (screenHeight * MAX_HEIGHT_RATIO) - MODAL_OVERHEAD
+
+    // 如果内容高度小于最大允许高度，则不限制高度；否则限制为最大允许高度
+    return contentHeight <= maxAllowedHeight ? 'auto' : maxAllowedHeight
+  }, [pins.length, screenHeight])
+
   // 加载Pin列表
   const loadPins = async () => {
     setLoading(true)
     try {
       const response = await pinsApi.getUserPins()
       // 处理标准API响应格式
-      const data = response?.data || response
+      const data = response
       if (data && data.pins) {
         setPins(data.pins.sort((a, b) => (a.pin_order || 0) - (b.pin_order || 0)))
       }
@@ -175,14 +200,14 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
         }))
 
         await pinsApi.reorderPins(reorderData)
-        message.success('Pin顺序已更新')
+        message.success(t('messages.reorderSuccess'))
         onUpdate() // 通知父组件更新导航栏
         // 通知其他组件Pin状态更新
         window.dispatchEvent(new CustomEvent('pinUpdated'))
       } catch (error: any) {
         // 如果保存失败，恢复原来的顺序
         setPins(pins)
-        const errorMessage = error.response?.data?.error || '更新Pin顺序失败'
+        const errorMessage = error.response?.data?.error || t('messages.reorderFailed')
         message.error(errorMessage)
       }
     }
@@ -245,7 +270,10 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
             items={pins.map(pin => pin.id.toString())} 
             strategy={verticalListSortingStrategy}
           >
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <div style={{
+              maxHeight: calculateContentHeight === 'auto' ? 'none' : `${calculateContentHeight}px`,
+              overflowY: calculateContentHeight === 'auto' ? 'visible' : 'auto'
+            }}>
               {pins.map((pin) => (
                 <SortableItem
                   key={pin.id}

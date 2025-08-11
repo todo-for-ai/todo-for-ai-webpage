@@ -22,7 +22,9 @@
     "unpinFailed": "Failed to unpin project",
     "pinSuccess": "Project pinned to navigation bar",
     "pinFailed": "Operation failed",
-    "pinLimitReached": "Maximum 10 projects can be pinned. Please unpin some projects first"
+    "pinLimitReached": "Maximum 10 projects can be pinned. Please unpin some projects first",
+    "reorderSuccess": "Pin order updated successfully",
+    "reorderFailed": "Failed to update pin order"
   },
   "buttons": {
     "close": "Close"

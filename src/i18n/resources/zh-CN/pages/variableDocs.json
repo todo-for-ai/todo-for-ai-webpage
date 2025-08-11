@@ -1,0 +1,116 @@
+{
+  "title": "变量文档",
+  "pageTitle": "变量文档 - Todo for AI",
+  "subtitle": "这里列出了在自定义提示词中可以使用的所有变量。您可以在提示词模板中使用这些变量，系统会在生成提示词时自动替换为实际值。",
+  "navigation": {
+    "back": "返回"
+  },
+  "sections": {
+    "project": {
+      "title": "项目变量",
+      "description": "项目相关的变量，包含项目的基本信息和配置。"
+    },
+    "task": {
+      "title": "任务变量", 
+      "description": "任务相关的变量，包含任务的详细信息和状态。"
+    },
+    "system": {
+      "title": "系统变量",
+      "description": "系统相关的变量，包含系统配置和运行时信息。"
+    },
+    "tasks": {
+      "title": "任务列表变量",
+      "description": "任务列表相关的变量，用于显示项目中的任务统计和列表。"
+    },
+    "contextRules": {
+      "title": "上下文规则变量",
+      "description": "上下文规则相关的变量，用于引用用户的全局规则或项目级别的规则。可以引用全部规则或按名称引用单独的规则。"
+    }
+  },
+  "table": {
+    "columns": {
+      "variable": "变量",
+      "description": "描述", 
+      "type": "类型",
+      "example": "示例"
+    }
+  },
+  "examples": {
+    "title": "使用示例",
+    "globalRules": "引用所有全局规则：",
+    "projectRules": "引用当前项目的所有规ules：",
+    "mergedRules": "引用合并后的所有规则（推荐）：",
+    "specificRule": "按名称引用特定规则：",
+    "ruleNamePlaceholder": "规则名"
+  },
+  "usage": {
+    "title": "使用说明",
+    "basicSyntax": {
+      "title": "基本语法",
+      "description": "变量使用 ${variable.property} 的格式，其中：",
+      "variableDesc": "variable 是变量类别（project、task、system、tasks、context_rules）",
+      "propertyDesc": "property 是具体的属性名"
+    },
+    "exampleUsage": {
+      "title": "示例",
+      "projectName": "获取项目名称",
+      "taskTitle": "获取任务标题", 
+      "currentTime": "获取当前时间",
+      "allRules": "获取所有上下文规则"
+    },
+    "notes": {
+      "title": "注意事项",
+      "item1": "变量名区分大小写",
+      "item2": "如果变量不存在或为空，将显示为空字符串",
+      "item3": "建议在使用前先在预览功能中测试变量是否正确显示",
+      "item4": "上下文规则变量支持按名称引用，名称必须与实际规则名称完全匹配"
+    }
+  },
+  "sampleData": {
+    "project": {
+      "name": "示例项目",
+      "description": "这是一个示例项目",
+      "context": "项目上下文信息"
+    },
+    "task": {
+      "title": "示例任务",
+      "content": "任务详细内容"
+    },
+    "tasks": {
+      "list": "1. [高] 任务1\n2. [中] 任务2"
+    }
+  },
+  "variables": {
+    "project": {
+      "title": "项目变量",
+      "name": "项目名称",
+      "description": "项目描述",
+      "github_repo": "GitHub仓库地址",
+      "context": "项目上下文",
+      "color": "项目颜色"
+    },
+    "task": {
+      "title": "任务变量",
+      "id": "任务ID",
+      "title": "任务标题",
+      "content": "任务内容",
+      "status": "任务状态",
+      "priority": "优先级",
+      "created_at": "创建时间",
+      "due_date": "截止时间",
+      "estimated_hours": "预估工时",
+      "tags": "标签列表",
+      "related_files": "相关文件"
+    },
+    "system": {
+      "title": "系统变量",
+      "url": "系统URL",
+      "current_time": "当前时间"
+    },
+    "tasks": {
+      "title": "任务列表变量",
+      "count": "任务数量",
+      "list": "任务列表"
+    }
+  }
+}

@@ -68,7 +68,7 @@ const CreateContextRule = () => {
         priority: isFromGlobalRules ? 100 : 0,
         is_active: true,
         apply_to_tasks: true,
-        apply_to_projects: false,
+        apply_to_projects: true,
         is_public: false,
         project_id: projectId
       })

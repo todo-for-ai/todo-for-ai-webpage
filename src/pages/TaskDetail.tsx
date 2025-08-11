@@ -10,12 +10,12 @@ import {
   Progress,
   Breadcrumb,
   Spin,
-  message,
   Row,
   Col,
   Popconfirm,
   Select,
-  Collapse
+  Collapse,
+  App
 } from 'antd'
 import {
   EditOutlined,
@@ -28,27 +28,35 @@ import {
   LeftOutlined,
   RightOutlined,
   SettingOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  BranchesOutlined,
+  ReloadOutlined
 } from '@ant-design/icons'
 import { useTaskStore, useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
+import TaskIdBadge from '../components/TaskIdBadge'
 import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import type { ApiResponse } from '../api/client'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
+import { customPromptsService } from '../services/customPromptsService'
+import { type RenderContext } from '../utils/promptRenderer'
 import dayjs from 'dayjs'
 import styles from './TaskDetail.module.css'
+import { analytics } from '../utils/analytics'
 
 const { Title, Paragraph } = Typography
 
 const TaskDetail: React.FC = () => {
+  const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [projectTasks, setProjectTasks] = useState<Task[]>([])
-  const [projectContext, setProjectContext] = useState<ApiResponse<BuildContextResponse> | null>(null)
+  const [projectContext, setProjectContext] = useState<BuildContextResponse | null>(null)
   const [contextLoading, setContextLoading] = useState(false)
+  const [customButtons, setCustomButtons] = useState<any[]>([])
 
   const { getTask, deleteTask, fetchTasksByParams } = useTaskStore()
   const { projects, fetchProjects } = useProjectStore()
@@ -58,6 +66,8 @@ const TaskDetail: React.FC = () => {
   useEffect(() => {
     if (id) {
       loadTask(parseInt(id, 10))
+      // 追踪任务查看事件
+      analytics.task.view(id)
     }
   }, [id])
 
@@ -65,6 +75,12 @@ const TaskDetail: React.FC = () => {
   useEffect(() => {
     fetchProjects()
   }, [fetchProjects])
+
+  // 加载自定义按钮配置
+  useEffect(() => {
+    const buttons = customPromptsService.getTaskPromptButtons()
+    setCustomButtons(buttons)
+  }, [])
 
   // 设置网页标题
   useEffect(() => {
@@ -153,13 +169,37 @@ const TaskDetail: React.FC = () => {
           loadProjectContext(result.project_id)
         }
       } else {
-        message.error(tp('messages.taskNotFound'))
+        const errorMsg = tp('messages.taskNotFound')
+        message.error(errorMsg)
         navigate('/todo-for-ai/pages/tasks')
+        throw new Error(errorMsg)
       }
     } catch (error) {
       console.error('加载任务失败:', error)
-      message.error(tp('messages.loadTaskFailed'))
+
+      // 如果错误已经被处理过（比如任务不存在），直接抛出
+      if (error instanceof Error && error.message === tp('messages.taskNotFound')) {
+        throw error
+      }
+
+      // 构建详细的错误信息
+      let errorMessage = tp('messages.loadTaskFailed')
+      if (error instanceof Error) {
+        errorMessage = `${tp('messages.loadTaskFailed')}: ${error.message}`
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any
+        if (errorObj.response?.data?.message) {
+          errorMessage = `${tp('messages.loadTaskFailed')}: ${errorObj.response.data.message}`
+        } else if (errorObj.response?.statusText) {
+          errorMessage = `${tp('messages.loadTaskFailed')}: ${errorObj.response.status} ${errorObj.response.statusText}`
+        } else if (errorObj.message) {
+          errorMessage = `${tp('messages.loadTaskFailed')}: ${errorObj.message}`
+        }
+      }
+
+      message.error(errorMessage)
       navigate('/todo-for-ai/pages/tasks')
+      throw new Error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -228,6 +268,49 @@ const TaskDetail: React.FC = () => {
     }
   }
 
+  // 从此任务创建新任务
+  const handleCreateFromTask = () => {
+    if (task) {
+      navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}&from_task=${task.id}`)
+    }
+  }
+
+  // 刷新任务数据
+  const handleRefreshTask = async () => {
+    if (!id) return
+
+    try {
+      setLoading(true)
+      // 追踪刷新事件
+      analytics.task.view(id, task?.project_id?.toString())
+
+      // 重新加载任务数据
+      await loadTask(parseInt(id, 10))
+      message.success(tp('messages.refreshSuccess'))
+    } catch (error) {
+      console.error('刷新任务失败:', error)
+
+      // 显示具体的错误信息
+      let errorMessage = tp('messages.refreshFailed')
+      if (error instanceof Error) {
+        errorMessage = `${tp('messages.refreshFailed')}: ${error.message}`
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any
+        if (errorObj.response?.data?.message) {
+          errorMessage = `${tp('messages.refreshFailed')}: ${errorObj.response.data.message}`
+        } else if (errorObj.response?.statusText) {
+          errorMessage = `${tp('messages.refreshFailed')}: ${errorObj.response.status} ${errorObj.response.statusText}`
+        } else if (errorObj.message) {
+          errorMessage = `${tp('messages.refreshFailed')}: ${errorObj.message}`
+        }
+      }
+
+      message.error(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // 修改任务状态
   const handleStatusChange = async (newStatus: string) => {
     if (!task) return
@@ -263,25 +346,88 @@ const TaskDetail: React.FC = () => {
     }
   }
 
-  // 复制MCP执行任务的提示词
-  const handleCopyMCPPrompt = () => {
+  // 复制自定义提示词
+  const handleCopyCustomPrompt = (buttonId: string, buttonName: string) => {
     if (!task) return
 
-    const prompt = `请使用todo-for-ai MCP工具获取任务ID为${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`
+    try {
+      const project = projects.find(p => p.id === task.project_id)
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      message.success(tp('messages.mcpPromptCopied'))
-    }).catch(() => {
-      message.error(tp('messages.copyFailedManual'))
-    })
+      // 创建渲染上下文
+      const context: RenderContext = {
+        project: project ? {
+          id: project.id,
+          name: project.name,
+          description: project.description || '',
+          github_repo: project.github_url || '',
+          context: project.project_context || '',
+          color: project.color || '#1890ff',
+          status: 'active',
+          created_at: project.created_at,
+          updated_at: project.updated_at
+        } : undefined,
+        task: {
+          id: task.id,
+          title: task.title,
+          content: task.content || '',
+          status: task.status,
+          priority: task.priority,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
+          due_date: task.due_date || '',
+          estimated_hours: (task as any).estimated_hours || 0,
+          tags: (task as any).tags || [],
+          related_files: (task as any).related_files || [],
+          assignee: (task as any).assignee || '',
+          project_id: task.project_id
+        },
+        system: {
+          url: 'https://todo4ai.org',
+          current_time: new Date().toISOString()
+        }
+      }
+
+      // 使用自定义提示词服务渲染提示词
+      const prompt = customPromptsService.renderTaskPrompt(buttonId, context)
+
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(`${buttonName}提示词已复制到剪贴板`)
+      }).catch(() => {
+        message.error('复制失败，请手动复制')
+      })
+    } catch (error) {
+      console.error('Failed to copy custom prompt:', error)
+      message.error('复制失败，请稍后重试')
+    }
   }
 
-  // 复制AI助手执行任务的详细提示词
-  const handleCopyAIPrompt = () => {
-    if (!task) return
+  // 复制MCP执行任务的提示词（保持向后兼容）
+  const handleCopyMCPPrompt = () => {
+    const mcpButton = customButtons.find(b => b.id === 'mcp-execution')
+    if (mcpButton) {
+      handleCopyCustomPrompt('mcp-execution', mcpButton.name)
+    } else {
+      // 回退到原始实现
+      if (!task) return
+      const prompt = `请使用todo-for-ai MCP工具获取任务ID为${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(tp('messages.mcpPromptCopied'))
+      }).catch(() => {
+        message.error(tp('messages.copyFailedManual'))
+      })
+    }
+  }
 
-    const project = projects.find(p => p.id === task.project_id)
-    const prompt = `请帮我执行以下任务，这是一个完整的任务信息：
+  // 复制AI助手执行任务的详细提示词（保持向后兼容）
+  const handleCopyAIPrompt = () => {
+    const executeButton = customButtons.find(b => b.id === 'execute-task')
+    if (executeButton) {
+      handleCopyCustomPrompt('execute-task', executeButton.name)
+    } else {
+      // 回退到原始实现
+      if (!task) return
+      const project = projects.find(p => p.id === task.project_id)
+      const prompt = `请帮我执行以下任务，这是一个完整的任务信息：
 
 **项目信息**：
 - 项目名称：${project?.name || '未知项目'}
@@ -297,18 +443,23 @@ ${task.content || '无详细内容'}
 **执行要求**：
 请仔细阅读任务内容，按照要求完成任务，并在完成后提供详细的执行报告和结果说明。`
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      message.success(tp('messages.aiPromptCopied'))
-    }).catch(() => {
-      message.error(tp('messages.copyFailed'))
-    })
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(tp('messages.aiPromptCopied'))
+      }).catch(() => {
+        message.error(tp('messages.copyFailed'))
+      })
+    }
   }
 
-  // 复制任务完成确认提示词
+  // 复制任务完成确认提示词（保持向后兼容）
   const handleCopyTaskCompletionPrompt = () => {
-    if (!task) return
-
-    const prompt = `请检查并确认任务ID为${task.id}的任务执行状态：
+    const completionButton = customButtons.find(b => b.id === 'completion-check')
+    if (completionButton) {
+      handleCopyCustomPrompt('completion-check', completionButton.name)
+    } else {
+      // 回退到原始实现
+      if (!task) return
+      const prompt = `请检查并确认任务ID为${task.id}的任务执行状态：
 
 **任务信息**：
 - 任务ID：${task.id}
@@ -332,11 +483,12 @@ ${task.content || '无详细内容'}
 
 请开始检查并执行相应操作。`
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      message.success(tp('messages.completionPromptCopied'))
-    }).catch(() => {
-      message.error(tp('messages.copyFailed'))
-    })
+      navigator.clipboard.writeText(prompt).then(() => {
+        message.success(tp('messages.completionPromptCopied'))
+      }).catch(() => {
+        message.error(tp('messages.copyFailed'))
+      })
+    }
   }
 
   // 复制快速完成任务提示词
@@ -543,9 +695,7 @@ ${task.content || '无详细内容'}
             {/* 任务标题行 - 单独一行，符合UI设计对齐原则 */}
             <div className={styles.taskTitleRow}>
               {/* 任务ID徽标 */}
-              <div className={styles.taskIdBadge}>
-                #{task.id}
-              </div>
+              <TaskIdBadge taskId={task.id} size="medium" />
               {/* 任务标题 - 支持省略号和tooltip */}
               <div className={styles.taskTitleContainer}>
                 <Title
@@ -598,9 +748,9 @@ ${task.content || '无详细内容'}
         
       {/* 操作按钮组 - 符合UI设计亲密性原则，相关操作放在一起 */}
       <Card className={styles.actionCard}>
-        <Row gutter={[16, 16]} className={styles.actionGrid}>
+        <Row gutter={[16, 0]} align="top" wrap={false} className={styles.actionGrid}>
           {/* 任务状态快捷修改 */}
-          <Col xs={24} sm={8} md={6} className={styles.actionCol}>
+          <Col xs={24} sm={8} md={6} lg={5} xl={4} xxl={4} className={styles.actionCol}>
             <div className={styles.actionSection}>{tp('actions.taskStatus')}</div>
             <Select
               value={task.status}
@@ -616,9 +766,23 @@ ${task.content || '无详细内容'}
           </Col>
 
           {/* 任务操作 - 合并所有操作按钮 */}
-          <Col xs={24} sm={16} md={18} className={styles.actionCol}>
+          <Col xs={24} sm={16} md={18} lg={19} xl={20} xxl={20} className={styles.actionCol}>
             <div className={styles.actionSection}>{tp('actions.taskActions')}</div>
             <div className={styles.taskActionButtons}>
+              {/* 刷新任务按钮 - 紫色系，表示数据刷新操作 */}
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={handleRefreshTask}
+                loading={loading}
+                style={{
+                  backgroundColor: '#722ed1',
+                  borderColor: '#722ed1'
+                }}
+                title={tp('tooltips.refreshTask')}
+              >
+                {tp('actions.refresh')}
+              </Button>
               {/* 创建任务按钮 - 绿色系，表示积极的创建操作 */}
               <Button
                 type="primary"
@@ -631,6 +795,19 @@ ${task.content || '无详细内容'}
                 title={tp('tooltips.createTask')}
               >
                 {tp('actions.createTask')}
+              </Button>
+              {/* 从此任务创建新任务按钮 - 蓝色系，表示基于现有任务的衍生操作 */}
+              <Button
+                type="primary"
+                icon={<BranchesOutlined />}
+                onClick={handleCreateFromTask}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
+                title={tp('tooltips.createFromTask')}
+              >
+                {tp('actions.createFromTask')}
               </Button>
               {/* 编辑任务按钮 - 橙色系，表示中性的修改操作 */}
               <Button
@@ -671,92 +848,99 @@ ${task.content || '无详细内容'}
         </Row>
       </Card>
 
-      {/* 复制提示词面板 - 符合UI设计重复原则，统一按钮样式 */}
+      {/* 复制提示词面板 - 动态显示自定义按钮 */}
       <Card className={styles.actionCard}>
         <Title level={4} style={{ marginBottom: '16px', color: '#1890ff' }}>
           <CopyOutlined style={{ marginRight: '8px' }} />
           {tp('copyPrompts.title')}
         </Title>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.mcpExecution')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyMCPPrompt}
-              block
-              title={tp('tooltips.mcpPrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.mcpPromptButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.mcpPromptDesc')}
-            </div>
-          </Col>
+          {customButtons.map((button, index) => (
+            <Col xs={24} sm={12} md={6} key={button.id}>
+              <div className={styles.actionSection}>{button.name}</div>
+              <Button
+                type="primary"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopyCustomPrompt(button.id, button.name)}
+                block
+                title={`复制${button.name}提示词`}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
+              >
+                {button.name}
+              </Button>
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                点击复制{button.name}提示词到剪贴板
+              </div>
+            </Col>
+          ))}
 
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.aiExecution')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyAIPrompt}
-              block
-              title={tp('tooltips.aiPrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.aiPromptButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.aiPromptDesc')}
-            </div>
-          </Col>
+          {/* 如果没有自定义按钮，显示默认按钮 */}
+          {customButtons.length === 0 && (
+            <>
+              <Col xs={24} sm={12} md={6}>
+                <div className={styles.actionSection}>{tp('copyPrompts.mcpExecution')}</div>
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyMCPPrompt}
+                  block
+                  title={tp('tooltips.mcpPrompt')}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  {tp('copyPrompts.mcpPromptButton')}
+                </Button>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {tp('copyPrompts.mcpPromptDesc')}
+                </div>
+              </Col>
 
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.taskCompletion')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyTaskCompletionPrompt}
-              block
-              title={tp('tooltips.completionPrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.completionPromptButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.completionPromptDesc')}
-            </div>
-          </Col>
+              <Col xs={24} sm={12} md={6}>
+                <div className={styles.actionSection}>{tp('copyPrompts.aiExecution')}</div>
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyAIPrompt}
+                  block
+                  title={tp('tooltips.aiPrompt')}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  {tp('copyPrompts.aiPromptButton')}
+                </Button>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {tp('copyPrompts.aiPromptDesc')}
+                </div>
+              </Col>
 
-          <Col xs={24} sm={12} md={6}>
-            <div className={styles.actionSection}>{tp('copyPrompts.quickComplete')}</div>
-            <Button
-              type="primary"
-              icon={<CopyOutlined />}
-              onClick={handleCopyQuickCompletePrompt}
-              block
-              title={tp('tooltips.quickCompletePrompt')}
-              style={{
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff'
-              }}
-            >
-              {tp('copyPrompts.quickCompleteButton')}
-            </Button>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              {tp('copyPrompts.quickCompleteDesc')}
-            </div>
-          </Col>
+              <Col xs={24} sm={12} md={6}>
+                <div className={styles.actionSection}>{tp('copyPrompts.taskCompletion')}</div>
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyTaskCompletionPrompt}
+                  block
+                  title={tp('tooltips.completionPrompt')}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  {tp('copyPrompts.completionPromptButton')}
+                </Button>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {tp('copyPrompts.completionPromptDesc')}
+                </div>
+              </Col>
+            </>
+          )}
         </Row>
       </Card>
 
@@ -873,7 +1057,7 @@ ${task.content || '无详细内容'}
             <Spin size="large" />
             <div style={{ marginTop: '16px' }}>{tp('projectContext.loading')}</div>
           </div>
-        ) : projectContext && projectContext.data && projectContext.data.context_string ? (
+        ) : projectContext && projectContext.context_string ? (
           <Collapse
             items={[
               {
@@ -881,28 +1065,84 @@ ${task.content || '无详细内容'}
                 label: (
                   <Space>
                     <span>{tp('projectContext.rulesLabel')}</span>
-                    <Tag color="blue">{projectContext.data.rules.length} 条规则</Tag>
+                    <Tag color="blue">{tp('projectContext.rulesCount', { count: projectContext.rules.length })}</Tag>
                   </Space>
                 ),
                 children: (
                   <div>
-                    <div style={{ marginBottom: '16px' }}>
-                      <Tag color="green">{tp('projectContext.appliedRules')}</Tag>
-                      {projectContext.data.rules.map(rule => (
-                        <Tag
-                          key={rule.id}
-                          color={rule.is_global ? 'purple' : 'blue'}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
-                        >
-                          {rule.is_global ? '🌐' : '📁'} {rule.name}
+                    {/* 项目级别规则 */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <Tag color="blue" icon={<span>📁</span>}>
+                          {tp('projectContext.projectRules')}
                         </Tag>
-                      ))}
+                        <Tag color="geekblue">
+                          {tp('projectContext.projectRulesCount', {
+                            count: projectContext.rules.filter(rule => !rule.is_global).length
+                          })}
+                        </Tag>
+                      </div>
+                      <div style={{ marginLeft: '16px', marginBottom: '16px' }}>
+                        {projectContext.rules.filter(rule => !rule.is_global).length > 0 ? (
+                          projectContext.rules
+                            .filter(rule => !rule.is_global)
+                            .map(rule => (
+                              <Tag
+                                key={rule.id}
+                                color="blue"
+                                style={{ cursor: 'pointer', marginBottom: '4px' }}
+                                onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
+                              >
+                                📁 {rule.name}
+                              </Tag>
+                            ))
+                        ) : (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>
+                            {tp('projectContext.noProjectRules')}
+                          </span>
+                        )}
+                      </div>
                     </div>
+
+                    {/* 用户全局规则 */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <Tag color="purple" icon={<span>🌐</span>}>
+                          {tp('projectContext.globalRules')}
+                        </Tag>
+                        <Tag color="magenta">
+                          {tp('projectContext.globalRulesCount', {
+                            count: projectContext.rules.filter(rule => rule.is_global).length
+                          })}
+                        </Tag>
+                      </div>
+                      <div style={{ marginLeft: '16px', marginBottom: '16px' }}>
+                        {projectContext.rules.filter(rule => rule.is_global).length > 0 ? (
+                          projectContext.rules
+                            .filter(rule => rule.is_global)
+                            .map(rule => (
+                              <Tag
+                                key={rule.id}
+                                color="purple"
+                                style={{ cursor: 'pointer', marginBottom: '4px' }}
+                                onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
+                              >
+                                🌐 {rule.name}
+                              </Tag>
+                            ))
+                        ) : (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>
+                            {tp('projectContext.noGlobalRules')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 合并后的上下文内容 */}
                     <div className={styles.markdownContainer}>
                       <MarkdownEditor
                         key={`project-context-${task.id}`}
-                        value={projectContext.data.context_string}
+                        value={projectContext.context_string}
                         readOnly
                         autoHeight={true}
                         hideToolbar

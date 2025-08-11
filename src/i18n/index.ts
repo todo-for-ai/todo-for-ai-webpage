@@ -20,6 +20,11 @@ import zhCNProjectDetail from './resources/zh-CN/pages/projectDetail.json'
 import zhCNTaskDetail from './resources/zh-CN/pages/taskDetail.json'
 import zhCNCreateTask from './resources/zh-CN/pages/createTask.json'
 import zhCNPinManager from './resources/zh-CN/components/pinManager.json'
+import zhCNWeChatGroup from './resources/zh-CN/components/wechatGroup.json'
+import zhCNTelegramGroup from './resources/zh-CN/components/telegramGroup.json'
+import zhCNUserManagement from './resources/zh-CN/pages/userManagement.json'
+import zhCNCustomPrompts from './resources/zh-CN/pages/customPrompts.json'
+import zhCNVariableDocs from './resources/zh-CN/pages/variableDocs.json'
 
 import enCommon from './resources/en/common.json'
 import enNavigation from './resources/en/navigation.json'
@@ -38,6 +43,11 @@ import enProjectDetail from './resources/en/pages/projectDetail.json'
 import enTaskDetail from './resources/en/pages/taskDetail.json'
 import enCreateTask from './resources/en/pages/createTask.json'
 import enPinManager from './resources/en/components/pinManager.json'
+import enWeChatGroup from './resources/en/components/wechatGroup.json'
+import enTelegramGroup from './resources/en/components/telegramGroup.json'
+import enUserManagement from './resources/en/pages/userManagement.json'
+import enCustomPrompts from './resources/en/pages/customPrompts.json'
+import enVariableDocs from './resources/en/pages/variableDocs.json'
 
 // 支持的语言
 export const SUPPORTED_LANGUAGES = ['zh-CN', 'en'] as const
@@ -63,6 +73,11 @@ const resources = {
     taskDetail: zhCNTaskDetail,
     createTask: zhCNCreateTask,
     pinManager: zhCNPinManager,
+    wechatGroup: zhCNWeChatGroup,
+    telegramGroup: zhCNTelegramGroup,
+    userManagement: zhCNUserManagement,
+    customPrompts: zhCNCustomPrompts,
+    variableDocs: zhCNVariableDocs,
   },
   en: {
     common: enCommon,
@@ -82,6 +97,11 @@ const resources = {
     taskDetail: enTaskDetail,
     createTask: enCreateTask,
     pinManager: enPinManager,
+    wechatGroup: enWeChatGroup,
+    telegramGroup: enTelegramGroup,
+    userManagement: enUserManagement,
+    customPrompts: enCustomPrompts,
+    variableDocs: enVariableDocs,
   },
 }
 

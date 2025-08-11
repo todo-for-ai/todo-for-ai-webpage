@@ -5,6 +5,12 @@ import './index.css'
 import './i18n' // 初始化i18n
 import App from './App.tsx'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { loadGAScript } from './utils/analytics'
+
+// 初始化Google Analytics
+loadGAScript().catch(error => {
+  console.warn('[GA] Failed to load Google Analytics:', error)
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -9,7 +9,8 @@ import {
   Switch,
   message,
   Popconfirm,
-  Drawer
+  Drawer,
+  Modal
 } from 'antd'
 import {
   PlusOutlined,
@@ -53,7 +54,8 @@ const ContextRules = () => {
 
   useEffect(() => {
     // 设置查询参数只获取全局规则（使用scope=global而不是rule_type）
-    setQueryParams({ scope: 'global' })
+    // 明确清除project_id，确保只获取全局规则
+    setQueryParams({ scope: 'global', project_id: undefined })
     fetchContextRules()
   }, [fetchContextRules, setQueryParams])
 
@@ -98,15 +100,23 @@ const ContextRules = () => {
     }
   }
 
-  const handleCopy = async (rule: ContextRule) => {
-    const newName = t('messages.copyName', { name: rule.name })
-    const result = await copyContextRule(rule.id, {
-      name: newName,
-      project_id: rule.project_id
+  const handleCopy = (rule: ContextRule) => {
+    Modal.confirm({
+      title: t('confirm.copy.title'),
+      content: t('confirm.copy.content', { name: rule.name }),
+      okText: t('confirm.copy.ok'),
+      cancelText: t('confirm.copy.cancel'),
+      onOk: async () => {
+        const newName = t('messages.copyName', { name: rule.name })
+        const result = await copyContextRule(rule.id, {
+          name: newName,
+          project_id: rule.project_id
+        })
+        if (result) {
+          message.success(t('messages.copySuccess'))
+        }
+      }
     })
-    if (result) {
-      message.success(t('messages.copySuccess'))
-    }
   }
 
 

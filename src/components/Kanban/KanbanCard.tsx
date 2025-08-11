@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Card, Tag, Avatar, Tooltip, Progress } from 'antd'
 import { UserOutlined, ClockCircleOutlined, FileTextOutlined } from '@ant-design/icons'
+import TaskIdBadge from '../TaskIdBadge'
 import type { Task } from '../../api/tasks'
 import dayjs from 'dayjs'
 
@@ -182,15 +183,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {/* 任务ID */}
-          <span style={{
-            fontSize: '11px',
-            color: '#8c8c8c',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px'
-          }}>
-            #{task.id}
-          </span>
+          <TaskIdBadge taskId={task.id} size="small" />
         </div>
 
         {/* AI任务标识 */}

@@ -23,7 +23,7 @@ import {
   CopyOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons'
-import { fetchApiClient } from '../api/fetchClient'
+import { apiClient } from '../api'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Text } = Typography
@@ -42,6 +42,9 @@ interface APIToken {
 }
 
 export const APITokenManager: React.FC = () => {
+  console.log('🔍 APITokenManager component rendered!')
+  console.log('🔍 Component is starting...')
+
   const [tokens, setTokens] = useState<APIToken[]>([])
   const [loading, setLoading] = useState(false)
   const [createModalVisible, setCreateModalVisible] = useState(false)
@@ -52,20 +55,23 @@ export const APITokenManager: React.FC = () => {
   // 用于在View弹窗中显示完整Token的状态
   const [isTokenRevealed, setIsTokenRevealed] = useState(false)
   const [revealedTokenInView, setRevealedTokenInView] = useState<string>('')
+  // 用于显示加载状态
+  const [isRevealingToken, setIsRevealingToken] = useState(false)
+  const [isCopyingToken, setIsCopyingToken] = useState(false)
+  // 用于跟踪哪个token正在复制（表格中的复制操作）
+  const [copyingTokenId, setCopyingTokenId] = useState<number | null>(null)
   const [form] = Form.useForm()
   const { tp } = usePageTranslation('profile')
-
-  useEffect(() => {
-    fetchTokens()
-  }, [])
 
   const fetchTokens = async () => {
     setLoading(true)
     try {
-      const response = await fetchApiClient.get('/tokens')
-      // 处理标准API响应格式
-      const data = response?.data || response
-      const tokens = data?.tokens || []
+      const response = await apiClient.get<{ items: any[], pagination: any }>('/api-tokens')
+      console.log('🔍 fetchTokens response:', response)
+      console.log('🔍 response:', response)
+      // 修复数据提取逻辑：直接从response获取items，而不是response.data
+      const tokens = response?.items || []
+      console.log('🔍 extracted tokens:', tokens)
       setTokens(tokens)
     } catch (error: any) {
       message.error(tp('apiTokens.messages.fetchFailed'))
@@ -75,10 +81,15 @@ export const APITokenManager: React.FC = () => {
     }
   }
 
+  // 使用正确的useEffect来在组件挂载时调用fetchTokens
+  useEffect(() => {
+    console.log('🔍 useEffect triggered, calling fetchTokens...')
+    fetchTokens()
+  }, [])
+
   const handleCreateToken = async (values: any) => {
     try {
-      const response = await fetchApiClient.post('/tokens', values)
-      const data = response?.data || response
+      const data = await apiClient.post<{ token?: string; raw_token?: string }>('/api-tokens', values)
 
       // 显示新创建的token
       setNewToken(data.token || data.raw_token)
@@ -96,7 +107,7 @@ export const APITokenManager: React.FC = () => {
 
   const handleDeleteToken = async (tokenId: number) => {
     try {
-      await fetchApiClient.delete(`/tokens/${tokenId}`)
+      await apiClient.delete(`/api-tokens/${tokenId}`)
       message.success('Token删除成功')
       fetchTokens()
     } catch (error: any) {
@@ -120,31 +131,159 @@ export const APITokenManager: React.FC = () => {
       setRevealedTokenInView('')
     } else {
       // 如果未显示，则获取并显示完整Token
+      setIsRevealingToken(true)
       try {
-        const response = await fetchApiClient.get(`/tokens/${token.id}/reveal`)
-        const data = response?.data || response
+        const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/api-tokens/${token.id}/reveal`)
 
-        // 检查是否有token字段（fetchApiClient可能已经解包了data）
+        // 检查是否有token字段（apiClient可能已经解包了data）
         if (data.token) {
           setRevealedTokenInView(data.token)
           setIsTokenRevealed(true)
-        } else if (data.success && data.data) {
+          message.success(tp('apiTokens.messages.revealSuccess'))
+        } else if (data.success && data.data && data.data.token) {
           // 备用方案：如果数据结构是嵌套的
           setRevealedTokenInView(data.data.token)
           setIsTokenRevealed(true)
+          message.success(tp('apiTokens.messages.revealSuccess'))
         } else {
-          message.error(data.error || tp('apiTokens.messages.revealFailed'))
+          // 显示具体的错误信息
+          const errorMessage = data.error || data.message || tp('apiTokens.messages.revealFailed')
+          message.error(errorMessage)
+
+          // 如果是旧Token的错误，显示更友好的提示
+          if (errorMessage.includes('before the encryption feature was enabled')) {
+            Modal.info({
+              title: 'Token查看功能说明',
+              content: (
+                <div>
+                  <p>此Token创建于加密功能启用之前，出于安全考虑无法显示完整内容。</p>
+                  <p>如需查看完整Token，请删除此Token并创建新的Token。</p>
+                  <p><strong>建议：</strong>创建新Token以启用查看功能。</p>
+                </div>
+              ),
+              okText: '我知道了'
+            })
+          }
         }
       } catch (error: any) {
-        message.error(tp('apiTokens.messages.revealFailedOldToken'))
+        console.error('Token reveal error:', error)
+
+        // 显示错误信息
+        let errorMessage = tp('apiTokens.messages.revealFailed')
+
+        // 尝试从错误响应中获取详细信息
+        if (error?.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error?.response?.data?.error) {
+          errorMessage = error.response.data.error
+        }
+
+        message.error(errorMessage)
+
+        // 如果是旧Token的错误，显示更友好的提示
+        if (errorMessage.includes('before the encryption feature was enabled')) {
+          Modal.info({
+            title: 'Token查看功能说明',
+            content: (
+              <div>
+                <p>此Token创建于加密功能启用之前，出于安全考虑无法显示完整内容。</p>
+                <p>如需查看完整Token，请删除此Token并创建新的Token。</p>
+                <p><strong>建议：</strong>创建新Token以启用查看功能。</p>
+              </div>
+            ),
+            okText: '我知道了'
+          })
+        }
+      } finally {
+        setIsRevealingToken(false)
       }
     }
   }
 
-  const handleCopyTokenPrefix = (token: APIToken) => {
-    // 复制Token前缀（这是我们能安全显示的部分）
-    copyToClipboard(`${token.prefix}***`)
-    message.info(tp('apiTokens.messages.copyPrefixSuccess'))
+
+
+  // 复制完整Token的函数
+  const handleCopyFullToken = async (token: APIToken, fromTable = false) => {
+    if (fromTable) {
+      setCopyingTokenId(token.id)
+    } else {
+      setIsCopyingToken(true)
+    }
+
+    try {
+      // 如果已经显示了完整token，直接复制
+      if (isTokenRevealed && revealedTokenInView && !fromTable) {
+        copyToClipboard(revealedTokenInView)
+        return
+      }
+
+      // 否则先获取完整token再复制
+      const data = await apiClient.get<{ token?: string; success?: boolean; data?: { token?: string }; error?: string; message?: string }>(`/api-tokens/${token.id}/reveal`)
+
+      let fullToken = ''
+      if (data.token) {
+        fullToken = data.token
+      } else if (data.success && data.data && data.data.token) {
+        fullToken = data.data.token
+      } else {
+        // 显示具体的错误信息
+        const errorMessage = data.error || data.message || tp('apiTokens.messages.revealFailed')
+        message.error(errorMessage)
+
+        // 如果是旧Token的错误，显示更友好的提示
+        if (errorMessage.includes('before the encryption feature was enabled')) {
+          Modal.info({
+            title: 'Token复制功能说明',
+            content: (
+              <div>
+                <p>此Token创建于加密功能启用之前，出于安全考虑无法复制完整内容。</p>
+                <p>当前只能复制Token前缀：<code>{token.prefix}***</code></p>
+                <p>如需复制完整Token，请删除此Token并创建新的Token。</p>
+              </div>
+            ),
+            okText: '我知道了'
+          })
+        }
+        return
+      }
+
+      copyToClipboard(fullToken)
+    } catch (error: any) {
+      console.error('Token copy error:', error)
+
+      // 显示错误信息
+      let errorMessage = tp('apiTokens.messages.revealFailed')
+
+      // 尝试从错误响应中获取详细信息
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error
+      }
+
+      message.error(errorMessage)
+
+      // 如果是旧Token的错误，显示更友好的提示
+      if (errorMessage.includes('before the encryption feature was enabled')) {
+        Modal.info({
+          title: 'Token复制功能说明',
+          content: (
+            <div>
+              <p>此Token创建于加密功能启用之前，出于安全考虑无法复制完整内容。</p>
+              <p>当前只能复制Token前缀：<code>{token.prefix}***</code></p>
+              <p>如需复制完整Token，请删除此Token并创建新的Token。</p>
+            </div>
+          ),
+          okText: '我知道了'
+        })
+      }
+    } finally {
+      if (fromTable) {
+        setCopyingTokenId(null)
+      } else {
+        setIsCopyingToken(false)
+      }
+    }
   }
 
   const copyToClipboard = (text: string) => {
@@ -245,12 +384,13 @@ export const APITokenManager: React.FC = () => {
               {tp('apiTokens.actions.view')}
             </Button>
           </Tooltip>
-          <Tooltip title={tp('apiTokens.actions.copyPrefix')}>
+          <Tooltip title={tp('apiTokens.actions.copyToken')}>
             <Button
               type="text"
               icon={<CopyOutlined />}
               size="small"
-              onClick={() => handleCopyTokenPrefix(record)}
+              loading={copyingTokenId === record.id}
+              onClick={() => handleCopyFullToken(record, true)}
             >
               {tp('apiTokens.actions.copy')}
             </Button>
@@ -293,13 +433,7 @@ export const APITokenManager: React.FC = () => {
           </div>
         }
       >
-        <Alert
-          message={tp('apiTokens.description')}
-          description={tp('apiTokens.detailDescription')}
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
+
 
         <Table
           columns={columns}
@@ -433,6 +567,9 @@ export const APITokenManager: React.FC = () => {
           setViewingToken(null)
           setIsTokenRevealed(false)
           setRevealedTokenInView('')
+          setIsRevealingToken(false)
+          setIsCopyingToken(false)
+          setCopyingTokenId(null)
         }}
         footer={[
           <Button key="close" onClick={() => {
@@ -440,6 +577,9 @@ export const APITokenManager: React.FC = () => {
             setViewingToken(null)
             setIsTokenRevealed(false)
             setRevealedTokenInView('')
+            setIsRevealingToken(false)
+            setIsCopyingToken(false)
+            setCopyingTokenId(null)
           }}>
             {tp('buttons.close')}
           </Button>
@@ -481,6 +621,7 @@ export const APITokenManager: React.FC = () => {
                       type="text"
                       icon={isTokenRevealed ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                       size="small"
+                      loading={isRevealingToken}
                       onClick={() => handleToggleTokenInView(viewingToken)}
                     />
                   </Tooltip>
@@ -489,7 +630,8 @@ export const APITokenManager: React.FC = () => {
                       type="text"
                       icon={<CopyOutlined />}
                       size="small"
-                      onClick={() => copyToClipboard(isTokenRevealed ? revealedTokenInView : `${viewingToken.prefix}***`)}
+                      loading={isCopyingToken}
+                      onClick={() => handleCopyFullToken(viewingToken)}
                     />
                   </Tooltip>
                 </div>

@@ -37,17 +37,24 @@ import {
   PushpinOutlined,
   PushpinFilled,
   HomeOutlined,
-  DeploymentUnitOutlined
+  DeploymentUnitOutlined,
+  DesktopOutlined,
+  CloudOutlined
 } from '@ant-design/icons'
 import { useProjectStore, useTaskStore, useContextRuleStore } from '../stores'
 import { KanbanBoard } from '../components/Kanban'
 import { TaskContentSummary } from '../components/TaskContentPreview'
+import TaskIdBadge from '../components/TaskIdBadge'
 import { pinsApi } from '../api/pins'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { LinkButton } from '../components/SmartLink'
+import { analytics } from '../utils/analytics'
 import type { Task } from '../api/tasks'
 import type { ContextRule } from '../api/contextRules'
 import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
+import { getMcpServerUrl } from '../utils/apiConfig'
+import { customPromptsService } from '../services/customPromptsService'
+import { formatTasksList, type RenderContext } from '../utils/promptRenderer'
 
 const { Title, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -67,14 +74,21 @@ const ProjectDetail = () => {
     try {
       const saved = localStorage.getItem('project-task-filters')
       if (saved) {
-        return { ...JSON.parse(saved) }
+        const parsed = JSON.parse(saved)
+        // 兼容旧的字符串格式，转换为数组格式
+        if (typeof parsed.status === 'string' && parsed.status) {
+          parsed.status = parsed.status.split(',').map((s: string) => s.trim()).filter(Boolean)
+        } else if (!Array.isArray(parsed.status)) {
+          parsed.status = []
+        }
+        return { ...parsed }
       }
     } catch (error) {
       console.warn('Failed to load task filters from localStorage:', error)
     }
     // 默认筛选条件：只显示待办任务
     return {
-      status: 'todo,in_progress,review',
+      status: ['todo', 'in_progress', 'review'],
       priority: '',
       search: '',
       sort_by: 'updated_at',
@@ -161,8 +175,8 @@ const ProjectDetail = () => {
           isPinnedValue = response.is_pinned
         }
         // 包装响应格式：{data: {is_pinned: true, project_id: 24}, ...}
-        else if (response.data && typeof response.data.is_pinned === 'boolean') {
-          isPinnedValue = response.data.is_pinned
+        else if ((response as any).data && typeof (response as any).data.is_pinned === 'boolean') {
+          isPinnedValue = (response as any).data.is_pinned
         }
         // 其他可能的格式
         else if (typeof response === 'boolean') {
@@ -182,10 +196,17 @@ const ProjectDetail = () => {
   useEffect(() => {
     if (id) {
       fetchProject(parseInt(id))
+      // 追踪项目查看事件
+      analytics.project.view(id)
+
       // 设置任务查询参数，使用保存的分页大小
+      const statusString = Array.isArray(taskFilters.status)
+        ? taskFilters.status.join(',')
+        : taskFilters.status || ''
+
       const queryParams = {
         project_id: parseInt(id),
-        status: taskFilters.status,
+        status: statusString,
         priority: taskFilters.priority,
         search: taskFilters.search,
         sort_by: taskFilters.sort_by,
@@ -302,9 +323,13 @@ const ProjectDetail = () => {
 
     try {
       // 使用当前的筛选和排序条件重新获取任务数据
+      const statusString = Array.isArray(taskFilters.status)
+        ? taskFilters.status.join(',')
+        : taskFilters.status || ''
+
       const queryParams = {
         project_id: parseInt(id),
-        status: taskFilters.status,
+        status: statusString,
         priority: taskFilters.priority,
         search: taskFilters.search,
         sort_by: taskFilters.sort_by,
@@ -372,9 +397,14 @@ const ProjectDetail = () => {
 
       // 更新查询参数并重新获取数据
       if (id) {
+        // 将状态数组转换为逗号分隔的字符串
+        const statusString = Array.isArray(newFilters.status)
+          ? newFilters.status.join(',')
+          : newFilters.status || ''
+
         const newQueryParams = {
           project_id: parseInt(id),
-          status: newFilters.status,
+          status: statusString,
           priority: newFilters.priority,
           search: newFilters.search,
           sort_by: newFilters.sort_by,
@@ -403,6 +433,8 @@ const ProjectDetail = () => {
       message.success('任务删除成功')
       // 如果删除的任务在选中列表中，也要移除
       setSelectedTaskIds(prev => prev.filter(id => id !== task.id))
+      // 刷新任务列表以确保UI立即更新
+      await fetchTasks()
     }
   }
 
@@ -442,46 +474,45 @@ const ProjectDetail = () => {
 
     // 根据是否有选中任务来决定要执行的任务
     let targetTasks: Task[]
-    let promptTitle: string
 
     if (selectedTaskIds.length > 0) {
       // 如果有选中任务，只处理选中的任务
       targetTasks = tasks.filter(task => selectedTaskIds.includes(task.id))
-      promptTitle = `请帮我执行项目"${currentProject.name}"中的指定任务：`
     } else {
       // 如果没有选中任务，处理所有待执行任务
       targetTasks = tasks.filter(task =>
         ['todo', 'in_progress', 'review'].includes(task.status)
       )
-      promptTitle = `请帮我执行项目"${currentProject.name}"中的所有待办任务：`
     }
 
-    const prompt = `${promptTitle}
+    // 创建渲染上下文
+    const context: RenderContext = {
+      project: {
+        id: currentProject.id,
+        name: currentProject.name,
+        description: currentProject.description || '',
+        github_repo: currentProject.github_url || '',
+        context: currentProject.project_context || '',
+        color: currentProject.color || '#1890ff',
+        status: 'active',
+        created_at: currentProject.created_at,
+        updated_at: currentProject.updated_at
+      },
+      system: {
+        url: getMcpServerUrl(),
+        current_time: new Date().toISOString()
+      },
+      tasks: {
+        count: targetTasks.length,
+        list: formatTasksList(targetTasks),
+        pending_count: targetTasks.filter(t => t.status === 'todo').length,
+        in_progress_count: targetTasks.filter(t => t.status === 'in_progress').length,
+        review_count: targetTasks.filter(t => t.status === 'review').length
+      }
+    }
 
-**项目信息**:
-- 项目名称: ${currentProject.name}
-- 项目描述: ${currentProject.description || '无'}
-- GitHub仓库: ${currentProject.github_url || '无'}
-- 项目上下文: ${currentProject.project_context || '无'}
-
-**${selectedTaskIds.length > 0 ? '指定' : '待执行'}任务数量**: ${targetTasks.length}个
-
-**执行指引**:
-1. 请使用MCP工具连接到Todo系统: http://localhost:50110
-2. 使用get_project_tasks_by_name工具获取项目任务列表:
-   - 项目名称: "${currentProject.name}"
-   - 状态筛选: ["todo", "in_progress", "review"]
-3. 按照任务的创建时间顺序，逐个执行任务
-4. 对于每个任务，使用get_task_by_id获取详细信息
-5. 完成任务后，使用submit_task_feedback提交反馈
-6. 继续执行下一个任务，直到所有任务完成
-
-**任务概览**:
-${targetTasks.length > 0 ? targetTasks.map((task, index) =>
-  `${index + 1}. [${task.priority === 'low' ? '低' : task.priority === 'medium' ? '中' : task.priority === 'high' ? '高' : '紧急'}] ${task.title} (ID: ${task.id})`
-).join('\n') : '暂无待执行任务'}
-
-请开始执行这个项目的任务，并在每个任务完成后提交反馈。`
+    // 使用自定义提示词服务渲染提示词
+    const prompt = customPromptsService.renderProjectPrompt(context)
 
     navigator.clipboard.writeText(prompt).then(() => {
       const message_text = selectedTaskIds.length > 0
@@ -551,9 +582,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
       width: 200,
       render: (text: string, record: Task) => (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-          <Tag color="blue" style={{ fontSize: '10px', padding: '2px 6px', margin: 0, flexShrink: 0 }}>
-            #{record.id}
-          </Tag>
+          <TaskIdBadge taskId={record.id} size="medium" />
           <div style={{ flex: 1, minWidth: 0, color: getTaskTitleColor(record.status) }}>
             <LinkButton
               to={`/todo-for-ai/pages/tasks/${record.id}`}
@@ -616,7 +645,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
       },
     },
     {
-      title: '任务内容',
+      title: tp('tasks.table.columns.content'),
       dataIndex: 'content',
       key: 'content',
       width: 400,
@@ -699,13 +728,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
             {tp('breadcrumb.projectManagement')}
           </Button>
         </Breadcrumb.Item>
-        <Breadcrumb.Item
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            lineHeight: 1
-          }}
-        >
+        <Breadcrumb.Item>
           {currentProject.name}
         </Breadcrumb.Item>
       </Breadcrumb>
@@ -749,13 +772,13 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                   </Tooltip>
                 )}
 
-                {currentProject.local_url && (
-                  <Tooltip title={tp('tooltips.localUrl')}>
+                {currentProject.production_url && (
+                  <Tooltip title={tp('tooltips.productionUrl')}>
                     <Button
                       type="text"
                       size="small"
-                      icon={<HomeOutlined />}
-                      onClick={() => window.open(currentProject.local_url, '_blank')}
+                      icon={<CloudOutlined />}
+                      onClick={() => window.open(currentProject.production_url, '_blank')}
                       style={{
                         padding: '0 4px',
                         height: '24px',
@@ -766,13 +789,13 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                   </Tooltip>
                 )}
 
-                {currentProject.production_url && (
-                  <Tooltip title={tp('tooltips.productionUrl')}>
+                {currentProject.local_url && (
+                  <Tooltip title={tp('tooltips.localUrl')}>
                     <Button
                       type="text"
                       size="small"
-                      icon={<DeploymentUnitOutlined />}
-                      onClick={() => window.open(currentProject.production_url, '_blank')}
+                      icon={<DesktopOutlined />}
+                      onClick={() => window.open(currentProject.local_url, '_blank')}
                       style={{
                         padding: '0 4px',
                         height: '24px',
@@ -784,11 +807,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                 )}
               </Space>
             </div>
-            {currentProject.description && (
-              <Paragraph className="page-description">
-                {currentProject.description}
-              </Paragraph>
-            )}
+
           </div>
           <Space size="small">
             <Button
@@ -910,6 +929,21 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         <TabPane tab={tp('tabs.overview')} key="overview">
           <Row gutter={[16, 16]}>
+            {/* 项目描述 */}
+            {currentProject.description && (
+              <Col span={24}>
+                <Card title={tp('overview.projectDescription.title')}>
+                  <MarkdownEditor
+                    value={currentProject.description}
+                    readOnly={true}
+                    hideToolbar={true}
+                    autoHeight={true}
+                    preview="preview"
+                  />
+                </Card>
+              </Col>
+            )}
+
             <Col span={24}>
               <Card title={tp('overview.basicInfo.title')}>
                 <Row gutter={[16, 16]}>
@@ -983,7 +1017,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                         <div style={{ marginTop: '4px' }}>
                           <Button
                             type="link"
-                            icon={<LinkOutlined />}
+                            icon={<DesktopOutlined />}
                             href={currentProject.local_url}
                             target="_blank"
                             style={{ padding: 0 }}
@@ -1003,7 +1037,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                         <div style={{ marginTop: '4px' }}>
                           <Button
                             type="link"
-                            icon={<GlobalOutlined />}
+                            icon={<CloudOutlined />}
                             href={currentProject.production_url}
                             target="_blank"
                             style={{ padding: 0 }}
@@ -1049,15 +1083,16 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                 </Col>
                 <Col span={4}>
                   <Select
+                    mode="multiple"
                     size="small"
                     placeholder={tp('tasks.filters.status.placeholder')}
                     value={taskFilters.status}
                     onChange={(value) => handleFilterChange('status', value)}
-                    style={{ width: '100%', height: '22px' }}
+                    style={{ width: '100%', minHeight: '22px' }}
                     allowClear
+                    maxTagCount="responsive"
+                    showSearch={false}
                   >
-                    <Option value="">{tp('tasks.filters.status.all')}</Option>
-                    <Option value="todo,in_progress,review">{tp('tasks.filters.status.pendingDefault')}</Option>
                     <Option value="todo">{tp('tasks.filters.status.todo')}</Option>
                     <Option value="in_progress">{tp('tasks.filters.status.inProgress')}</Option>
                     <Option value="review">{tp('tasks.filters.status.review')}</Option>
@@ -1109,7 +1144,7 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                     <Option value="asc">{tp('tasks.filters.sortOrder.asc')}</Option>
                   </Select>
                 </Col>
-                <Col span={4}>
+                <Col span={3}>
                   <Search
                     size="small"
                     placeholder={tp('tasks.filters.search.placeholder')}
@@ -1132,6 +1167,35 @@ ${targetTasks.length > 0 ? targetTasks.map((task, index) =>
                   >
                     {tp('buttons.refreshTasks')}
                   </Button>
+                </Col>
+                <Col span={5}>
+                  <Space size={4} align="center">
+                    <span style={{ fontSize: '11px', color: '#666', lineHeight: '22px' }}>{tp('tasks.filters.quickSelect.label')}</span>
+                    <Button
+                      size="small"
+                      type={JSON.stringify(taskFilters.status) === JSON.stringify(['todo', 'in_progress', 'review']) ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', ['todo', 'in_progress', 'review'])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      {tp('tasks.filters.quickSelect.pending')}
+                    </Button>
+                    <Button
+                      size="small"
+                      type={JSON.stringify(taskFilters.status) === JSON.stringify(['done']) ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', ['done'])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      {tp('tasks.filters.quickSelect.completed')}
+                    </Button>
+                    <Button
+                      size="small"
+                      type={taskFilters.status.length === 0 ? 'primary' : 'default'}
+                      onClick={() => handleFilterChange('status', [])}
+                      style={{ fontSize: '11px', height: '20px', padding: '0 6px' }}
+                    >
+                      {tp('tasks.filters.quickSelect.all')}
+                    </Button>
+                  </Space>
                 </Col>
               </Row>
             </Card>

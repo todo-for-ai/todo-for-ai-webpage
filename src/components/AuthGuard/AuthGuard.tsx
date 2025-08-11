@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Spin, Result, Button } from 'antd'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -16,19 +16,24 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAdmin = false,
   fallback
 }) => {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore()
+  const { user, isAuthenticated, isLoading } = useAuthStore()
   const [isChecking, setIsChecking] = useState(true)
+
+  // 使用useCallback来稳定checkAuth函数引用
+  const stableCheckAuth = useCallback(async () => {
+    return useAuthStore.getState().checkAuth()
+  }, [])
 
   useEffect(() => {
     const verifyAuth = async () => {
       if (requireAuth) {
-        await checkAuth()
+        await stableCheckAuth()
       }
       setIsChecking(false)
     }
 
     verifyAuth()
-  }, [requireAuth, checkAuth])
+  }, [requireAuth, stableCheckAuth])
 
   // 显示加载状态
   if (isLoading || isChecking) {

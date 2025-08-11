@@ -56,6 +56,12 @@
       "description": "This action cannot be undone. Please proceed with caution.",
       "ok": "OK",
       "cancel": "Cancel"
+    },
+    "copy": {
+      "title": "Confirm Copy Rule",
+      "content": "Are you sure you want to copy the rule \"{{name}}\"?",
+      "ok": "Confirm Copy",
+      "cancel": "Cancel"
     }
   }
 }

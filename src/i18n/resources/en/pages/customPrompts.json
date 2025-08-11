@@ -1,0 +1,205 @@
+{
+  "title": "Custom Prompts",
+  "subtitle": "Customize your AI prompt templates to improve efficiency",
+  "pageTitle": "Custom Prompts - Todo for AI",
+  "description": "You can set prompts for project task execution and copy buttons on task detail pages.",
+  "tabs": {
+    "projectPrompts": "Project Task Execution Prompts",
+    "taskPrompts": "Task Detail Page Prompt Buttons"
+  },
+  "projectPrompts": {
+    "title": "Project Task Execution Prompts",
+    "description": "Here you can customize the content copied by the \\\"Copy AI Prompt\\\" button on project detail pages. Supports variables like ${project.name}.",
+    "placeholder": "Please enter your custom prompt template...",
+    "defaultTemplate": "Please help me execute all pending tasks in project \\\"${project.name}\\\":\\n\\n**Project Information**:\\n- Project Name: ${project.name}\\n- Project Description: ${project.description}\\n- GitHub Repository: ${project.github_repo}\\n- Project Context: ${project.context}\\n\\n**Number of Tasks to Execute**: ${tasks.count}\\n\\n**Execution Guidelines**:\\n1. Please use MCP tools to connect to Todo system: ${system.url}\\n2. Use get_project_tasks_by_name tool to get project task list:\\n   - Project Name: \\\"${project.name}\\\"\\n   - Status Filter: [\\\"todo\\\", \\\"in_progress\\\", \\\"review\\\"]\\n3. Execute tasks one by one in order of creation time\\n4. For each task, use get_task_by_id to get detailed information\\n5. After completing a task, use submit_task_feedback to submit feedback\\n6. Continue to the next task until all tasks are completed\\n\\n**Task Overview**:\\n${tasks.list}\\n\\nPlease start executing the tasks in this project and submit feedback after each task is completed."
+  },
+  "taskPrompts": {
+    "title": "Task Detail Page Prompt Buttons",
+    "description": "Here you can customize the copy prompt buttons on task detail pages, including the number of buttons, text, and copied content.",
+    "addButton": "Add Button",
+    "buttonConfig": {
+      "title": "Button Configuration",
+      "name": "Button Name",
+      "namePlaceholder": "Please enter the button display text",
+      "content": "Copy Content",
+      "contentPlaceholder": "Please enter the prompt content to copy when the button is clicked...",
+      "defaultContent": "Please help me execute the following task:\\n\\n**Task Information**:\\n- Task ID: ${task.id}\\n- Task Title: ${task.title}\\n- Task Content: ${task.content}\\n- Task Status: ${task.status}\\n- Priority: ${task.priority}\\n- Created At: ${task.created_at}\\n- Due Date: ${task.due_date}\\n- Estimated Hours: ${task.estimated_hours}\\n- Tags: ${task.tags}\\n- Related Files: ${task.related_files}\\n\\n**Project Information**:\\n- Project Name: ${project.name}\\n- Project Description: ${project.description}\\n\\nPlease execute this task and submit feedback."
+    }
+  },
+  "variables": {
+    "title": "Supported Variables",
+    "viewDocs": "View Variable Documentation",
+    "insertVariable": "Insert Variable",
+    "searchPlaceholder": "Search variables...",
+    "close": "Close",
+    "insert": "Insert",
+    "copy": "Copy",
+    "example": "Example",
+    "project": {
+      "title": "Project Variables",
+      "name": "Project Name",
+      "description": "Project Description",
+      "github_repo": "GitHub Repository URL",
+      "context": "Project Context",
+      "color": "Project Color"
+    },
+    "task": {
+      "title": "Task Variables",
+      "id": "Task ID",
+      "title": "Task Title",
+      "content": "Task Content",
+      "status": "Task Status",
+      "priority": "Priority",
+      "created_at": "Created At",
+      "due_date": "Due Date",
+      "estimated_hours": "Estimated Hours",
+      "tags": "Tag List",
+      "related_files": "Related Files"
+    },
+    "system": {
+      "title": "System Variables",
+      "url": "System URL",
+      "current_time": "Current Time"
+    },
+    "tasks": {
+      "title": "Task List Variables",
+      "count": "Task Count",
+      "list": "Task List"
+    },
+    "contextRules": {
+      "title": "Context Rules Variables",
+      "global": {
+        "all": "All global context rules content",
+        "count": "Global context rules count",
+        "names": "Global context rules name list",
+        "byName": "Get specific global rule by name"
+      },
+      "project": {
+        "all": "Current project all context rules content",
+        "count": "Project context rules count",
+        "names": "Project context rules name list",
+        "byName": "Get specific project rule by name"
+      },
+      "merged": {
+        "all": "Merged global and project rules content",
+        "count": "Total merged rules count",
+        "names": "Merged rules name list",
+        "byName": "Get specific merged rule by name"
+      }
+    },
+    "examples": {
+      "project": {
+        "name": "Example Project",
+        "description": "This is an example project",
+        "github_repo": "https://github.com/example/project",
+        "context": "Project context information",
+        "color": "#1890ff"
+      },
+      "task": {
+        "id": "123",
+        "title": "Example Task",
+        "content": "Task detailed content",
+        "status": "todo",
+        "priority": "high",
+        "created_at": "2024-01-01 10:00:00",
+        "due_date": "2024-01-31 18:00:00",
+        "estimated_hours": "8",
+        "tags": "frontend, urgent",
+        "related_files": "file1.js, file2.css"
+      },
+      "system": {
+        "url": "https://todo4ai.org",
+        "current_time": "2024-01-01 10:00:00"
+      },
+      "tasks": {
+        "count": "5",
+        "list": "1. [High] Task 1\n2. [Medium] Task 2"
+      },
+      "contextRules": {
+        "global": {
+          "all": "### Rule 1\nContent 1\n\n### Rule 2\nContent 2",
+          "count": "3",
+          "names": "Rule 1, Rule 2, Rule 3",
+          "byName": "Specific rule content"
+        },
+        "project": {
+          "all": "### Project Rule 1\nContent 1",
+          "count": "2",
+          "names": "Project Rule 1, Project Rule 2",
+          "byName": "Specific project rule content"
+        },
+        "merged": {
+          "all": "### Rule 1\nContent 1\n\n### Project Rule 1\nContent 2",
+          "count": "5",
+          "names": "Rule 1, Rule 2, Project Rule 1",
+          "byName": "Specific rule content"
+        }
+      }
+    }
+  },
+  "buttons": {
+    "save": "Save",
+    "reset": "Reset",
+    "preview": "Preview",
+    "copy": "Copy",
+    "edit": "Edit",
+    "delete": "Delete",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down"
+  },
+  "messages": {
+    "saveSuccess": "Saved successfully",
+    "saveFailed": "Save failed, please try again later",
+    "resetConfirm": "Are you sure you want to reset to the default template?",
+    "resetSuccess": "Reset to default template successfully",
+    "resetFailed": "Reset failed, please try again later",
+    "resetTitle": "Confirm Reset",
+    "deleteConfirm": "Are you sure you want to delete this button?",
+    "copySuccess": "Copied to clipboard",
+    "previewTitle": "Preview",
+    "previewError": "Preview Error",
+    "previewLoadFailed": "Failed to load project data",
+    "selectProjectForPreview": "Select project for preview (optional):",
+    "selectProjectPlaceholder": "Select a project to preview with real data, or leave empty to use sample data",
+    "selectedProject": "Selected project:",
+    "taskCount": "Task count:",
+    "projectDescription": "Project description:",
+    "close": "Close",
+    "noDescription": "No description",
+    "none": "None"
+  },
+  "sampleData": {
+    "projectName": "Sample Project",
+    "projectDescription": "This is a sample project description",
+    "projectContext": "Project context information",
+    "taskList": "1. [High] Sample Task 1 (ID: 1)\n2. [Medium] Sample Task 2 (ID: 2)\n3. [Low] Sample Task 3 (ID: 3)",
+    "contextRules": {
+      "codingStandards": {
+        "name": "Coding Standards",
+        "description": "General coding standards"
+      },
+      "testRequirements": {
+        "name": "Test Requirements",
+        "description": "Testing related requirements"
+      },
+      "projectSpecific": {
+        "name": "Project Specific Standards",
+        "description": "Current project specific standards"
+      }
+    },
+    "tasks": {
+      "loginFeature": "Implement user login functionality",
+      "dbOptimization": "Optimize database query performance",
+      "apiDocs": "Write API documentation"
+    }
+  },
+  "priority": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "urgent": "Urgent"
+  },
+  "variableNames": {
+    "ruleName": "Rule Name"
+  }
+}

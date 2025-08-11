@@ -1,0 +1,208 @@
+{
+  "title": "自定义提示词",
+  "subtitle": "自定义您的AI提示词模板，提升工作效率",
+  "pageTitle": "自定义提示词 - Todo for AI",
+  "description": "您可以设置项目执行任务的提示词，以及任务详情页面的复制按钮。",
+  "tabs": {
+    "projectPrompts": "项目执行任务提示词",
+    "taskPrompts": "任务详情页提示词按钮"
+  },
+  "projectPrompts": {
+    "title": "项目执行任务提示词",
+    "description": "在这里您可以自定义项目详情页面\"复制AI提示词\"按钮复制的内容。支持使用变量如 ${project.name} 等。",
+    "placeholder": "请输入您的自定义提示词模板...",
+    "defaultTemplate": "请帮我执行项目\\\"${project.name}\\\"中的所有待办任务：\\n\\n**项目信息**:\\n- 项目名称: ${project.name}\\n- 项目描述: ${project.description}\\n- GitHub仓库: ${project.github_repo}\\n- 项目上下文: ${project.context}\\n\\n**待执行任务数量**: ${tasks.count}个\\n\\n**执行指引**:\\n1. 请使用MCP工具连接到Todo系统: ${system.url}\\n2. 使用get_project_tasks_by_name工具获取项目任务列表:\\n   - 项目名称: \\\"${project.name}\\\"\\n   - 状态筛选: [\\\"todo\\\", \\\"in_progress\\\", \\\"review\\\"]\\n3. 按照任务的创建时间顺序，逐个执行任务\\n4. 对于每个任务，使用get_task_by_id获取详细信息\\n5. 完成任务后，使用submit_task_feedback提交反馈\\n6. 继续执行下一个任务，直到所有任务完成\\n\\n**任务概览**:\\n${tasks.list}\\n\\n请开始执行这个项目的任务，并在每个任务完成后提交反馈。"
+  },
+  "taskPrompts": {
+    "title": "任务详情页提示词按钮",
+    "description": "在这里您可以自定义任务详情页面的复制提示词按钮，包括按钮的数量、文案和复制的内容。拖拽按钮可以调整显示顺序。",
+    "addButton": "添加按钮",
+    "noButtons": "暂无自定义按钮，点击上方\"添加按钮\"创建",
+    "buttonConfig": {
+      "title": "按钮配置",
+      "name": "按钮名称",
+      "namePlaceholder": "请输入按钮显示的文案",
+      "content": "复制内容",
+      "contentPlaceholder": "请输入点击按钮后复制的提示词内容...",
+      "defaultContent": "请帮我执行以下任务：\\n\\n**任务信息**:\\n- 任务ID: ${task.id}\\n- 任务标题: ${task.title}\\n- 任务内容: ${task.content}\\n- 任务状态: ${task.status}\\n- 优先级: ${task.priority}\\n- 创建时间: ${task.created_at}\\n- 截止时间: ${task.due_date}\\n- 预估工时: ${task.estimated_hours}\\n- 标签: ${task.tags}\\n- 相关文件: ${task.related_files}\\n\\n**项目信息**:\\n- 项目名称: ${project.name}\\n- 项目描述: ${project.description}\\n\\n请执行这个任务并提交反馈。"
+    }
+  },
+  "variables": {
+    "title": "支持的变量",
+    "viewDocs": "查看变量文档",
+    "insertVariable": "插入变量",
+    "searchPlaceholder": "搜索变量...",
+    "close": "关闭",
+    "insert": "插入",
+    "copy": "复制",
+    "example": "示例",
+    "project": {
+      "title": "项目变量",
+      "name": "项目名称",
+      "description": "项目描述",
+      "github_repo": "GitHub仓库地址",
+      "context": "项目上下文",
+      "color": "项目颜色"
+    },
+    "task": {
+      "title": "任务变量",
+      "id": "任务ID",
+      "title": "任务标题",
+      "content": "任务内容",
+      "status": "任务状态",
+      "priority": "优先级",
+      "created_at": "创建时间",
+      "due_date": "截止时间",
+      "estimated_hours": "预估工时",
+      "tags": "标签列表",
+      "related_files": "相关文件"
+    },
+    "system": {
+      "title": "系统变量",
+      "url": "系统URL",
+      "current_time": "当前时间"
+    },
+    "tasks": {
+      "title": "任务列表变量",
+      "count": "任务数量",
+      "list": "任务列表"
+    },
+    "examples": {
+      "project": {
+        "name": "示例项目",
+        "description": "这是一个示例项目",
+        "github_repo": "https://github.com/example/project",
+        "context": "项目上下文信息",
+        "color": "#1890ff"
+      },
+      "task": {
+        "id": "123",
+        "title": "示例任务",
+        "content": "任务详细内容",
+        "status": "todo",
+        "priority": "high",
+        "created_at": "2024-01-01 10:00:00",
+        "due_date": "2024-01-31 18:00:00",
+        "estimated_hours": "8",
+        "tags": "frontend, urgent",
+        "related_files": "file1.js, file2.css"
+      },
+      "system": {
+        "url": "https://todo4ai.org",
+        "current_time": "2024-01-01 10:00:00"
+      },
+      "tasks": {
+        "count": "5",
+        "list": "1. [高] 任务1\n2. [中] 任务2"
+      },
+      "contextRules": {
+        "global": {
+          "all": "### 规则1\n内容1\n\n### 规则2\n内容2",
+          "count": "3",
+          "names": "规则1, 规则2, 规则3",
+          "byName": "具体规则的内容"
+        },
+        "project": {
+          "all": "### 项目规则1\n内容1",
+          "count": "2",
+          "names": "项目规则1, 项目规则2",
+          "byName": "具体项目规则的内容"
+        },
+        "merged": {
+          "all": "### 规则1\n内容1\n\n### 项目规则1\n内容2",
+          "count": "5",
+          "names": "规则1, 规则2, 项目规则1",
+          "byName": "具体规则的内容"
+        }
+      }
+    },
+    "contextRules": {
+      "title": "上下文规则变量",
+      "global": {
+        "all": "所有全局上下文规则的内容",
+        "count": "全局上下文规则数量",
+        "names": "全局上下文规则名称列表",
+        "byName": "按名称获取特定全局规则"
+      },
+      "project": {
+        "all": "当前项目所有上下文规则的内容",
+        "count": "项目上下文规则数量",
+        "names": "项目上下文规则名称列表",
+        "byName": "按名称获取特定项目规则"
+      },
+      "merged": {
+        "all": "全局和项目规则合并后的内容",
+        "count": "合并后的规则总数",
+        "names": "合并后的规则名称列表",
+        "byName": "按名称获取合并后的特定规则"
+      }
+    }
+  },
+  "buttons": {
+    "save": "保存",
+    "reset": "重置",
+    "preview": "预览",
+    "copy": "复制",
+    "edit": "编辑",
+    "delete": "删除",
+    "moveUp": "上移",
+    "moveDown": "下移"
+  },
+  "messages": {
+    "saveSuccess": "保存成功",
+    "saveFailed": "保存失败，请稍后重试",
+    "resetConfirm": "确定要重置为默认模板吗？",
+    "resetSuccess": "已重置为默认模板",
+    "resetFailed": "重置失败，请稍后重试",
+    "resetTitle": "确认重置",
+    "deleteConfirm": "确定要删除这个按钮吗？",
+    "copySuccess": "已复制到剪贴板",
+    "previewTitle": "预览效果",
+    "previewError": "预览错误",
+    "previewLoadFailed": "加载项目数据失败",
+    "selectProjectForPreview": "选择项目进行预览（可选）：",
+    "selectProjectPlaceholder": "选择一个项目来使用真实数据预览，或留空使用示例数据",
+    "selectedProject": "已选择项目：",
+    "taskCount": "任务数量：",
+    "projectDescription": "项目描述：",
+    "close": "关闭",
+    "noDescription": "无描述",
+    "none": "无",
+    "reorderSuccess": "按钮顺序已更新",
+    "reorderFailed": "更新按钮顺序失败"
+  },
+  "sampleData": {
+    "projectName": "示例项目",
+    "projectDescription": "这是一个示例项目的描述",
+    "projectContext": "项目上下文信息",
+    "taskList": "1. [高] 示例任务1 (ID: 1)\n2. [中] 示例任务2 (ID: 2)\n3. [低] 示例任务3 (ID: 3)",
+    "contextRules": {
+      "codingStandards": {
+        "name": "编码规范",
+        "description": "通用编码规范"
+      },
+      "testRequirements": {
+        "name": "测试要求",
+        "description": "测试相关要求"
+      },
+      "projectSpecific": {
+        "name": "项目特定规范",
+        "description": "当前项目的特定规范"
+      }
+    },
+    "tasks": {
+      "loginFeature": "实现用户登录功能",
+      "dbOptimization": "优化数据库查询性能",
+      "apiDocs": "编写API文档"
+    }
+  },
+  "priority": {
+    "high": "高",
+    "medium": "中",
+    "low": "低",
+    "urgent": "紧急"
+  },
+  "variableNames": {
+    "ruleName": "规则名"
+  }
+}
