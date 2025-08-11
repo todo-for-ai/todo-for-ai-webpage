@@ -576,8 +576,6 @@ ${sourceTask.content || '无内容'}
           clearEditDraft(parseInt(id, 10))
           // 更新原始内容
           setOriginalTaskContent(taskData.content || '')
-          // 重置未保存更改状态
-          setHasUnsavedChanges(false)
           message.success(tp('messages.saveSuccess'))
           // 留在当前编辑页面，不跳转
         }

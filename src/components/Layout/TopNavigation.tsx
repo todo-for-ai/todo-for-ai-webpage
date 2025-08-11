@@ -28,7 +28,7 @@ const TopNavigation: React.FC = () => {
   const [currentTaskProjectId, setCurrentTaskProjectId] = useState<number | null>(null)
   const [taskCounts, setTaskCounts] = useState<ProjectTaskCount[]>([])
   const { tn } = useTranslation()
-  const pollingIntervalRef = useRef<number | null>(null)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // 加载Pin项目的任务数量
   const loadTaskCounts = useCallback(async () => {

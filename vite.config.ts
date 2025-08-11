@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { execSync } from 'child_process'
 
 // 获取git信息和构建时间
 function getGitInfo() {
   try {
+    // 动态导入 child_process
+    const { execSync } = require('child_process')
+
     // 设置git命令的执行选项，确保从正确的仓库根目录获取信息
     const gitOptions = { encoding: 'utf8' as const, cwd: '..' }
 
@@ -23,7 +25,6 @@ function getGitInfo() {
       buildTime
     }
   } catch (error) {
-    console.warn('Failed to get git info:', error)
     // 如果获取git信息失败，返回默认值
     return {
       gitTag: 'v1.0',

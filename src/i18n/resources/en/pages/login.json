@@ -12,5 +12,9 @@
     "terms": "Terms of Service",
     "and": "and",
     "privacy": "Privacy Policy"
+  },
+  "learnMore": {
+    "text": "Learn more about our product",
+    "link": "Learn More"
   }
 }

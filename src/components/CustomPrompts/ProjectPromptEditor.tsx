@@ -92,8 +92,8 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
   const loadProjectContextRules = async (projectId: number) => {
     try {
       const response = await contextRulesApi.getContextRules({ project_id: projectId })
-      if (response && response.items && Array.isArray(response.items)) {
-        setProjectContextRules(response.items.map(rule => ({
+      if (response && response.data && Array.isArray(response.data)) {
+        setProjectContextRules(response.data.map(rule => ({
           id: rule.id,
           name: rule.name,
           description: rule.description,

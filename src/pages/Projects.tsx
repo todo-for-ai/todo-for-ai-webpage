@@ -68,7 +68,7 @@ const Projects = () => {
   // 防抖搜索函数
   const debouncedSearch = useCallback(
     (() => {
-      let timeoutId: number
+      let timeoutId: NodeJS.Timeout
       return (searchTerm: string) => {
         clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
