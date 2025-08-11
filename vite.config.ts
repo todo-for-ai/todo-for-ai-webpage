@@ -60,14 +60,8 @@ export default defineConfig(() => {
       },
       // 设置chunk大小警告限制
       chunkSizeWarningLimit: 1000,
-      // 启用压缩
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true, // 生产环境移除console
-          drop_debugger: true
-        }
-      }
+      // 启用压缩，使用esbuild（默认）
+      minify: 'esbuild'
     },
     server: {
       port: 50111,
