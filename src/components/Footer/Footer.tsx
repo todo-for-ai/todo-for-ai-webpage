@@ -19,6 +19,10 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
   const commitId = __COMMIT_ID__
   const buildTime = __BUILD_TIME__
 
+  // 获取环境变量中的版本信息
+  const appVersion = import.meta.env.VITE_APP_VERSION || 'v1.0'
+  const buildTimeEnv = import.meta.env.VITE_BUILD_TIME
+
   // 格式化构建时间
   const formatBuildTime = (isoString: string) => {
     try {
@@ -36,8 +40,10 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
     }
   }
 
-  // 构建版本信息字符串 - 按照任务要求的格式
-  const versionInfo = `Version v1.0, build unknown at 2025/08/04 12:24`
+  // 构建版本信息字符串 - 使用实际的构建信息
+  const versionInfo = buildTimeEnv
+    ? `Version ${appVersion}, build ${commitId} at ${formatBuildTime(buildTime)}`
+    : `Version ${appVersion}, build ${commitId} at ${formatBuildTime(buildTime)}`
 
   return (
     <AntFooter

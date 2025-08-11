@@ -6,6 +6,7 @@ import { useTranslation } from '../i18n/hooks/useTranslation'
 import LanguageSwitch from '../components/LanguageSwitch'
 import WeChatGroup from '../components/WeChatGroup/WeChatGroup'
 import TelegramGroup from '../components/TelegramGroup/TelegramGroup'
+import { Footer } from '../components/Footer'
 import { analytics } from '../utils/analytics'
 import './Login.css'
 
@@ -43,121 +44,126 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="login-container">
-      {/* 语言切换按钮 */}
-      <div className="login-language-switch">
-        <LanguageSwitch size="small" />
-      </div>
-
-      <Card
-        className="login-card"
-        styles={{ body: { padding: '24px 20px' } }}
-      >
-        <div className="login-header">
-          <Title level={2} className="login-title">
-            {t('title')}
-          </Title>
-          <Paragraph className="login-subtitle">
-            {t('subtitle')} · <a
-              href="https://site.todo4ai.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="login-learn-more-inline"
-            >
-              {t('learnMore.link')}
-            </a>
-          </Paragraph>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="login-container" style={{ flex: 1 }}>
+        {/* 语言切换按钮 */}
+        <div className="login-language-switch">
+          <LanguageSwitch size="small" />
         </div>
 
-        {error && (
-          <Alert
-            message={t('loginFailed')}
-            description={error}
-            type="error"
-            showIcon
-            className="login-error"
-          />
-        )}
-
-        <Space direction="vertical" size="middle" className="login-methods">
-          <div>
-            <Title level={4} className="login-methods-title">
-              {t('chooseLoginMethod')}
+        <Card
+          className="login-card"
+          styles={{ body: { padding: '24px 20px' } }}
+        >
+          <div className="login-header">
+            <Title level={2} className="login-title">
+              {t('title')}
             </Title>
-
-            <Space direction="vertical" size="small" className="login-buttons">
-              <Button
-                type="primary"
-                size="large"
-                icon={<GithubOutlined />}
-                loading={isLoading}
-                onClick={handleGitHubLogin}
-                className="login-button-github"
-              >
-                {t('loginWithGitHub')}
-              </Button>
-
-              <Button
-                size="large"
-                icon={<GoogleOutlined />}
-                loading={isLoading}
-                onClick={handleGoogleLogin}
-                className="login-button-google"
-              >
-                {t('loginWithGmail')}
-              </Button>
-            </Space>
-          </div>
-
-          <Divider className="login-divider">
-            <span className="login-divider-text">{t('supportedMethods')}</span>
-          </Divider>
-
-          <div className="login-supported-methods">
-            <Space size="large">
-              <div className="login-method-icon">
-                <GithubOutlined className="login-method-icon-github" />
-                <div className="login-method-label">GitHub</div>
-              </div>
-              <div className="login-method-icon">
-                <GoogleOutlined className="login-method-icon-google" />
-                <div className="login-method-label">Gmail</div>
-              </div>
-            </Space>
-          </div>
-
-          <div className="login-agreement">
-            <Paragraph className="login-agreement-text">
-              {t('agreement.text')}
-              <a
-                href="/todo-for-ai/pages/terms"
+            <Paragraph className="login-subtitle">
+              {t('subtitle')} · <a
+                href="https://site.todo4ai.org/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="login-agreement-link"
+                className="login-learn-more-inline"
               >
-                {t('agreement.terms')}
-              </a>
-              {t('agreement.and')}
-              <a
-                href="/todo-for-ai/pages/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="login-agreement-link"
-              >
-                {t('agreement.privacy')}
+                {t('learnMore.link')}
               </a>
             </Paragraph>
           </div>
 
+          {error && (
+            <Alert
+              message={t('loginFailed')}
+              description={error}
+              type="error"
+              showIcon
+              className="login-error"
+            />
+          )}
 
-        </Space>
-      </Card>
+          <Space direction="vertical" size="middle" className="login-methods">
+            <div>
+              <Title level={4} className="login-methods-title">
+                {t('chooseLoginMethod')}
+              </Title>
 
-      {/* 微信AI交流群 - 只在中文环境下显示 */}
-      <WeChatGroup />
+              <Space direction="vertical" size="small" className="login-buttons">
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<GithubOutlined />}
+                  loading={isLoading}
+                  onClick={handleGitHubLogin}
+                  className="login-button-github"
+                >
+                  {t('loginWithGitHub')}
+                </Button>
 
-      {/* Telegram AI交流群 - 只在英文环境下显示 */}
-      <TelegramGroup />
+                <Button
+                  size="large"
+                  icon={<GoogleOutlined />}
+                  loading={isLoading}
+                  onClick={handleGoogleLogin}
+                  className="login-button-google"
+                >
+                  {t('loginWithGmail')}
+                </Button>
+              </Space>
+            </div>
+
+            <Divider className="login-divider">
+              <span className="login-divider-text">{t('supportedMethods')}</span>
+            </Divider>
+
+            <div className="login-supported-methods">
+              <Space size="large">
+                <div className="login-method-icon">
+                  <GithubOutlined className="login-method-icon-github" />
+                  <div className="login-method-label">GitHub</div>
+                </div>
+                <div className="login-method-icon">
+                  <GoogleOutlined className="login-method-icon-google" />
+                  <div className="login-method-label">Gmail</div>
+                </div>
+              </Space>
+            </div>
+
+            <div className="login-agreement">
+              <Paragraph className="login-agreement-text">
+                {t('agreement.text')}
+                <a
+                  href="/todo-for-ai/pages/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="login-agreement-link"
+                >
+                  {t('agreement.terms')}
+                </a>
+                {t('agreement.and')}
+                <a
+                  href="/todo-for-ai/pages/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="login-agreement-link"
+                >
+                  {t('agreement.privacy')}
+                </a>
+              </Paragraph>
+            </div>
+
+
+          </Space>
+        </Card>
+
+        {/* 微信AI交流群 - 只在中文环境下显示 */}
+        <WeChatGroup />
+
+        {/* Telegram AI交流群 - 只在英文环境下显示 */}
+        <TelegramGroup />
+      </div>
+
+      {/* 页脚 */}
+      <Footer />
     </div>
   )
 }
