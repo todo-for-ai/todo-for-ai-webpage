@@ -7,6 +7,7 @@ import LanguageSwitch from '../components/LanguageSwitch'
 import WeChatGroup from '../components/WeChatGroup/WeChatGroup'
 import TelegramGroup from '../components/TelegramGroup/TelegramGroup'
 import { Footer } from '../components/Footer'
+import GitHubBadge from '../components/GitHubBadge/GitHubBadge'
 import { analytics } from '../utils/analytics'
 import './Login.css'
 
@@ -69,6 +70,18 @@ const Login: React.FC = () => {
                 {t('learnMore.link')}
               </a>
             </Paragraph>
+
+            {/* GitHub徽标 */}
+            <div className="login-github-badge">
+              <GitHubBadge
+                variant="button"
+                size="middle"
+                showStars={true}
+                showForks={false}
+                owner="todo-for-ai"
+                repo="todo-for-ai"
+              />
+            </div>
           </div>
 
           {error && (
