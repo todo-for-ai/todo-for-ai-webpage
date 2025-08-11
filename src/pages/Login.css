@@ -9,10 +9,19 @@
   position: relative;
 }
 
-.login-language-switch {
+/* 头部控件容器 */
+.login-header-controls {
   position: absolute;
   top: 20px;
   right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-language-switch {
+  /* 移除原有的定位样式，现在由父容器控制 */
 }
 
 .login-card {
@@ -138,20 +147,19 @@
   text-decoration: none;
 }
 
-/* GitHub徽标样式 */
-.login-github-badge {
-  text-align: center;
-  margin-top: 16px;
-  margin-bottom: 8px;
+/* GitHub徽标样式 - 在头部控件中 */
+.login-header-controls .login-github-badge {
+  /* 在头部控件中的GitHub徽标样式 */
 }
 
-.login-github-badge .github-badge {
+.login-header-controls .login-github-badge .github-badge {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border: 1px solid #dee2e6;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
 }
 
-.login-github-badge .github-badge:hover {
+.login-header-controls .login-github-badge .github-badge:hover {
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   border-color: #1890ff;
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);

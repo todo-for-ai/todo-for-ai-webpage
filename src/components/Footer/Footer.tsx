@@ -22,11 +22,22 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
   // 获取环境变量中的版本信息
   const appVersion = import.meta.env.VITE_APP_VERSION || 'v1.0'
   const buildTimeEnv = import.meta.env.VITE_BUILD_TIME
+  const commitIdEnv = import.meta.env.VITE_COMMIT_ID
 
   // 格式化构建时间
-  const formatBuildTime = (isoString: string) => {
+  const formatBuildTime = (timeString: string) => {
     try {
-      const date = new Date(isoString)
+      // 如果是时间戳格式 (YYYYMMDD_HHMMSS)
+      if (timeString && timeString.match(/^\d{8}_\d{6}$/)) {
+        const year = timeString.substring(0, 4)
+        const month = timeString.substring(4, 6)
+        const day = timeString.substring(6, 8)
+        const hour = timeString.substring(9, 11)
+        const minute = timeString.substring(11, 13)
+        return `${year}/${month}/${day} ${hour}:${minute}`
+      }
+      // 如果是ISO字符串
+      const date = new Date(timeString)
       return date.toLocaleString('zh-CN', {
         year: 'numeric',
         month: '2-digit',
@@ -36,14 +47,14 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
         timeZone: 'Asia/Shanghai'
       })
     } catch {
-      return isoString
+      return timeString || buildTime
     }
   }
 
   // 构建版本信息字符串 - 使用实际的构建信息
-  const versionInfo = buildTimeEnv
-    ? `Version ${appVersion}, build ${commitId} at ${formatBuildTime(buildTime)}`
-    : `Version ${appVersion}, build ${commitId} at ${formatBuildTime(buildTime)}`
+  const finalCommitId = commitIdEnv || commitId || 'unknown'
+  const finalBuildTime = buildTimeEnv || buildTime
+  const versionInfo = `Version ${appVersion}, build ${finalCommitId} at ${formatBuildTime(finalBuildTime)}`
 
   return (
     <AntFooter

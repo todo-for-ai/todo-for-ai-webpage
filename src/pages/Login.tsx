@@ -47,9 +47,21 @@ const Login: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div className="login-container" style={{ flex: 1 }}>
-        {/* 语言切换按钮 */}
-        <div className="login-language-switch">
-          <LanguageSwitch size="small" />
+        {/* 语言切换按钮和GitHub徽标 */}
+        <div className="login-header-controls">
+          <div className="login-language-switch">
+            <LanguageSwitch size="small" />
+          </div>
+          <div className="login-github-badge">
+            <GitHubBadge
+              variant="button"
+              size="small"
+              showStars={true}
+              showForks={false}
+              owner="todo-for-ai"
+              repo="todo-for-ai"
+            />
+          </div>
         </div>
 
         <Card
@@ -70,18 +82,6 @@ const Login: React.FC = () => {
                 {t('learnMore.link')}
               </a>
             </Paragraph>
-
-            {/* GitHub徽标 */}
-            <div className="login-github-badge">
-              <GitHubBadge
-                variant="button"
-                size="middle"
-                showStars={true}
-                showForks={false}
-                owner="todo-for-ai"
-                repo="todo-for-ai"
-              />
-            </div>
           </div>
 
           {error && (
