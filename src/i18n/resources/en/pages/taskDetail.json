@@ -23,6 +23,7 @@
     "review": "Review",
     "done": "Done",
     "cancelled": "Cancelled",
+    "waitingHumanFeedback": "Waiting Human Feedback",
     "selectStatus": "Select Task Status"
   },
   "priority": {
@@ -60,7 +61,10 @@
     "updatedAt": "Updated At",
     "createdBy": "Created By",
     "tags": "Tags",
-    "unknownProject": "Unknown Project"
+    "unknownProject": "Unknown Project",
+    "interactive": "Interactive Mode",
+    "interactiveTask": "Interactive Task",
+    "aiWaitingFeedback": "AI Waiting Feedback"
   },
   "taskContent": {
     "title": "Task Content",
@@ -91,6 +95,20 @@
     "title": "Task Execution Feedback",
     "description": "Feedback information after AI task execution, including specific execution status and results.",
     "feedbackTime": "Feedback Time:"
+  },
+  "interactiveFeedback": {
+    "title": "AI Awaiting Your Feedback",
+    "aiWaitingMessage": "AI has completed the task and is waiting for your confirmation",
+    "aiWaitingDescription": "Please review the AI's execution results, then choose to confirm task completion or provide further guidance.",
+    "aiFeedback": "AI Execution Feedback",
+    "yourResponse": "Your Response",
+    "responsePlaceholder": "Please enter your feedback...",
+    "confirmComplete": "Confirm Complete",
+    "continueWithInstructions": "Continue Execution",
+    "feedbackRequired": "Please enter feedback content",
+    "taskMarkedComplete": "Task marked as complete",
+    "instructionsSent": "Instructions sent, AI will continue execution",
+    "submitFailed": "Failed to submit feedback, please try again"
   },
   "messages": {
     "taskNotFound": "Task not found",

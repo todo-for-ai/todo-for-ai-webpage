@@ -15,7 +15,9 @@ import {
   Popconfirm,
   Select,
   Collapse,
-  App
+  App,
+  Alert,
+  Input
 } from 'antd'
 import {
   EditOutlined,
@@ -30,7 +32,9 @@ import {
   SettingOutlined,
   CheckCircleOutlined,
   BranchesOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  MessageOutlined,
+  CheckOutlined
 } from '@ant-design/icons'
 import { useTaskStore, useProjectStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
@@ -45,7 +49,8 @@ import dayjs from 'dayjs'
 import styles from './TaskDetail.module.css'
 import { analytics } from '../utils/analytics'
 
-const { Title, Paragraph } = Typography
+const { Title, Paragraph, Text } = Typography
+const { TextArea } = Input
 
 const TaskDetail: React.FC = () => {
   const { message } = App.useApp()
@@ -57,6 +62,10 @@ const TaskDetail: React.FC = () => {
   const [projectContext, setProjectContext] = useState<BuildContextResponse | null>(null)
   const [contextLoading, setContextLoading] = useState(false)
   const [customButtons, setCustomButtons] = useState<any[]>([])
+
+  // 交互式任务相关状态
+  const [humanFeedback, setHumanFeedback] = useState('')
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
 
   const { getTask, deleteTask, fetchTasksByParams } = useTaskStore()
   const { projects, fetchProjects } = useProjectStore()
@@ -234,6 +243,61 @@ const TaskDetail: React.FC = () => {
     } catch (error) {
       console.error('删除任务失败:', error)
       message.error(tp('messages.deleteFailed'))
+    }
+  }
+
+  // 处理人工反馈
+  const handleHumanFeedback = async (action: 'complete' | 'continue') => {
+    if (!task || !humanFeedback.trim()) {
+      message.error(tp('interactiveFeedback.feedbackRequired'))
+      return
+    }
+
+    setSubmittingFeedback(true)
+    try {
+      const response = await fetch(`/todo-for-ai/api/v1/interactive/tasks/${task.id}/human-feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          feedback_content: humanFeedback,
+          action: action,
+          session_id: task.interaction_session_id
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback')
+      }
+
+      const result = await response.json()
+
+      // 更新任务状态
+      setTask(prev => prev ? {
+        ...prev,
+        status: result.task_status,
+        ai_waiting_feedback: result.ai_waiting_feedback
+      } : null)
+
+      // 清空反馈输入
+      setHumanFeedback('')
+
+      if (action === 'complete') {
+        message.success(tp('interactiveFeedback.taskMarkedComplete'))
+      } else {
+        message.success(tp('interactiveFeedback.instructionsSent'))
+      }
+
+      // 追踪反馈事件
+      analytics.task.feedback(task.id.toString(), action)
+
+    } catch (error) {
+      console.error('Failed to submit human feedback:', error)
+      message.error(tp('interactiveFeedback.submitFailed'))
+    } finally {
+      setSubmittingFeedback(false)
     }
   }
 
@@ -762,6 +826,9 @@ ${task.content || '无详细内容'}
               <Select.Option value="in_progress">{tp('status.inProgress')}</Select.Option>
               <Select.Option value="review">{tp('status.review')}</Select.Option>
               <Select.Option value="done">{tp('status.done')}</Select.Option>
+              {task.is_interactive && (
+                <Select.Option value="waiting_human_feedback">{tp('status.waitingHumanFeedback')}</Select.Option>
+              )}
             </Select>
           </Col>
 
@@ -992,6 +1059,16 @@ ${task.content || '无详细内容'}
                   status={task.status === 'done' ? 'success' : task.status === 'cancelled' ? 'exception' : 'active'}
                 />
               </Descriptions.Item>
+              {task.is_interactive && (
+                <Descriptions.Item label={tp('taskInfo.interactive')}>
+                  <Tag color="blue">{tp('taskInfo.interactiveTask')}</Tag>
+                  {task.ai_waiting_feedback && (
+                    <Tag color="orange" style={{ marginLeft: 8 }}>
+                      {tp('taskInfo.aiWaitingFeedback')}
+                    </Tag>
+                  )}
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label={tp('taskInfo.createdAt')}>
                 {dayjs(task.created_at).format('YYYY-MM-DD HH:mm:ss')}
               </Descriptions.Item>
@@ -1039,6 +1116,71 @@ ${task.content || '无详细内容'}
           </div>
         )}
       </Card>
+
+      {/* 交互式任务反馈区域 */}
+      {task.is_interactive && task.ai_waiting_feedback && (
+        <Card className={styles.interactiveFeedbackCard}>
+          <Title level={3} className={styles.feedbackTitle}>
+            <MessageOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+            {tp('interactiveFeedback.title')}
+          </Title>
+          <div className={styles.feedbackContent}>
+            <Alert
+              message={tp('interactiveFeedback.aiWaitingMessage')}
+              description={tp('interactiveFeedback.aiWaitingDescription')}
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+
+            {task.feedback_content && (
+              <div className={styles.aiFeedbackSection}>
+                <Text strong>{tp('interactiveFeedback.aiFeedback')}:</Text>
+                <div className={styles.aiFeedbackContent}>
+                  <MarkdownEditor
+                    value={task.feedback_content}
+                    readOnly
+                    autoHeight={true}
+                    hideToolbar
+                    preview="preview"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className={styles.humanFeedbackSection}>
+              <Text strong>{tp('interactiveFeedback.yourResponse')}:</Text>
+              <TextArea
+                rows={4}
+                placeholder={tp('interactiveFeedback.responsePlaceholder')}
+                value={humanFeedback}
+                onChange={(e) => setHumanFeedback(e.target.value)}
+                style={{ marginTop: 8, marginBottom: 16 }}
+              />
+
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  onClick={() => handleHumanFeedback('complete')}
+                  loading={submittingFeedback}
+                  disabled={!humanFeedback.trim()}
+                >
+                  {tp('interactiveFeedback.confirmComplete')}
+                </Button>
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => handleHumanFeedback('continue')}
+                  loading={submittingFeedback}
+                  disabled={!humanFeedback.trim()}
+                >
+                  {tp('interactiveFeedback.continueWithInstructions')}
+                </Button>
+              </Space>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* 项目上下文规则预览 */}
       <Card className={styles.contentCard}>

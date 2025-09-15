@@ -23,6 +23,7 @@
     "review": "待审核",
     "done": "已完成",
     "cancelled": "已取消",
+    "waitingHumanFeedback": "等待人工反馈",
     "selectStatus": "选择任务状态"
   },
   "priority": {
@@ -60,7 +61,10 @@
     "updatedAt": "更新时间",
     "createdBy": "创建者",
     "tags": "标签",
-    "unknownProject": "未知项目"
+    "unknownProject": "未知项目",
+    "interactive": "交互模式",
+    "interactiveTask": "交互式任务",
+    "aiWaitingFeedback": "AI等待反馈中"
   },
   "taskContent": {
     "title": "任务内容",
@@ -91,6 +95,20 @@
     "title": "任务执行反馈",
     "description": "AI执行任务后的反馈信息，包含任务的具体执行情况和结果。",
     "feedbackTime": "反馈时间："
+  },
+  "interactiveFeedback": {
+    "title": "AI等待您的反馈",
+    "aiWaitingMessage": "AI已完成任务并等待您的确认",
+    "aiWaitingDescription": "请查看AI的执行结果，然后选择确认任务完成或提供进一步的指导意见。",
+    "aiFeedback": "AI执行反馈",
+    "yourResponse": "您的回复",
+    "responsePlaceholder": "请输入您的反馈意见...",
+    "confirmComplete": "确认完成",
+    "continueWithInstructions": "继续执行",
+    "feedbackRequired": "请输入反馈内容",
+    "taskMarkedComplete": "任务已标记为完成",
+    "instructionsSent": "指导意见已发送，AI将继续执行",
+    "submitFailed": "提交反馈失败，请重试"
   },
   "messages": {
     "taskNotFound": "任务不存在",
