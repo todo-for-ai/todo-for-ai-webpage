@@ -49,7 +49,7 @@ export default defineConfig(() => {
       // 设置chunk大小警告限制
       chunkSizeWarningLimit: 5000,
       // 启用压缩，使用esbuild（默认）
-      minify: 'esbuild'
+      minify: 'esbuild' as const
     },
     server: {
       port: 50111,

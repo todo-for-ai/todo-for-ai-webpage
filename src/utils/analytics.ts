@@ -221,6 +221,13 @@ export const analytics = {
         project_id: projectId,
       })
     },
+    feedback: (taskId: string, action: string) => {
+      trackEvent('task_feedback', {
+        event_category: 'task',
+        task_id: taskId,
+        action,
+      })
+    },
   },
 
   // 功能使用相关

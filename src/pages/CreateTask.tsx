@@ -434,31 +434,31 @@ ${sourceTask.content || '无内容'}
 
 请根据源任务的内容和要求，制定新任务的具体执行计划...`
 
+            // 修复bug：改进编辑器内容设置逻辑，确保内容能正确填充
             console.log('📄 设置编辑器内容:', templateContent.substring(0, 100) + '...')
 
-            // 先显示成功消息
-            message.success('已基于源任务预填充信息，请完善任务标题和内容')
-            console.log('✅ 成功消息已显示')
+            // 使用更可靠的内容设置策略
+            const setContentSafely = () => {
+              // 确保taskLoaded状态已设置，让编辑器能够渲染
+              setTaskLoaded(true)
 
-            // 延迟设置编辑器内容，确保编辑器已经完全初始化
-            // 增加延迟时间到1500ms，确保编辑器完全准备好
-            setTimeout(() => {
-              console.log('🔄 开始设置编辑器内容...')
-              console.log('📝 当前editorContent状态:', editorContent)
-
-              setEditorContent(templateContent)
-              console.log('✅ setEditorContent调用完成')
-
-              // 再次延迟检查内容是否设置成功
+              // 延迟设置内容，确保编辑器已初始化
               setTimeout(() => {
-                console.log('🔍 检查编辑器内容是否更新成功...')
-                // 这里可以通过DOM检查编辑器内容
-                const editor = document.querySelector('.milkdown');
-                if (editor) {
-                  console.log('📋 编辑器DOM内容:', editor.textContent);
-                }
-              }, 500)
-            }, 1500)
+                // 设置编辑器内容状态
+                setEditorContent(templateContent)
+
+                // 同时更新表单字段，确保数据一致性
+                form.setFieldValue('content', templateContent)
+
+                console.log('✅ 已设置编辑器内容和表单字段')
+                message.success('已基于源任务预填充信息，请完善任务标题和内容')
+              }, 100) // 给编辑器一点时间初始化
+            }
+
+            // 使用React.startTransition确保状态更新的优先级
+            React.startTransition(() => {
+              setContentSafely()
+            })
 
             console.log('✅ 预填充逻辑完成')
           } catch (error) {
@@ -520,7 +520,9 @@ ${sourceTask.content || '无内容'}
         // 这里不需要重复设置，避免竞态条件
       }
     }
-  }, [defaultProjectId, id])
+    // 修复bug：添加searchParams到依赖数组，确保from_task参数变化时能重新执行
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultProjectId, id, searchParams])
 
   // 设置网页标题 - 简化版本，不依赖项目数据
   useEffect(() => {
@@ -614,25 +616,6 @@ ${sourceTask.content || '无内容'}
       setLoading(false)
     }
   }, [isEditMode, id, form, createTask, updateTask, clearDraft, navigate])
-
-  // 键盘快捷键监听
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Ctrl+S 快捷键保存
-    if (event.ctrlKey && event.key === 's') {
-      event.preventDefault()
-      handleSubmitAndEdit()
-    }
-  }, [handleSubmitAndEdit])
-
-  useEffect(() => {
-    // 添加键盘事件监听
-    document.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      // 清理事件监听
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handleKeyDown])
 
   const loadTask = async (taskId: number) => {
     try {
@@ -1311,6 +1294,7 @@ ${sourceTask.content || '无内容'}
                 icon={<SaveOutlined />}
                 loading={loading}
                 htmlType="submit"
+                title={tp('shortcuts.submit')}
               >
                 {isEditMode ? tp('actions.common.update') : tp('actions.createMode.create')}
               </Button>
