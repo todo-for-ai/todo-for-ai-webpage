@@ -34,9 +34,7 @@ curl -H "Authorization: Bearer YOUR_API_TOKEN" \
 
       <Card title="获取任务列表" style={{ marginBottom: '16px' }}>
         <Paragraph>获取项目的任务列表：</Paragraph>
-        <CodeBlock language="bash">
-GET /api/v1/projects/{projectId}/tasks
-        </CodeBlock>
+        <CodeBlock language="bash">{`GET /api/v1/projects/{projectId}/tasks`}</CodeBlock>
       </Card>
 
       <Card title="创建任务" style={{ marginBottom: '16px' }}>

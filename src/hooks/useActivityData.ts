@@ -1,7 +1,11 @@
 // 占位文件 - useActivityData hook
-export const useActivityData = () => {
+export const useActivityData = (userId?: number, dateRange?: any) => {
   return {
     data: [],
-    loading: false
+    loading: false,
+    stats: {},
+    heatmapData: [],
+    colorScale: [],
+    getColorForValue: (value: number) => '#eee'
   }
 }

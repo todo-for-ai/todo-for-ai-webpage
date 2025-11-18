@@ -164,9 +164,6 @@ i18n
 
     // 确保语言切换正常工作
     cleanCode: true,
-
-    // 非严格模式，允许回退
-    nonExplicitSupportedLngs: false,
     
     // 插值配置
     interpolation: {
