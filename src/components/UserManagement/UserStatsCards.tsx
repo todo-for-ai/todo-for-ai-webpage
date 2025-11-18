@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Card, Statistic } from 'antd'
+import { Row, Col, Card, Statistic } from 'antd'
 import {
   UserOutlined,
   StopOutlined,

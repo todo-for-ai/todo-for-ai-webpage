@@ -16,7 +16,7 @@ export interface UserPinsResponse {
 
 // 检查项目Pin状态
 export const checkPinStatus = async (projectId: number): Promise<PinStatusResponse | boolean | any> => {
-  const response = await pinsApi.checkPinStatus(projectId)
+  const response: any = await pinsApi.checkPinStatus(projectId)
 
   // 处理多种响应格式
   if (response && typeof response.is_pinned === 'boolean') {
@@ -36,7 +36,7 @@ export const checkPinStatus = async (projectId: number): Promise<PinStatusRespon
 
 // 获取用户Pin列表
 export const getUserPins = async (): Promise<UserPinsResponse> => {
-  const response = await pinsApi.getUserPins()
+  const response: any = await pinsApi.getUserPins()
   return response
 }
 

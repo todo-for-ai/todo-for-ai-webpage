@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Card, Form, Input, message } from 'antd'
+import { Card, Form, Input, message, Button, Space } from 'antd'
 import { SaveOutlined } from '@ant-design/icons'
 import { useProjectStore } from '../stores'
-import { MarkdownEditor } from '../components/MilkdownEditor'
-import { CreateProjectForm } from '../components/CreateProjectForm'
-import { CreateProjectHeader } from '../components/CreateProjectHeader'
+import MilkdownEditor from '../components/MilkdownEditor'
 
 const CreateProject: React.FC = () => {
   const navigate = useNavigate()
@@ -46,19 +44,31 @@ const CreateProject: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <CreateProjectHeader
-        navigate={navigate}
-        form={form}
-        onCancel={handleCancel}
-      />
-
-      <Card>
+      <Card title={id ? '编辑项目' : '创建项目'}>
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
         >
-          <CreateProjectForm form={form} />
+          <Form.Item label="项目名称" name="name" rules={[{ required: true, message: '请输入项目名称' }]}>
+            <Input placeholder="请输入项目名称" />
+          </Form.Item>
+          
+          <Form.Item label="项目描述" name="description">
+            <Input.TextArea rows={4} placeholder="请输入项目描述" />
+          </Form.Item>
+          
+          <Form.Item label="颜色" name="color">
+            <Input type="color" />
+          </Form.Item>
+          
+          <Form.Item label="GitHub 仓库" name="github_repo_url">
+            <Input placeholder="https://github.com/..." />
+          </Form.Item>
+          
+          <Form.Item label="网站地址" name="website_url">
+            <Input placeholder="https://..." />
+          </Form.Item>
           
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
             <Form.Item>
