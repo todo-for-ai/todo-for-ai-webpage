@@ -1,6 +1,8 @@
 import React from 'react'
-import { Card, Title, Paragraph, Divider, Space, Tag, Text } from 'antd'
+import { Card, Divider, Space, Tag, Typography } from 'antd'
 import { CheckCircleOutlined, SettingOutlined } from '@ant-design/icons'
+
+const { Title, Paragraph, Text } = Typography
 
 export const OverviewTab: React.FC = () => {
   return (
