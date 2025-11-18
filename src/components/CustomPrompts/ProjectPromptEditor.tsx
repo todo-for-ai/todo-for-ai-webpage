@@ -7,6 +7,10 @@ import ProjectSelector from '../ProjectSelector'
 import { useProjectPromptEditor } from '../../hooks/useProjectPromptEditor'
 import { PromptEditorToolbar } from './ProjectPromptEditor/PromptEditorToolbar'
 
+interface ProjectPromptEditorProps {
+  onVariableDocsClick?: () => void
+}
+
 const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
   onVariableDocsClick
 }) => {
@@ -37,7 +41,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
     setPreviewError(null)
     
     try {
-      const context = {
+      const context: any = {
         project: selectedProject,
         tasks: projectTasks,
         globalContextRules,
@@ -110,7 +114,7 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
               tasks: projectTasks,
               globalContextRules,
               projectContextRules,
-            })}</pre>
+            } as any)}</pre>
           </div>
         )}
       </Modal>

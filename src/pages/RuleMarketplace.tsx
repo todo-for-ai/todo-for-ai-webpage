@@ -5,6 +5,10 @@ import { useMarketplaceStore } from '../stores'
 import { RuleMarketplaceFilter } from '../components/RuleMarketplaceFilter'
 import { RuleMarketplaceModal } from '../components/RuleMarketplaceModal'
 
+const marketplaceApi = {
+  install: async (id: number) => Promise.resolve()
+}
+
 const RuleMarketplace: React.FC = () => {
   const [searchText, setSearchText] = useState('')
   const [modalVisible, setModalVisible] = useState(false)

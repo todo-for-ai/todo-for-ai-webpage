@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react'
 import { App } from 'antd'
-import { useTaskDetail } from '../../hooks/useTaskDetail'
+import { useNavigate } from 'react-router-dom'
+import { useTaskDetail } from '../hooks/useTaskDetail'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { TaskDetailHeader } from './components/TaskDetail/TaskDetailHeader'
 import { TaskDetailContent } from './components/TaskDetail/TaskDetailContent'
 import { TaskDetailNavigation } from './components/TaskDetail/TaskDetailNavigation'
 
 const TaskDetail: React.FC = () => {
   const { message } = App.useApp()
+  const navigate = useNavigate()
   const { t, tp } = usePageTranslation('taskDetail')
   
   const {

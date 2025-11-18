@@ -1,7 +1,11 @@
 // 占位文件 - HeatmapStats
 import React from 'react'
 
-export const HeatmapStats: React.FC = () => {
+interface HeatmapStatsProps {
+  stats?: any
+}
+
+export const HeatmapStats: React.FC<HeatmapStatsProps> = ({ stats }) => {
   return <div>Heatmap Stats</div>
 }
 

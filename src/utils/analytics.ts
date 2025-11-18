@@ -25,7 +25,8 @@ export const analytics = {
   task: {
     create: (projectId: string) => {},
     update: (taskId: string) => {},
-    delete: (taskId: string) => {}
+    delete: (taskId: string) => {},
+    view: (taskId: string) => {}
   },
   auth: {
     login: (method?: string) => {},

@@ -2,5 +2,7 @@
 import { create } from 'zustand'
 
 export const useMarketplaceStore = create(() => ({
-  // 占位实现
+  rules: [],
+  loading: false,
+  fetchRules: () => Promise.resolve()
 }))

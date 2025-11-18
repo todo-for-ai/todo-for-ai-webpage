@@ -3,7 +3,9 @@ import { message } from 'antd'
 import { customPromptsService } from '../services/customPromptsService'
 import { contextRulesApi } from '../api/contextRules'
 import { apiClient } from '../api'
-import type { Project, Task, ContextRuleData } from '../api'
+import type { Project, Task } from '../api'
+
+type ContextRuleData = any
 
 export const useProjectPromptEditor = (tp: (key: string) => string) => {
   const [content, setContent] = useState('')
@@ -89,7 +91,7 @@ export const useProjectPromptEditor = (tp: (key: string) => string) => {
 
   const savePrompt = useCallback(async () => {
     try {
-      await customPromptsService.saveProjectPromptTemplate(content)
+      await customPromptsService.setProjectPromptTemplate(content)
       message.success('保存成功')
     } catch (error) {
       console.error('Failed to save prompt:', error)

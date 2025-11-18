@@ -1,7 +1,13 @@
 // 占位文件 - HeatmapGrid
 import React from 'react'
 
-export const HeatmapGrid: React.FC = () => {
+interface HeatmapGridProps {
+  data?: any
+  renderCell?: (value: number, date: string) => React.ReactElement
+  loading?: boolean
+}
+
+export const HeatmapGrid: React.FC<HeatmapGridProps> = ({ data, renderCell, loading }) => {
   return <div>Heatmap Grid</div>
 }
 
