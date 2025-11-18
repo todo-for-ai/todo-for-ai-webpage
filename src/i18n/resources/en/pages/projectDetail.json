@@ -112,8 +112,39 @@
         "done": "Done",
         "cancelled": "Cancelled"
       },
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "urgent": "Urgent"
+      },
       "pagination": {
         "total": "{{start}}-{{end}} of {{total}} items"
+      },
+      "bulkActions": {
+        "selectedCount": "{{count}} tasks selected",
+        "changeStatus": "Change Status",
+        "changePriority": "Change Priority", 
+        "delete": "Batch Delete",
+        "clearSelection": "Clear Selection",
+        "deleteConfirm": {
+          "title": "Are you sure you want to delete these tasks?",
+          "description": "{{count}} tasks will be deleted. This action cannot be undone"
+        },
+      "statusChangeConfirm": {
+        "title": "Are you sure you want to change the status of these tasks?",
+        "description": "{{count}} tasks will be changed to: {{status}}"
+      },
+      "priorityChangeConfirm": {
+        "title": "Are you sure you want to change the priority of these tasks?",
+        "description": "{{count}} tasks priority will be changed to: {{priority}}"
+      },
+        "deleteSuccess": "Successfully deleted {{count}} tasks",
+        "deleteError": "Failed to batch delete tasks",
+        "statusChangeSuccess": "Successfully changed {{count}} tasks status to: {{status}}",
+        "statusChangeError": "Failed to batch change task status",
+        "priorityChangeSuccess": "Successfully changed {{count}} tasks priority to: {{priority}}",
+        "priorityChangeError": "Failed to batch change task priority"
       }
     },
     "confirm": {
@@ -127,6 +158,11 @@
     "messages": {
       "refreshSuccess": "Task list and statistics refreshed",
       "refreshError": "Refresh failed"
+    },
+    "autoRefresh": {
+      "enable": "Auto Refresh",
+      "interval": "Interval(s)",
+      "tooltip": "When enabled, the task list will be automatically refreshed at the set interval"
     }
   },
   "buttons": {

@@ -26,24 +26,17 @@ import { useContextRuleStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import type { ContextRule } from '../api/contextRules'
-
 const { Title, Paragraph } = Typography
-
-
 const ContextRules = () => {
   const navigate = useNavigate()
   const { t } = useTranslation('contextRules')
   const [isDetailVisible, setIsDetailVisible] = useState(false)
   const [viewingRule, setViewingRule] = useState<ContextRule | null>(null)
-
-
-
   const {
     contextRules,
     loading,
     error,
     pagination,
-    // queryParams,
     fetchContextRules,
     deleteContextRule,
     toggleContextRule,
@@ -51,47 +44,32 @@ const ContextRules = () => {
     setQueryParams,
     clearError,
   } = useContextRuleStore()
-
   useEffect(() => {
-    // 设置查询参数只获取全局规则（使用scope=global而不是rule_type）
-    // 明确清除project_id，确保只获取全局规则
     setQueryParams({ scope: 'global', project_id: undefined })
     fetchContextRules()
   }, [fetchContextRules, setQueryParams])
-
   useEffect(() => {
     if (error) {
       message.error(error)
       clearError()
     }
   }, [error, clearError])
-
-  // 设置网页标题
   useEffect(() => {
     document.title = t('pageTitle')
-
-    // 组件卸载时恢复默认标题
     return () => {
       document.title = 'Todo for AI'
     }
   }, [t])
-
-
-
-
-
   const handleView = (rule: ContextRule) => {
     setViewingRule(rule)
     setIsDetailVisible(true)
   }
-
   const handleDelete = async (rule: ContextRule) => {
     const success = await deleteContextRule(rule.id)
     if (success) {
       message.success(t('messages.deleteSuccess'))
     }
   }
-
   const handleToggle = async (rule: ContextRule) => {
     const success = await toggleContextRule(rule.id, !rule.is_active)
     if (success) {
@@ -99,7 +77,6 @@ const ContextRules = () => {
       message.success(t('messages.toggleSuccess', { status }))
     }
   }
-
   const handleCopy = (rule: ContextRule) => {
     Modal.confirm({
       title: t('confirm.copy.title'),
@@ -118,28 +95,18 @@ const ContextRules = () => {
       }
     })
   }
-
-
-
-
-
-
-
   const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
     const newParams: any = {
       page: pagination.current,
       per_page: pagination.pageSize,
     }
-
     if (sorter.field) {
       newParams.sort_by = sorter.field
       newParams.sort_order = sorter.order === 'ascend' ? 'asc' : 'desc'
     }
-
     setQueryParams(newParams)
     fetchContextRules()
   }
-
   const columns = [
     {
       title: t('table.columns.name'),
@@ -243,10 +210,7 @@ const ContextRules = () => {
       ),
     },
   ]
-
-  // 后端已经通过scope=global过滤了全局规则，这里直接使用
   const filteredRules = contextRules
-
   return (
     <div className="page-container">
       <div className="page-header">
@@ -277,9 +241,6 @@ const ContextRules = () => {
           </Space>
         </div>
       </div>
-
-
-
       <Table 
         columns={columns} 
         dataSource={filteredRules}
@@ -300,9 +261,6 @@ const ContextRules = () => {
         }}
         onChange={handleTableChange}
       />
-
-
-
       {/* 规则详情抽屉 */}
       <Drawer
         title={
@@ -348,7 +306,6 @@ const ContextRules = () => {
                   </Tag>
                 </Space>
               </div>
-
               {viewingRule.description && (
                 <div style={{ marginBottom: '16px' }}>
                   <strong>{t('drawer.fields.description')}</strong>
@@ -357,7 +314,6 @@ const ContextRules = () => {
                   </div>
                 </div>
               )}
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                 <div>
                   <strong>{t('drawer.fields.createdAt')}</strong> {new Date(viewingRule.created_at).toLocaleString()}
@@ -368,10 +324,8 @@ const ContextRules = () => {
                 <div>
                   <strong>{t('drawer.fields.createdBy')}</strong> {viewingRule.created_by || t('drawer.fields.unknown')}
                 </div>
-
               </div>
             </div>
-
             <div>
               <Title level={4}>{t('drawer.content.title')}</Title>
               <MarkdownEditor
@@ -385,10 +339,7 @@ const ContextRules = () => {
           </div>
         )}
       </Drawer>
-
-
     </div>
   )
 }
-
 export default ContextRules

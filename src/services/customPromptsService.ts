@@ -5,6 +5,7 @@
 
 import { renderPromptTemplate, type RenderContext, formatTasksList } from '../utils/promptRenderer'
 import { customPromptsApi } from '../api/customPrompts'
+import i18n from '../i18n'
 
 export interface TaskPromptButton {
   id: string
@@ -44,65 +45,31 @@ const DEFAULT_PROJECT_TEMPLATE = `请帮我执行项目"\${project.name}"中的�
 
 请开始执行这个项目的任务，并在每个任务完成后提交反馈。`
 
-// 默认的任务提示词按钮
-const DEFAULT_TASK_BUTTONS: TaskPromptButton[] = [
-  {
-    id: 'execute-task',
-    name: '执行任务',
-    content: `请帮我执行以下任务：
-
-**任务信息**:
-- 任务ID: \${task.id}
-- 任务标题: \${task.title}
-- 任务内容: \${task.content}
-- 任务状态: \${task.status}
-- 优先级: \${task.priority}
-- 创建时间: \${task.created_at}
-- 截止时间: \${task.due_date}
-- 预估工时: \${task.estimated_hours}
-- 标签: \${task.tags}
-- 相关文件: \${task.related_files}
-
-**项目信息**:
-- 项目名称: \${project.name}
-- 项目描述: \${project.description}
-
-请执行这个任务并提交反馈。`,
-    order: 1
-  },
-  {
-    id: 'mcp-execution',
-    name: 'MCP执行',
-    content: `请使用todo-for-ai MCP工具获取任务ID为\${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`,
-    order: 2
-  },
-  {
-    id: 'completion-check',
-    name: '完成检查',
-    content: `请检查并确认任务ID为\${task.id}的任务执行状态：
-
-**任务信息**：
-- 任务ID：\${task.id}
-- 任务标题：\${task.title}
-- 当前状态：\${task.status}
-
-**检查要求**：
-1. 仔细检查任务是否已经完全完成
-2. 如果任务已完成：
-   - 使用MCP工具将任务状态更新为"已完成"(done)
-   - 提交详细的任务完成报告
-3. 如果任务未完成：
-   - 继续执行任务内容直到完成
-   - 确保所有要求都已满足
-   - 完成后再次运行此检查
-
-**任务详细内容**：
-\${task.content}
-
-请开始检查并执行相应操作。`,
-    order: 3
+// 根据语言获取默认任务提示词按钮
+const getDefaultTaskButtons = (language?: string): TaskPromptButton[] => {
+  const currentLanguage = language || i18n.language || 'zh-CN'
+  
+  if (currentLanguage === 'en') {
+    return [
+      {
+        id: 'mcp-execution',
+        name: 'MCP Execution',
+        content: `Please use the todo-for-ai MCP tool to get detailed information for task ID \${task.id}, then execute this task and submit a task feedback report upon completion.`,
+        order: 1
+      }
+    ]
+  } else {
+    // 默认中文按钮
+    return [
+      {
+        id: 'mcp-execution',
+        name: 'MCP执行',
+        content: `请使用todo-for-ai MCP工具获取任务ID为\${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`,
+        order: 1
+      }
+    ]
   }
-]
+}
 
 class CustomPromptsService {
   private static instance: CustomPromptsService
@@ -130,7 +97,7 @@ class CustomPromptsService {
         const parsed = JSON.parse(stored)
         return {
           projectPromptTemplate: parsed.projectPromptTemplate || DEFAULT_PROJECT_TEMPLATE,
-          taskPromptButtons: parsed.taskPromptButtons || DEFAULT_TASK_BUTTONS
+          taskPromptButtons: parsed.taskPromptButtons || getDefaultTaskButtons()
         }
       }
     } catch (error) {
@@ -139,7 +106,7 @@ class CustomPromptsService {
 
     return {
       projectPromptTemplate: DEFAULT_PROJECT_TEMPLATE,
-      taskPromptButtons: [...DEFAULT_TASK_BUTTONS]
+      taskPromptButtons: [...getDefaultTaskButtons()]
     }
   }
 
@@ -251,7 +218,7 @@ class CustomPromptsService {
   public async resetToDefaults(): Promise<void> {
     this.config = {
       projectPromptTemplate: DEFAULT_PROJECT_TEMPLATE,
-      taskPromptButtons: [...DEFAULT_TASK_BUTTONS]
+      taskPromptButtons: [...getDefaultTaskButtons()]
     }
     this.saveConfig()
 

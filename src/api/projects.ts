@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {

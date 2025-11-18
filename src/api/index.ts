@@ -6,7 +6,7 @@
 export { apiClient } from './client'
 
 // 类型定义
-export type { ApiResponse, ApiClientConfig, PerformanceStats } from './client'
+export type { ApiClientConfig, PerformanceStats } from './client/types'
 
 // API服务
 export { projectsApi, type Project } from './projects'

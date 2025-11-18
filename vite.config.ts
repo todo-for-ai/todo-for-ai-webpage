@@ -49,14 +49,40 @@ export default defineConfig(() => {
       // 设置chunk大小警告限制
       chunkSizeWarningLimit: 5000,
       // 启用压缩，使用esbuild（默认）
-      minify: 'esbuild' as const
+      minify: 'esbuild' as const,
+      // 启用CSS代码分割
+      cssCodeSplit: true,
+      // 启用源映射（生产环境可禁用以减小包体积）
+      sourcemap: false,
+      // 启用rollup打包优化
+      rollupOptions: {
+        output: {
+          // 手动指定chunks，优化加载性能
+          manualChunks: {
+            // 将React相关库单独打包
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            // 将Ant Design单独打包
+            'antd-vendor': ['antd', '@ant-design/icons'],
+            // 将Milkdown编辑器相关打包
+            'milkdown-vendor': [
+              '@milkdown/core',
+              '@milkdown/preset-commonmark',
+              '@milkdown/preset-gfm',
+              '@milkdown/react',
+              '@milkdown/theme-nord'
+            ],
+            // 将i18n相关打包
+            'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector']
+          }
+        }
+      }
     },
     server: {
       port: 50111,
       host: '0.0.0.0',
       proxy: {
         '/todo-for-ai/api': {
-          target: 'http://localhost:50110',
+          target: 'http://localhost:50112',
           changeOrigin: true,
           secure: false,
         }

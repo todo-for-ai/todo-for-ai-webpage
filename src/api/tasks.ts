@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -28,6 +28,7 @@ export interface Task {
   status: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   due_date?: string
+  estimated_hours?: number
   completion_rate: number
   completed_at?: string
   tags: string[]
@@ -156,7 +157,9 @@ export class TasksApi {
 
   // 上传任务附件
   async uploadTaskAttachment(id: number, file: File, onProgress?: (progress: number) => void) {
-    return apiClient.upload<{ file_path: string; original_filename: string; file_size: number }>(`/tasks/${id}/attachments`, file, onProgress)
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.upload<{ file_path: string; original_filename: string; file_size: number }>(`/tasks/${id}/attachments`, formData)
   }
 
   // 删除任务附件

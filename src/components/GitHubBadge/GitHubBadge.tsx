@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button, Tooltip, Space } from 'antd'
 import { GithubOutlined, StarOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
 import { githubService, DEFAULT_REPO, type GitHubRepoInfo } from '../../services/githubService'
+import { useDebounce } from '../../hooks/useDebounce'
 import './GitHubBadge.css'
 
 interface GitHubBadgeProps {
@@ -43,25 +44,29 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
   const finalRepo = repo || (repositoryUrl ? parseRepoFromUrl(repositoryUrl)?.repo : DEFAULT_REPO.repo) || DEFAULT_REPO.repo
   const finalUrl = repositoryUrl || `https://github.com/${finalOwner}/${finalRepo}`
 
-  useEffect(() => {
-    if (showStars || showForks) {
-      const loadRepoInfo = async () => {
-        try {
-          setLoading(true)
-          setError(null)
-          const info = await githubService.getRepoInfo(finalOwner, finalRepo)
-          setRepoInfo(info)
-        } catch (err) {
-          console.error('Failed to load GitHub repo info:', err)
-          setError(err instanceof Error ? err.message : '获取仓库信息失败')
-        } finally {
-          setLoading(false)
-        }
-      }
+  // 使用useCallback缓存loadRepoInfo函数，避免重复创建
+  const loadRepoInfo = useCallback(async () => {
+    if (!(showStars || showForks)) return
 
-      loadRepoInfo()
+    try {
+      setLoading(true)
+      setError(null)
+      const info = await githubService.getRepoInfo(finalOwner, finalRepo)
+      setRepoInfo(info)
+    } catch (err) {
+      console.error('Failed to load GitHub repo info:', err)
+      setError(err instanceof Error ? err.message : '获取仓库信息失败')
+    } finally {
+      setLoading(false)
     }
   }, [finalOwner, finalRepo, showStars, showForks])
+
+  // 使用防抖优化，避免频繁调用
+  const debouncedLoadRepoInfo = useDebounce(loadRepoInfo, 500)
+
+  useEffect(() => {
+    debouncedLoadRepoInfo()
+  }, [debouncedLoadRepoInfo])
 
   const handleClick = () => {
     window.open(finalUrl, '_blank', 'noopener,noreferrer')
@@ -85,7 +90,9 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     }
   }
 
-  const tooltipTitle = tc('github.badgeTooltip')
+  const tooltipTitle = repoInfo
+    ? `${repoInfo.full_name}\n${repoInfo.description}\n⭐ ${repoInfo.stargazers_count} stars`
+    : `${finalOwner}/${finalRepo}\n${tc('github.starRepository')}`
 
   // 三角形样式（原有样式，保持向后兼容）
   if (variant === 'triangle') {
@@ -156,11 +163,12 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     return (
       <Space size="small" className="github-badge-content">
         <GithubOutlined className="github-badge-icon" />
-        {showStars && (
+        <span className="github-badge-text">GitHub</span>
+        {showStars && repoInfo && (
           <Space size={2} className="github-badge-stats">
             <StarOutlined className="github-badge-star-icon" />
             <span className="github-badge-star-count">
-              {repoInfo ? formatNumber(repoInfo.stargazers_count) : '0'}
+              {formatNumber(repoInfo.stargazers_count)}
             </span>
           </Space>
         )}
@@ -182,7 +190,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
         type="default"
         size={getButtonSize()}
         onClick={handleClick}
-        className={`github-badge github-badge-compact ${className || ''}`}
+        className={`github-badge ${className || ''}`}
         style={style}
         loading={loading}
       >

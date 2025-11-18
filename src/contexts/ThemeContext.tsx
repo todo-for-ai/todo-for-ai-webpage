@@ -72,56 +72,56 @@ export const useThemeStyles = () => {
   const styles = {
     // 编辑器容器样式
     editorContainer: {
-      backgroundColor: currentTheme.colors.editorBackground,
-      border: `${currentTheme.borders.borderWidth} solid ${currentTheme.colors.editorBorder}`,
-      borderRadius: currentTheme.borders.borderRadius,
-      boxShadow: currentTheme.shadows.editorShadow,
-      fontFamily: currentTheme.fonts.fontFamily,
-      fontSize: currentTheme.fonts.fontSize,
-      lineHeight: currentTheme.fonts.lineHeight,
+      backgroundColor: currentTheme.colors.editorBackground || currentTheme.colors.background,
+      border: `${currentTheme.borders?.width || '1px'} solid ${currentTheme.colors.editorBorder || currentTheme.colors.border}`,
+      borderRadius: currentTheme.effects?.borderRadius?.base || '4px',
+      boxShadow: currentTheme.shadows?.level1,
+      fontFamily: currentTheme.fonts?.body || currentTheme.typography?.fontFamily?.base,
+      fontSize: currentTheme.typography?.fontSize?.base || '14px',
+      lineHeight: currentTheme.typography?.lineHeight?.normal || 1.5,
       color: currentTheme.colors.textPrimary,
-      transition: `all ${currentTheme.animations.transitionDuration} ${currentTheme.animations.easing}`
+      transition: `all 0.3s ease`
     },
-    
+
     // 编辑器聚焦样式
     editorFocused: {
-      backgroundColor: currentTheme.colors.editorFocusBackground,
-      borderColor: currentTheme.colors.editorFocusBorder,
-      boxShadow: currentTheme.shadows.editorFocusShadow
+      backgroundColor: currentTheme.colors.focus || currentTheme.colors.hover,
+      borderColor: currentTheme.colors.focus || currentTheme.colors.primary,
+      boxShadow: currentTheme.shadows?.level2
     },
-    
+
     // 代码块样式
     codeBlock: {
-      background: currentTheme.colors.codeBlockBackground,
-      border: `${currentTheme.borders.borderWidth} solid ${currentTheme.colors.codeBlockBorder}`,
-      borderRadius: currentTheme.borders.codeBlockRadius,
-      boxShadow: currentTheme.shadows.codeBlockShadow,
-      fontFamily: currentTheme.fonts.codeFontFamily,
-      fontSize: currentTheme.fonts.codeSize,
-      padding: currentTheme.spacing.codeBlockPadding,
-      margin: currentTheme.spacing.codeBlockMargin
+      background: currentTheme.colors.surface || currentTheme.colors.background,
+      border: `${currentTheme.borders?.width || '1px'} solid ${currentTheme.colors.border}`,
+      borderRadius: currentTheme.effects?.borderRadius?.md || '6px',
+      boxShadow: currentTheme.shadows?.level1,
+      fontFamily: currentTheme.fonts?.monospace || currentTheme.typography?.fontFamily?.mono,
+      fontSize: currentTheme.typography?.fontSize?.sm || '13px',
+      padding: '12px',
+      margin: '8px 0'
     },
-    
+
     // 引用块样式
     blockquote: {
-      background: currentTheme.colors.blockquoteBackground,
-      borderLeft: `5px solid ${currentTheme.colors.blockquoteBorder}`,
-      borderRadius: currentTheme.borders.blockquoteRadius,
-      color: currentTheme.colors.blockquoteText,
-      padding: currentTheme.spacing.blockquotePadding,
-      margin: currentTheme.spacing.blockquoteMargin
+      background: currentTheme.colors.surface || currentTheme.colors.background,
+      borderLeft: `5px solid ${currentTheme.colors.secondary || currentTheme.colors.primary}`,
+      borderRadius: currentTheme.effects?.borderRadius?.base || '4px',
+      color: currentTheme.colors.textSecondary || currentTheme.colors.textPrimary,
+      padding: '12px',
+      margin: '8px 0'
     },
-    
+
     // 链接样式
     link: {
-      color: currentTheme.colors.linkColor,
+      color: currentTheme.colors.primary,
       textDecoration: 'none',
-      transition: `color ${currentTheme.animations.transitionDuration} ${currentTheme.animations.easing}`
+      transition: `color 0.3s ease`
     },
-    
+
     // 链接悬停样式
     linkHover: {
-      color: currentTheme.colors.linkHoverColor
+      color: currentTheme.colors.secondary || currentTheme.colors.primary
     }
   }
   

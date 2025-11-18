@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Card, Button, Typography, Space, Divider, Alert } from 'antd'
-import { GithubOutlined, GoogleOutlined } from '@ant-design/icons'
+import { GithubOutlined, GoogleOutlined, UserOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import LanguageSwitch from '../components/LanguageSwitch'
@@ -14,7 +14,7 @@ import './Login.css'
 const { Title, Paragraph } = Typography
 
 const Login: React.FC = () => {
-  const { loginWithGitHub, loginWithGoogle, isLoading, error, isAuthenticated } = useAuthStore()
+  const { loginWithGitHub, loginWithGoogle, loginWithGuest, isLoading, error, isAuthenticated } = useAuthStore()
   const { t } = useTranslation('login')
 
   useEffect(() => {
@@ -44,24 +44,17 @@ const Login: React.FC = () => {
     loginWithGoogle('/todo-for-ai/pages')
   }
 
+  const handleGuestLogin = () => {
+    analytics.auth.login('guest')
+    loginWithGuest('/todo-for-ai/pages')
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div className="login-container" style={{ flex: 1 }}>
-        {/* 语言切换按钮和GitHub徽标 */}
-        <div className="login-header-controls">
-          <div className="login-language-switch">
-            <LanguageSwitch size="small" />
-          </div>
-          <div className="login-github-badge">
-            <GitHubBadge
-              variant="button"
-              size="small"
-              showStars={true}
-              showForks={false}
-              owner="todo-for-ai"
-              repo="todo-for-ai"
-            />
-          </div>
+        {/* 语言切换按钮 */}
+        <div className="login-language-switch">
+          <LanguageSwitch size="small" />
         </div>
 
         <Card
@@ -82,6 +75,18 @@ const Login: React.FC = () => {
                 {t('learnMore.link')}
               </a>
             </Paragraph>
+
+            {/* GitHub徽标 */}
+            <div className="login-github-badge">
+              <GitHubBadge
+                variant="button"
+                size="middle"
+                showStars={true}
+                showForks={false}
+                owner="todo-for-ai"
+                repo="todo-for-ai"
+              />
+            </div>
           </div>
 
           {error && (
@@ -121,6 +126,16 @@ const Login: React.FC = () => {
                 >
                   {t('loginWithGmail')}
                 </Button>
+
+                <Button
+                  size="large"
+                  icon={<UserOutlined />}
+                  loading={isLoading}
+                  onClick={handleGuestLogin}
+                  className="login-button-guest"
+                >
+                  游客模式登录
+                </Button>
               </Space>
             </div>
 
@@ -137,6 +152,10 @@ const Login: React.FC = () => {
                 <div className="login-method-icon">
                   <GoogleOutlined className="login-method-icon-google" />
                   <div className="login-method-label">Gmail</div>
+                </div>
+                <div className="login-method-icon">
+                  <UserOutlined className="login-method-icon-guest" />
+                  <div className="login-method-label">Guest</div>
                 </div>
               </Space>
             </div>

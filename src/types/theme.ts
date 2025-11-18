@@ -1,243 +1,213 @@
 /**
- * Markdown编辑器主题系统类型定义
+ * 主题相关类型定义
  */
 
-// 颜色配置
-export interface ThemeColors {
-  // 基础颜色
-  primary: string
-  secondary: string
-  background: string
-  surface: string
-  
-  // 文本颜色
-  textPrimary: string
-  textSecondary: string
-  textMuted: string
-  
-  // 边框和分割线
-  border: string
-  divider: string
-  
-  // 状态颜色
-  success: string
-  warning: string
-  error: string
-  info: string
-  
-  // 编辑器特定颜色
-  editorBackground: string
-  editorFocusBackground: string
-  editorBorder: string
-  editorFocusBorder: string
-  
-  // 代码相关颜色
-  codeBackground: string
-  codeText: string
-  codeBlockBackground: string
-  codeBlockBorder: string
-  
-  // 引用块颜色
-  blockquoteBackground: string
-  blockquoteBorder: string
-  blockquoteText: string
-  
-  // 链接颜色
-  linkColor: string
-  linkHoverColor: string
-  
-  // 选中文本颜色
-  selectionBackground: string
-  
-  // 光标颜色
-  caretColor: string
-}
-
-// 字体配置
-export interface ThemeFonts {
-  // 字体族
-  fontFamily: string
-  codeFontFamily: string
-  
-  // 字体大小
-  fontSize: string
-  codeSize: string
-  h1Size: string
-  h2Size: string
-  h3Size: string
-  h4Size: string
-  h5Size: string
-  h6Size: string
-  
-  // 字体权重
-  fontWeight: string
-  boldWeight: string
-  headingWeight: string
-  
-  // 行高
-  lineHeight: string
-  headingLineHeight: string
-  
-  // 字母间距
-  letterSpacing: string
-  headingLetterSpacing: string
-}
-
-// 间距配置
-export interface ThemeSpacing {
-  // 基础间距单位
-  unit: string
-  
-  // 编辑器内边距
-  editorPadding: string
-  
-  // 段落间距
-  paragraphMargin: string
-  
-  // 标题间距
-  headingMarginTop: string
-  headingMarginBottom: string
-  
-  // 列表间距
-  listMargin: string
-  listItemMargin: string
-  
-  // 代码块间距
-  codeBlockMargin: string
-  codeBlockPadding: string
-  
-  // 引用块间距
-  blockquoteMargin: string
-  blockquotePadding: string
-  
-  // 表格间距
-  tableMargin: string
-  tableCellPadding: string
-}
-
-// 边框和圆角配置
-export interface ThemeBorders {
-  // 边框宽度
-  borderWidth: string
-  focusBorderWidth: string
-  
-  // 圆角半径
-  borderRadius: string
-  smallRadius: string
-  largeRadius: string
-  
-  // 代码块圆角
-  codeBlockRadius: string
-  
-  // 引用块圆角
-  blockquoteRadius: string
-}
-
-// 阴影配置
-export interface ThemeShadows {
-  // 基础阴影
-  small: string
-  medium: string
-  large: string
-  
-  // 编辑器阴影
-  editorShadow: string
-  editorHoverShadow: string
-  editorFocusShadow: string
-  
-  // 代码块阴影
-  codeBlockShadow: string
-}
-
-// 动画配置
-export interface ThemeAnimations {
-  // 过渡时间
-  transitionDuration: string
-  fastTransition: string
-  slowTransition: string
-  
-  // 缓动函数
-  easing: string
-  
-  // 特殊动画
-  typingGlow: string
-  hoverTransform: string
-}
-
-// 完整主题配置
+// 基础主题接口
 export interface Theme {
   id: string
   name: string
   description: string
   isDark: boolean
   colors: ThemeColors
-  fonts: ThemeFonts
-  spacing: ThemeSpacing
-  borders: ThemeBorders
-  shadows: ThemeShadows
-  animations: ThemeAnimations
-  // 新增字段
-  category?: ThemeCategory
-  tags?: ThemeTag[]
-  version?: string
-  author?: string
-  preview?: string // 预览图片URL
-  customCSS?: string // 自定义CSS
-  requiredAssets?: string[] // 需要的资源文件
+  typography?: ThemeTypography
+  effects?: ThemeEffects
+  tags?: string[]
+  category?: string
+  borders?: {
+    width?: string
+    style?: string
+    color?: string
+    borderWidth?: string
+    blockquoteRadius?: string
+    codeBlockRadius?: string
+    [key: string]: string | undefined
+  }
+  shadows?: {
+    level1?: string
+    level2?: string
+    level3?: string
+    small?: string
+    editorShadow?: string
+    editorFocusShadow?: string
+    codeBlockShadow?: string
+    [key: string]: string | undefined
+  }
+  fonts?: {
+    body?: string
+    heading?: string
+    monospace?: string
+    fontFamily?: string
+    codeFontFamily?: string
+    fontSize?: string
+    codeSize?: string
+    h1Size?: string
+    h2Size?: string
+    h3Size?: string
+    h4Size?: string
+    h5Size?: string
+    h6Size?: string
+    fontWeight?: string
+    boldWeight?: string
+    headingWeight?: string
+    lineHeight?: string
+    headingLineHeight?: string
+    letterSpacing?: string
+    headingLetterSpacing?: string
+    [key: string]: string | undefined
+  }
+  spacing?: {
+    [key: string]: string
+  }
+  animations?: {
+    [key: string]: string
+  }
 }
 
-// 打字机主题配置 (扩展Theme接口)
+// 主题颜色配置
+export interface ThemeColors {
+  // 主要颜色
+  primary: string
+  secondary: string
+
+  // 背景色
+  background: string
+  surface: string
+  overlay?: string
+  editorBackground?: string
+  editorBorder?: string
+  editorFocusBackground?: string
+  editorFocusBorder?: string
+
+  // 文本色
+  textPrimary: string
+  textSecondary: string
+  textMuted?: string
+
+  // 边框和分割线
+  border: string
+  divider?: string
+
+  // 状态色
+  success: string
+  warning: string
+  error: string
+  info?: string
+
+  // 特殊元素
+  highlight?: string
+  selection?: string
+
+  // 交互状态
+  hover?: string
+  active?: string
+  focus?: string
+
+  // 代码相关
+  codeBackground?: string
+  codeText?: string
+  codeBlockBackground?: string
+  codeBlockBorder?: string
+
+  // 引用块相关
+  blockquoteBackground?: string
+  blockquoteBorder?: string
+  blockquoteText?: string
+
+  // 链接相关
+  linkColor?: string
+  linkHoverColor?: string
+
+  // 选择和插入符
+  selectionBackground?: string
+  caretColor?: string
+
+  // 允许其他自定义属性
+  [key: string]: string | undefined
+}
+
+// 主题字体配置
+export interface ThemeTypography {
+  fontFamily?: {
+    base?: string
+    mono?: string
+    display?: string
+  }
+  fontSize?: {
+    xs?: string
+    sm?: string
+    base?: string
+    lg?: string
+    xl?: string
+    '2xl'?: string
+    '3xl'?: string
+  }
+  fontWeight?: {
+    normal?: number
+    medium?: number
+    semibold?: number
+    bold?: number
+  }
+  lineHeight?: {
+    tight?: number
+    normal?: number
+    relaxed?: number
+  }
+}
+
+// 主题特效配置
+export interface ThemeEffects {
+  shadow?: {
+    sm?: string
+    base?: string
+    md?: string
+    lg?: string
+    xl?: string
+  }
+  borderRadius?: {
+    sm?: string
+    base?: string
+    md?: string
+    lg?: string
+    full?: string
+  }
+  animation?: {
+    duration?: {
+      fast?: string
+      normal?: string
+      slow?: string
+    }
+    easing?: string
+  }
+}
+
+// 打字机主题
 export interface TypewriterTheme extends Theme {
-  category: 'typewriter'
-  typewriterEffects: TypewriterEffects
+  typewriter?: {
+    fontFamily: string
+    fontSize: number
+    lineHeight: number
+    letterSpacing: number
+    cursorColor: string
+    caretColor?: string
+    backgroundColor: string
+    textColor: string
+    effects?: {
+      caretBlink?: boolean
+      textReveal?: boolean
+      noise?: boolean
+      paperTexture?: boolean
+    }
+  }
+  typewriterEffects?: {
+    [key: string]: any
+  }
 }
 
-// 主题上下文类型 (扩展)
-export interface ThemeContextType {
-  currentTheme: Theme
-  availableThemes: Theme[]
-  setTheme: (themeId: string) => void
-  isDarkMode: boolean
-  toggleDarkMode: () => void
-  // 新增方法
-  getThemesByCategory: (category: ThemeCategory) => Theme[]
-  getThemesByTag: (tag: ThemeTag) => Theme[]
-  registerTheme: (theme: Theme) => void
-  unregisterTheme: (themeId: string) => void
-  isTypewriterTheme: (theme: Theme) => theme is TypewriterTheme
-}
+// 主题类别
+export type ThemeCategory = 'modern' | 'classic' | 'minimal' | 'vintage' | 'colorful' | 'dark' | 'light' | 'typewriter' | 'handwriting'
 
-// 主题配置选项
-export interface ThemeOptions {
-  // 是否启用主题持久化
-  enablePersistence?: boolean
-  
-  // 默认主题ID
-  defaultThemeId?: string
-  
-  // 是否跟随系统深色模式
-  followSystemDarkMode?: boolean
-  
-  // 自定义主题存储键
-  storageKey?: string
-}
-
-// 主题变更事件 (扩展)
-export interface ThemeChangeEvent {
-  previousTheme: Theme
-  currentTheme: Theme
-  timestamp: number
-  reason: 'user' | 'system' | 'auto' | 'time-based'
-  metadata?: Record<string, any>
-}
-
-// 主题注册配置
-export interface ThemeRegistration {
-  theme: Theme
-  assets?: string[]
-  dependencies?: string[]
-  loadPriority?: 'high' | 'normal' | 'low'
-}
+// 主题标签
+export type ThemeTag = 'typewriter' | 'handwriting' | 'minimal' | 'dark' | 'colorful' | 'professional' | 'casual'
 
 // 主题过滤器
 export interface ThemeFilter {
@@ -247,9 +217,24 @@ export interface ThemeFilter {
   search?: string
 }
 
-// 主题排序选项
-export type ThemeSortBy = 'name' | 'category' | 'created' | 'popularity'
-export type ThemeSortOrder = 'asc' | 'desc'
+// 主题注册信息
+export interface ThemeRegistration {
+  theme: Theme
+  assets?: ThemeAssets
+  metadata?: {
+    author?: string
+    version?: string
+    license?: string
+    homepage?: string
+  }
+}
+
+// 主题资源
+export interface ThemeAssets {
+  fonts?: string[]
+  images?: string[]
+  sounds?: string[]
+}
 
 // 主题管理器配置
 export interface ThemeManagerConfig {
@@ -261,71 +246,35 @@ export interface ThemeManagerConfig {
   maxCachedThemes: number
 }
 
-// 主题分类类型
-export type ThemeCategory = 'modern' | 'typewriter' | 'vintage' | 'minimal' | 'code' | 'dynamic'
-
-// 主题标签类型
-export type ThemeTag = 'focus' | 'dark' | 'retro' | 'animation' | 'immersive' | 'code-friendly' | 'zen'
-
-// 打字机效果配置
-export interface TypewriterEffects {
-  // 焦点行效果
-  focusLine: {
-    enabled: boolean
-    highlightColor: string
-    fadeDistance: number
-    centerOnFocus: boolean
-    gradientIntensity: number
-    markerColor?: string
-    markerWidth?: string
-  }
-
-  // 渐变淡化效果
-  fadeEffect: {
-    enabled: boolean
-    fadeOpacity: number
-    fadeDistance: string
-    animationDuration: string
-    easing: string
-  }
-
-  // 特殊视觉效果
-  visualEffects: {
-    scanLines: boolean
-    scanLineOpacity?: number
-    scanLineSpeed?: string
-    paperTexture: string | null
-    glowEffect: boolean
-    glowColor?: string
-    glowIntensity?: number
-    breathingCursor: boolean
-    breathingDuration?: string
-    pageFlipAnimation: boolean
-    noiseTexture: boolean
-  }
-
-  // 动态效果
-  dynamicEffects: {
-    colorTemperature: boolean
-    temperatureRange?: [number, number] // [min, max] in Kelvin
-    autoAdjustBrightness: boolean
-    brightnessRange?: [number, number] // [min, max] 0-1
-    timeBasedTheme: boolean
-    smartFocus: boolean
-    paragraphExpansion: boolean
-  }
-
-  // 音效支持
-  audioEffects: {
-    enabled: boolean
-    typingSound: string | null
-    volume: number
-    soundSet: 'mechanical' | 'vintage' | 'modern' | 'silent'
-  }
+// 主题变更事件
+export interface ThemeChangeEvent {
+  previousTheme: Theme | null
+  currentTheme: Theme
+  timestamp: number
+  reason: 'init' | 'user' | 'system' | 'auto'
 }
 
-// 主题预设类型 (扩展)
-export type ThemePreset = 'default' | 'dark' | 'minimal' | 'comfort' | 'high-contrast' | 'vintage' |
-  'typewriter-classic' | 'typewriter-dark' | 'typewriter-zen' | 'typewriter-code' | 'typewriter-vintage' | 'typewriter-dynamic'
+// Theme上下文类型
+export interface ThemeContextType {
+  currentTheme: Theme | null
+  availableThemes: Theme[]
+  setTheme: (themeId: string) => Promise<boolean>
+  isDarkMode: boolean
+  toggleDarkMode: () => void
+  getThemesByCategory: (category: ThemeCategory) => Theme[]
+  getThemesByTag: (tag: ThemeTag) => Theme[]
+  registerTheme: (registration: ThemeRegistration) => void
+  unregisterTheme: (themeId: string) => boolean
+  isTypewriterTheme: (themeId: string) => boolean
+}
 
-// 所有类型已在上面单独导出，这里不需要重复导出
+// Theme选项类型
+export type ThemeOptions = {
+  enablePersistence?: boolean
+  defaultThemeId?: string
+  followSystemDarkMode?: boolean
+  storageKey?: string
+}
+
+// Theme变更监听器类型
+export type ThemeChangeListener = (event: ThemeChangeEvent) => void

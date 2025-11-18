@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { App as AntdApp } from 'antd'
 import { AppLayout } from './components/Layout'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -33,20 +33,29 @@ import TestTelegramGroup from './pages/TestTelegramGroup'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
+  const [serviceStarted, setServiceStarted] = useState(false)
 
   // 初始化token刷新服务
   useEffect(() => {
-    if (isAuthenticated) {
+    // 使用token刷新服务自身状态，而不是本地状态
+    const serviceStatus = tokenRefreshService.getStatus()
+
+    if (isAuthenticated && !serviceStatus.isRunning) {
       console.log('[App] 启动token刷新服务')
       tokenRefreshService.start()
-    } else {
+      setServiceStarted(true)
+    } else if (!isAuthenticated && serviceStatus.isRunning) {
       console.log('[App] 停止token刷新服务')
       tokenRefreshService.stop()
+      setServiceStarted(false)
     }
 
-    // 清理函数
+    // 清理函数 - 只在组件卸载时执行
     return () => {
-      tokenRefreshService.stop()
+      const currentStatus = tokenRefreshService.getStatus()
+      if (currentStatus.isRunning) {
+        tokenRefreshService.stop()
+      }
     }
   }, [isAuthenticated])
 

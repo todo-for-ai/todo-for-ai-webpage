@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 import type { User } from '../stores/useAuthStore'
 import { getApiBaseUrl } from '../utils/apiConfig'
 
