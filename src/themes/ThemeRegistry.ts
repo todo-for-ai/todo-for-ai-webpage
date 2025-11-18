@@ -4,7 +4,7 @@ export class ThemeRegistry {
     // 占位
   }
   
-  register(theme: any) {
+  register(id: string, theme: any) {
     // 占位
   }
   

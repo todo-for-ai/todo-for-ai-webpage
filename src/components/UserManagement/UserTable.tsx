@@ -156,11 +156,7 @@ export const UserTable: React.FC<UserTableProps> = ({
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: (total, range) =>
-            tp('table.pagination.total', {
-              start: range[0],
-              end: range[1],
-              total
-            }),
+            `${range[0]}-${range[1]} / ${total}`,
           onChange
         }}
         scroll={{ x: 1000 }}

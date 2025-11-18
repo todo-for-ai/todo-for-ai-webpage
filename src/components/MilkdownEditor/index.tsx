@@ -208,7 +208,7 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
       containerRef.current.classList.add(`theme-${currentTheme.id}`)
 
       // 如果是打字机主题，初始化特效
-      if (isTypewriterTheme(currentTheme)) {
+      if (isTypewriterTheme(currentTheme.id)) {
         const effectsManager = initTypewriterEffects(containerRef.current, currentTheme)
 
         return () => {

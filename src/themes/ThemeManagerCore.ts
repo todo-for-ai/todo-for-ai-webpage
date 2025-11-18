@@ -12,11 +12,11 @@ export class ThemeManagerCore {
     // 占位
   }
   
-  loadTheme() {
-    return null
+  loadTheme(id?: string, registry?: any): Promise<any> {
+    return Promise.resolve(null)
   }
   
-  applyTheme(theme: any) {
+  applyTheme(theme: any, listeners?: any) {
     // 占位
   }
 }

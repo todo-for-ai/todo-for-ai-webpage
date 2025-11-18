@@ -43,7 +43,7 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
         <Card title={tp('info.title')}>
           <Descriptions column={1} size="small">
             <Descriptions.Item label={tp('info.taskId')}>
-              <TaskIdBadge id={task.id} />
+              <span>#{task.id}</span>
             </Descriptions.Item>
             <Descriptions.Item label={tp('info.project')}>
               {task.project_id}

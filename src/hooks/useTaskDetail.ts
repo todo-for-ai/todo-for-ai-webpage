@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate, App } from 'antd'
+import { useParams, useNavigate } from 'react-router-dom'
+import { App } from 'antd'
 import dayjs from 'dayjs'
 import { useTaskStore, useProjectStore } from '../stores'
 import type { Task } from '../api/tasks'
