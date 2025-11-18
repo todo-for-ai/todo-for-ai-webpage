@@ -7,6 +7,14 @@ export class ThemePersistence {
   loadTheme() {
     return null
   }
+  
+  persist(themeId: string) {
+    // 占位
+  }
+  
+  load() {
+    return null
+  }
 }
 
 export default ThemePersistence

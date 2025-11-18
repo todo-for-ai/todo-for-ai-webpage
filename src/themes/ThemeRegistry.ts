@@ -4,6 +4,10 @@ export class ThemeRegistry {
     // 占位
   }
   
+  register(theme: any) {
+    // 占位
+  }
+  
   getTheme(id: string) {
     return null
   }
