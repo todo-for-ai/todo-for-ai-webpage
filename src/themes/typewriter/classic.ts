@@ -16,8 +16,6 @@ export const classicTypewriterTheme: TypewriterTheme = {
   isDark: false,
   category: 'typewriter',
   tags: ['focus', 'retro', 'immersive'],
-  version: '1.0.0',
-  author: 'Milkdown Theme Team',
   colors: {
     primary: '#d2691e', // 橙棕色
     secondary: '#8b4513', // 深棕色
@@ -147,78 +145,6 @@ export const classicTypewriterTheme: TypewriterTheme = {
       volume: 0.3,
       soundSet: 'vintage'
     }
-  },
-  customCSS: `
-    .theme-typewriter-classic {
-      background-image: var(--typewriter-paper-texture, none);
-      background-repeat: repeat;
-      background-size: 200px 200px;
-    }
-    .theme-typewriter-classic .milkdown-editor-content {
-      position: relative;
-    }
-    .theme-typewriter-classic .milkdown-editor-content .ProseMirror-focused .focus-line {
-      background: var(--typewriter-focus-color);
-      border-left: var(--typewriter-focus-marker-width) solid var(--typewriter-focus-marker-color);
-      box-shadow: 0 0 10px rgba(210, 105, 30, 0.2);
-      position: relative;
-      z-index: 1;
-    }
-    .theme-typewriter-classic .milkdown-editor-content .fade-content {
-      opacity: var(--typewriter-fade-opacity);
-      transition: opacity var(--typewriter-fade-duration) var(--typewriter-fade-easing);
-    }
-    .theme-typewriter-classic .ProseMirror-focused .ProseMirror-cursor {
-      animation: cursor-breathing var(--typewriter-breathing-duration) ease-in-out infinite;
-    }
-    @keyframes cursor-breathing {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-    .theme-typewriter-classic .milkdown-editor-content {
-      max-width: 800px;
-      margin: 0 auto;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      border: 1px solid #d3d3d3;
-    }
-    .theme-typewriter-classic .milkdown-editor-content p {
-      text-indent: 2em; /* 段落首行缩进 */
-      margin: 1.2em 0;
-    }
-    .theme-typewriter-classic .milkdown-editor-content h1,
-    .theme-typewriter-classic .milkdown-editor-content h2,
-    .theme-typewriter-classic .milkdown-editor-content h3 {
-      text-align: center;
-      border-bottom: 2px solid var(--theme-color-primary);
-      padding-bottom: 0.5em;
-      margin-bottom: 1em;
-    }
-    .theme-typewriter-classic .milkdown-editor-content blockquote {
-      font-style: italic;
-      position: relative;
-    }
-    .theme-typewriter-classic .milkdown-editor-content blockquote::before {
-      content: '"';
-      font-size: 3em;
-      color: var(--theme-color-primary);
-      position: absolute;
-      left: -0.5em;
-      top: -0.2em;
-    }
-    .theme-typewriter-classic .milkdown-editor-content pre {
-      background: var(--theme-color-code-block-background);
-      border: 1px solid var(--theme-color-code-block-border);
-      position: relative;
-    }
-    .theme-typewriter-classic .milkdown-editor-content pre::before {
-      content: '> ';
-      color: var(--theme-color-primary);
-      font-weight: bold;
-    }
-  `,
-  requiredAssets: [
-    '/assets/textures/paper-texture.png',
-    '/assets/sounds/typewriter-classic.mp3'
-  ]
+  }
 }
 export default classicTypewriterTheme

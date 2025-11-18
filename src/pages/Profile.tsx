@@ -20,7 +20,7 @@ import {
   SaveOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../stores/useAuthStore'
-import { APITokenManager } from '../components/APITokenManager'
+import APITokenManager from '../components/APITokenManager'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useSearchParams } from 'react-router-dom'
 

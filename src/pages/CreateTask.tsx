@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react'
-import { Form, Input, DatePicker, Select, Button, Space, Card, Row, Col, Checkbox, Breadcrumb, message } from 'antd'
+import { Form, Input, DatePicker, Select, Button, Space, Card, Row, Col, Checkbox, Breadcrumb, message, Typography } from 'antd'
 import { SaveOutlined, ArrowLeftOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
 import { TaskEditStatus } from '../components/TaskEditStatus'
@@ -12,6 +13,7 @@ const { Option } = Select
 
 const CreateTask: React.FC = () => {
   const { t, tp } = usePageTranslation('createTask')
+  const navigate = useNavigate()
   const hook = useCreateTask(tp)
 
   const {
@@ -113,7 +115,7 @@ const CreateTask: React.FC = () => {
               <Row gutter={16}>
                 <Col span={8}>
                   <Form.Item label={tp('form.project.label')} name="project_id" rules={[{ required: true, message: tp('form.project.required') }]}>
-                    <ProjectSelector placeholder={tp('form.project.placeholder')} showSearch allowClear={false} simpleMode />
+                    <Select placeholder={tp('form.project.placeholder')} showSearch allowClear={false} />
                   </Form.Item>
                 </Col>
                 <Col span={10}>
