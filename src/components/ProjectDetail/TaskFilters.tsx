@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Row, Col, Select, Search, Button, Space } from 'antd'
+import { Card, Row, Col, Select, Button, Space } from 'antd'
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useTaskFilters } from '../../hooks/useTaskFilters'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
