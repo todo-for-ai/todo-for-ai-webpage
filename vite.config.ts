@@ -77,12 +77,15 @@ export default defineConfig(() => {
         }
       }
     },
+    optimizeDeps: {
+      include: ['antd'],
+    },
     server: {
       port: 50111,
       host: '0.0.0.0',
       proxy: {
         '/todo-for-ai/api': {
-          target: 'http://localhost:50112',
+          target: 'http://localhost:50110',
           changeOrigin: true,
           secure: false,
         }

@@ -5,7 +5,7 @@ import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useProjectStore } from '../stores'
 import type { Project } from '../api/projects'
 
-const { Search } = Input
+const Search = Input.Search
 
 const Projects: React.FC = () => {
   const navigate = useNavigate()

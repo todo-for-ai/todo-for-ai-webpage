@@ -3,7 +3,7 @@ import { Card, Row, Col, Input, Select, Button } from 'antd'
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { UserListParams } from '../../api/auth'
 
-const { Search } = Input
+const Search = Input.Search
 const { Option } = Select
 
 interface UserFiltersProps {
