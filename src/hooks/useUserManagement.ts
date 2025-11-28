@@ -34,19 +34,30 @@ interface UserManagementReturn {
   }>>
 }
 
+const USER_MANAGEMENT_PAGE_SIZE_KEY = 'userManagement.pageSize'
+
 export const useUserManagement = (): UserManagementReturn => {
   const { t } = useTranslation('userManagement')
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
+  
+  // 从LocalStorage读取上次选择的页码大小
+  const getSavedPageSize = () => {
+    const saved = localStorage.getItem(USER_MANAGEMENT_PAGE_SIZE_KEY)
+    return saved ? parseInt(saved, 10) : 20
+  }
+  
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 20,
+    pageSize: getSavedPageSize(),
     total: 0
   })
   const [filters, setFilters] = useState<UserListParams>({
     search: '',
     status: undefined,
-    role: undefined
+    role: undefined,
+    sort_by: 'created_at',
+    sort_order: 'desc'
   })
   const [stats, setStats] = useState<UserStats>({
     total: 0,
@@ -56,6 +67,11 @@ export const useUserManagement = (): UserManagementReturn => {
   })
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const isInitialLoad = useRef(true)
+  
+  // 保存pageSize到LocalStorage
+  useEffect(() => {
+    localStorage.setItem(USER_MANAGEMENT_PAGE_SIZE_KEY, String(pagination.pageSize))
+  }, [pagination.pageSize])
 
   useEffect(() => {
     const currentUser = useAuthStore.getState().user

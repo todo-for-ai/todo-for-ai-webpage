@@ -35,6 +35,8 @@ export interface UserListParams {
   search?: string
   status?: string
   role?: string
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
 }
 
 export interface UpdateUserStatusRequest {
