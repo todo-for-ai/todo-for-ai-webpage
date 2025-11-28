@@ -177,7 +177,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
           <span className="github-badge-text">GitHub</span>
           {showStars && (
             <span className="github-badge-error" style={{ fontSize: '12px', color: '#ff4d4f' }}>
-              (获取失败)
+              {tc('github.fetchFailed')}
             </span>
           )}
         </Space>

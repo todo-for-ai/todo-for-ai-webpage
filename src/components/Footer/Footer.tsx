@@ -89,6 +89,16 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
             >
               CC11001100
             </a>
+            {' & '}
+            <a
+              href="https://github.com/songzhibin97"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-author-link"
+              title="Visit songzhibin97's GitHub Profile"
+            >
+              songzhibin97
+            </a>
             {' '}With ❤️
           </span>
         </div>
