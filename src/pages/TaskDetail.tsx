@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { App } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTaskDetail } from '../hooks/useTaskDetail'
@@ -25,6 +25,27 @@ const TaskDetail: React.FC = () => {
     handlePreviousTask,
     handleNextTask,
   } = useTaskDetail(tp)
+
+  const handleCreateTask = useCallback(() => {
+    if (task?.project_id) {
+      navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}`)
+    } else {
+      navigate('/todo-for-ai/pages/tasks/create')
+    }
+  }, [task, navigate])
+
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Ctrl+N or Cmd+N - 新建任务
+    if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+      event.preventDefault()
+      handleCreateTask()
+    }
+  }, [handleCreateTask])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
   if (loading) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>{tp('loading')}</div>
