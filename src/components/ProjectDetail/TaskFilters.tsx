@@ -1,5 +1,5 @@
-import React from 'react'
-import { Card, Row, Col, Select, Button, Space } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { Card, Row, Col, Select, Button, Space, Checkbox, InputNumber } from 'antd'
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useTaskFilters } from '../../hooks/useTaskFilters'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
@@ -11,9 +11,54 @@ interface TaskFiltersProps {
   loading?: boolean
 }
 
+const AUTO_REFRESH_ENABLED_KEY = 'taskList.autoRefresh.enabled'
+const AUTO_REFRESH_INTERVAL_KEY = 'taskList.autoRefresh.interval'
+
 export const TaskFilters: React.FC<TaskFiltersProps> = ({ onRefresh, loading }) => {
   const { tp } = usePageTranslation('projectDetail')
   const { taskFilters, handleFilterChange } = useTaskFilters()
+  
+  // 从LocalStorage读取自动刷新设置
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem(AUTO_REFRESH_ENABLED_KEY)
+    return saved === 'true'
+  })
+  
+  const [refreshInterval, setRefreshInterval] = useState<number>(() => {
+    const saved = localStorage.getItem(AUTO_REFRESH_INTERVAL_KEY)
+    return saved ? parseInt(saved, 10) : 5
+  })
+  
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 自动刷新逻辑
+  useEffect(() => {
+    if (autoRefreshEnabled && refreshInterval > 0) {
+      timerRef.current = setInterval(() => {
+        onRefresh()
+      }, refreshInterval * 1000)
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [autoRefreshEnabled, refreshInterval, onRefresh])
+
+  // 保存自动刷新开关到LocalStorage
+  const handleAutoRefreshChange = (checked: boolean) => {
+    setAutoRefreshEnabled(checked)
+    localStorage.setItem(AUTO_REFRESH_ENABLED_KEY, String(checked))
+  }
+
+  // 保存刷新间隔到LocalStorage
+  const handleIntervalChange = (value: number | null) => {
+    const interval = value || 5
+    setRefreshInterval(interval)
+    localStorage.setItem(AUTO_REFRESH_INTERVAL_KEY, String(interval))
+  }
 
   return (
     <Card style={{ marginBottom: 6, backgroundColor: '#fafafa' }} bodyStyle={{ padding: '6px 12px' }}>
@@ -43,17 +88,41 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({ onRefresh, loading }) 
             <Option value="cancelled">{tp('tasks.filters.status.cancelled')}</Option>
           </Select>
         </Col>
-        <Col span={21}>
-          <Button
-            type="link"
-            size="small"
-            icon={<ReloadOutlined style={{ fontSize: '12px' }} />}
-            onClick={onRefresh}
-            loading={loading}
-            style={{ fontSize: '11px', height: '22px', padding: '0 4px' }}
-          >
-            {tp('buttons.refreshTasks')}
-          </Button>
+        <Col span={17}>
+          <Space size={8}>
+            <Button
+              type="link"
+              size="small"
+              icon={<ReloadOutlined style={{ fontSize: '12px' }} />}
+              onClick={onRefresh}
+              loading={loading}
+              style={{ fontSize: '11px', height: '22px', padding: '0 4px' }}
+            >
+              {tp('buttons.refreshTasks')}
+            </Button>
+            <Checkbox
+              checked={autoRefreshEnabled}
+              onChange={(e) => handleAutoRefreshChange(e.target.checked)}
+              style={{ fontSize: '11px' }}
+            >
+              自动刷新
+            </Checkbox>
+            {autoRefreshEnabled && (
+              <Space size={4}>
+                <span style={{ fontSize: '11px' }}>间隔:</span>
+                <InputNumber
+                  size="small"
+                  min={1}
+                  max={300}
+                  value={refreshInterval}
+                  onChange={handleIntervalChange}
+                  style={{ width: '60px' }}
+                  formatter={value => `${value}秒`}
+                  parser={value => parseInt(value?.replace('秒', '') || '5')}
+                />
+              </Space>
+            )}
+          </Space>
         </Col>
       </Row>
     </Card>
