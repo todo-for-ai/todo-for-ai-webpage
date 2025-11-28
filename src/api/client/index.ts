@@ -15,8 +15,44 @@ export class ApiClient {
   }
 
   async request<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
-    // TODO: Implement actual API request
-    throw new Error('Not implemented')
+    const url = `${this.baseURL}${endpoint}`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        signal: controller.signal,
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      // 处理标准的ApiResponse格式
+      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+        if (!data.success) {
+          throw new Error(data.message || 'API request failed')
+        }
+        return data.data as T
+      }
+      
+      return data as T
+    } catch (error) {
+      clearTimeout(timeoutId)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('Unknown error occurred')
+    }
   }
 
   async get<T = any>(endpoint: string): Promise<T> {

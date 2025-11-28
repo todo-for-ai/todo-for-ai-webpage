@@ -17,12 +17,12 @@ const Projects: React.FC = () => {
 
   useEffect(() => {
     loadProjects()
-  }, [])
+  }, [statusFilter])
 
   const loadProjects = async () => {
     setLoading(true)
     try {
-      await fetchProjects()
+      await fetchProjects({ status: statusFilter === 'all' ? undefined : statusFilter })
     } catch (error) {
       message.error('加载项目失败')
     } finally {
