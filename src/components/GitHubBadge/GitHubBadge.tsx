@@ -160,6 +160,20 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
       )
     }
 
+    if (error) {
+      return (
+        <Space size="small" className="github-badge-content">
+          <GithubOutlined className="github-badge-icon" />
+          <span className="github-badge-text">GitHub</span>
+          {showStars && (
+            <span className="github-badge-error" style={{ fontSize: '12px', color: '#ff4d4f' }}>
+              (获取失败)
+            </span>
+          )}
+        </Space>
+      )
+    }
+
     return (
       <Space size="small" className="github-badge-content">
         <GithubOutlined className="github-badge-icon" />
