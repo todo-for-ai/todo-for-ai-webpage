@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { tasksApi, type Task } from '../../api/tasks'
 
 export const useTaskStore = () => {
   const [state, setState] = useState<any>({
@@ -28,6 +29,28 @@ export const useTaskStore = () => {
     // TODO: Implement
   }, [])
 
+  const batchDeleteTasks = useCallback(async (taskIds: number[]) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }))
+      await tasksApi.batchDeleteTasks(taskIds)
+      setState(prev => ({ ...prev, loading: false }))
+    } catch (error) {
+      setState(prev => ({ ...prev, loading: false, error }))
+      throw error
+    }
+  }, [])
+
+  const batchUpdateTaskStatus = useCallback(async (taskIds: number[], status: Task['status']) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }))
+      await tasksApi.batchUpdateTaskStatus(taskIds, status)
+      setState(prev => ({ ...prev, loading: false }))
+    } catch (error) {
+      setState(prev => ({ ...prev, loading: false, error }))
+      throw error
+    }
+  }, [])
+
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }))
   }, [])
@@ -39,6 +62,8 @@ export const useTaskStore = () => {
     fetchTask,
     updateTask,
     deleteTask,
+    batchDeleteTasks,
+    batchUpdateTaskStatus,
     clearError
   }
 }
