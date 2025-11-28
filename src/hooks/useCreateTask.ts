@@ -367,8 +367,35 @@ if (id) {
 setIsEditMode(true)
 setTaskLoaded(false)
 loadTask(parseInt(id, 10))
+} else {
+// 检查是否是复制任务模式
+const isCopyMode = searchParams.get('copy') === 'true'
+if (isCopyMode) {
+try {
+const copyDataStr = sessionStorage.getItem('copyTaskData')
+if (copyDataStr) {
+const copyData = JSON.parse(copyDataStr)
+// 设置表单值
+form.setFieldsValue({
+project_id: copyData.project_id,
+title: copyData.title,
+content: copyData.content,
+priority: copyData.priority || 'medium',
+due_date: copyData.due_date ? dayjs(copyData.due_date) : null,
+tags: copyData.tags || [],
+is_ai_task: copyData.is_ai_task !== undefined ? copyData.is_ai_task : true
+})
+// 设置编辑器内容
+setEditorContent(copyData.content || '')
+// 清除sessionStorage中的数据
+sessionStorage.removeItem('copyTaskData')
 }
-}, [id])
+} catch (error) {
+console.warn('Failed to load copy task data:', error)
+}
+}
+}
+}, [id, searchParams, form])
 
 return {
 form,
