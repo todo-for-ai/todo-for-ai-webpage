@@ -257,7 +257,7 @@ const values = await form.validateFields()
 const taskData = {
 project_id: values.project_id,
 title: values.title?.trim() || undefined,
-content: values.content?.trim() || undefined,
+content: editorContent?.trim() || undefined,
 status: values.status || 'todo',
 priority: values.priority || 'medium',
 due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
@@ -296,7 +296,7 @@ const values = await form.validateFields()
 const taskData = {
 project_id: values.project_id,
 title: values.title?.trim() || undefined,
-content: values.content?.trim() || undefined,
+content: editorContent?.trim() || undefined,
 status: values.status || 'todo',
 priority: values.priority || 'medium',
 due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
@@ -337,7 +337,7 @@ const values = await form.validateFields()
 const taskData = {
 project_id: values.project_id,
 title: values.title?.trim() || undefined,
-content: values.content?.trim() || undefined,
+content: editorContent?.trim() || undefined,
 status: values.status || 'todo',
 priority: values.priority || 'medium',
 due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
