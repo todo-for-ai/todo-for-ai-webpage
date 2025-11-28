@@ -89,6 +89,13 @@
   color: white;
 }
 
+.login-button-guest {
+  width: 100%;
+  height: 40px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
 .login-divider {
   margin: 8px 0;
 }
@@ -114,6 +121,11 @@
 .login-method-icon-google {
   font-size: 24px;
   color: #db4437;
+}
+
+.login-method-icon-guest {
+  font-size: 24px;
+  color: #52c41a;
 }
 
 .login-method-label {
