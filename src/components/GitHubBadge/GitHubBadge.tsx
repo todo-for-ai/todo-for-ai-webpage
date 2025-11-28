@@ -90,8 +90,18 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     }
   }
 
+  // 使用i18n翻译的description，如果GitHub API返回的是英文则使用翻译
+  const getDescription = () => {
+    if (!repoInfo) return ''
+    // 如果是todo-for-ai仓库，优先使用i18n翻译
+    if (finalOwner === 'todo-for-ai' && finalRepo === 'todo-for-ai') {
+      return tc('login.repoDescription') || repoInfo.description
+    }
+    return repoInfo.description
+  }
+
   const tooltipTitle = repoInfo
-    ? `${repoInfo.full_name}\n${repoInfo.description}\n⭐ ${repoInfo.stargazers_count} stars`
+    ? `${repoInfo.full_name}\n${getDescription()}\n⭐ ${repoInfo.stargazers_count} stars`
     : `${finalOwner}/${finalRepo}\n${tc('github.starRepository')}`
 
   // 三角形样式（原有样式，保持向后兼容）

@@ -134,7 +134,7 @@ const Login: React.FC = () => {
                   onClick={handleGuestLogin}
                   className="login-button-guest"
                 >
-                  游客模式登录
+                  {t('loginWithGuest')}
                 </Button>
               </Space>
             </div>
