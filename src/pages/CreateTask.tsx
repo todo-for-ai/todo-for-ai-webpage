@@ -46,11 +46,17 @@ const CreateTask: React.FC = () => {
   }, [isEditMode, tp])
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === 's') {
+    // Ctrl+S (Windows) or Cmd+S (Mac) - 保存并编辑
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
       event.preventDefault()
       handleSubmitAndEdit()
     }
-  }, [handleSubmitAndEdit])
+    // Ctrl+Enter (Windows) or Cmd+Enter (Mac) - 提交表单
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault()
+      handleSubmit()
+    }
+  }, [handleSubmitAndEdit, handleSubmit])
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
