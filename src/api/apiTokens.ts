@@ -1,8 +1,11 @@
+import { apiClient } from './client'
+
 // API Token 相关接口
 export interface ApiToken {
   id: number
   name: string
   token?: string
+  status?: string
   created_at: string
   expires_at?: string
 }
@@ -14,12 +17,16 @@ export interface CreateApiTokenParams {
 
 export const apiTokensApi = {
   list: async (): Promise<ApiToken[]> => {
-    return []
+    const response = await apiClient.get<ApiToken[]>('/api-tokens/')
+    return response
   },
+  
   create: async (params: CreateApiTokenParams): Promise<ApiToken> => {
-    return {} as ApiToken
+    const response = await apiClient.post<ApiToken>('/api-tokens/', params)
+    return response
   },
+  
   delete: async (id: number): Promise<void> => {
-    return
+    await apiClient.delete(`/api-tokens/${id}`)
   }
 }
