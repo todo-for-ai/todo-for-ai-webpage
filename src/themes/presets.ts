@@ -5,8 +5,6 @@ import handwritingClassicTheme from './handwriting-classic'
 import handwritingNotebookTheme from './handwriting-notebook'
 import handwritingKraftTheme from './handwriting-kraft'
 import handwritingGridTheme from './handwriting-grid'
-
-// 默认主题（当前样式的优化版本）
 export const defaultTheme: Theme = {
   id: 'default',
   name: '默认主题',
@@ -17,43 +15,34 @@ export const defaultTheme: Theme = {
     secondary: '#52c41a',
     background: '#fafbfc',
     surface: '#ffffff',
-    
     textPrimary: '#2c3e50',
     textSecondary: '#34495e',
     textMuted: '#a0aec0',
-    
     border: '#e2e8f0',
     divider: '#f1f5f9',
-    
     success: '#52c41a',
     warning: '#faad14',
     error: '#ff4d4f',
     info: '#1890ff',
-    
     editorBackground: '#fafbfc',
     editorFocusBackground: 'rgba(24, 144, 255, 0.02)',
     editorBorder: '#e2e8f0',
     editorFocusBorder: '#1890ff',
-    
     codeBackground: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
     codeText: '#e53e3e',
     codeBlockBackground: 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
     codeBlockBorder: '#4a5568',
-    
     blockquoteBackground: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
     blockquoteBorder: '#1890ff',
     blockquoteText: '#475569',
-    
     linkColor: '#1890ff',
     linkHoverColor: '#0056b3',
-    
     selectionBackground: 'rgba(24, 144, 255, 0.2)',
     caretColor: '#1890ff'
   },
   fonts: {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif',
     codeFontFamily: '"JetBrains Mono", "Fira Code", "Monaco", "Menlo", "Ubuntu Mono", monospace',
-    
     fontSize: '15px',
     codeSize: '13px',
     h1Size: '28px',
@@ -62,14 +51,11 @@ export const defaultTheme: Theme = {
     h4Size: '18px',
     h5Size: '16px',
     h6Size: '14px',
-    
     fontWeight: '400',
     boldWeight: '700',
     headingWeight: '700',
-    
     lineHeight: '1.8',
     headingLineHeight: '1.4',
-    
     letterSpacing: '0.3px',
     headingLetterSpacing: '-0.5px'
   },
@@ -115,8 +101,6 @@ export const defaultTheme: Theme = {
     hoverTransform: 'translateX(4px)'
   }
 }
-
-// 深色主题
 export const darkTheme: Theme = {
   id: 'dark',
   name: '深色主题',
@@ -127,36 +111,28 @@ export const darkTheme: Theme = {
     secondary: '#73d13d',
     background: '#0f1419',
     surface: '#1a202c',
-    
     textPrimary: '#f7fafc',
     textSecondary: '#e2e8f0',
     textMuted: '#718096',
-    
     border: '#4a5568',
     divider: '#2d3748',
-    
     success: '#73d13d',
     warning: '#ffc53d',
     error: '#ff7875',
     info: '#4096ff',
-    
     editorBackground: '#1a202c',
     editorFocusBackground: 'rgba(64, 150, 255, 0.05)',
     editorBorder: '#4a5568',
     editorFocusBorder: '#4096ff',
-    
     codeBackground: 'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)',
     codeText: '#68d391',
     codeBlockBackground: 'linear-gradient(135deg, #0f1419 0%, #1a202c 100%)',
     codeBlockBorder: '#2d3748',
-    
     blockquoteBackground: 'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)',
     blockquoteBorder: '#4096ff',
     blockquoteText: '#cbd5e0',
-    
     linkColor: '#4096ff',
     linkHoverColor: '#69c0ff',
-    
     selectionBackground: 'rgba(64, 150, 255, 0.3)',
     caretColor: '#4096ff'
   },
@@ -174,8 +150,6 @@ export const darkTheme: Theme = {
   },
   animations: defaultTheme.animations
 }
-
-// 简约主题
 export const minimalTheme: Theme = {
   id: 'minimal',
   name: '简约主题',
@@ -186,36 +160,28 @@ export const minimalTheme: Theme = {
     secondary: '#666666',
     background: '#ffffff',
     surface: '#ffffff',
-    
     textPrimary: '#000000',
     textSecondary: '#333333',
     textMuted: '#999999',
-    
     border: '#e0e0e0',
     divider: '#f5f5f5',
-    
     success: '#4caf50',
     warning: '#ff9800',
     error: '#f44336',
     info: '#2196f3',
-    
     editorBackground: '#ffffff',
     editorFocusBackground: '#fafafa',
     editorBorder: '#e0e0e0',
     editorFocusBorder: '#000000',
-    
     codeBackground: '#f5f5f5',
     codeText: '#d32f2f',
     codeBlockBackground: '#f8f8f8',
     codeBlockBorder: '#e0e0e0',
-    
     blockquoteBackground: '#f9f9f9',
     blockquoteBorder: '#000000',
     blockquoteText: '#555555',
-    
     linkColor: '#000000',
     linkHoverColor: '#333333',
-    
     selectionBackground: 'rgba(0, 0, 0, 0.1)',
     caretColor: '#000000'
   },
@@ -253,8 +219,6 @@ export const minimalTheme: Theme = {
     transitionDuration: '0.1s'
   }
 }
-
-// 护眼主题
 export const comfortTheme: Theme = {
   id: 'comfort',
   name: '护眼主题',
@@ -265,36 +229,28 @@ export const comfortTheme: Theme = {
     secondary: '#a0845c',
     background: '#f7f3e9',
     surface: '#faf8f1',
-    
     textPrimary: '#3e2723',
     textSecondary: '#5d4037',
     textMuted: '#8d6e63',
-    
     border: '#d7ccc8',
     divider: '#efebe9',
-    
     success: '#689f38',
     warning: '#f57c00',
     error: '#d32f2f',
     info: '#1976d2',
-    
     editorBackground: '#faf8f1',
     editorFocusBackground: '#f5f1e8',
     editorBorder: '#d7ccc8',
     editorFocusBorder: '#8b5a3c',
-    
     codeBackground: '#efebe9',
     codeText: '#bf360c',
     codeBlockBackground: '#3e2723',
     codeBlockBorder: '#5d4037',
-    
     blockquoteBackground: '#f3e5ab',
     blockquoteBorder: '#8b5a3c',
     blockquoteText: '#5d4037',
-    
     linkColor: '#8b5a3c',
     linkHoverColor: '#6d4c41',
-    
     selectionBackground: 'rgba(139, 90, 60, 0.2)',
     caretColor: '#8b5a3c'
   },
@@ -321,8 +277,6 @@ export const comfortTheme: Theme = {
   },
   animations: defaultTheme.animations
 }
-
-// 高对比度主题
 export const highContrastTheme: Theme = {
   id: 'high-contrast',
   name: '高对比度主题',
@@ -333,36 +287,28 @@ export const highContrastTheme: Theme = {
     secondary: '#009900',
     background: '#ffffff',
     surface: '#ffffff',
-
     textPrimary: '#000000',
     textSecondary: '#000000',
     textMuted: '#666666',
-
     border: '#000000',
     divider: '#cccccc',
-
     success: '#008000',
     warning: '#ff8c00',
     error: '#cc0000',
     info: '#0066cc',
-
     editorBackground: '#ffffff',
     editorFocusBackground: '#f0f8ff',
     editorBorder: '#000000',
     editorFocusBorder: '#0066cc',
-
     codeBackground: '#f0f0f0',
     codeText: '#cc0000',
     codeBlockBackground: '#000000',
     codeBlockBorder: '#000000',
-
     blockquoteBackground: '#f5f5f5',
     blockquoteBorder: '#0066cc',
     blockquoteText: '#000000',
-
     linkColor: '#0066cc',
     linkHoverColor: '#004499',
-
     selectionBackground: 'rgba(0, 102, 204, 0.3)',
     caretColor: '#0066cc'
   },
@@ -396,8 +342,6 @@ export const highContrastTheme: Theme = {
     transitionDuration: '0.1s'
   }
 }
-
-// 复古主题
 export const vintageTheme: Theme = {
   id: 'vintage',
   name: '复古主题',
@@ -408,36 +352,28 @@ export const vintageTheme: Theme = {
     secondary: '#cd853f',
     background: '#fdf6e3',
     surface: '#fefbf3',
-
     textPrimary: '#2f1b14',
     textSecondary: '#5d4037',
     textMuted: '#8d6e63',
-
     border: '#deb887',
     divider: '#f5deb3',
-
     success: '#556b2f',
     warning: '#b8860b',
     error: '#a0522d',
     info: '#4682b4',
-
     editorBackground: '#fefbf3',
     editorFocusBackground: '#faf0e6',
     editorBorder: '#deb887',
     editorFocusBorder: '#8b4513',
-
     codeBackground: '#f5deb3',
     codeText: '#a0522d',
     codeBlockBackground: '#2f1b14',
     codeBlockBorder: '#5d4037',
-
     blockquoteBackground: '#fff8dc',
     blockquoteBorder: '#8b4513',
     blockquoteText: '#5d4037',
-
     linkColor: '#8b4513',
     linkHoverColor: '#654321',
-
     selectionBackground: 'rgba(139, 69, 19, 0.2)',
     caretColor: '#8b4513'
   },
@@ -473,8 +409,6 @@ export const vintageTheme: Theme = {
     transitionDuration: '0.25s'
   }
 }
-
-// 所有预设主题
 export const themes: Theme[] = [
   defaultTheme,
   darkTheme,
@@ -489,13 +423,9 @@ export const themes: Theme[] = [
   handwritingKraftTheme,
   handwritingGridTheme
 ]
-
-// 根据ID获取主题
 export const getThemeById = (id: string): Theme | undefined => {
   return themes.find(theme => theme.id === id)
 }
-
-// 获取默认主题
 export const getDefaultTheme = (): Theme => {
   return defaultTheme
 }

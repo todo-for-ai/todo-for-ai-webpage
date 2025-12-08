@@ -2,6 +2,44 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
+// 自定义语言检测器
+const customLanguageDetector = {
+  type: 'languageDetector' as const,
+  async: true,
+  detect: (callback: (lng: string) => void) => {
+    // 获取浏览器语言
+    let detectedLang = navigator.language
+
+    // 规范化语言代码
+    if (detectedLang.startsWith('zh')) {
+      detectedLang = 'zh-CN'
+    } else if (detectedLang.startsWith('en')) {
+      detectedLang = 'en'
+    } else {
+      detectedLang = 'en' // 默认英语
+    }
+
+    // 检查localStorage
+    const savedLang = localStorage.getItem('i18nextLng')
+    if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang as SupportedLanguage)) {
+      callback(savedLang)
+      return
+    }
+
+    // 检查是否在支持列表中
+    if (SUPPORTED_LANGUAGES.includes(detectedLang as SupportedLanguage)) {
+      callback(detectedLang)
+    } else {
+      callback('en') // 默认返回英语
+    }
+  },
+  init: () => {},
+  cacheUserLanguage: (lng: string) => {
+    // 存储规范化后的语言代码
+    localStorage.setItem('i18nextLng', lng)
+  }
+}
+
 // 导入语言资源
 import zhCNCommon from './resources/zh-CN/common.json'
 import zhCNNavigation from './resources/zh-CN/navigation.json'
@@ -105,39 +143,27 @@ const resources = {
   },
 }
 
-// 语言检测配置
-const languageDetectorOptions = {
-  // 检测顺序：localStorage > 用户设置 > 浏览器语言 > 默认语言
-  order: ['localStorage', 'navigator', 'htmlTag'],
-  
-  // 缓存用户语言选择
-  caches: ['localStorage'],
-  
-  // localStorage的key
-  lookupLocalStorage: 'i18nextLng',
-  
-  // 检查所有可用的语言
-  checkWhitelist: true,
-}
-
 // 初始化i18n
 i18n
-  .use(LanguageDetector)
+  .use(customLanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    
+
     // 默认语言
     fallbackLng: 'en',
-    
+
     // 支持的语言白名单
     supportedLngs: SUPPORTED_LANGUAGES,
-    
-    // 语言检测配置
-    detection: languageDetectorOptions,
+
+    // 严格模式，不允许不支持的语言
+    nonExplicitSupportedLngs: false,
     
     // 调试模式（生产环境应设为false）
     debug: import.meta.env.DEV,
+
+    // 确保语言切换正常工作
+    cleanCode: true,
     
     // 插值配置
     interpolation: {

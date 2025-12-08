@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -91,7 +91,7 @@ export class ProjectsApi {
       })
     }
 
-    const url = `/projects${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    const url = `/projects/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
     return apiClient.get<PaginatedResponse<Project>>(url)
   }
 

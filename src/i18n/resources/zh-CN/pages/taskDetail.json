@@ -23,6 +23,7 @@
     "review": "待审核",
     "done": "已完成",
     "cancelled": "已取消",
+    "waitingHumanFeedback": "等待人工反馈",
     "selectStatus": "选择任务状态"
   },
   "priority": {
@@ -39,12 +40,6 @@
     "mcpExecution": "MCP工具执行",
     "mcpPromptButton": "复制MCP工具执行提示词",
     "mcpPromptDesc": "使用MCP工具自动获取任务信息并执行，适用于Claude等支持MCP的AI助手",
-    "aiExecution": "通用AI助手执行",
-    "aiPromptButton": "复制完整任务执行提示词",
-    "aiPromptDesc": "包含完整任务信息和执行要求，适用于ChatGPT、Claude等所有AI助手",
-    "taskCompletion": "任务完成检查",
-    "completionPromptButton": "复制任务完成检查提示词",
-    "completionPromptDesc": "检查任务是否完成，如果完成则自动关闭任务并提交报告",
     "quickComplete": "一键完成任务",
     "quickCompleteButton": "复制快速完成任务提示词",
     "quickCompleteDesc": "直接执行任务并在完成后立即关闭，适合简单快速的任务"
@@ -60,7 +55,10 @@
     "updatedAt": "更新时间",
     "createdBy": "创建者",
     "tags": "标签",
-    "unknownProject": "未知项目"
+    "unknownProject": "未知项目",
+    "interactive": "交互模式",
+    "interactiveTask": "交互式任务",
+    "aiWaitingFeedback": "AI等待反馈中"
   },
   "taskContent": {
     "title": "任务内容",
@@ -92,6 +90,20 @@
     "description": "AI执行任务后的反馈信息，包含任务的具体执行情况和结果。",
     "feedbackTime": "反馈时间："
   },
+  "interactiveFeedback": {
+    "title": "AI等待您的反馈",
+    "aiWaitingMessage": "AI已完成任务并等待您的确认",
+    "aiWaitingDescription": "请查看AI的执行结果，然后选择确认任务完成或提供进一步的指导意见。",
+    "aiFeedback": "AI执行反馈",
+    "yourResponse": "您的回复",
+    "responsePlaceholder": "请输入您的反馈意见...",
+    "confirmComplete": "确认完成",
+    "continueWithInstructions": "继续执行",
+    "feedbackRequired": "请输入反馈内容",
+    "taskMarkedComplete": "任务已标记为完成",
+    "instructionsSent": "指导意见已发送，AI将继续执行",
+    "submitFailed": "提交反馈失败，请重试"
+  },
   "messages": {
     "taskNotFound": "任务不存在",
     "returnToTaskList": "返回任务列表",
@@ -103,8 +115,6 @@
     "progressUpdateSuccess": "，进度已更新为",
     "statusUpdateFailed": "更新任务状态失败",
     "mcpPromptCopied": "MCP执行任务提示词已复制到剪贴板",
-    "aiPromptCopied": "AI助手执行任务提示词已复制到剪贴板",
-    "completionPromptCopied": "任务完成确认提示词已复制到剪贴板",
     "quickCompletePromptCopied": "快速完成任务提示词已复制到剪贴板",
     "copyFailed": "复制失败",
     "copyFailedManual": "复制失败，请手动复制",
@@ -116,13 +126,11 @@
     "nextTask": "下一个任务 (→键)",
     "returnToProjectTaskList": "返回项目任务列表",
     "refreshTask": "刷新任务数据 - 重新从服务器获取最新的任务信息",
-    "createTask": "创建新任务 - 绿色表示积极的创建操作",
+    "createTask": "创建新任务 (Ctrl+N / Cmd+N) - 绿色表示积极的创建操作",
     "createFromTask": "基于此任务创建新任务，将预填充项目信息和部分内容",
     "editTask": "编辑当前任务 - 橙色表示中性的修改操作",
     "deleteTask": "删除当前任务 - 红色表示危险的删除操作",
     "mcpPrompt": "复制MCP工具执行任务的提示词，适用于支持MCP协议的AI助手",
-    "aiPrompt": "复制包含完整任务信息的执行提示词，适用于所有AI助手",
-    "completionPrompt": "复制任务完成检查和关闭的提示词",
     "quickCompletePrompt": "复制快速完成并关闭任务的提示词"
   },
   "confirmations": {

@@ -112,10 +112,41 @@
         "done": "已完成",
         "cancelled": "已取消"
       },
-      "pagination": {
-        "total": "第 {{start}}-{{end}} 条，共 {{total}} 条"
-      }
+      "priority": {
+        "low": "低",
+        "medium": "中",
+        "high": "高",
+        "urgent": "紧急"
+      },
+    "pagination": {
+      "total": "第 {{start}}-{{end}} 条，共 {{total}} 条"
     },
+    "bulkActions": {
+      "selectedCount": "已选中 {{count}} 个任务",
+      "changeStatus": "更改状态",
+      "changePriority": "更改优先级", 
+      "delete": "批量删除",
+      "clearSelection": "清除选中",
+      "deleteConfirm": {
+        "title": "确定要删除这些任务吗？",
+        "description": "将删除 {{count}} 个任务，删除后无法恢复"
+      },
+      "statusChangeConfirm": {
+        "title": "确定要更改这些任务的状态吗？",
+        "description": "将把 {{count}} 个任务的状态更改为：{{status}}"
+      },
+      "priorityChangeConfirm": {
+        "title": "确定要更改这些任务的优先级吗？",
+        "description": "将把 {{count}} 个任务的优先级更改为：{{priority}}"
+      },
+      "deleteSuccess": "已成功删除 {{count}} 个任务",
+      "deleteError": "批量删除任务失败",
+      "statusChangeSuccess": "已成功将 {{count}} 个任务状态更改为：{{status}}",
+      "statusChangeError": "批量更改任务状态失败",
+      "priorityChangeSuccess": "已成功将 {{count}} 个任务优先级更改为：{{priority}}",
+      "priorityChangeError": "批量更改任务优先级失败"
+    }
+  },
     "confirm": {
       "delete": {
         "title": "确定要删除这个任务吗？",
@@ -127,6 +158,11 @@
     "messages": {
       "refreshSuccess": "任务列表和统计信息已刷新",
       "refreshError": "刷新失败"
+    },
+    "autoRefresh": {
+      "enable": "自动刷新",
+      "interval": "间隔(秒)",
+      "tooltip": "开启后将按设置的间隔自动刷新任务列表"
     }
   },
   "buttons": {

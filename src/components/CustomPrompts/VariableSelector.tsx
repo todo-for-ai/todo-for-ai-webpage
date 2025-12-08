@@ -5,7 +5,7 @@ import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { getVariableDescription } from '../../utils/promptRenderer'
 
 const { Panel } = Collapse
-const { Search } = Input
+const Search = Input.Search
 const { Text } = Typography
 
 interface VariableInfo {

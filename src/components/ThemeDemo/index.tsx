@@ -90,7 +90,7 @@ themeManager.setTheme('typewriter-classic')
           <div>
             <Text strong>当前主题: </Text>
             <Text code>{currentTheme.name}</Text>
-            {isTypewriterTheme(currentTheme) && (
+            {isTypewriterTheme(currentTheme.id) && (
               <Text type="secondary"> (打字机主题)</Text>
             )}
           </div>

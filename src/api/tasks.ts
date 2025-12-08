@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -28,6 +28,7 @@ export interface Task {
   status: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   due_date?: string
+  estimated_hours?: number
   completion_rate: number
   completed_at?: string
   tags: string[]
@@ -40,6 +41,9 @@ export interface Task {
   related_files?: string[]  // 添加缺失的related_files属性
   creator_type?: string  // 添加缺失的creator_type属性
   creator_identifier?: string  // 添加缺失的creator_identifier属性
+  interaction_session_id?: string  // 交互式任务会话ID
+  is_interactive?: boolean  // 是否为交互式任务
+  ai_waiting_feedback?: boolean  // AI是否等待人类反馈
   project?: {
     id: number
     name: string
@@ -153,12 +157,35 @@ export class TasksApi {
 
   // 上传任务附件
   async uploadTaskAttachment(id: number, file: File, onProgress?: (progress: number) => void) {
-    return apiClient.upload<{ file_path: string; original_filename: string; file_size: number }>(`/tasks/${id}/attachments`, file, onProgress)
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.upload<{ file_path: string; original_filename: string; file_size: number }>(`/tasks/${id}/attachments`, formData)
   }
 
   // 删除任务附件
   async deleteTaskAttachment(taskId: number, attachmentId: number) {
     return apiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}`)
+  }
+
+  // 批量删除任务
+  async batchDeleteTasks(taskIds: number[]) {
+    return apiClient.post('/tasks/batch/delete', { task_ids: taskIds })
+  }
+
+  // 批量更新任务状态
+  async batchUpdateTaskStatus(taskIds: number[], status: Task['status']) {
+    return apiClient.post('/tasks/batch/update-status', { 
+      task_ids: taskIds, 
+      status 
+    })
+  }
+
+  // 批量更新任务优先级
+  async batchUpdateTaskPriority(taskIds: number[], priority: Task['priority']) {
+    return apiClient.post('/tasks/batch/update-priority', { 
+      task_ids: taskIds, 
+      priority 
+    })
   }
 }
 

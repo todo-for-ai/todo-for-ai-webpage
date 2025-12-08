@@ -6,7 +6,9 @@
   "chooseLoginMethod": "Choose Login Method",
   "loginWithGitHub": "Login with GitHub",
   "loginWithGmail": "Login with Gmail",
+  "loginWithGuest": "Guest Mode Login",
   "supportedMethods": "Supported Login Methods",
+  "repoDescription": "www.todo4ai.org is a distributed task management system specifically designed for AI. Supports Python, TypeScript, React, and Docker. Flexible integration through MCP (Model Context Protocol). Main features include tasks, tags, and Docker environment, ideal for building complex AI workflows.",
   "agreement": {
     "text": "By logging in, you agree to our",
     "terms": "Terms of Service",

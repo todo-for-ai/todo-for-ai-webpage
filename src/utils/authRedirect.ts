@@ -37,11 +37,34 @@ export function getRedirectUrlAfterLogin(): string {
   return defaultUrl
 }
 
+// 防止重复跳转的标记
+let isRedirecting = false
+
+// 页面加载时重置标记
+if (typeof window !== 'undefined') {
+  // 确保每次页面加载时重置标记
+  isRedirecting = false
+}
+
 /**
  * 跳转到登录页面
  * @param reason 跳转原因，用于显示提示信息
  */
 export function redirectToLogin(reason: 'expired' | 'unauthorized' | 'required' = 'required'): void {
+  // 防止重复跳转
+  if (isRedirecting) {
+    console.log('[AuthRedirect] 正在跳转中，跳过重复跳转')
+    return
+  }
+  
+  // 如果已经在登录页面，不需要跳转
+  if (window.location.pathname.includes('/login')) {
+    console.log('[AuthRedirect] 已在登录页面，跳过跳转')
+    return
+  }
+  
+  isRedirecting = true
+  
   // 保存当前页面
   saveCurrentPageForRedirect()
   
@@ -58,10 +81,8 @@ export function redirectToLogin(reason: 'expired' | 'unauthorized' | 'required' 
   
   console.log('[AuthRedirect] 跳转到登录页面:', finalUrl, '原因:', reason)
   
-  // 执行跳转
-  if (window.location.pathname !== loginUrl) {
-    window.location.href = finalUrl
-  }
+  // 使用replace避免在浏览器历史中留下当前页面
+  window.location.replace(finalUrl)
 }
 
 /**
@@ -146,6 +167,10 @@ export function clearAuthStorage(): void {
     localStorage.removeItem(key)
   })
   
+  // 重置重定向标记
+  isRedirecting = false
+  isHandlingTokenExpired = false
+  
   console.log('[AuthRedirect] 清除认证存储数据')
 }
 
@@ -167,10 +192,26 @@ export function shouldAutoRedirectToLogin(): boolean {
   return isAuthRequiredPage()
 }
 
+// 防止重复处理token过期的标记
+let isHandlingTokenExpired = false
+
+// 页面加载时重置标记
+if (typeof window !== 'undefined') {
+  // 确保每次页面加载时重置标记
+  isHandlingTokenExpired = false
+}
+
 /**
  * 处理token过期的完整流程
  */
 export function handleTokenExpired(): void {
+  // 防止重复处理
+  if (isHandlingTokenExpired) {
+    console.log('[AuthRedirect] 正在处理token过期，跳过重复处理')
+    return
+  }
+  
+  isHandlingTokenExpired = true
   console.log('[AuthRedirect] 处理token过期')
   
   // 清除认证存储

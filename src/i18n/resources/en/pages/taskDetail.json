@@ -23,6 +23,7 @@
     "review": "Review",
     "done": "Done",
     "cancelled": "Cancelled",
+    "waitingHumanFeedback": "Waiting Human Feedback",
     "selectStatus": "Select Task Status"
   },
   "priority": {
@@ -39,12 +40,6 @@
     "mcpExecution": "MCP Tool Execution",
     "mcpPromptButton": "Copy MCP Tool Execution Prompt",
     "mcpPromptDesc": "Use MCP tools to automatically get task information and execute, suitable for AI assistants like Claude that support MCP",
-    "aiExecution": "General AI Assistant Execution",
-    "aiPromptButton": "Copy Complete Task Execution Prompt",
-    "aiPromptDesc": "Contains complete task information and execution requirements, suitable for all AI assistants like ChatGPT, Claude",
-    "taskCompletion": "Task Completion Check",
-    "completionPromptButton": "Copy Task Completion Check Prompt",
-    "completionPromptDesc": "Check if task is completed, automatically close task and submit report if completed",
     "quickComplete": "Quick Complete Task",
     "quickCompleteButton": "Copy Quick Complete Task Prompt",
     "quickCompleteDesc": "Execute task directly and close immediately after completion, suitable for simple quick tasks"
@@ -60,7 +55,10 @@
     "updatedAt": "Updated At",
     "createdBy": "Created By",
     "tags": "Tags",
-    "unknownProject": "Unknown Project"
+    "unknownProject": "Unknown Project",
+    "interactive": "Interactive Mode",
+    "interactiveTask": "Interactive Task",
+    "aiWaitingFeedback": "AI Waiting Feedback"
   },
   "taskContent": {
     "title": "Task Content",
@@ -92,6 +90,20 @@
     "description": "Feedback information after AI task execution, including specific execution status and results.",
     "feedbackTime": "Feedback Time:"
   },
+  "interactiveFeedback": {
+    "title": "AI Awaiting Your Feedback",
+    "aiWaitingMessage": "AI has completed the task and is waiting for your confirmation",
+    "aiWaitingDescription": "Please review the AI's execution results, then choose to confirm task completion or provide further guidance.",
+    "aiFeedback": "AI Execution Feedback",
+    "yourResponse": "Your Response",
+    "responsePlaceholder": "Please enter your feedback...",
+    "confirmComplete": "Confirm Complete",
+    "continueWithInstructions": "Continue Execution",
+    "feedbackRequired": "Please enter feedback content",
+    "taskMarkedComplete": "Task marked as complete",
+    "instructionsSent": "Instructions sent, AI will continue execution",
+    "submitFailed": "Failed to submit feedback, please try again"
+  },
   "messages": {
     "taskNotFound": "Task not found",
     "returnToTaskList": "Return to Task List",
@@ -103,8 +115,6 @@
     "progressUpdateSuccess": ", progress updated to",
     "statusUpdateFailed": "Failed to update task status",
     "mcpPromptCopied": "MCP execution task prompt copied to clipboard",
-    "aiPromptCopied": "AI assistant execution task prompt copied to clipboard",
-    "completionPromptCopied": "Task completion confirmation prompt copied to clipboard",
     "quickCompletePromptCopied": "Quick complete task prompt copied to clipboard",
     "copyFailed": "Copy failed",
     "copyFailedManual": "Copy failed, please copy manually",
@@ -116,13 +126,11 @@
     "nextTask": "Next Task (→ key)",
     "returnToProjectTaskList": "Return to Project Task List",
     "refreshTask": "Refresh task data - Reload the latest task information from server",
-    "createTask": "Create new task - Green indicates positive creation action",
+    "createTask": "Create new task (Ctrl+N / Cmd+N) - Green indicates positive creation action",
     "createFromTask": "Create new task based on this task, will pre-fill project information and some content",
     "editTask": "Edit current task - Orange indicates neutral modification action",
     "deleteTask": "Delete current task - Red indicates dangerous deletion action",
     "mcpPrompt": "Copy MCP tool execution task prompt, suitable for AI assistants that support MCP protocol",
-    "aiPrompt": "Copy complete task information execution prompt, suitable for all AI assistants",
-    "completionPrompt": "Copy task completion check and close prompt",
     "quickCompletePrompt": "Copy quick complete and close task prompt"
   },
   "confirmations": {

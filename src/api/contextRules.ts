@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -168,7 +168,9 @@ export class ContextRulesApi {
 
   // 导入上下文规则
   async importContextRules(file: File) {
-    return apiClient.upload<{ imported_count: number; skipped_count: number; total_count: number }>('/context-rules/import', file)
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.upload<{ imported_count: number; skipped_count: number; total_count: number }>('/context-rules/import', formData)
   }
 
   // 导出上下文规则

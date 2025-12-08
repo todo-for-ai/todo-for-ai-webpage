@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // Pin相关类型定义
 export interface UserProjectPin {

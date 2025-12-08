@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 import type { User } from '../stores/useAuthStore'
 import { getApiBaseUrl } from '../utils/apiConfig'
 
@@ -35,6 +35,8 @@ export interface UserListParams {
   search?: string
   status?: string
   role?: string
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
 }
 
 export interface UpdateUserStatusRequest {

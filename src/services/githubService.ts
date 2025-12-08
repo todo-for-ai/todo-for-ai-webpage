@@ -72,17 +72,8 @@ class GitHubService {
         return cached.data
       }
       
-      // 返回默认数据
-      return {
-        name: repo,
-        full_name: `${owner}/${repo}`,
-        description: 'AI任务管理系统',
-        html_url: `https://github.com/${owner}/${repo}`,
-        stargazers_count: 0,
-        forks_count: 0,
-        language: 'TypeScript',
-        updated_at: new Date().toISOString()
-      }
+      // 抛出错误，不返回默认的0值
+      throw error
     }
   }
 

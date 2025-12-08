@@ -18,6 +18,7 @@
   },
   "shortcuts": {
     "save": "Shortcut: Ctrl+S",
+    "submit": "Shortcut: Ctrl+Enter (Windows) / Cmd+Enter (Mac)",
     "createAndEdit": "create and enter edit mode",
     "saveAndStay": "save and stay in edit page"
   },

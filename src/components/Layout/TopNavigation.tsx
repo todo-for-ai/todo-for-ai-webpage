@@ -4,7 +4,6 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   DashboardOutlined,
   ProjectOutlined,
-  // RobotOutlined, // 未使用
   AppstoreOutlined,
   ApiOutlined,
   PushpinOutlined
@@ -16,10 +15,8 @@ import { pinsApi, type UserProjectPin, type ProjectTaskCount } from '../../api/p
 import { tasksApi } from '../../api/tasks'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
 import './TopNavigation.css'
-
 const { Header } = Layout
 const { Title } = Typography
-
 const TopNavigation: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -29,13 +26,10 @@ const TopNavigation: React.FC = () => {
   const [taskCounts, setTaskCounts] = useState<ProjectTaskCount[]>([])
   const { tn } = useTranslation()
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  // 加载Pin项目的任务数量
   const loadTaskCounts = useCallback(async () => {
     try {
       const response = await pinsApi.getPinnedProjectsTaskCounts()
       const data = response
-
       if (data && data.task_counts) {
         setTaskCounts(data.task_counts)
       } else {
@@ -46,8 +40,6 @@ const TopNavigation: React.FC = () => {
       setTaskCounts([])
     }
   }, [])
-
-  // 加载Pin的项目
   const loadPinnedProjects = useCallback(async () => {
     try {
       console.log('开始加载Pin项目...')
@@ -55,21 +47,15 @@ const TopNavigation: React.FC = () => {
       console.log('Pin API Response:', response)
       console.log('Response type:', typeof response)
       console.log('Response keys:', response ? Object.keys(response) : 'null')
-
-      // 处理标准API响应格式 {data: {...}, message: ..., success: ...}
       const data = response
-
       if (data && data.pins) {
         console.log('Pin projects:', data.pins)
         data.pins.forEach((pin, index) => {
           console.log(`Pin ${index}:`, pin)
           console.log(`Pin ${index} project:`, pin.project)
         })
-        // 按照pin_order排序
         const sortedPins = data.pins.sort((a: any, b: any) => (a.pin_order || 0) - (b.pin_order || 0))
         setPinnedProjects(sortedPins)
-
-        // 如果有Pin项目，立即加载任务数量
         if (sortedPins.length > 0) {
           loadTaskCounts()
         } else {
@@ -86,41 +72,27 @@ const TopNavigation: React.FC = () => {
       setTaskCounts([])
     }
   }, [loadTaskCounts])
-
   useEffect(() => {
     loadPinnedProjects()
-
-    // 监听Pin更新事件
     const handlePinUpdate = () => {
       loadPinnedProjects()
     }
-
     window.addEventListener('pinUpdated', handlePinUpdate)
-
     return () => {
       window.removeEventListener('pinUpdated', handlePinUpdate)
     }
   }, [])
-
-  // 设置任务数量轮询
   useEffect(() => {
-    // 清除之前的轮询
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
       pollingIntervalRef.current = null
     }
-
-    // 如果有Pin项目，设置轮询
     if (pinnedProjects.length > 0) {
-      // 立即加载一次
       loadTaskCounts()
-
-      // 每10秒轮询一次
       pollingIntervalRef.current = setInterval(() => {
         loadTaskCounts()
       }, 10000)
     }
-
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current)
@@ -128,14 +100,10 @@ const TopNavigation: React.FC = () => {
       }
     }
   }, [pinnedProjects.length])
-
-  // 获取项目的任务数量
   const getProjectTaskCount = (projectId: number): number => {
     const taskCount = taskCounts.find(tc => tc.project_id === projectId)
     return taskCount?.pending_tasks || 0
   }
-
-  // 主要菜单项（左侧）
   const mainMenuItems = [
     {
       key: '/todo-for-ai/pages',
@@ -152,12 +120,10 @@ const TopNavigation: React.FC = () => {
       icon: <ProjectOutlined />,
       label: tn('menu.projects'),
     },
-    // 添加Pin的项目菜单项
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id
       const taskCount = getProjectTaskCount(projectId)
       const projectColor = pin.project?.color || '#1890ff'
-
       return {
         key: `/todo-for-ai/pages/projects/${projectId}`,
         icon: <PushpinOutlined style={{ color: projectColor }} />,
@@ -202,25 +168,16 @@ const TopNavigation: React.FC = () => {
       }
     })
   ]
-
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key)
   }
-
-  // 检测当前是否在任务相关页面，并获取项目ID
   useEffect(() => {
     const detectTaskProjectId = async () => {
       const pathname = location.pathname
-
-      // 检测任务详情页面：/todo-for-ai/pages/tasks/123
       const taskDetailMatch = pathname.match(/^\/todo-for-ai\/pages\/tasks\/(\d+)$/)
-      // 检测编辑任务页面：/todo-for-ai/pages/tasks/123/edit
       const taskEditMatch = pathname.match(/^\/todo-for-ai\/pages\/tasks\/(\d+)\/edit$/)
-      // 检测新建任务页面：/todo-for-ai/pages/tasks/create
       const taskCreateMatch = pathname.match(/^\/todo-for-ai\/pages\/tasks\/create$/)
-
       if (taskDetailMatch || taskEditMatch) {
-        // 任务详情或编辑页面，通过task_id获取项目ID
         const taskId = parseInt(taskDetailMatch?.[1] || taskEditMatch?.[1] || '0', 10)
         if (taskId) {
           try {
@@ -236,7 +193,6 @@ const TopNavigation: React.FC = () => {
           }
         }
       } else if (taskCreateMatch) {
-        // 新建任务页面，从URL参数获取项目ID
         const projectIdParam = searchParams.get('project_id')
         if (projectIdParam) {
           setCurrentTaskProjectId(parseInt(projectIdParam, 10))
@@ -244,17 +200,12 @@ const TopNavigation: React.FC = () => {
           setCurrentTaskProjectId(null)
         }
       } else {
-        // 不在任务页面，清除项目ID
         setCurrentTaskProjectId(null)
       }
     }
-
     detectTaskProjectId()
   }, [location.pathname, searchParams])
-
-  // 计算应该选中的菜单项
   const getSelectedKeys = () => {
-    // 如果在任务页面且找到了项目ID，检查该项目是否被pin了
     if (currentTaskProjectId) {
       const pinnedProject = pinnedProjects.find(pin =>
         pin.project_id === currentTaskProjectId || pin.project?.id === currentTaskProjectId
@@ -263,16 +214,11 @@ const TopNavigation: React.FC = () => {
         return [`/todo-for-ai/pages/projects/${currentTaskProjectId}`]
       }
     }
-
-    // 默认使用当前路径
     return [location.pathname]
   }
-
-  // 重新加载Pin项目列表
   const reloadPinnedProjects = useCallback(async () => {
     await loadPinnedProjects()
   }, [])
-
   return (
     <Header
       className="top-navigation"
@@ -318,7 +264,6 @@ const TopNavigation: React.FC = () => {
           Todo for AI
         </Title>
       </div>
-
       {/* 中间：主要菜单 - 居中显示 */}
       <div style={{
         display: 'flex',
@@ -342,7 +287,6 @@ const TopNavigation: React.FC = () => {
           overflowedIndicator={null}
         />
       </div>
-
       {/* GitHub徽标 - 紧贴右上角的倒三角形设计 */}
       <GitHubBadge
         style={{
@@ -352,7 +296,6 @@ const TopNavigation: React.FC = () => {
           zIndex: 1001
         }}
       />
-
       {/* 右侧：文档链接 + 用户区域 - 紧贴用户头像 */}
       <div
         className="header-user-section"
@@ -380,7 +323,6 @@ const TopNavigation: React.FC = () => {
           >
             {tn('menu.mcpDocs')}
           </LinkButton>
-
           {/*
             HTTP API文档菜单 - 暂时隐藏
             注意：这只是暂时将这个功能下线，以后还会再上线的
@@ -403,11 +345,9 @@ const TopNavigation: React.FC = () => {
           </LinkButton>
           */}
         </div>
-
         <UserAvatar onPinUpdate={reloadPinnedProjects} />
       </div>
     </Header>
   )
 }
-
 export default TopNavigation

@@ -2,7 +2,7 @@
  * 仪表盘API客户端
  */
 
-import { apiClient } from './client'
+import { apiClient } from './client/index.js'
 
 // 仪表盘统计数据类型
 export interface DashboardStats {

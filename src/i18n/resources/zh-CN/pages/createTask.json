@@ -18,6 +18,7 @@
   },
   "shortcuts": {
     "save": "快捷键：Ctrl+S",
+    "submit": "快捷键：Ctrl+Enter (Windows) / Cmd+Enter (Mac)",
     "createAndEdit": "创建并进入编辑模式",
     "saveAndStay": "保存并留在编辑页面"
   },
