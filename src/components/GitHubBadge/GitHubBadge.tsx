@@ -3,7 +3,6 @@ import { Button, Tooltip, Space } from 'antd'
 import { GithubOutlined, StarOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
 import { githubService, DEFAULT_REPO, type GitHubRepoInfo } from '../../services/githubService'
-import { useDebounce } from '../../hooks/useDebounce'
 import './GitHubBadge.css'
 
 interface GitHubBadgeProps {
@@ -53,20 +52,22 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
       setError(null)
       const info = await githubService.getRepoInfo(finalOwner, finalRepo)
       setRepoInfo(info)
+      setError(null) // 成功后清除错误
     } catch (err) {
       console.error('Failed to load GitHub repo info:', err)
-      setError(err instanceof Error ? err.message : '获取仓库信息失败')
+      // 注意：即使出错，githubService 可能已经返回了缓存数据
+      // 所以这里不一定要显示错误，只有在真的没有数据时才显示
+      const errorMessage = err instanceof Error ? err.message : '获取仓库信息失败'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }, [finalOwner, finalRepo, showStars, showForks])
 
-  // 使用防抖优化，避免频繁调用
-  const debouncedLoadRepoInfo = useDebounce(loadRepoInfo, 500)
-
+  // 首次加载立即执行，避免延迟
   useEffect(() => {
-    debouncedLoadRepoInfo()
-  }, [debouncedLoadRepoInfo])
+    loadRepoInfo()
+  }, [loadRepoInfo])
 
   const handleClick = () => {
     window.open(finalUrl, '_blank', 'noopener,noreferrer')
@@ -170,7 +171,8 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
       )
     }
 
-    if (error) {
+    // 只有在没有缓存数据且出错时才显示错误
+    if (error && !repoInfo) {
       return (
         <Space size="small" className="github-badge-content">
           <GithubOutlined className="github-badge-icon" />
