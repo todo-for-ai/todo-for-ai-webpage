@@ -5,10 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:pm2": "PM2_HOME=.pm2 pm2 start ecosystem.config.cjs --only todo-for-ai-web-dev",
     "build": "tsc -b && vite build",
     "build:no-check": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:pm2": "PM2_HOME=.pm2 pm2 start ecosystem.config.cjs --only todo-for-ai-web-preview",
+    "pm2:start": "PM2_HOME=.pm2 pm2 start ecosystem.config.cjs --only todo-for-ai-web-dev",
+    "pm2:stop": "PM2_HOME=.pm2 pm2 stop todo-for-ai-web-dev",
+    "pm2:restart": "PM2_HOME=.pm2 pm2 restart todo-for-ai-web-dev",
+    "pm2:delete": "PM2_HOME=.pm2 pm2 delete todo-for-ai-web-dev",
+    "pm2:logs": "PM2_HOME=.pm2 pm2 logs todo-for-ai-web-dev"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
