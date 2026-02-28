@@ -1,0 +1,26 @@
+{
+  "title": "API Documentation",
+  "pageTitle": "API Documentation - Todo for AI",
+  "sections": {
+    "overview": {
+      "title": "Overview",
+      "description": "Todo for AI provides a complete RESTful API for core features such as task and project management."
+    },
+    "auth": {
+      "title": "Authentication",
+      "description": "Use API Token for authentication:"
+    },
+    "listTasks": {
+      "title": "Get Task List",
+      "description": "Get task list for a project:"
+    },
+    "createTask": {
+      "title": "Create Task",
+      "description": "Create a new task:",
+      "example": {
+        "title": "Task title",
+        "content": "Task content"
+      }
+    }
+  }
+}

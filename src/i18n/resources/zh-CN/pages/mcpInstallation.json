@@ -1,0 +1,69 @@
+{
+  "title": "MCP 安装文档",
+  "pageTitle": "MCP 安装文档 - Todo for AI",
+  "tabs": {
+    "overview": "概述",
+    "installation": "安装步骤",
+    "claude": "Claude Desktop",
+    "cursor": "Cursor IDE",
+    "otherIdes": "其他 IDE",
+    "configuration": "配置参数",
+    "testing": "测试验证"
+  },
+  "details": {
+    "claude": "Claude Desktop 配置详情...",
+    "cursor": "Cursor IDE 配置详情...",
+    "otherIdes": "其他 IDE 配置详情...",
+    "configuration": "配置参数详情...",
+    "testing": "测试验证详情..."
+  },
+  "overview": {
+    "title": "MCP 功能概述",
+    "description": "Todo for AI 的 MCP 服务器提供以下核心功能：",
+    "supportedTools": {
+      "title": "支持的工具",
+      "getProjectTasks": "获取项目的任务列表，支持状态筛选和排序",
+      "submitFeedback": "为任务提交 AI 反馈和进度更新",
+      "getTaskById": "根据 ID 获取任务详细信息"
+    },
+    "requirements": {
+      "title": "配置要求",
+      "node": "Node.js 18+ 环境",
+      "backend": "Todo for AI 后端服务运行中",
+      "ide": "支持 MCP 协议的 AI IDE（Claude Desktop、Cursor 等）",
+      "network": "网络连接到 Todo API 服务器"
+    }
+  },
+  "installation": {
+    "title": "MCP 配置安装指南",
+    "alert": {
+      "message": "简单配置",
+      "description": "Todo for AI 的 MCP 集成无需安装额外软件，只需要复制 JSON 配置到您的 AI 客户端即可。"
+    },
+    "steps": {
+      "first": {
+        "title": "第一步：获取 API Token",
+        "description": {
+          "prefix": "前往",
+          "linkText": "个人中心 -> API Token",
+          "suffix": "创建您的专属 Token"
+        }
+      },
+      "second": {
+        "title": "第二步：获取 MCP 配置",
+        "description": "根据您使用的 AI 客户端，复制对应的 MCP JSON 配置：",
+        "claude": "Claude Desktop 配置",
+        "cursor": "Cursor IDE 配置"
+      },
+      "third": {
+        "title": "第三步：验证 MCP 配置",
+        "description": "通过以下步骤验证 MCP 配置是否成功：",
+        "items": {
+          "restart": "重启您的 AI 客户端应用",
+          "command": "在对话中输入测试命令",
+          "verify": "检查是否能正常获取任务信息"
+        }
+      }
+    }
+  }
+}

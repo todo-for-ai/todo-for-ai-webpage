@@ -150,6 +150,8 @@
   "messages": {
     "saveSuccess": "Saved successfully",
     "saveFailed": "Save failed, please try again later",
+    "nameRequired": "Please enter button name",
+    "unnamedButton": "Unnamed button",
     "resetConfirm": "Are you sure you want to reset to the default template?",
     "resetSuccess": "Reset to default template successfully",
     "resetFailed": "Reset failed, please try again later",
@@ -167,6 +169,9 @@
     "close": "Close",
     "noDescription": "No description",
     "none": "None"
+    ,
+    "deleteSuccess": "Button deleted",
+    "deleteFailed": "Failed to delete button"
   },
   "sampleData": {
     "projectName": "Sample Project",

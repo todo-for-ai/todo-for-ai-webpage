@@ -51,6 +51,8 @@
     "priority": "Priority",
     "dueDate": "Due Date",
     "progress": "Progress",
+    "estimatedHours": "Estimated Hours",
+    "estimatedHoursValue": "{{hours}} hours",
     "createdAt": "Created At",
     "updatedAt": "Updated At",
     "createdBy": "Created By",
@@ -62,6 +64,7 @@
   },
   "taskContent": {
     "title": "Task Content",
+    "previewTitle": "Task Content Preview",
     "empty": {
       "title": "No detailed content",
       "subtitle": "Click edit button to add task content"

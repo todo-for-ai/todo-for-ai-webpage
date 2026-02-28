@@ -43,6 +43,31 @@
     "specificRule": "Reference specific rule by name:",
     "ruleNamePlaceholder": "Rule Name"
   },
+  "examplesData": {
+    "contextRules": {
+      "global": {
+        "all": "### Rule 1\nContent 1\n\n### Rule 2\nContent 2",
+        "count": "3",
+        "names": "Rule 1, Rule 2, Rule 3",
+        "byName": "Specific rule content"
+      },
+      "project": {
+        "all": "### Project Rule 1\nContent 1",
+        "count": "2",
+        "names": "Project Rule 1, Project Rule 2",
+        "byName": "Specific project rule content"
+      },
+      "merged": {
+        "all": "### Rule 1\nContent 1\n\n### Project Rule 1\nContent 2",
+        "count": "5",
+        "names": "Rule 1, Rule 2, Project Rule 1",
+        "byName": "Specific merged rule content"
+      }
+    }
+  },
+  "messages": {
+    "copySuccess": "Copied to clipboard"
+  },
   "usage": {
     "title": "Usage Instructions",
     "basicSyntax": {
@@ -64,6 +89,13 @@
       "item2": "If a variable does not exist or is empty, it will display as an empty string",
       "item3": "It is recommended to test variables in the preview function before use to ensure they display correctly",
       "item4": "Context rules variables support referencing by name, and the name must exactly match the actual rule name"
+    },
+    "extraNotes": {
+      "title": "Additional Notes",
+      "item1": "Variable names are case-sensitive",
+      "item2": "If a variable value does not exist, default placeholders may be shown",
+      "item3": "Datetime variables are formatted according to local timezone",
+      "item4": "Array variables are converted to comma-separated strings"
     }
   },
   "sampleData": {

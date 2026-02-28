@@ -23,8 +23,18 @@
   },
   "actions": {
     "preview": "Preview Rule",
+    "install": "Install",
     "copy": "Copy Rule",
     "fork": "Fork Rule"
+  },
+  "table": {
+    "columns": {
+      "name": "Rule Name",
+      "description": "Description",
+      "category": "Category",
+      "downloads": "Downloads",
+      "actions": "Actions"
+    }
   },
   "tooltips": {
     "usageCount": "Number of times this rule has been copied and used by other users"
@@ -58,6 +68,8 @@
     "total": "{{start}}-{{end}} of {{total}} items"
   },
   "messages": {
-    "fetchError": "Failed to fetch rule list"
+    "fetchError": "Failed to fetch rule list",
+    "installSuccess": "Installed successfully",
+    "installFailed": "Install failed"
   }
 }

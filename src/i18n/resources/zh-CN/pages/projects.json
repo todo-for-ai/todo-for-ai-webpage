@@ -21,6 +21,7 @@
   "table": {
     "columns": {
       "name": "项目名称",
+      "description": "描述",
       "status": "状态",
       "stats": "任务统计",
       "lastActivity": "最后活动时间",
@@ -85,7 +86,8 @@
   },
   "messages": {
     "deleteSuccess": "项目删除成功",
-    "archiveSuccess": "项目归档成功"
+    "archiveSuccess": "项目归档成功",
+    "loadFailed": "加载项目失败"
   },
   "empty": {
     "noData": "暂无项目数据",

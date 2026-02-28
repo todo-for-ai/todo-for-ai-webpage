@@ -51,6 +51,8 @@
     "priority": "优先级",
     "dueDate": "截止时间",
     "progress": "完成进度",
+    "estimatedHours": "预计工时",
+    "estimatedHoursValue": "{{hours}} 小时",
     "createdAt": "创建时间",
     "updatedAt": "更新时间",
     "createdBy": "创建者",
@@ -62,6 +64,7 @@
   },
   "taskContent": {
     "title": "任务内容",
+    "previewTitle": "任务内容预览",
     "empty": {
       "title": "暂无详细内容",
       "subtitle": "点击编辑按钮添加任务内容"

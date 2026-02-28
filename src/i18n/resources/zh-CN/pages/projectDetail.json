@@ -127,6 +127,14 @@
       "changePriority": "更改优先级", 
       "delete": "批量删除",
       "clearSelection": "清除选中",
+      "noSelectionForDelete": "请先选择要删除的任务",
+      "noSelectionForStatus": "请先选择要修改的任务",
+      "deleteConfirmTitle": "批量删除确认",
+      "deleteConfirmDescription": "确定要删除选中的 {{count}} 个任务吗？此操作不可恢复。",
+      "confirmDelete": "确定删除",
+      "statusChangeConfirmTitle": "批量更改状态确认",
+      "statusChangeConfirmDescription": "确定要将选中的 {{count}} 个任务的状态修改为\"{{status}}\"吗？",
+      "confirmStatusChange": "确定修改",
       "deleteConfirm": {
         "title": "确定要删除这些任务吗？",
         "description": "将删除 {{count}} 个任务，删除后无法恢复"
@@ -157,7 +165,9 @@
     },
     "messages": {
       "refreshSuccess": "任务列表和统计信息已刷新",
-      "refreshError": "刷新失败"
+      "refreshError": "刷新失败",
+      "statusUpdateSuccess": "任务状态更新成功",
+      "deleteSuccess": "任务删除成功"
     },
     "autoRefresh": {
       "enable": "自动刷新",

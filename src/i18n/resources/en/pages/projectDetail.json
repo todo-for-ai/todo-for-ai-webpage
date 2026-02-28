@@ -127,6 +127,14 @@
         "changePriority": "Change Priority", 
         "delete": "Batch Delete",
         "clearSelection": "Clear Selection",
+        "noSelectionForDelete": "Please select tasks to delete first",
+        "noSelectionForStatus": "Please select tasks to change first",
+        "deleteConfirmTitle": "Batch Delete Confirmation",
+        "deleteConfirmDescription": "Are you sure to delete {{count}} selected tasks? This action cannot be undone.",
+        "confirmDelete": "Delete",
+        "statusChangeConfirmTitle": "Batch Status Change Confirmation",
+        "statusChangeConfirmDescription": "Are you sure to change status of {{count}} selected tasks to \"{{status}}\"?",
+        "confirmStatusChange": "Confirm Change",
         "deleteConfirm": {
           "title": "Are you sure you want to delete these tasks?",
           "description": "{{count}} tasks will be deleted. This action cannot be undone"
@@ -157,7 +165,9 @@
     },
     "messages": {
       "refreshSuccess": "Task list and statistics refreshed",
-      "refreshError": "Refresh failed"
+      "refreshError": "Refresh failed",
+      "statusUpdateSuccess": "Task status updated successfully",
+      "deleteSuccess": "Task deleted successfully"
     },
     "autoRefresh": {
       "enable": "Auto Refresh",

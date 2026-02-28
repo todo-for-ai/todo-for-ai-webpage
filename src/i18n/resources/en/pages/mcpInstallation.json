@@ -1,0 +1,69 @@
+{
+  "title": "MCP Installation",
+  "pageTitle": "MCP Installation - Todo for AI",
+  "tabs": {
+    "overview": "Overview",
+    "installation": "Installation",
+    "claude": "Claude Desktop",
+    "cursor": "Cursor IDE",
+    "otherIdes": "Other IDEs",
+    "configuration": "Configuration",
+    "testing": "Testing"
+  },
+  "details": {
+    "claude": "Claude Desktop configuration details...",
+    "cursor": "Cursor IDE configuration details...",
+    "otherIdes": "Other IDE configuration details...",
+    "configuration": "Configuration details...",
+    "testing": "Testing details..."
+  },
+  "overview": {
+    "title": "MCP Feature Overview",
+    "description": "Todo for AI MCP server provides the following core capabilities:",
+    "supportedTools": {
+      "title": "Supported Tools",
+      "getProjectTasks": "Get project task list with status filters and sorting",
+      "submitFeedback": "Submit AI feedback and progress updates for tasks",
+      "getTaskById": "Get detailed task information by task ID"
+    },
+    "requirements": {
+      "title": "Requirements",
+      "node": "Node.js 18+ environment",
+      "backend": "Todo for AI backend service running",
+      "ide": "AI IDE with MCP protocol support (Claude Desktop, Cursor, etc.)",
+      "network": "Network access to Todo API server"
+    }
+  },
+  "installation": {
+    "title": "MCP Configuration Guide",
+    "alert": {
+      "message": "Simple Setup",
+      "description": "Todo for AI MCP integration does not require extra software. Copy the JSON configuration to your AI client."
+    },
+    "steps": {
+      "first": {
+        "title": "Step 1: Get API Token",
+        "description": {
+          "prefix": "Go to",
+          "linkText": "Profile -> API Token",
+          "suffix": "to create your dedicated token"
+        }
+      },
+      "second": {
+        "title": "Step 2: Get MCP Configuration",
+        "description": "Copy the corresponding MCP JSON configuration based on your AI client:",
+        "claude": "Claude Desktop Configuration",
+        "cursor": "Cursor IDE Configuration"
+      },
+      "third": {
+        "title": "Step 3: Verify MCP Configuration",
+        "description": "Verify with the following steps:",
+        "items": {
+          "restart": "Restart your AI client",
+          "command": "Enter a test command in the chat",
+          "verify": "Check that task data can be fetched successfully"
+        }
+      }
+    }
+  }
+}

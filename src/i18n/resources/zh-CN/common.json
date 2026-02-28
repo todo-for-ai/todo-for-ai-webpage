@@ -59,7 +59,22 @@
     "todo": "待办",
     "in_progress": "进行中",
     "review": "待审核",
-    "done": "已完成"
+    "done": "已完成",
+    "dropHere": "放置任务到此列",
+    "details": "详情",
+    "aiTask": "AI执行任务",
+    "priority": {
+      "urgent": "紧急",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "unset": "未设置"
+    },
+    "messages": {
+      "fetchFailed": "获取任务数据失败",
+      "movedTo": "任务已移动到\"{{status}}\"",
+      "updateFailed": "更新任务状态失败"
+    }
   },
   "time": {
     "now": "刚刚",
@@ -120,6 +135,22 @@
       "currentTheme": "当前主题",
       "applyTheme": "应用主题",
       "cancel": "取消",
+      "primaryColor": "主色",
+      "backgroundColor": "背景色",
+      "textColor": "文字色",
+      "codeColor": "代码色",
+      "themeName": "主题名称",
+      "themeDescription": "主题描述",
+      "themeType": "主题类型",
+      "darkTheme": "深色主题",
+      "lightTheme": "浅色主题",
+      "colorPalette": "色彩方案",
+      "stylePreview": "样式预览",
+      "modernThemes": "现代主题",
+      "typewriterThemes": "打字机主题",
+      "editorPlaceholder": "开始输入内容...",
+      "category": "分类",
+      "tags": "标签",
       "sampleTitle": "示例标题",
       "sampleText": "这是一段示例文本，展示了主题的基本样式效果。"
     }
@@ -215,5 +246,100 @@
   },
   "compliance": {
     "notice": "请遵循当地法律法规，请勿公开不合适的内容（如政治敏感、种族歧视等），违规可能导致账号被封禁"
+  },
+  "projectSelector": {
+    "placeholder": "请选择项目",
+    "archived": "已归档",
+    "noMatches": "未找到匹配的项目",
+    "noOptions": "暂无项目"
+  },
+  "apiTokenManager": {
+    "title": "API Token 管理",
+    "create": "创建 Token",
+    "modalTitle": "创建 API Token",
+    "namePlaceholder": "给这个Token起个名字",
+    "confirmDelete": "确定要删除这个Token吗？",
+    "table": {
+      "name": "名称",
+      "token": "Token",
+      "status": "状态",
+      "createdAt": "创建时间",
+      "actions": "操作"
+    },
+    "validation": {
+      "nameRequired": "请输入名称"
+    },
+    "messages": {
+      "loadFailed": "加载API Token失败",
+      "createSuccess": "创建成功",
+      "createFailed": "创建失败",
+      "deleteSuccess": "删除成功",
+      "deleteFailed": "删除失败",
+      "copySuccess": "已复制到剪贴板",
+      "copyFailed": "复制失败"
+    }
+  },
+  "imageUpload": {
+    "uploadButton": "上传图片",
+    "uploading": "上传中 {{percent}}%",
+    "previewAlt": "预览",
+    "uploadedImages": "已上传的图片:",
+    "imageIndex": "图片 {{index}}",
+    "errors": {
+      "onlyImage": "只能上传图片文件",
+      "maxSize": "图片大小不能超过 {{size}}MB",
+      "saveTaskFirst": "请先保存任务后再上传图片"
+    },
+    "messages": {
+      "uploadSuccess": "图片上传成功",
+      "uploadFailed": "图片上传失败"
+    }
+  },
+  "editorToolbar": {
+    "copy": "复制内容",
+    "save": "保存 (Ctrl+S)",
+    "fullscreen": "全屏 (F11)",
+    "exitFullscreen": "退出全屏 (F11)",
+    "unsavedChanges": "未保存的更改",
+    "messages": {
+      "copySuccess": "内容已复制到剪贴板",
+      "copyFailed": "复制失败"
+    }
+  },
+  "markdownEditor": {
+    "placeholder": "请输入内容...",
+    "saveTaskFirst": "请先保存任务后再上传图片",
+    "insertImage": "插入图片",
+    "uploadTitle": "上传图片",
+    "tabs": {
+      "upload": "上传图片",
+      "help": "使用说明"
+    },
+    "help": {
+      "uploadGuideTitle": "图片上传说明：",
+      "supportedFormats": "支持 JPG、PNG、GIF 等常见图片格式",
+      "maxSize": "单个图片大小不超过 5MB",
+      "maxCount": "一次最多上传 5 张图片",
+      "autoInsert": "上传成功后会自动插入 Markdown 格式的图片链接",
+      "syntaxTitle": "Markdown 图片语法：",
+      "altText": "图片描述"
+    }
+  },
+  "authGuard": {
+    "verifying": "验证身份中...",
+    "backHome": "返回首页",
+    "relogin": "重新登录",
+    "forbidden": {
+      "title": "权限不足",
+      "subtitle": "您需要管理员权限才能访问此页面"
+    },
+    "suspended": {
+      "title": "账户已暂停",
+      "subtitle": "您的账户已被暂停，请联系管理员"
+    },
+    "inactive": {
+      "title": "账户未激活",
+      "subtitle": "您的账户尚未激活，请联系管理员"
+    }
   }
 }

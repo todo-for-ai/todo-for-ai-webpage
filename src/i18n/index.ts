@@ -63,6 +63,9 @@ import zhCNTelegramGroup from './resources/zh-CN/components/telegramGroup.json'
 import zhCNUserManagement from './resources/zh-CN/pages/userManagement.json'
 import zhCNCustomPrompts from './resources/zh-CN/pages/customPrompts.json'
 import zhCNVariableDocs from './resources/zh-CN/pages/variableDocs.json'
+import zhCNApiDocumentation from './resources/zh-CN/pages/apiDocumentation.json'
+import zhCNMcpInstallation from './resources/zh-CN/pages/mcpInstallation.json'
+import zhCNKanban from './resources/zh-CN/pages/kanban.json'
 
 import enCommon from './resources/en/common.json'
 import enNavigation from './resources/en/navigation.json'
@@ -86,6 +89,9 @@ import enTelegramGroup from './resources/en/components/telegramGroup.json'
 import enUserManagement from './resources/en/pages/userManagement.json'
 import enCustomPrompts from './resources/en/pages/customPrompts.json'
 import enVariableDocs from './resources/en/pages/variableDocs.json'
+import enApiDocumentation from './resources/en/pages/apiDocumentation.json'
+import enMcpInstallation from './resources/en/pages/mcpInstallation.json'
+import enKanban from './resources/en/pages/kanban.json'
 
 // 支持的语言
 export const SUPPORTED_LANGUAGES = ['zh-CN', 'en'] as const
@@ -116,6 +122,9 @@ const resources = {
     userManagement: zhCNUserManagement,
     customPrompts: zhCNCustomPrompts,
     variableDocs: zhCNVariableDocs,
+    apiDocumentation: zhCNApiDocumentation,
+    mcpInstallation: zhCNMcpInstallation,
+    kanban: zhCNKanban,
   },
   en: {
     common: enCommon,
@@ -140,6 +149,9 @@ const resources = {
     userManagement: enUserManagement,
     customPrompts: enCustomPrompts,
     variableDocs: enVariableDocs,
+    apiDocumentation: enApiDocumentation,
+    mcpInstallation: enMcpInstallation,
+    kanban: enKanban,
   },
 }
 

@@ -1,0 +1,24 @@
+{
+  "title": "Task Board",
+  "subtitle": "Drag-and-drop task management with a visual workflow",
+  "pageTitle": "Task Board - Todo for AI",
+  "pageTitleWithProject": "{{projectName}} - Task Board - Todo for AI",
+  "unknownProject": "Unknown Project",
+  "actions": {
+    "refresh": "Refresh",
+    "createTask": "Create Task"
+  },
+  "projectSelector": {
+    "label": "Select Project:",
+    "placeholder": "Please select project",
+    "currentProject": "Current Project:"
+  },
+  "empty": {
+    "title": "Please select a project",
+    "description": "After selecting a project, you can view and manage the task board"
+  },
+  "drawer": {
+    "title": "Task Details",
+    "taskContent": "Task Content"
+  }
+}

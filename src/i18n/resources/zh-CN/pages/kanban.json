@@ -1,0 +1,24 @@
+{
+  "title": "任务看板",
+  "subtitle": "拖拽式任务管理，可视化工作流程",
+  "pageTitle": "看板视图 - Todo for AI",
+  "pageTitleWithProject": "{{projectName}} - 看板视图 - Todo for AI",
+  "unknownProject": "未知项目",
+  "actions": {
+    "refresh": "刷新",
+    "createTask": "新建任务"
+  },
+  "projectSelector": {
+    "label": "选择项目：",
+    "placeholder": "请选择项目",
+    "currentProject": "当前项目："
+  },
+  "empty": {
+    "title": "请选择一个项目",
+    "description": "选择项目后即可查看和管理任务看板"
+  },
+  "drawer": {
+    "title": "任务详情",
+    "taskContent": "任务内容"
+  }
+}

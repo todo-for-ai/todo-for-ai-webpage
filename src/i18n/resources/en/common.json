@@ -59,7 +59,22 @@
     "todo": "To Do",
     "in_progress": "In Progress",
     "review": "Review",
-    "done": "Done"
+    "done": "Done",
+    "dropHere": "Drop task here",
+    "details": "Details",
+    "aiTask": "AI task",
+    "priority": {
+      "urgent": "Urgent",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "unset": "Not set"
+    },
+    "messages": {
+      "fetchFailed": "Failed to fetch tasks",
+      "movedTo": "Task moved to \"{{status}}\"",
+      "updateFailed": "Failed to update task status"
+    }
   },
   "time": {
     "now": "Just now",
@@ -120,6 +135,22 @@
       "currentTheme": "Current theme",
       "applyTheme": "Apply theme",
       "cancel": "Cancel",
+      "primaryColor": "Primary color",
+      "backgroundColor": "Background color",
+      "textColor": "Text color",
+      "codeColor": "Code color",
+      "themeName": "Theme Name",
+      "themeDescription": "Theme Description",
+      "themeType": "Theme Type",
+      "darkTheme": "Dark theme",
+      "lightTheme": "Light theme",
+      "colorPalette": "Color Palette",
+      "stylePreview": "Style Preview",
+      "modernThemes": "Modern Themes",
+      "typewriterThemes": "Typewriter Themes",
+      "editorPlaceholder": "Start typing...",
+      "category": "Category",
+      "tags": "Tags",
       "sampleTitle": "Sample Title",
       "sampleText": "This is a sample text that demonstrates the basic styling effects of the theme."
     }
@@ -215,5 +246,100 @@
   },
   "compliance": {
     "notice": "Please comply with local laws and regulations. Do not publish inappropriate content (such as political sensitive content, racial discrimination, etc.), violations may result in account suspension"
+  },
+  "projectSelector": {
+    "placeholder": "Please select project",
+    "archived": "Archived",
+    "noMatches": "No matching projects found",
+    "noOptions": "No projects available"
+  },
+  "apiTokenManager": {
+    "title": "API Token Management",
+    "create": "Create Token",
+    "modalTitle": "Create API Token",
+    "namePlaceholder": "Name this token",
+    "confirmDelete": "Are you sure to delete this token?",
+    "table": {
+      "name": "Name",
+      "token": "Token",
+      "status": "Status",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "validation": {
+      "nameRequired": "Please enter token name"
+    },
+    "messages": {
+      "loadFailed": "Failed to load API tokens",
+      "createSuccess": "Created successfully",
+      "createFailed": "Create failed",
+      "deleteSuccess": "Deleted successfully",
+      "deleteFailed": "Delete failed",
+      "copySuccess": "Copied to clipboard",
+      "copyFailed": "Copy failed"
+    }
+  },
+  "imageUpload": {
+    "uploadButton": "Upload",
+    "uploading": "Uploading {{percent}}%",
+    "previewAlt": "preview",
+    "uploadedImages": "Uploaded images:",
+    "imageIndex": "Image {{index}}",
+    "errors": {
+      "onlyImage": "Only image files are allowed",
+      "maxSize": "Image size cannot exceed {{size}}MB",
+      "saveTaskFirst": "Please save the task before uploading images"
+    },
+    "messages": {
+      "uploadSuccess": "Image uploaded successfully",
+      "uploadFailed": "Image upload failed"
+    }
+  },
+  "editorToolbar": {
+    "copy": "Copy content",
+    "save": "Save (Ctrl+S)",
+    "fullscreen": "Fullscreen (F11)",
+    "exitFullscreen": "Exit fullscreen (F11)",
+    "unsavedChanges": "Unsaved changes",
+    "messages": {
+      "copySuccess": "Copied to clipboard",
+      "copyFailed": "Copy failed"
+    }
+  },
+  "markdownEditor": {
+    "placeholder": "Please enter content...",
+    "saveTaskFirst": "Please save the task before uploading images",
+    "insertImage": "Insert image",
+    "uploadTitle": "Upload image",
+    "tabs": {
+      "upload": "Upload image",
+      "help": "Usage"
+    },
+    "help": {
+      "uploadGuideTitle": "Image upload guide:",
+      "supportedFormats": "Supports common image formats such as JPG, PNG and GIF",
+      "maxSize": "Single image size should not exceed 5MB",
+      "maxCount": "Upload up to 5 images at a time",
+      "autoInsert": "Markdown image link will be inserted automatically after upload",
+      "syntaxTitle": "Markdown image syntax:",
+      "altText": "Image description"
+    }
+  },
+  "authGuard": {
+    "verifying": "Verifying identity...",
+    "backHome": "Back to Home",
+    "relogin": "Re-login",
+    "forbidden": {
+      "title": "Access denied",
+      "subtitle": "Administrator permission is required to access this page"
+    },
+    "suspended": {
+      "title": "Account suspended",
+      "subtitle": "Your account has been suspended. Please contact administrator"
+    },
+    "inactive": {
+      "title": "Account inactive",
+      "subtitle": "Your account is not activated yet. Please contact administrator"
+    }
   }
 }
