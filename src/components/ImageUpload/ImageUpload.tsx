@@ -3,6 +3,7 @@ import { Upload, message, Modal, Progress } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { UploadFile, UploadProps } from 'antd'
 import { apiClient } from '../../api'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 interface ImageUploadProps {
   value?: string[]
@@ -23,6 +24,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   taskId,
   disabled = false,
 }) => {
+  const { tc } = useTranslation()
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
@@ -54,13 +56,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const beforeUpload = (file: File) => {
     const isImage = file.type.startsWith('image/')
     if (!isImage) {
-      message.error('只能上传图片文件!')
+      message.error(tc('imageUpload.errors.onlyImage'))
       return false
     }
 
     const isLtMaxSize = file.size / 1024 / 1024 < maxSize
     if (!isLtMaxSize) {
-      message.error(`图片大小不能超过 ${maxSize}MB!`)
+      message.error(tc('imageUpload.errors.maxSize', { size: maxSize }))
       return false
     }
 
@@ -72,7 +74,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const { file, onSuccess, onError, onProgress } = options
     
     if (!taskId) {
-      message.error('请先保存任务后再上传图片')
+      message.error(tc('imageUpload.errors.saveTaskFirst'))
       onError?.(new Error('Task ID is required'))
       return
     }
@@ -103,12 +105,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }
 
         onSuccess?.(response)
-        message.success('图片上传成功')
+        message.success(tc('imageUpload.messages.uploadSuccess'))
       }
     } catch (error: any) {
       console.error('Upload error:', error)
       onError?.(error)
-      message.error(error.response?.data?.error?.message || '图片上传失败')
+      message.error(error.response?.data?.error?.message || tc('imageUpload.messages.uploadFailed'))
     } finally {
       setUploading(false)
       setUploadProgress(0)
@@ -130,7 +132,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const uploadButton = (
     <div>
       <PlusOutlined />
-      <div style={{ marginTop: 8 }}>上传图片</div>
+      <div style={{ marginTop: 8 }}>{tc('imageUpload.uploadButton')}</div>
     </div>
   )
 
@@ -157,7 +159,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           <Progress 
             percent={uploadProgress} 
             status="active"
-            format={(percent) => `上传中 ${percent}%`}
+            format={(percent) => tc('imageUpload.uploading', { percent })}
           />
         </div>
       )}
@@ -171,7 +173,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         centered
       >
         <img 
-          alt="preview" 
+          alt={tc('imageUpload.previewAlt')}
           style={{ width: '100%' }} 
           src={previewImage} 
         />
@@ -179,7 +181,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {value.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ marginBottom: 8, fontWeight: 500 }}>已上传的图片:</div>
+          <div style={{ marginBottom: 8, fontWeight: 500 }}>{tc('imageUpload.uploadedImages')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {value.map((url, index) => (
               <div 
@@ -200,7 +202,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onClick={() => {
                     setPreviewImage(url)
-                    setPreviewTitle(`图片 ${index + 1}`)
+                    setPreviewTitle(tc('imageUpload.imageIndex', { index: index + 1 }))
                     setPreviewVisible(true)
                   }}
                 />

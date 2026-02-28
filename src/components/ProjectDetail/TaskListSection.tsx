@@ -28,24 +28,24 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
 
   const handleBatchDelete = () => {
     if (selectedTaskIds.length === 0) {
-      message.warning('请先选择要删除的任务')
+      message.warning(tp('tasks.table.bulkActions.noSelectionForDelete'))
       return
     }
 
     Modal.confirm({
-      title: '批量删除确认',
-      content: `确定要删除选中的 ${selectedTaskIds.length} 个任务吗？此操作不可恢复。`,
-      okText: '确定删除',
+      title: tp('tasks.table.bulkActions.deleteConfirmTitle'),
+      content: tp('tasks.table.bulkActions.deleteConfirmDescription', { count: selectedTaskIds.length }),
+      okText: tp('tasks.table.bulkActions.confirmDelete'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: tp('tasks.confirm.delete.cancel'),
       onOk: async () => {
         try {
           await batchDeleteTasks(selectedTaskIds)
-          message.success(`成功删除 ${selectedTaskIds.length} 个任务`)
+          message.success(tp('tasks.table.bulkActions.deleteSuccess', { count: selectedTaskIds.length }))
           handleClearSelection()
           await onRefresh()
         } catch (error) {
-          message.error('批量删除失败')
+          message.error(tp('tasks.table.bulkActions.deleteError'))
         }
       }
     })
@@ -53,24 +53,24 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
 
   const handleBatchStatusChange = (status: string) => {
     if (selectedTaskIds.length === 0) {
-      message.warning('请先选择要修改的任务')
+      message.warning(tp('tasks.table.bulkActions.noSelectionForStatus'))
       return
     }
 
     Modal.confirm({
-      title: '批量更改状态确认',
-      content: `确定要将选中的 ${selectedTaskIds.length} 个任务的状态修改为"${getStatusLabel(status)}"吗？`,
-      okText: '确定修改',
-      cancelText: '取消',
+      title: tp('tasks.table.bulkActions.statusChangeConfirmTitle'),
+      content: tp('tasks.table.bulkActions.statusChangeConfirmDescription', { count: selectedTaskIds.length, status: getStatusLabel(status) }),
+      okText: tp('tasks.table.bulkActions.confirmStatusChange'),
+      cancelText: tp('tasks.confirm.delete.cancel'),
       onOk: async () => {
         try {
           await batchUpdateTaskStatus(selectedTaskIds, status)
-          message.success(`成功修改 ${selectedTaskIds.length} 个任务的状态`)
+          message.success(tp('tasks.table.bulkActions.statusChangeSuccess', { count: selectedTaskIds.length, status: getStatusLabel(status) }))
           setBatchStatusValue(undefined)
           handleClearSelection()
           await onRefresh()
         } catch (error) {
-          message.error('批量修改状态失败')
+          message.error(tp('tasks.table.bulkActions.statusChangeError'))
         }
       },
       onCancel: () => {
@@ -97,31 +97,31 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
       {selectedTaskIds.length > 0 && (
         <div style={{ marginBottom: 16, padding: '12px', backgroundColor: '#e6f7ff', borderRadius: '4px' }}>
           <Space>
-            <span>已选中 {selectedTaskIds.length} 个任务</span>
+            <span>{tp('tasks.table.bulkActions.selectedCount', { count: selectedTaskIds.length })}</span>
             <Button
               size="small"
               icon={<DeleteOutlined />}
               danger
               onClick={handleBatchDelete}
             >
-              批量删除
+              {tp('tasks.table.bulkActions.delete')}
             </Button>
             <Select
               size="small"
-              placeholder="批量更改状态"
+              placeholder={tp('tasks.table.bulkActions.changeStatus')}
               style={{ width: 150 }}
               value={batchStatusValue}
               onChange={handleBatchStatusChange}
               suffixIcon={<EditOutlined />}
             >
-              <Option value="todo">待办</Option>
-              <Option value="in_progress">进行中</Option>
-              <Option value="review">待审核</Option>
-              <Option value="done">已完成</Option>
-              <Option value="cancelled">已取消</Option>
+              <Option value="todo">{tp('tasks.filters.status.todo')}</Option>
+              <Option value="in_progress">{tp('tasks.filters.status.inProgress')}</Option>
+              <Option value="review">{tp('tasks.filters.status.review')}</Option>
+              <Option value="done">{tp('tasks.filters.status.done')}</Option>
+              <Option value="cancelled">{tp('tasks.filters.status.cancelled')}</Option>
             </Select>
             <Button size="small" onClick={handleClearSelection}>
-              取消选择
+              {tp('tasks.table.bulkActions.clearSelection')}
             </Button>
           </Space>
         </div>

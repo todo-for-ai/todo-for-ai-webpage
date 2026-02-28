@@ -28,6 +28,7 @@ import {
   CopyOutlined
 } from '@ant-design/icons'
 import ThemeSelector from '../ThemeSelector'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 
 interface ToolbarProps {
@@ -49,13 +50,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onSave,
   onCopy
 }) => {
+  const { tc } = useTranslation()
   if (hideToolbar) return null
 
   const handleCopy = () => {
     navigator.clipboard.writeText(value).then(() => {
-      message.success('内容已复制到剪贴板')
+      message.success(tc('editorToolbar.messages.copySuccess'))
     }).catch(() => {
-      message.error('复制失败')
+      message.error(tc('editorToolbar.messages.copyFailed'))
     })
     onCopy()
   }
@@ -71,7 +73,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     }}>
       <Space>
         {/* 移除预览模式切换按钮，因为Milkdown本身就是所见即所得的编辑器 */}
-        <Tooltip title="复制内容">
+        <Tooltip title={tc('editorToolbar.copy')}>
           <Button
             type="text"
             size="small"
@@ -83,7 +85,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <Space>
         {hasUnsavedChanges && (
           <span style={{ fontSize: '12px', color: '#ff4d4f' }}>
-            未保存的更改
+            {tc('editorToolbar.unsavedChanges')}
           </span>
         )}
 
@@ -97,7 +99,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </div>
 
         {onSave && (
-          <Tooltip title="保存 (Ctrl+S)">
+          <Tooltip title={tc('editorToolbar.save')}>
             <Button
               type="text"
               size="small"
@@ -107,7 +109,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             />
           </Tooltip>
         )}
-        <Tooltip title={isFullscreen ? '退出全屏 (F11)' : '全屏 (F11)'}>
+        <Tooltip title={isFullscreen ? tc('editorToolbar.exitFullscreen') : tc('editorToolbar.fullscreen')}>
           <Button
             type="text"
             size="small"

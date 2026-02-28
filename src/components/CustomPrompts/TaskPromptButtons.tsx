@@ -59,7 +59,7 @@ const SortableButtonItem: React.FC<SortableButtonItemProps> = ({
               <div {...attributes} {...listeners} style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
                 <HolderOutlined style={{ color: '#999' }} />
               </div>
-              <span>{button.name || '未命名按钮'}</span>
+              <span>{button.name || tp('messages.unnamedButton')}</span>
             </div>
           }
           extra={
@@ -152,7 +152,7 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
   // 保存按钮
   const handleSaveButton = async () => {
     if (!editingButton || !editingButton.name.trim()) {
-      message.error('请输入按钮名称')
+      message.error(tp('messages.nameRequired'))
       return
     }
 
@@ -175,7 +175,7 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
       setEditingButton(null)
     } catch (error) {
       console.error('Failed to save button:', error)
-      message.error('保存失败，请稍后重试')
+      message.error(tp('messages.saveFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -187,10 +187,10 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
     setButtons(newButtons)
     try {
       await customPromptsService.setTaskPromptButtons(newButtons)
-      message.success('按钮已删除')
+      message.success(tp('messages.deleteSuccess'))
     } catch (error) {
       console.error('Failed to delete button:', error)
-      message.error('删除失败，请稍后重试')
+      message.error(tp('messages.deleteFailed'))
     }
   }
 

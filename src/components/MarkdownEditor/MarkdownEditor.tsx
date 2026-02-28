@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons'
 import { ImageUpload } from '../ImageUpload'
 import MilkdownEditor from '../MilkdownEditor'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 const { TabPane } = Tabs
 
@@ -51,7 +52,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value = '',
   onChange,
   onSave,
-  placeholder = '请输入内容...',
+  placeholder,
   height = 400,
   minHeight,
   maxHeight,
@@ -63,6 +64,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   taskId,
   enableImageUpload = false,
 }) => {
+  const { tc } = useTranslation()
+  const resolvedPlaceholder = placeholder || tc('markdownEditor.placeholder')
   const [imageModalVisible, setImageModalVisible] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
 
@@ -76,7 +79,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   // 打开图片上传对话框
   const handleImageUpload = () => {
     if (!taskId) {
-      message.warning('请先保存任务后再上传图片')
+      message.warning(tc('markdownEditor.saveTaskFirst'))
       return
     }
     setImageModalVisible(true)
@@ -88,7 +91,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         value={value}
         onChange={onChange}
         onSave={onSave}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         height={height}
         minHeight={minHeight}
         maxHeight={maxHeight}
@@ -107,7 +110,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           right: '60px',
           zIndex: 10
         }}>
-          <Tooltip title="插入图片">
+          <Tooltip title={tc('markdownEditor.insertImage')}>
             <Button
               type="text"
               size="small"
@@ -120,14 +123,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
       {/* 图片上传模态框 */}
       <Modal
-        title="上传图片"
+        title={tc('markdownEditor.uploadTitle')}
         open={imageModalVisible}
         onCancel={() => setImageModalVisible(false)}
         footer={null}
         width={600}
       >
         <Tabs defaultActiveKey="upload">
-          <TabPane tab="上传图片" key="upload">
+          <TabPane tab={tc('markdownEditor.tabs.upload')} key="upload">
             <ImageUpload
               value={uploadedImages}
               onChange={setUploadedImages}
@@ -140,24 +143,24 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               maxSize={5}
             />
           </TabPane>
-          <TabPane tab="使用说明" key="help">
+          <TabPane tab={tc('markdownEditor.tabs.help')} key="help">
             <div style={{ padding: '16px 0' }}>
-              <h4>图片上传说明：</h4>
+              <h4>{tc('markdownEditor.help.uploadGuideTitle')}</h4>
               <ul>
-                <li>支持 JPG、PNG、GIF 等常见图片格式</li>
-                <li>单个图片大小不超过 5MB</li>
-                <li>一次最多上传 5 张图片</li>
-                <li>上传成功后会自动插入 Markdown 格式的图片链接</li>
+                <li>{tc('markdownEditor.help.supportedFormats')}</li>
+                <li>{tc('markdownEditor.help.maxSize')}</li>
+                <li>{tc('markdownEditor.help.maxCount')}</li>
+                <li>{tc('markdownEditor.help.autoInsert')}</li>
               </ul>
 
-              <h4>Markdown 图片语法：</h4>
+              <h4>{tc('markdownEditor.help.syntaxTitle')}</h4>
               <pre style={{
                 background: '#f5f5f5',
                 padding: '8px',
                 borderRadius: '4px',
                 fontSize: '13px'
               }}>
-                {`![图片描述](图片链接)
+                {`![${tc('markdownEditor.help.altText')}](https://example.com/image.jpg)
 ![示例图片](https://example.com/image.jpg)`}
               </pre>
             </div>

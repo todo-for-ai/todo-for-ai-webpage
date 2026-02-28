@@ -6,12 +6,14 @@ import React from 'react'
 import { Card, Select, Space, Typography, Divider } from 'antd'
 import { useThemeContext } from '../../contexts/ThemeContext'
 import MilkdownEditor from '../MilkdownEditor'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 
 const { Title, Text } = Typography
 const { Option } = Select
 
 const ThemeDemoContent: React.FC = () => {
+  const { t } = useTranslation('common')
   const { 
     currentTheme, 
     availableThemes, 
@@ -103,7 +105,7 @@ themeManager.setTheme('typewriter-classic')
               style={{ width: 200, marginLeft: 8 }}
             >
               {modernThemes.length > 0 && (
-                <Select.OptGroup label="现代主题">
+                <Select.OptGroup label={t('themes.selector.modernThemes')}>
                   {modernThemes.map(theme => (
                     <Option key={theme.id} value={theme.id}>
                       {theme.name}
@@ -113,7 +115,7 @@ themeManager.setTheme('typewriter-classic')
               )}
               
               {typewriterThemes.length > 0 && (
-                <Select.OptGroup label="打字机主题">
+                <Select.OptGroup label={t('themes.selector.typewriterThemes')}>
                   {typewriterThemes.map(theme => (
                     <Option key={theme.id} value={theme.id}>
                       {theme.name}
@@ -137,7 +139,7 @@ themeManager.setTheme('typewriter-classic')
             <MilkdownEditor
               value={demoContent}
               onChange={(value) => console.log('Content changed:', value)}
-              placeholder="开始输入内容..."
+              placeholder={t('themes.selector.editorPlaceholder')}
               autoHeight={true}
             />
           </div>
@@ -146,13 +148,13 @@ themeManager.setTheme('typewriter-classic')
             <Title level={4}>主题信息</Title>
             <Space direction="vertical">
               <Text><strong>ID:</strong> {currentTheme.id}</Text>
-              <Text><strong>描述:</strong> {currentTheme.description}</Text>
-              <Text><strong>类型:</strong> {currentTheme.isDark ? '深色' : '浅色'}</Text>
+              <Text><strong>{t('themes.selector.themeDescription')}:</strong> {currentTheme.description}</Text>
+              <Text><strong>{t('themes.selector.themeType')}:</strong> {currentTheme.isDark ? t('themes.selector.darkTheme') : t('themes.selector.lightTheme')}</Text>
               {currentTheme.category && (
-                <Text><strong>分类:</strong> {currentTheme.category}</Text>
+                <Text><strong>{t('themes.selector.category')}:</strong> {currentTheme.category}</Text>
               )}
               {currentTheme.tags && currentTheme.tags.length > 0 && (
-                <Text><strong>标签:</strong> {currentTheme.tags.join(', ')}</Text>
+                <Text><strong>{t('themes.selector.tags')}:</strong> {currentTheme.tags.join(', ')}</Text>
               )}
             </Space>
           </div>

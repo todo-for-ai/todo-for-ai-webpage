@@ -36,7 +36,7 @@ export interface KanbanBoardRef {
 }
 
 const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, onTaskClick }, ref) => {
-  const { t } = useTranslation()
+  const { t, tc, language } = useTranslation()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
@@ -72,7 +72,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
       }
     } catch (error) {
       console.error('Failed to fetch kanban tasks:', error)
-      message.error('获取任务数据失败')
+      message.error(tc('kanban.messages.fetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -163,10 +163,10 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
     try {
       const success = await updateTaskStatus(taskId, newStatus)
       if (success) {
-        message.success(`任务已移动到"${columns.find(c => c.id === newStatus)?.title}"`)
+        message.success(tc('kanban.messages.movedTo', { status: columns.find(c => c.id === newStatus)?.title }))
       }
     } catch (error) {
-      message.error('更新任务状态失败')
+      message.error(tc('kanban.messages.updateFailed'))
     }
   }
 
@@ -186,11 +186,11 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
 
   const getPriorityText = (priority: string) => {
     switch (priority) {
-      case 'urgent': return '紧急'
-      case 'high': return '高'
-      case 'medium': return '中'
-      case 'low': return '低'
-      default: return '未设置'
+      case 'urgent': return tc('kanban.priority.urgent')
+      case 'high': return tc('kanban.priority.high')
+      case 'medium': return tc('kanban.priority.medium')
+      case 'low': return tc('kanban.priority.low')
+      default: return tc('kanban.priority.unset')
     }
   }
 
@@ -280,7 +280,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
                   </Tag>
                   {activeTask.due_date && (
                     <Tag style={{ margin: 0, fontSize: '11px' }}>
-                      {new Date(activeTask.due_date).toLocaleDateString('zh-CN', { 
+                      {new Date(activeTask.due_date).toLocaleDateString(language === 'zh-CN' ? 'zh-CN' : 'en-US', { 
                         month: 'short', 
                         day: 'numeric' 
                       })}
@@ -289,7 +289,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
                 </Space>
                 
                 {activeTask.is_ai_task && (
-                  <Tooltip title="AI执行任务">
+                  <Tooltip title={tc('kanban.aiTask')}>
                     <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#52c41a' }}>
                       AI
                     </Avatar>

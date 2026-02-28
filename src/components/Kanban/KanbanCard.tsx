@@ -5,6 +5,7 @@ import { UserOutlined, ClockCircleOutlined, FileTextOutlined } from '@ant-design
 import TaskIdBadge from '../TaskIdBadge'
 import type { Task } from '../../api/tasks'
 import dayjs from 'dayjs'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 interface KanbanCardProps {
   task: Task
@@ -19,6 +20,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   priorityText,
   onClick,
 }) => {
+  const { tc } = useTranslation()
   const {
     attributes,
     listeners,
@@ -143,7 +145,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             }}
             icon={<FileTextOutlined />}
           >
-            详情
+            {tc('kanban.details')}
           </Tag>
         )}
 
@@ -188,7 +190,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
 
         {/* AI任务标识 */}
         {task.is_ai_task && (
-          <Tooltip title="AI执行任务">
+          <Tooltip title={tc('kanban.aiTask')}>
             <Avatar
               size={20}
               icon={<UserOutlined />}

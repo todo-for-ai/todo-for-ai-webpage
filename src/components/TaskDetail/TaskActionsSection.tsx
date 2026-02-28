@@ -1,6 +1,7 @@
 import React from 'react'
 import { Card, Button, Space, Popconfirm } from 'antd'
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 
 interface TaskActionsSectionProps {
   onEdit: () => void
@@ -13,6 +14,7 @@ const TaskActionsSection: React.FC<TaskActionsSectionProps> = ({
   onDelete,
   loading
 }) => {
+  const { tp } = usePageTranslation('taskDetail')
   return (
     <Card>
       <Space>
@@ -21,21 +23,21 @@ const TaskActionsSection: React.FC<TaskActionsSectionProps> = ({
           icon={<EditOutlined />}
           onClick={onEdit}
         >
-          编辑
+          {tp('actions.edit')}
         </Button>
 
         <Popconfirm
-          title="确定要删除这个任务吗？"
+          title={tp('confirmations.deleteTitle')}
           onConfirm={onDelete}
-          okText="确定"
-          cancelText="取消"
+          okText={tp('confirmations.confirmText')}
+          cancelText={tp('confirmations.cancelText')}
         >
           <Button
             danger
             icon={<DeleteOutlined />}
             loading={loading}
           >
-            删除
+            {tp('actions.delete')}
           </Button>
         </Popconfirm>
       </Space>

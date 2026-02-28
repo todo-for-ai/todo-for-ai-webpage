@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Spin, Result, Button } from 'antd'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -16,6 +17,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAdmin = false,
   fallback
 }) => {
+  const { tc } = useTranslation()
   const { user, isAuthenticated, isLoading } = useAuthStore()
   const [isChecking, setIsChecking] = useState(true)
 
@@ -44,7 +46,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         alignItems: 'center',
         minHeight: '200px'
       }}>
-        <Spin size="large" tip="验证身份中..." />
+        <Spin size="large" tip={tc('authGuard.verifying')} />
       </div>
     )
   }
@@ -69,11 +71,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return (
       <Result
         status="403"
-        title="权限不足"
-        subTitle="您需要管理员权限才能访问此页面"
+        title={tc('authGuard.forbidden.title')}
+        subTitle={tc('authGuard.forbidden.subtitle')}
         extra={
           <Button type="primary" href="/todo-for-ai/pages">
-            返回首页
+            {tc('authGuard.backHome')}
           </Button>
         }
       />
@@ -85,11 +87,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return (
       <Result
         status="warning"
-        title="账户已暂停"
-        subTitle="您的账户已被暂停，请联系管理员"
+        title={tc('authGuard.suspended.title')}
+        subTitle={tc('authGuard.suspended.subtitle')}
         extra={
           <Button type="primary" onClick={() => useAuthStore.getState().logout()}>
-            重新登录
+            {tc('authGuard.relogin')}
           </Button>
         }
       />
@@ -101,11 +103,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return (
       <Result
         status="warning"
-        title="账户未激活"
-        subTitle="您的账户尚未激活，请联系管理员"
+        title={tc('authGuard.inactive.title')}
+        subTitle={tc('authGuard.inactive.subtitle')}
         extra={
           <Button type="primary" onClick={() => useAuthStore.getState().logout()}>
-            重新登录
+            {tc('authGuard.relogin')}
           </Button>
         }
       />

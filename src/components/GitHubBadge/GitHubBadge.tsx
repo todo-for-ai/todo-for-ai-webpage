@@ -66,7 +66,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
         setRepoInfo(fallback)
         setError(null)
       } else {
-        const errorMessage = err instanceof Error ? err.message : '获取仓库信息失败'
+        const errorMessage = err instanceof Error ? err.message : tc('github.fetchFailed')
         setError(errorMessage)
       }
     } finally {
@@ -176,7 +176,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
       return (
         <Space size="small">
           <LoadingOutlined />
-          <span>加载中...</span>
+          <span>{tc('status.loading')}</span>
         </Space>
       )
     }

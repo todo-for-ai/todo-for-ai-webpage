@@ -1,6 +1,7 @@
 import React from 'react'
 import { Form, Input, Select, DatePicker, InputNumber, Button } from 'antd'
 import type { TaskFormData } from './hooks/useTaskCreation'
+import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 
 interface TaskFormSectionProps {
   formData: TaskFormData
@@ -15,38 +16,40 @@ const TaskFormSection: React.FC<TaskFormSectionProps> = ({
   loading,
   onSubmit
 }) => {
+  const { tp } = usePageTranslation('createTask')
+
   return (
     <Form layout="vertical" onFinish={onSubmit}>
-      <Form.Item label="任务标题" required>
+      <Form.Item label={tp('form.simple.title.label')} required>
         <Input
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="请输入任务标题"
+          placeholder={tp('form.simple.title.placeholder')}
         />
       </Form.Item>
 
-      <Form.Item label="任务描述">
+      <Form.Item label={tp('form.simple.description.label')}>
         <Input.TextArea
           value={formData.content}
           onChange={(e) => setFormData({ ...formData, content: e.target.value })}
           rows={4}
-          placeholder="请输入任务描述"
+          placeholder={tp('form.simple.description.placeholder')}
         />
       </Form.Item>
 
-      <Form.Item label="优先级">
+      <Form.Item label={tp('form.settings.priority.label')}>
         <Select
           value={formData.priority}
           onChange={(value) => setFormData({ ...formData, priority: value })}
         >
-          <Select.Option value="low">低</Select.Option>
-          <Select.Option value="medium">中</Select.Option>
-          <Select.Option value="high">高</Select.Option>
-          <Select.Option value="urgent">紧急</Select.Option>
+          <Select.Option value="low">{tp('form.settings.priority.low')}</Select.Option>
+          <Select.Option value="medium">{tp('form.settings.priority.medium')}</Select.Option>
+          <Select.Option value="high">{tp('form.settings.priority.high')}</Select.Option>
+          <Select.Option value="urgent">{tp('form.settings.priority.urgent')}</Select.Option>
         </Select>
       </Form.Item>
 
-      <Form.Item label="截止日期">
+      <Form.Item label={tp('form.settings.dueDate.label')}>
         <DatePicker
           value={formData.due_date ? new Date(formData.due_date) : null}
           onChange={(date) => setFormData({
@@ -56,7 +59,7 @@ const TaskFormSection: React.FC<TaskFormSectionProps> = ({
         />
       </Form.Item>
 
-      <Form.Item label="预计工时">
+      <Form.Item label={tp('form.simple.estimatedHours.label')}>
         <InputNumber
           value={formData.estimated_hours}
           onChange={(value) => setFormData({ ...formData, estimated_hours: value || 0 })}
@@ -68,7 +71,7 @@ const TaskFormSection: React.FC<TaskFormSectionProps> = ({
 
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading}>
-          创建任务
+          {tp('actions.createMode.create')}
         </Button>
       </Form.Item>
     </Form>
