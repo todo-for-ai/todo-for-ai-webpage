@@ -91,7 +91,7 @@ export class ProjectsApi {
       })
     }
 
-    const url = `/projects/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    const url = `/projects${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
     return apiClient.get<PaginatedResponse<Project>>(url)
   }
 
