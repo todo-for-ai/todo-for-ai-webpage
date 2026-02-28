@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Table, Button, Space, Tag, Input, message, Modal } from 'antd'
-import { PlusOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { Card, Table, Button, Space, Tag, Input, message } from 'antd'
+import { DownloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { useMarketplaceStore } from '../stores'
-import { RuleMarketplaceFilter } from '../components/RuleMarketplaceFilter'
 import { RuleMarketplaceModal } from '../components/RuleMarketplaceModal'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const marketplaceApi = {
   install: async (id: number) => Promise.resolve()
 }
 
 const RuleMarketplace: React.FC = () => {
+  const { tp } = usePageTranslation('ruleMarketplace')
   const [searchText, setSearchText] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedRule, setSelectedRule] = useState<any>(null)
@@ -23,9 +24,9 @@ const RuleMarketplace: React.FC = () => {
   const handleInstall = async (rule: any) => {
     try {
       await marketplaceApi.install(rule.id)
-      message.success('安装成功')
+      message.success(tp('messages.installSuccess'))
     } catch (error) {
-      message.error('安装失败')
+      message.error(tp('messages.installFailed'))
     }
   }
 
@@ -36,18 +37,18 @@ const RuleMarketplace: React.FC = () => {
 
   const columns = [
     {
-      title: '规则名称',
+      title: tp('table.columns.name'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: '描述',
+      title: tp('table.columns.description'),
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
     },
     {
-      title: '分类',
+      title: tp('table.columns.category'),
       dataIndex: 'category',
       key: 'category',
       render: (category: string) => (
@@ -55,18 +56,18 @@ const RuleMarketplace: React.FC = () => {
       ),
     },
     {
-      title: '下载量',
+      title: tp('table.columns.downloads'),
       dataIndex: 'downloads',
       key: 'downloads',
       sorter: (a: any, b: any) => a.downloads - b.downloads,
     },
     {
-      title: '操作',
+      title: tp('table.columns.actions'),
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
           <Button size="small" onClick={() => handlePreview(record)}>
-            预览
+            {tp('actions.preview')}
           </Button>
           <Button
             type="primary"
@@ -74,7 +75,7 @@ const RuleMarketplace: React.FC = () => {
             icon={<DownloadOutlined />}
             onClick={() => handleInstall(record)}
           >
-            安装
+            {tp('actions.install')}
           </Button>
         </Space>
       ),
@@ -90,12 +91,12 @@ const RuleMarketplace: React.FC = () => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>规则市场</h1>
+        <h1>{tp('title')}</h1>
       </div>
 
       <Card style={{ marginBottom: '16px' }}>
         <Input
-          placeholder="搜索规则..."
+          placeholder={tp('search.placeholder')}
           prefix={<SearchOutlined />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}

@@ -4,6 +4,7 @@ import { ApiOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import { OverviewTab } from './components/MCPInstallation/OverviewTab'
 import { InstallationTab } from './components/MCPInstallation/InstallationTab'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title } = Typography
 const { TabPane } = Tabs
@@ -11,6 +12,7 @@ const { TabPane } = Tabs
 const validTabs = ['overview', 'installation', 'claude', 'cursor', 'other-ides', 'configuration', 'testing']
 
 const MCPInstallation: React.FC = () => {
+  const { tp } = usePageTranslation('mcpInstallation')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = searchParams.get('tab')
@@ -18,9 +20,9 @@ const MCPInstallation: React.FC = () => {
   })
 
   useEffect(() => {
-    document.title = 'MCP安装文档 - Todo for AI'
+    document.title = tp('pageTitle')
     return () => { document.title = 'Todo for AI' }
-  }, [])
+  }, [tp])
 
   useEffect(() => {
     const tabParam = searchParams.get('tab')
@@ -45,31 +47,31 @@ const MCPInstallation: React.FC = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <ApiOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-          MCP 安装文档
+          {tp('title')}
         </Title>
       </div>
 
       <Tabs activeKey={activeTab} onChange={handleTabChange} size="large">
-        <TabPane tab="概述" key="overview">
+        <TabPane tab={tp('tabs.overview')} key="overview">
           <OverviewTab />
         </TabPane>
-        <TabPane tab="安装步骤" key="installation">
+        <TabPane tab={tp('tabs.installation')} key="installation">
           <InstallationTab />
         </TabPane>
-        <TabPane tab="Claude Desktop" key="claude">
-          <div>Claude Desktop 配置详情...</div>
+        <TabPane tab={tp('tabs.claude')} key="claude">
+          <div>{tp('details.claude')}</div>
         </TabPane>
-        <TabPane tab="Cursor IDE" key="cursor">
-          <div>Cursor IDE 配置详情...</div>
+        <TabPane tab={tp('tabs.cursor')} key="cursor">
+          <div>{tp('details.cursor')}</div>
         </TabPane>
-        <TabPane tab="其他 IDE" key="other-ides">
-          <div>其他 IDE 配置详情...</div>
+        <TabPane tab={tp('tabs.otherIdes')} key="other-ides">
+          <div>{tp('details.otherIdes')}</div>
         </TabPane>
-        <TabPane tab="配置参数" key="configuration">
-          <div>配置参数详情...</div>
+        <TabPane tab={tp('tabs.configuration')} key="configuration">
+          <div>{tp('details.configuration')}</div>
         </TabPane>
-        <TabPane tab="测试验证" key="testing">
-          <div>测试验证详情...</div>
+        <TabPane tab={tp('tabs.testing')} key="testing">
+          <div>{tp('details.testing')}</div>
         </TabPane>
       </Tabs>
     </div>

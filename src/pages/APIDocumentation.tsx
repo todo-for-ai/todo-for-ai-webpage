@@ -2,47 +2,50 @@ import React, { useEffect } from 'react'
 import { Card, Typography } from 'antd'
 import { ApiOutlined } from '@ant-design/icons'
 import { CodeBlock } from '../components/common/CodeBlock'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Paragraph } = Typography
 
 const APIDocumentation: React.FC = () => {
+  const { tp } = usePageTranslation('apiDocumentation')
+
   useEffect(() => {
-    document.title = 'API文档 - Todo for AI'
+    document.title = tp('pageTitle')
     return () => { document.title = 'Todo for AI' }
-  }, [])
+  }, [tp])
 
   return (
     <div style={{ padding: '24px' }}>
       <Title level={2}>
         <ApiOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-        API 文档
+        {tp('title')}
       </Title>
 
-      <Card title="概述" style={{ marginBottom: '16px' }}>
+      <Card title={tp('sections.overview.title')} style={{ marginBottom: '16px' }}>
         <Paragraph>
-          Todo for AI 提供完整的 RESTful API，支持任务管理、项目管理等核心功能。
+          {tp('sections.overview.description')}
         </Paragraph>
       </Card>
 
-      <Card title="认证" style={{ marginBottom: '16px' }}>
-        <Paragraph>使用 API Token 进行认证：</Paragraph>
+      <Card title={tp('sections.auth.title')} style={{ marginBottom: '16px' }}>
+        <Paragraph>{tp('sections.auth.description')}</Paragraph>
         <CodeBlock language="bash">
 curl -H "Authorization: Bearer YOUR_API_TOKEN" \
      https://todo4ai.org/todo-for-ai/api/v1/tasks
         </CodeBlock>
       </Card>
 
-      <Card title="获取任务列表" style={{ marginBottom: '16px' }}>
-        <Paragraph>获取项目的任务列表：</Paragraph>
+      <Card title={tp('sections.listTasks.title')} style={{ marginBottom: '16px' }}>
+        <Paragraph>{tp('sections.listTasks.description')}</Paragraph>
         <CodeBlock language="bash">{`GET /api/v1/projects/{projectId}/tasks`}</CodeBlock>
       </Card>
 
-      <Card title="创建任务" style={{ marginBottom: '16px' }}>
-        <Paragraph>创建新任务：</Paragraph>
+      <Card title={tp('sections.createTask.title')} style={{ marginBottom: '16px' }}>
+        <Paragraph>{tp('sections.createTask.description')}</Paragraph>
         <CodeBlock language="bash">{`POST /api/v1/tasks
 {
-  "title": "任务标题",
-  "content": "任务内容",
+  "title": "${tp('sections.createTask.example.title')}",
+  "content": "${tp('sections.createTask.example.content')}",
   "priority": "medium"
 }`}</CodeBlock>
       </Card>
