@@ -82,8 +82,10 @@ export const useAuthStore = create<AuthState>()(
           set({ token, isAuthenticated: !!token })
           if (token) {
             localStorage.setItem('auth_token', token)
+            localStorage.setItem('access_token', token)
           } else {
             localStorage.removeItem('auth_token')
+            localStorage.removeItem('access_token')
           }
         },
         setRefreshToken: (refreshToken) => {
@@ -102,8 +104,10 @@ export const useAuthStore = create<AuthState>()(
           })
           if (accessToken) {
             localStorage.setItem('auth_token', accessToken)
+            localStorage.setItem('access_token', accessToken)
           } else {
             localStorage.removeItem('auth_token')
+            localStorage.removeItem('access_token')
           }
           if (refreshToken) {
             localStorage.setItem('refresh_token', refreshToken)
@@ -215,6 +219,7 @@ export const useAuthStore = create<AuthState>()(
         },
         clearAuth: () => {
           localStorage.removeItem('auth_token')
+          localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
           set({
             ...initialState

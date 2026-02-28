@@ -1,5 +1,6 @@
 // Import types and utilities from submodules
 import { type ApiClientConfig, type PerformanceStats } from './types'
+import { getApiBaseUrl } from '../../utils/apiConfig'
 
 /**
  * API Client class
@@ -20,7 +21,8 @@ export class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout)
 
     // 从localStorage获取token并添加到请求头
-    const token = localStorage.getItem('access_token')
+    // 优先使用当前存储键 auth_token，兼容历史键 access_token
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token')
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...options?.headers as Record<string, string>,
@@ -39,19 +41,25 @@ export class ApiClient {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        let errMsg = `HTTP error! status: ${response.status}`
+        try {
+          const errorData = await response.json()
+          if (errorData?.message) {
+            errMsg = errorData.message
+          }
+        } catch {
+          // Keep fallback message when response body is not JSON
+        }
+        throw new Error(errMsg)
       }
 
       const data = await response.json()
-      
-      // 处理标准的ApiResponse格式
-      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
-        if (!data.success) {
-          throw new Error(data.message || 'API request failed')
-        }
+
+      // 处理后端标准响应结构 { code, data, message, ... }
+      if (data && typeof data === 'object' && 'data' in data) {
         return data.data as T
       }
-      
+
       return data as T
     } catch (error) {
       clearTimeout(timeoutId)
@@ -97,7 +105,7 @@ export type { ApiClientConfig, PerformanceStats }
 
 // Create and export default instance
 const apiClient = new ApiClient({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: getApiBaseUrl(),
   timeout: 10000
 })
 
