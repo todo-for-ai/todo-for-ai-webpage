@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Avatar, Dropdown, Button } from 'antd'
-import { UserOutlined, LogoutOutlined, SettingOutlined, UserSwitchOutlined, FileTextOutlined, PushpinOutlined, EditOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, SettingOutlined, UserSwitchOutlined, FileTextOutlined, PushpinOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -126,6 +126,14 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       label: tn('userMenu.customPrompts'),
       onClick: () => {
         navigate('/todo-for-ai/pages/custom-prompts')
+      },
+    },
+    {
+      key: 'organizations',
+      icon: <TeamOutlined />,
+      label: tn('userMenu.organizations'),
+      onClick: () => {
+        navigate('/todo-for-ai/pages/organizations')
       },
     },
     ...(hasPins ? [{

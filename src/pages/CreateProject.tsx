@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Card, Form, Input, message, Button, Space, Select } from 'antd'
 import { SaveOutlined } from '@ant-design/icons'
@@ -9,12 +9,17 @@ import { projectsApi } from '../api/projects'
 
 const CreateProject: React.FC = () => {
   const { tp } = usePageTranslation('createProject')
+  const tpRef = useRef(tp)
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const [form] = Form.useForm()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(false)
   const { createProject, updateProject } = useProjectStore()
+
+  useEffect(() => {
+    tpRef.current = tp
+  }, [tp])
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -42,14 +47,14 @@ const CreateProject: React.FC = () => {
           organization_id: project.organization_id ?? undefined,
         })
       } catch (error) {
-        message.error(tp('messages.loadFailed'))
+        message.error(tpRef.current('messages.loadFailed'))
       } finally {
         setLoading(false)
       }
     }
 
     loadInitialData()
-  }, [id, form, tp])
+  }, [id, form])
 
   const handleSubmit = async (values: any) => {
     try {

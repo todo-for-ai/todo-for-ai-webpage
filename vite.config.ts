@@ -83,6 +83,7 @@ export default defineConfig(() => {
     server: {
       port: 50111,
       host: '0.0.0.0',
+      strictPort: true,
       proxy: {
         '/todo-for-ai/api': {
           target: 'http://localhost:50110',
@@ -93,7 +94,8 @@ export default defineConfig(() => {
     },
     preview: {
       port: 50112,
-      host: '0.0.0.0'
+      host: '0.0.0.0',
+      strictPort: true
     }
   }
 })

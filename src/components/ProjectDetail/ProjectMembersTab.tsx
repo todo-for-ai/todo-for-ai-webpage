@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Card, Input, message, Popconfirm, Select, Space, Table, Tag, Typography } from 'antd'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { projectsApi, type ProjectMember } from '../../api/projects'
@@ -28,10 +28,15 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
   currentUserRole
 }) => {
   const { tp } = usePageTranslation('projectDetail')
+  const tpRef = useRef(tp)
   const [items, setItems] = useState<ProjectMember[]>([])
   const [loading, setLoading] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'maintainer' | 'member' | 'viewer'>('member')
+
+  useEffect(() => {
+    tpRef.current = tp
+  }, [tp])
 
   const canManage = useMemo(
     () => currentUserRole === 'owner' || currentUserRole === 'maintainer',
@@ -44,11 +49,11 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
       const data = await projectsApi.getProjectMembers(projectId)
       setItems(data.items || [])
     } catch (error: any) {
-      message.error(error?.message || tp('members.messages.loadFailed'))
+      message.error(error?.message || tpRef.current('members.messages.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [projectId, tp])
+  }, [projectId])
 
   useEffect(() => {
     loadMembers()

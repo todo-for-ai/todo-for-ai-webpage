@@ -50,6 +50,7 @@
     "logout": "Logout",
     "contextRules": "Global Context Rules",
     "customPrompts": "Custom Prompts",
+    "organizations": "Organizations",
     "pinManager": "Manage Pinned Projects",
     "userManagement": "User Management",
     "admin": "Administrator",

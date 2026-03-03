@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Button,
   Card,
@@ -36,7 +36,8 @@ const ORG_STATUS_COLORS: Record<string, string> = {
 }
 
 const Organizations = () => {
-  const { t, tp } = usePageTranslation('organizations')
+  const { tp } = usePageTranslation('organizations')
+  const tpRef = useRef(tp)
   const [orgs, setOrgs] = useState<Organization[]>([])
   const [members, setMembers] = useState<OrganizationMember[]>([])
   const [loading, setLoading] = useState(false)
@@ -45,6 +46,10 @@ const Organizations = () => {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [createForm] = Form.useForm()
+
+  useEffect(() => {
+    tpRef.current = tp
+  }, [tp])
 
   const selectedOrg = useMemo(
     () => orgs.find((item) => item.id === selectedOrgId) || null,
@@ -58,18 +63,21 @@ const Organizations = () => {
       const data = await organizationsApi.getOrganizations({ page: 1, per_page: 200 })
       const items = data.items || []
       setOrgs(items)
-      if (!selectedOrgId && items.length > 0) {
-        setSelectedOrgId(items[0].id)
-      }
-      if (selectedOrgId && !items.find((item) => item.id === selectedOrgId)) {
-        setSelectedOrgId(items.length > 0 ? items[0].id : null)
-      }
+      setSelectedOrgId((prev) => {
+        if (!prev && items.length > 0) {
+          return items[0].id
+        }
+        if (prev && !items.find((item) => item.id === prev)) {
+          return items.length > 0 ? items[0].id : null
+        }
+        return prev
+      })
     } catch (error: any) {
-      message.error(error?.message || tp('messages.loadFailed'))
+      message.error(error?.message || tpRef.current('messages.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [selectedOrgId, tp])
+  }, [])
 
   const loadMembers = useCallback(async (organizationId: number) => {
     try {
@@ -77,11 +85,11 @@ const Organizations = () => {
       const data = await organizationsApi.getOrganizationMembers(organizationId)
       setMembers(data.items || [])
     } catch (error: any) {
-      message.error(error?.message || tp('messages.memberLoadFailed'))
+      message.error(error?.message || tpRef.current('messages.memberLoadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [tp])
+  }, [])
 
   useEffect(() => {
     loadOrganizations()

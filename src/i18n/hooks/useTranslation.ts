@@ -1,4 +1,5 @@
 import { useTranslation as useI18nTranslation } from 'react-i18next'
+import { useCallback } from 'react'
 import type { SupportedLanguage } from '../index'
 
 // 扩展的翻译hook，提供更好的类型支持和便利方法
@@ -55,18 +56,22 @@ export const useTranslation = (namespace?: string) => {
 // 页面级别的翻译hook
 export const usePageTranslation = (page: string) => {
   const translation = useTranslation(page)
+  const tp = useCallback(
+    (key: string, options?: any) => translation.t(key, options) as string,
+    [translation.t]
+  )
 
   return {
     ...translation,
 
     // 页面特定的翻译函数
-    tp: (key: string, options?: any) => translation.t(key, options) as string,
+    tp,
 
     // 页面标题
-    pageTitle: translation.t('title') as string,
+    pageTitle: tp('title'),
 
     // 页面副标题
-    pageSubtitle: translation.t('subtitle') as string,
+    pageSubtitle: tp('subtitle'),
   }
 }
 
