@@ -24,7 +24,14 @@ const Kanban = () => {
   } = useProjectStore()
 
   useEffect(() => {
-    fetchProjects()
+    fetchProjects({
+      page: 1,
+      per_page: 100,
+      status: 'active',
+      sort_by: 'last_activity_at',
+      sort_order: 'desc',
+      include_stats: false
+    })
   }, [fetchProjects])
 
   // 设置网页标题

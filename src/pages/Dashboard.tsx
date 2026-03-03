@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag } from 'antd'
+import { Typography, Card, Row, Col, Statistic, message, List, Tag } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -76,15 +76,6 @@ const Dashboard = () => {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="page-container">
-        <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" />
-        </div>
-      </div>
-    )
-  }
   return (
     <div className="page-container">
       <div className="page-header">
@@ -99,7 +90,7 @@ const Dashboard = () => {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title={tp('stats.totalProjects')}
               value={stats?.projects.total || 0}
@@ -109,7 +100,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title={tp('misc.totalTasks')}
               value={stats?.tasks.total || 0}
@@ -119,7 +110,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title={tp('taskStatus.in_progress')}
               value={(stats?.tasks.in_progress || 0) + (stats?.tasks.review || 0)}
@@ -129,7 +120,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title={tp('taskStatus.ai_executing')}
               value={stats?.tasks.ai_executing || 0}
@@ -150,7 +141,7 @@ const Dashboard = () => {
       {/* 最近项目和任务 */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title={tp('sections.recentProjects')} variant="borderless">
+          <Card title={tp('sections.recentProjects')} variant="borderless" loading={loading}>
             {stats?.recent_projects && stats.recent_projects.length > 0 ? (
               <List
                 dataSource={stats.recent_projects}
@@ -181,7 +172,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title={tp('sections.recentTasks')} variant="borderless">
+          <Card title={tp('sections.recentTasks')} variant="borderless" loading={loading}>
             {stats?.recent_tasks && stats.recent_tasks.length > 0 ? (
               <List
                 dataSource={stats.recent_tasks}

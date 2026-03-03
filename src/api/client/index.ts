@@ -2,6 +2,16 @@
 import { type ApiClientConfig, type PerformanceStats } from './types'
 import { getApiBaseUrl } from '../../utils/apiConfig'
 
+class ApiHttpError extends Error {
+  status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'ApiHttpError'
+    this.status = status
+  }
+}
+
 /**
  * API Client class
  * Main entry point for all API requests
@@ -41,6 +51,7 @@ export class ApiClient {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
+        const status = response.status
         let errMsg = `HTTP error! status: ${response.status}`
         try {
           const errorData = await response.json()
@@ -50,7 +61,17 @@ export class ApiClient {
         } catch {
           // Keep fallback message when response body is not JSON
         }
-        throw new Error(errMsg)
+
+        if (status === 401 && !endpoint.includes('/auth/login')) {
+          try {
+            const mod = await import('../../utils/authRedirect')
+            mod.handleUnauthorized()
+          } catch (redirectError) {
+            console.error('[ApiClient] Failed to handle unauthorized redirect:', redirectError)
+          }
+        }
+
+        throw new ApiHttpError(status, errMsg)
       }
 
       const data = await response.json()

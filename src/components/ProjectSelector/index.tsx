@@ -59,8 +59,9 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     try {
       const response = await projectsApi.getProjects({
         page: 1,
-        per_page: 1000, // 加载更多项目以支持搜索
-        status: 'active' // 只加载活跃项目
+        per_page: 1000, // 后端会限制最大每页数量
+        status: 'active', // 只加载活跃项目
+        include_stats: false
       })
 
       let projectList: Project[] = []

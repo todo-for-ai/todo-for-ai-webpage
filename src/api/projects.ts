@@ -75,6 +75,7 @@ export interface ProjectQueryParams {
   status?: string
   sort_by?: string
   sort_order?: 'asc' | 'desc'
+  include_stats?: boolean
 }
 
 // 项目API服务
