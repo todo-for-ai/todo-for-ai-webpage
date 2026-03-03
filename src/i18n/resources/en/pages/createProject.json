@@ -35,6 +35,10 @@
       "label": "Project Description",
       "placeholder": "Enter project description"
     },
+    "organization": {
+      "label": "Organization",
+      "placeholder": "Select an organization (optional)"
+    },
     "githubUrl": {
       "label": "GitHub Repository Link",
       "placeholder": "https://github.com/username/repository",

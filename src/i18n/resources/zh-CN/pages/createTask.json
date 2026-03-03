@@ -64,7 +64,7 @@
       },
       "tags": {
         "label": "标签",
-        "placeholder": "请输入标签"
+        "placeholder": "可选择已有标签或直接输入自定义标签"
       }
     },
     "simple": {

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useState } from 'react'
 import { Form, Input, DatePicker, Select, Button, Space, Card, Row, Col, Checkbox, Breadcrumb, message, Typography } from 'antd'
 import { SaveOutlined, ArrowLeftOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -7,6 +7,7 @@ import ResizableContainer from '../components/ResizableContainer'
 import { TaskEditStatus } from '../components/TaskEditStatus'
 import { useCreateTask } from '../hooks/useCreateTask'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { taskLabelsApi } from '../api/taskLabels'
 
 const { Title, Paragraph } = Typography
 const { Option } = Select
@@ -15,6 +16,7 @@ const CreateTask: React.FC = () => {
   const { t, tp } = usePageTranslation('createTask')
   const navigate = useNavigate()
   const hook = useCreateTask(tp)
+  const [labelOptions, setLabelOptions] = useState<{ label: string; value: string }[]>([])
 
   const {
     form,
@@ -38,6 +40,7 @@ const CreateTask: React.FC = () => {
     clearDraft,
     clearEditDraft,
   } = hook
+  const selectedProjectId = Form.useWatch('project_id', form)
 
   useEffect(() => {
     const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
@@ -62,6 +65,27 @@ const CreateTask: React.FC = () => {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  useEffect(() => {
+    const loadTaskLabels = async () => {
+      if (!selectedProjectId) {
+        setLabelOptions([])
+        return
+      }
+      try {
+        const data = await taskLabelsApi.getTaskLabels({ project_id: Number(selectedProjectId) })
+        const options = (data.items || []).map((item) => ({
+          label: item.name,
+          value: item.name
+        }))
+        setLabelOptions(options)
+      } catch (error) {
+        console.error('Failed to load task labels:', error)
+      }
+    }
+
+    loadTaskLabels()
+  }, [selectedProjectId])
 
   return (
     <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1600px' }}>
@@ -194,7 +218,12 @@ const CreateTask: React.FC = () => {
                 </Col>
                 <Col span={6}>
                   <Form.Item label={tp('form.settings.tags.label')} name="tags">
-                    <Select mode="tags" placeholder={tp('form.settings.tags.placeholder')} style={{ width: '100%' }} />
+                    <Select
+                      mode="tags"
+                      placeholder={tp('form.settings.tags.placeholder')}
+                      style={{ width: '100%' }}
+                      options={labelOptions}
+                    />
                   </Form.Item>
                 </Col>
               </Row>

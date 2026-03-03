@@ -1,0 +1,51 @@
+{
+  "title": "组织管理",
+  "subtitle": "管理组织空间与共享成员",
+  "actions": {
+    "create": "创建组织"
+  },
+  "table": {
+    "orgName": "组织",
+    "role": "我的角色",
+    "members": "成员数",
+    "projects": "项目数"
+  },
+  "members": {
+    "title": "{{name}} 的成员",
+    "emailPlaceholder": "输入用户邮箱进行邀请",
+    "emailRequired": "请输入用户邮箱",
+    "invite": "邀请",
+    "remove": "移除",
+    "confirmOk": "确认",
+    "confirmCancel": "取消",
+    "removeConfirmTitle": "确认移除该成员？",
+    "removeConfirmDescription": "移除后该成员将失去组织访问权限。",
+    "table": {
+      "user": "成员",
+      "role": "角色",
+      "status": "状态",
+      "actions": "操作"
+    }
+  },
+  "createModal": {
+    "title": "创建组织",
+    "name": "组织名称",
+    "nameRequired": "请输入组织名称",
+    "slug": "Slug（可选）",
+    "description": "描述",
+    "confirm": "创建",
+    "cancel": "取消"
+  },
+  "messages": {
+    "loadFailed": "加载组织列表失败",
+    "memberLoadFailed": "加载组织成员失败",
+    "createSuccess": "组织创建成功",
+    "createFailed": "组织创建失败",
+    "inviteSuccess": "邀请组织成员成功",
+    "inviteFailed": "邀请组织成员失败",
+    "memberUpdated": "更新组织成员成功",
+    "memberUpdateFailed": "更新组织成员失败",
+    "memberRemoved": "移除组织成员成功",
+    "memberRemoveFailed": "移除组织成员失败"
+  }
+}

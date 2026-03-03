@@ -45,6 +45,43 @@
     },
     "projectDescription": {
       "title": "Project Description"
+    },
+    "tabs": {
+      "tasks": "Task List",
+      "overview": "Overview",
+      "contextRules": "Context Rules",
+      "members": "Members"
+    }
+  },
+  "members": {
+    "table": {
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "emailPlaceholder": "Invite by user email",
+      "emailRequired": "Please enter user email"
+    },
+    "actions": {
+      "invite": "Invite Member",
+      "remove": "Remove"
+    },
+    "confirm": {
+      "removeTitle": "Remove this member?",
+      "removeDescription": "This member will lose project access.",
+      "ok": "Confirm",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "loadFailed": "Failed to load project members",
+      "inviteSuccess": "Project member invited successfully",
+      "inviteFailed": "Failed to invite project member",
+      "updateSuccess": "Project member updated successfully",
+      "updateFailed": "Failed to update project member",
+      "removeSuccess": "Project member removed successfully",
+      "removeFailed": "Failed to remove project member"
     }
   },
   "tasks": {

@@ -2,6 +2,7 @@
   "menu": {
     "dashboard": "仪表板",
     "projects": "项目管理",
+    "organizations": "组织",
     "rules": "规则广场",
     "profile": "个人中心",
     "settings": "系统设置",

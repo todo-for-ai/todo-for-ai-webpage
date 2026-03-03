@@ -1,0 +1,51 @@
+{
+  "title": "Organizations",
+  "subtitle": "Manage organization spaces and shared members",
+  "actions": {
+    "create": "Create Organization"
+  },
+  "table": {
+    "orgName": "Organization",
+    "role": "My Role",
+    "members": "Members",
+    "projects": "Projects"
+  },
+  "members": {
+    "title": "Members of {{name}}",
+    "emailPlaceholder": "Invite by user email",
+    "emailRequired": "Please enter user email",
+    "invite": "Invite",
+    "remove": "Remove",
+    "confirmOk": "Confirm",
+    "confirmCancel": "Cancel",
+    "removeConfirmTitle": "Remove this member?",
+    "removeConfirmDescription": "This member will lose organization access.",
+    "table": {
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    }
+  },
+  "createModal": {
+    "title": "Create Organization",
+    "name": "Organization Name",
+    "nameRequired": "Please enter organization name",
+    "slug": "Slug (Optional)",
+    "description": "Description",
+    "confirm": "Create",
+    "cancel": "Cancel"
+  },
+  "messages": {
+    "loadFailed": "Failed to load organizations",
+    "memberLoadFailed": "Failed to load organization members",
+    "createSuccess": "Organization created successfully",
+    "createFailed": "Failed to create organization",
+    "inviteSuccess": "Organization member invited successfully",
+    "inviteFailed": "Failed to invite organization member",
+    "memberUpdated": "Organization member updated successfully",
+    "memberUpdateFailed": "Failed to update organization member",
+    "memberRemoved": "Organization member removed successfully",
+    "memberRemoveFailed": "Failed to remove organization member"
+  }
+}

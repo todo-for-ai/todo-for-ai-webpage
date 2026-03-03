@@ -46,6 +46,7 @@ import zhCNNavigation from './resources/zh-CN/navigation.json'
 import zhCNDashboard from './resources/zh-CN/pages/dashboard.json'
 import zhCNSettings from './resources/zh-CN/pages/settings.json'
 import zhCNProjects from './resources/zh-CN/pages/projects.json'
+import zhCNOrganizations from './resources/zh-CN/pages/organizations.json'
 import zhCNCreateProject from './resources/zh-CN/pages/createProject.json'
 import zhCNProfile from './resources/zh-CN/pages/profile.json'
 import zhCNContextRules from './resources/zh-CN/pages/contextRules.json'
@@ -72,6 +73,7 @@ import enNavigation from './resources/en/navigation.json'
 import enDashboard from './resources/en/pages/dashboard.json'
 import enSettings from './resources/en/pages/settings.json'
 import enProjects from './resources/en/pages/projects.json'
+import enOrganizations from './resources/en/pages/organizations.json'
 import enCreateProject from './resources/en/pages/createProject.json'
 import enProfile from './resources/en/pages/profile.json'
 import enContextRules from './resources/en/pages/contextRules.json'
@@ -105,6 +107,7 @@ const resources = {
     dashboard: zhCNDashboard,
     settings: zhCNSettings,
     projects: zhCNProjects,
+    organizations: zhCNOrganizations,
     createProject: zhCNCreateProject,
     profile: zhCNProfile,
     contextRules: zhCNContextRules,
@@ -132,6 +135,7 @@ const resources = {
     dashboard: enDashboard,
     settings: enSettings,
     projects: enProjects,
+    organizations: enOrganizations,
     createProject: enCreateProject,
     profile: enProfile,
     contextRules: enContextRules,

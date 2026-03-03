@@ -4,6 +4,7 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   DashboardOutlined,
   ProjectOutlined,
+  TeamOutlined,
   AppstoreOutlined,
   ApiOutlined,
   PushpinOutlined
@@ -119,6 +120,11 @@ const TopNavigation: React.FC = () => {
       key: '/todo-for-ai/pages/projects',
       icon: <ProjectOutlined />,
       label: tn('menu.projects'),
+    },
+    {
+      key: '/todo-for-ai/pages/organizations',
+      icon: <TeamOutlined />,
+      label: tn('menu.organizations'),
     },
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id

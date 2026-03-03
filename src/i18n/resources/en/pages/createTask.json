@@ -64,7 +64,7 @@
       },
       "tags": {
         "label": "Tags",
-        "placeholder": "Please enter tags"
+        "placeholder": "Select existing labels or type custom tags"
       }
     },
     "simple": {

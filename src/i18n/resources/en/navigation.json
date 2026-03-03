@@ -2,6 +2,7 @@
   "menu": {
     "dashboard": "Dashboard",
     "projects": "Project Management",
+    "organizations": "Organizations",
     "rules": "Rule Marketplace",
     "profile": "Profile",
     "settings": "Settings",
