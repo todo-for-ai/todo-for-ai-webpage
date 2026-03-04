@@ -71,11 +71,11 @@ export const useProjectPromptEditor = (tp: (key: string) => string) => {
       setProjectTasks(tasksResponse.data || [])
     } catch (error) {
       console.error('Failed to load project data:', error)
-      message.error('加载项目数据失败')
+      message.error(tp('messages.previewLoadFailed'))
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [tp])
 
   const handleProjectChange = useCallback((projectId: number | null) => {
     setSelectedProjectId(projectId)
@@ -92,12 +92,12 @@ export const useProjectPromptEditor = (tp: (key: string) => string) => {
   const savePrompt = useCallback(async () => {
     try {
       await customPromptsService.setProjectPromptTemplate(content)
-      message.success('保存成功')
+      message.success(tp('messages.saveSuccess'))
     } catch (error) {
       console.error('Failed to save prompt:', error)
-      message.error('保存失败')
+      message.error(tp('messages.saveFailed'))
     }
-  }, [content])
+  }, [content, tp])
 
   const resetPrompt = useCallback(() => {
     setContent(defaultTemplate)

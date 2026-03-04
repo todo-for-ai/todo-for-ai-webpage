@@ -21,6 +21,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { message } from 'antd'
 import { MilkdownEditorCore } from './core'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 export interface UseEditorOptions {
   value?: string
@@ -34,6 +35,7 @@ export interface UseEditorOptions {
 }
 
 export const useEditor = (options: UseEditorOptions) => {
+  const { tc } = useTranslation()
   const {
     value = '',
     onChange,
@@ -139,12 +141,12 @@ export const useEditor = (options: UseEditorOptions) => {
         onSave(value)
         setLastSaved(value)
         setHasUnsavedChanges(false)
-        message.success('自动保存成功')
+        message.success(tc('messages.success.saved'))
       }
     }, autoSaveInterval)
 
     return () => clearTimeout(timer)
-  }, [value, autoSave, autoSaveInterval, hasUnsavedChanges, lastSaved, onSave])
+  }, [value, autoSave, autoSaveInterval, hasUnsavedChanges, lastSaved, onSave, tc])
 
   // 手动保存
   const handleSave = useCallback(() => {
