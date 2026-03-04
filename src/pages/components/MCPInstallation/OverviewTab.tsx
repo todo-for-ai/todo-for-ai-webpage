@@ -6,7 +6,9 @@ import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 const { Title, Paragraph, Text } = Typography
 
 export const OverviewTab: React.FC = () => {
-  const { tp } = usePageTranslation('mcpInstallation')
+  const { tp, t } = usePageTranslation('mcpInstallation')
+  const featuresRaw = t('overview.whatIsMcp.features', { returnObjects: true })
+  const features = Array.isArray(featuresRaw) ? featuresRaw : []
 
   const tools = [
     { name: 'get_project_tasks_by_name', color: 'blue', key: 'getProjectTasks' },
@@ -30,7 +32,7 @@ export const OverviewTab: React.FC = () => {
       </Title>
       <Paragraph>{tp('overview.whatIsMcp.description')}</Paragraph>
       <ul>
-        {(tp('overview.whatIsMcp.features') as unknown as string[]).map((feature, index) => (
+        {features.map((feature, index) => (
           <li key={index}>{feature}</li>
         ))}
       </ul>

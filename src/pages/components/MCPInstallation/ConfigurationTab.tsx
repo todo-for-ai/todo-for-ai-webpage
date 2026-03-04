@@ -11,7 +11,9 @@ import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 const { Title, Paragraph, Text } = Typography
 
 export const ConfigurationTab: React.FC = () => {
-  const { tp } = usePageTranslation('mcpInstallation')
+  const { tp, t } = usePageTranslation('mcpInstallation')
+  const securityTipsRaw = t('configuration.security.tips', { returnObjects: true })
+  const securityTips = Array.isArray(securityTipsRaw) ? securityTipsRaw : []
 
   const columns = [
     {
@@ -116,7 +118,7 @@ export const ConfigurationTab: React.FC = () => {
         message={tp('configuration.security.title')}
         description={
           <ul style={{ marginBottom: 0 }}>
-            {(tp('configuration.security.tips') as unknown as string[]).map((tip, index) => (
+            {securityTips.map((tip, index) => (
               <li key={index}>{tip}</li>
             ))}
           </ul>

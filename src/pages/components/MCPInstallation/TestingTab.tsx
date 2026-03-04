@@ -16,7 +16,9 @@ const { Title, Paragraph, Text } = Typography
 const { Panel } = Collapse
 
 export const TestingTab: React.FC = () => {
-  const { tp } = usePageTranslation('mcpInstallation')
+  const { tp, t } = usePageTranslation('mcpInstallation')
+  const supportChannelsRaw = t('testing.support.channels', { returnObjects: true })
+  const supportChannels = Array.isArray(supportChannelsRaw) ? supportChannelsRaw : []
 
   const testCommands = [
     {
@@ -117,7 +119,7 @@ export const TestingTab: React.FC = () => {
         message={tp('testing.support.description')}
         description={
           <ul style={{ marginBottom: 0 }}>
-            {(tp('testing.support.channels') as unknown as string[]).map((channel, index) => (
+            {supportChannels.map((channel, index) => (
               <li key={index}>{channel}</li>
             ))}
           </ul>

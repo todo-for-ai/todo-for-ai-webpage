@@ -71,7 +71,7 @@ export const usePageTranslation = (page: string) => {
     pageTitle: tp('title'),
 
     // 页面副标题
-    pageSubtitle: tp('subtitle'),
+    pageSubtitle: tp('subtitle', { defaultValue: '' }),
   }
 }
 

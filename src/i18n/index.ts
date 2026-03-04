@@ -1,6 +1,12 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
+
+const normalizeLanguageCode = (lang?: string): 'zh-CN' | 'en' => {
+  if (!lang) return 'en'
+  if (lang.startsWith('zh')) return 'zh-CN'
+  if (lang.startsWith('en')) return 'en'
+  return 'en'
+}
 
 // 自定义语言检测器
 const customLanguageDetector = {
@@ -8,21 +14,13 @@ const customLanguageDetector = {
   async: true,
   detect: (callback: (lng: string) => void) => {
     // 获取浏览器语言
-    let detectedLang = navigator.language
-
-    // 规范化语言代码
-    if (detectedLang.startsWith('zh')) {
-      detectedLang = 'zh-CN'
-    } else if (detectedLang.startsWith('en')) {
-      detectedLang = 'en'
-    } else {
-      detectedLang = 'en' // 默认英语
-    }
+    const detectedLang = normalizeLanguageCode(navigator.language)
 
     // 检查localStorage
     const savedLang = localStorage.getItem('i18nextLng')
-    if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang as SupportedLanguage)) {
-      callback(savedLang)
+    const normalizedSavedLang = normalizeLanguageCode(savedLang || undefined)
+    if (savedLang && SUPPORTED_LANGUAGES.includes(normalizedSavedLang as SupportedLanguage)) {
+      callback(normalizedSavedLang)
       return
     }
 
@@ -36,7 +34,7 @@ const customLanguageDetector = {
   init: () => {},
   cacheUserLanguage: (lng: string) => {
     // 存储规范化后的语言代码
-    localStorage.setItem('i18nextLng', lng)
+    localStorage.setItem('i18nextLng', normalizeLanguageCode(lng))
   }
 }
 
@@ -176,8 +174,8 @@ i18n
     // 支持的语言白名单
     supportedLngs: SUPPORTED_LANGUAGES,
 
-    // 严格模式，不允许不支持的语言
-    nonExplicitSupportedLngs: false,
+    // 接受语言变体（例如 zh -> zh-CN），减少无意义警告
+    nonExplicitSupportedLngs: true,
     
     // 调试模式（生产环境应设为false）
     debug: import.meta.env.DEV,
