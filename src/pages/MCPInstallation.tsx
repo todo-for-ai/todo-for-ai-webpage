@@ -4,6 +4,11 @@ import { ApiOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import { OverviewTab } from './components/MCPInstallation/OverviewTab'
 import { InstallationTab } from './components/MCPInstallation/InstallationTab'
+import { ClaudeTab } from './components/MCPInstallation/ClaudeTab'
+import { CursorTab } from './components/MCPInstallation/CursorTab'
+import { OtherIdesTab } from './components/MCPInstallation/OtherIdesTab'
+import { ConfigurationTab } from './components/MCPInstallation/ConfigurationTab'
+import { TestingTab } from './components/MCPInstallation/TestingTab'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title } = Typography
@@ -59,19 +64,19 @@ const MCPInstallation: React.FC = () => {
           <InstallationTab />
         </TabPane>
         <TabPane tab={tp('tabs.claude')} key="claude">
-          <div>{tp('details.claude')}</div>
+          <ClaudeTab />
         </TabPane>
         <TabPane tab={tp('tabs.cursor')} key="cursor">
-          <div>{tp('details.cursor')}</div>
+          <CursorTab />
         </TabPane>
         <TabPane tab={tp('tabs.otherIdes')} key="other-ides">
-          <div>{tp('details.otherIdes')}</div>
+          <OtherIdesTab />
         </TabPane>
         <TabPane tab={tp('tabs.configuration')} key="configuration">
-          <div>{tp('details.configuration')}</div>
+          <ConfigurationTab />
         </TabPane>
         <TabPane tab={tp('tabs.testing')} key="testing">
-          <div>{tp('details.testing')}</div>
+          <TestingTab />
         </TabPane>
       </Tabs>
     </div>
