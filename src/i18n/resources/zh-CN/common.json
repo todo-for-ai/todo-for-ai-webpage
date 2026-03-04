@@ -232,7 +232,8 @@
     "sourceCode": "源代码",
     "starRepository": "在GitHub上Star仓库支持我们",
     "badgeTooltip": "此系统是开源的，计划支持私有部署，请star支持我们",
-    "fetchFailed": "(获取失败)"
+    "fetchFailed": "(获取失败)",
+    "repoDescription": "www.todo4ai.org 是一个面向 AI 工作流的分布式任务管理系统。"
   },
   "footer": {
     "version": "版本",

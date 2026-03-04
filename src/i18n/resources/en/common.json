@@ -232,7 +232,8 @@
     "sourceCode": "Source Code",
     "starRepository": "Star our repository on GitHub to support us",
     "badgeTooltip": "This system is open source and plans to support private deployment. Please star to support us",
-    "fetchFailed": "(Fetch failed)"
+    "fetchFailed": "(Fetch failed)",
+    "repoDescription": "www.todo4ai.org is a distributed task management system designed for AI workflows."
   },
   "footer": {
     "version": "Version",

@@ -61,6 +61,7 @@ import zhCNCreateTask from './resources/zh-CN/pages/createTask.json'
 import zhCNPinManager from './resources/zh-CN/components/pinManager.json'
 import zhCNWeChatGroup from './resources/zh-CN/components/wechatGroup.json'
 import zhCNTelegramGroup from './resources/zh-CN/components/telegramGroup.json'
+import zhCNResizableContainer from './resources/zh-CN/components/resizableContainer.json'
 import zhCNUserManagement from './resources/zh-CN/pages/userManagement.json'
 import zhCNCustomPrompts from './resources/zh-CN/pages/customPrompts.json'
 import zhCNVariableDocs from './resources/zh-CN/pages/variableDocs.json'
@@ -88,6 +89,7 @@ import enCreateTask from './resources/en/pages/createTask.json'
 import enPinManager from './resources/en/components/pinManager.json'
 import enWeChatGroup from './resources/en/components/wechatGroup.json'
 import enTelegramGroup from './resources/en/components/telegramGroup.json'
+import enResizableContainer from './resources/en/components/resizableContainer.json'
 import enUserManagement from './resources/en/pages/userManagement.json'
 import enCustomPrompts from './resources/en/pages/customPrompts.json'
 import enVariableDocs from './resources/en/pages/variableDocs.json'
@@ -122,6 +124,7 @@ const resources = {
     pinManager: zhCNPinManager,
     wechatGroup: zhCNWeChatGroup,
     telegramGroup: zhCNTelegramGroup,
+    resizableContainer: zhCNResizableContainer,
     userManagement: zhCNUserManagement,
     customPrompts: zhCNCustomPrompts,
     variableDocs: zhCNVariableDocs,
@@ -150,6 +153,7 @@ const resources = {
     pinManager: enPinManager,
     wechatGroup: enWeChatGroup,
     telegramGroup: enTelegramGroup,
+    resizableContainer: enResizableContainer,
     userManagement: enUserManagement,
     customPrompts: enCustomPrompts,
     variableDocs: enVariableDocs,

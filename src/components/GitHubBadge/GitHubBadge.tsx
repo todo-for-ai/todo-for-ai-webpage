@@ -106,7 +106,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     if (!repoInfo) return ''
     // 如果是todo-for-ai仓库，优先使用i18n翻译
     if (finalOwner === 'todo-for-ai' && finalRepo === 'todo-for-ai') {
-      return tc('login.repoDescription') || repoInfo.description
+      return tc('github.repoDescription') || repoInfo.description
     }
     return repoInfo.description
   }
