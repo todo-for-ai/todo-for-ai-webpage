@@ -55,6 +55,10 @@
     "online": "Online",
     "offline": "Offline"
   },
+  "boolean": {
+    "true": "Yes",
+    "false": "No"
+  },
   "kanban": {
     "todo": "To Do",
     "in_progress": "In Progress",
@@ -217,7 +221,11 @@
     "noContent": "No content",
     "noItems": "No items",
     "noProjects": "No project data",
-    "noTasks": "No task data"
+    "noTasks": "No task data",
+    "noRules": "No rules"
+  },
+  "task": {
+    "idBadgeTitle": "View task #{{taskId}} details"
   },
   "wechatGroup": {
     "tooltip": "Join AI Discussion Group",
@@ -341,6 +349,13 @@
     "inactive": {
       "title": "Account inactive",
       "subtitle": "Your account is not activated yet. Please contact administrator"
+    }
+  },
+  "auth": {
+    "loginMessages": {
+      "expired": "Your login has expired, please sign in again",
+      "unauthorized": "You do not have access, please sign in",
+      "required": "Please sign in to continue"
     }
   }
 }

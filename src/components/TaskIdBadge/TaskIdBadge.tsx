@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 import styles from './TaskIdBadge.module.css'
 
 export interface TaskIdBadgeProps {
@@ -28,6 +29,7 @@ const TaskIdBadge: React.FC<TaskIdBadgeProps> = ({
   onClick
 }) => {
   const navigate = useNavigate()
+  const { tc } = useTranslation()
 
   const handleClick = () => {
     if (onClick) {
@@ -51,7 +53,7 @@ const TaskIdBadge: React.FC<TaskIdBadgeProps> = ({
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      title={`查看任务 #${taskId} 详情`}
+      title={tc('task.idBadgeTitle', { taskId })}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()

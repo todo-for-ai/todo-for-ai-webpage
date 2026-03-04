@@ -25,7 +25,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   const navigate = useNavigate()
   const [pinManagerVisible, setPinManagerVisible] = useState(false)
   const [hasPins, setHasPins] = useState(false)
-  const { tn } = useTranslation()
+  const { tn, tc } = useTranslation()
 
   // 检查是否有Pin项目
   useEffect(() => {
@@ -49,7 +49,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   if (!isAuthenticated || !user) {
     return (
       <Button type="primary" href="/todo-for-ai/pages/login">
-        登录
+        {tc('actions.login')}
       </Button>
     )
   }

@@ -55,6 +55,10 @@
     "online": "在线",
     "offline": "离线"
   },
+  "boolean": {
+    "true": "是",
+    "false": "否"
+  },
   "kanban": {
     "todo": "待办",
     "in_progress": "进行中",
@@ -217,7 +221,11 @@
     "noContent": "暂无内容",
     "noItems": "暂无项目",
     "noProjects": "暂无项目数据",
-    "noTasks": "暂无任务数据"
+    "noTasks": "暂无任务数据",
+    "noRules": "暂无规则"
+  },
+  "task": {
+    "idBadgeTitle": "查看任务 #{{taskId}} 详情"
   },
   "wechatGroup": {
     "tooltip": "加入AI交流群",
@@ -341,6 +349,13 @@
     "inactive": {
       "title": "账户未激活",
       "subtitle": "您的账户尚未激活，请联系管理员"
+    }
+  },
+  "auth": {
+    "loginMessages": {
+      "expired": "您的登录已过期，请重新登录",
+      "unauthorized": "您没有访问权限，请登录",
+      "required": "请登录以继续使用"
     }
   }
 }
