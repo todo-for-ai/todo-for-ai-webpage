@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Table, Button, Space, Tag, Modal, Form, Input, message, Popconfirm, Tooltip } from 'antd'
+import { Card, Table, Button, Space, Tag, Modal, Form, Input, message, Popconfirm } from 'antd'
 import { PlusOutlined, DeleteOutlined, EyeOutlined, CopyOutlined } from '@ant-design/icons'
 import { apiTokensApi } from '../api/apiTokens'
 import type { ApiToken } from '../api/apiTokens'
@@ -12,6 +12,8 @@ const APITokenManager: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false)
   const [form] = Form.useForm()
   const [visibleTokens, setVisibleTokens] = useState<Set<number>>(new Set())
+  const [revealedTokens, setRevealedTokens] = useState<Record<number, string>>({})
+  const [revealingTokenIds, setRevealingTokenIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     loadTokens()
@@ -51,17 +53,51 @@ const APITokenManager: React.FC = () => {
     }
   }
 
-  const toggleTokenVisibility = (tokenId: number) => {
-    const newVisible = new Set(visibleTokens)
-    if (newVisible.has(tokenId)) {
-      newVisible.delete(tokenId)
-    } else {
-      newVisible.add(tokenId)
+  const toggleTokenVisibility = async (record: ApiToken) => {
+    const tokenId = record.id
+
+    if (visibleTokens.has(tokenId)) {
+      setVisibleTokens((prev) => {
+        const next = new Set(prev)
+        next.delete(tokenId)
+        return next
+      })
+      return
     }
-    setVisibleTokens(newVisible)
+
+    if (!revealedTokens[tokenId]) {
+      setRevealingTokenIds((prev) => {
+        const next = new Set(prev)
+        next.add(tokenId)
+        return next
+      })
+      try {
+        const token = await apiTokensApi.reveal(tokenId)
+        setRevealedTokens((prev) => ({ ...prev, [tokenId]: token }))
+      } catch (error) {
+        message.error(tc('apiTokenManager.messages.loadFailed'))
+        return
+      } finally {
+        setRevealingTokenIds((prev) => {
+          const next = new Set(prev)
+          next.delete(tokenId)
+          return next
+        })
+      }
+    }
+
+    setVisibleTokens((prev) => {
+      const next = new Set(prev)
+      next.add(tokenId)
+      return next
+    })
   }
 
   const copyToClipboard = (text: string) => {
+    if (!text) {
+      message.error(tc('apiTokenManager.messages.copyFailed'))
+      return
+    }
     navigator.clipboard.writeText(text).then(() => {
       message.success(tc('apiTokenManager.messages.copySuccess'))
     }).catch(() => {
@@ -80,21 +116,31 @@ const APITokenManager: React.FC = () => {
       dataIndex: 'token',
       key: 'token',
       render: (token: string, record: ApiToken) => (
-        <Space>
+        <Space align="center">
           <code>
-            {visibleTokens.has(record.id) ? token : '*'.repeat(20)}
+            {(() => {
+              const revealedToken = revealedTokens[record.id]
+              const copyableToken = revealedToken || (token && !token.includes('*') ? token : '')
+              const maskedToken = record.prefix ? `${record.prefix}${'*'.repeat(12)}` : '*'.repeat(20)
+              return visibleTokens.has(record.id) && copyableToken ? copyableToken : maskedToken
+            })()}
           </code>
           <Button
             type="text"
             size="small"
             icon={<EyeOutlined />}
-            onClick={() => toggleTokenVisibility(record.id)}
+            loading={revealingTokenIds.has(record.id)}
+            onClick={() => { void toggleTokenVisibility(record) }}
           />
           <Button
             type="text"
             size="small"
             icon={<CopyOutlined />}
-            onClick={() => copyToClipboard(token)}
+            onClick={() => {
+              const revealedToken = revealedTokens[record.id]
+              const copyableToken = revealedToken || (token && !token.includes('*') ? token : '')
+              copyToClipboard(copyableToken)
+            }}
           />
         </Space>
       ),
