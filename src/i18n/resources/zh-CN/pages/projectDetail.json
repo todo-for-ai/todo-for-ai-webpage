@@ -1,5 +1,6 @@
 {
   "title": "项目详情",
+  "subtitle": "查看项目概览、任务、成员与上下文规则",
   "pageTitle": "项目详情 - Todo for AI",
   "breadcrumb": {
     "projectManagement": "项目管理"

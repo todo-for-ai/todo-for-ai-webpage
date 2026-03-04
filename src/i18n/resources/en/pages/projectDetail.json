@@ -1,5 +1,6 @@
 {
   "title": "Project Details",
+  "subtitle": "View project overview, tasks, members, and context rules",
   "pageTitle": "Project Details - Todo for AI",
   "breadcrumb": {
     "projectManagement": "Project Management"

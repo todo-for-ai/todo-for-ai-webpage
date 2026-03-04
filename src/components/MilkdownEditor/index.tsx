@@ -202,21 +202,23 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
 
   // 应用主题类名和打字机效果
   useEffect(() => {
-    if (containerRef.current) {
-      // 清除之前的主题类名
-      containerRef.current.className = containerRef.current.className
-        .replace(/theme-[\w-]+/g, '')
+    if (!containerRef.current || !currentTheme) {
+      return
+    }
 
-      // 添加当前主题类名
-      containerRef.current.classList.add(`theme-${currentTheme.id}`)
+    // 清除之前的主题类名
+    containerRef.current.className = containerRef.current.className
+      .replace(/theme-[\w-]+/g, '')
 
-      // 如果是打字机主题，初始化特效
-      if (isTypewriterTheme(currentTheme.id)) {
-        const effectsManager = initTypewriterEffects(containerRef.current, currentTheme)
+    // 添加当前主题类名
+    containerRef.current.classList.add(`theme-${currentTheme.id}`)
 
-        return () => {
-          effectsManager.destroy()
-        }
+    // 如果是打字机主题，初始化特效
+    if (isTypewriterTheme(currentTheme.id)) {
+      const effectsManager = initTypewriterEffects(containerRef.current, currentTheme)
+
+      return () => {
+        effectsManager.destroy()
       }
     }
   }, [currentTheme, isTypewriterTheme])
