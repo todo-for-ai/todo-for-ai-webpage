@@ -100,6 +100,7 @@
     }
   },
   "messages": {
+    "titleRequired": "请输入任务标题",
     "draftSaved": "📝 草稿已保存 (防抖):",
     "draftLoaded": "已加载上次保存的草稿",
     "editDraftLoaded": "已加载未提交的编辑草稿",

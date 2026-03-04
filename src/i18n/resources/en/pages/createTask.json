@@ -100,6 +100,7 @@
     }
   },
   "messages": {
+    "titleRequired": "Please enter task title",
     "draftSaved": "📝 Draft saved (debounced):",
     "draftLoaded": "Loaded previously saved draft",
     "editDraftLoaded": "Unsaved edit draft loaded",
