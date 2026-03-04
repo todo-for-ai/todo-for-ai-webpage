@@ -143,6 +143,27 @@
       "title": "Task List Variables",
       "count": "Task Count",
       "list": "Task List"
+    },
+    "contextRules": {
+      "title": "Context Rules Variables",
+      "global": {
+        "all": "All global context rules content",
+        "count": "Global context rules count",
+        "names": "Global context rules name list",
+        "byName": "Get specific global rule by name"
+      },
+      "project": {
+        "all": "Current project all context rules content",
+        "count": "Project context rules count",
+        "names": "Project context rules name list",
+        "byName": "Get specific project rule by name"
+      },
+      "merged": {
+        "all": "Merged global and project rules content",
+        "count": "Total merged rules count",
+        "names": "Merged rules name list",
+        "byName": "Get specific merged rule by name"
+      }
     }
   }
 }

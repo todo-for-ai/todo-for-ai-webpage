@@ -10,6 +10,8 @@
   "projectPrompts": {
     "title": "Project Task Execution Prompts",
     "description": "Here you can customize the content copied by the \\\"Copy AI Prompt\\\" button on project detail pages. Supports variables like ${project.name}.",
+    "selectProject": "Select Project",
+    "preview": "Preview",
     "placeholder": "Please enter your custom prompt template...",
     "defaultTemplate": "Please help me execute all pending tasks in project \\\"${project.name}\\\":\\n\\n**Project Information**:\\n- Project Name: ${project.name}\\n- Project Description: ${project.description}\\n- GitHub Repository: ${project.github_repo}\\n- Project Context: ${project.context}\\n\\n**Number of Tasks to Execute**: ${tasks.count}\\n\\n**Execution Guidelines**:\\n1. Please use MCP tools to connect to Todo system: ${system.url}\\n2. Use get_project_tasks_by_name tool to get project task list:\\n   - Project Name: \\\"${project.name}\\\"\\n   - Status Filter: [\\\"todo\\\", \\\"in_progress\\\", \\\"review\\\"]\\n3. Execute tasks one by one in order of creation time\\n4. For each task, use get_task_by_id to get detailed information\\n5. After completing a task, use submit_task_feedback to submit feedback\\n6. Continue to the next task until all tasks are completed\\n\\n**Task Overview**:\\n${tasks.list}\\n\\nPlease start executing the tasks in this project and submit feedback after each task is completed."
   },
@@ -17,6 +19,7 @@
     "title": "Task Detail Page Prompt Buttons",
     "description": "Here you can customize the copy prompt buttons on task detail pages, including the number of buttons, text, and copied content.",
     "addButton": "Add Button",
+    "noButtons": "No custom buttons yet. Click \"Add Button\" above to create one.",
     "buttonConfig": {
       "title": "Button Configuration",
       "name": "Button Name",
@@ -168,10 +171,14 @@
     "projectDescription": "Project description:",
     "close": "Close",
     "noDescription": "No description",
-    "none": "None"
-    ,
+    "none": "None",
     "deleteSuccess": "Button deleted",
-    "deleteFailed": "Failed to delete button"
+    "deleteFailed": "Failed to delete button",
+    "reorderSuccess": "Button order updated",
+    "reorderFailed": "Failed to update button order"
+  },
+  "errors": {
+    "previewFailed": "Preview failed"
   },
   "sampleData": {
     "projectName": "Sample Project",

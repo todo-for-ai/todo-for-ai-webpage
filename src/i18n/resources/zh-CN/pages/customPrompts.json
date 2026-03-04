@@ -10,6 +10,8 @@
   "projectPrompts": {
     "title": "项目执行任务提示词",
     "description": "在这里您可以自定义项目详情页面\"复制AI提示词\"按钮复制的内容。支持使用变量如 ${project.name} 等。",
+    "selectProject": "选择项目",
+    "preview": "预览",
     "placeholder": "请输入您的自定义提示词模板...",
     "defaultTemplate": "请帮我执行项目\\\"${project.name}\\\"中的所有待办任务：\\n\\n**项目信息**:\\n- 项目名称: ${project.name}\\n- 项目描述: ${project.description}\\n- GitHub仓库: ${project.github_repo}\\n- 项目上下文: ${project.context}\\n\\n**待执行任务数量**: ${tasks.count}个\\n\\n**执行指引**:\\n1. 请使用MCP工具连接到Todo系统: ${system.url}\\n2. 使用get_project_tasks_by_name工具获取项目任务列表:\\n   - 项目名称: \\\"${project.name}\\\"\\n   - 状态筛选: [\\\"todo\\\", \\\"in_progress\\\", \\\"review\\\"]\\n3. 按照任务的创建时间顺序，逐个执行任务\\n4. 对于每个任务，使用get_task_by_id获取详细信息\\n5. 完成任务后，使用submit_task_feedback提交反馈\\n6. 继续执行下一个任务，直到所有任务完成\\n\\n**任务概览**:\\n${tasks.list}\\n\\n请开始执行这个项目的任务，并在每个任务完成后提交反馈。"
   },
@@ -174,6 +176,9 @@
     "deleteFailed": "删除失败，请稍后重试",
     "reorderSuccess": "按钮顺序已更新",
     "reorderFailed": "更新按钮顺序失败"
+  },
+  "errors": {
+    "previewFailed": "预览失败"
   },
   "sampleData": {
     "projectName": "示例项目",
