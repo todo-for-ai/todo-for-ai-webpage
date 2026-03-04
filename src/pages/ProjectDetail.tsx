@@ -17,7 +17,7 @@ const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { tp } = usePageTranslation('projectDetail')
+  const { tp, tc } = usePageTranslation('projectDetail')
 
   const {
     currentProject,
@@ -77,12 +77,12 @@ const ProjectDetail = () => {
       <Card style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/todo-for-ai/pages/projects')}
-            >
-              {tp('navigation.backToProjects')}
-            </Button>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate('/todo-for-ai/pages/projects')}
+              >
+                {tc('actions.back')}
+              </Button>
             <span style={{ color: '#999' }}>|</span>
             <HomeOutlined style={{ color: '#1890ff' }} />
             <span style={{ color: '#666' }}>{currentProject.name}</span>
@@ -91,7 +91,7 @@ const ProjectDetail = () => {
             <Button
               onClick={handleTogglePin}
             >
-              {isPinned ? tp('pinManager.unpin') : tp('pinManager.pin')}
+              {isPinned ? tp('buttons.pinned') : tp('buttons.pin')}
             </Button>
           </div>
         </div>

@@ -10,7 +10,7 @@ import { TaskDetailNavigation } from './components/TaskDetail/TaskDetailNavigati
 const TaskDetail: React.FC = () => {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const { t, tp } = usePageTranslation('taskDetail')
+  const { t, tp, tc } = usePageTranslation('taskDetail')
   
   const {
     task,
@@ -48,11 +48,11 @@ const TaskDetail: React.FC = () => {
   }, [handleKeyDown])
 
   if (loading) {
-    return <div style={{ padding: '24px', textAlign: 'center' }}>{tp('loading')}</div>
+    return <div style={{ padding: '24px', textAlign: 'center' }}>{tc('status.loading')}</div>
   }
 
   if (!task) {
-    return <div style={{ padding: '24px', textAlign: 'center' }}>{tp('notFound')}</div>
+    return <div style={{ padding: '24px', textAlign: 'center' }}>{tp('messages.taskNotFound')}</div>
   }
 
   return (
