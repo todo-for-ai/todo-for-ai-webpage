@@ -3,6 +3,7 @@ import { Button, Card, Form, Input, InputNumber, Select, Space, Switch, Tabs, me
 import type { Agent, AgentStatus } from '../../../api/agents'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 import type { AgentFormPayload, AgentFormValues } from './agentFormTypes'
+import './AgentEditorForm.css'
 
 interface WorkspaceOption {
   label: string
@@ -126,12 +127,12 @@ export function AgentEditorForm({
   }, [form, agent])
 
   return (
-    <div className="page-container">
-      <div style={{ marginBottom: 16 }}>
-        <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+    <div className='page-container'>
+      <div className='agent-editor-form__header'>
+        <Space align='center' className='agent-editor-form__header-space'>
           <div>
-            <h2 style={{ marginBottom: 8 }}>{title}</h2>
-            <div style={{ color: '#666' }}>{tp('form.description')}</div>
+            <h2 className='agent-editor-form__title'>{title}</h2>
+            <div className='agent-editor-form__description'>{tp('form.description')}</div>
           </div>
 
           <Space>
@@ -139,13 +140,13 @@ export function AgentEditorForm({
               placeholder={tp('form.workspace')}
               value={workspaceId || undefined}
               options={workspaces}
-              style={{ minWidth: 260 }}
+              className='agent-editor-form__workspace'
               onChange={onWorkspaceChange}
               disabled={lockWorkspace}
             />
             <Button onClick={onCancel}>{tp('form.cancel')}</Button>
             <Button
-              type="primary"
+              type='primary'
               loading={submitting}
               disabled={!workspaceId}
               onClick={async () => {
@@ -198,7 +199,7 @@ export function AgentEditorForm({
       </div>
 
       <Card loading={loading}>
-        <Form form={form} layout="vertical">
+        <Form form={form} layout='vertical'>
           <Tabs
             items={[
               {
@@ -206,40 +207,44 @@ export function AgentEditorForm({
                 label: tp('form.tabs.basic'),
                 children: (
                   <>
-                    <Form.Item name="name" label={tp('form.fields.name')} rules={[{ required: true, message: tp('form.validation.nameRequired') }]}>
-                      <Input placeholder="writer-agent-prod" maxLength={128} />
+                    <Form.Item
+                      name='name'
+                      label={tp('form.fields.name')}
+                      rules={[{ required: true, message: tp('form.validation.nameRequired') }]}
+                    >
+                      <Input placeholder='writer-agent-prod' maxLength={128} />
                     </Form.Item>
 
-                    <Form.Item name="display_name" label={tp('form.fields.displayName')}>
-                      <Input placeholder="Creative Writer Bot" maxLength={128} />
+                    <Form.Item name='display_name' label={tp('form.fields.displayName')}>
+                      <Input placeholder='Creative Writer Bot' maxLength={128} />
                     </Form.Item>
 
-                    <Form.Item name="description" label={tp('form.fields.description')}>
+                    <Form.Item name='description' label={tp('form.fields.description')}>
                       <Input.TextArea rows={3} maxLength={500} />
                     </Form.Item>
 
-                    <Form.Item name="avatar_url" label={tp('form.fields.avatarUrl')}>
-                      <Input placeholder="https://..." maxLength={512} />
+                    <Form.Item name='avatar_url' label={tp('form.fields.avatarUrl')}>
+                      <Input placeholder='https://...' maxLength={512} />
                     </Form.Item>
 
-                    <Form.Item name="homepage_url" label={tp('form.fields.homepageUrl')}>
-                      <Input placeholder="https://..." maxLength={512} />
+                    <Form.Item name='homepage_url' label={tp('form.fields.homepageUrl')}>
+                      <Input placeholder='https://...' maxLength={512} />
                     </Form.Item>
 
-                    <Form.Item name="contact_email" label={tp('form.fields.contactEmail')}>
-                      <Input placeholder="agent@company.com" maxLength={255} />
+                    <Form.Item name='contact_email' label={tp('form.fields.contactEmail')}>
+                      <Input placeholder='agent@company.com' maxLength={255} />
                     </Form.Item>
 
-                    <Form.Item name="status" label={tp('form.fields.status')}>
+                    <Form.Item name='status' label={tp('form.fields.status')}>
                       <Select options={statusOptions} />
                     </Form.Item>
 
-                    <Form.Item name="capability_tags_text" label={tp('form.fields.capabilityTags')}>
-                      <Input placeholder="write, review" />
+                    <Form.Item name='capability_tags_text' label={tp('form.fields.capabilityTags')}>
+                      <Input placeholder='write, review' />
                     </Form.Item>
 
-                    <Form.Item name="allowed_project_ids_text" label={tp('form.fields.allowedProjectIds')}>
-                      <Input placeholder="1, 2, 3" />
+                    <Form.Item name='allowed_project_ids_text' label={tp('form.fields.allowedProjectIds')}>
+                      <Input placeholder='1, 2, 3' />
                     </Form.Item>
                   </>
                 ),
@@ -249,71 +254,71 @@ export function AgentEditorForm({
                 label: tp('form.tabs.runtime'),
                 children: (
                   <>
-                    <Form.Item name="llm_provider" label={tp('form.fields.llmProvider')}>
-                      <Input placeholder="openai / anthropic / deepseek" maxLength={64} />
+                    <Form.Item name='llm_provider' label={tp('form.fields.llmProvider')}>
+                      <Input placeholder='openai / anthropic / deepseek' maxLength={64} />
                     </Form.Item>
 
-                    <Form.Item name="llm_model" label={tp('form.fields.llmModel')}>
-                      <Input placeholder="gpt-5-mini" maxLength={128} />
+                    <Form.Item name='llm_model' label={tp('form.fields.llmModel')}>
+                      <Input placeholder='gpt-5-mini' maxLength={128} />
                     </Form.Item>
 
-                    <Form.Item name="reasoning_mode" label={tp('form.fields.reasoningMode')}>
+                    <Form.Item name='reasoning_mode' label={tp('form.fields.reasoningMode')}>
                       <Select options={reasoningOptions} />
                     </Form.Item>
 
-                    <Form.Item name="temperature" label={tp('form.fields.temperature')}>
-                      <InputNumber min={0} max={2} step={0.05} style={{ width: '100%' }} />
+                    <Form.Item name='temperature' label={tp('form.fields.temperature')}>
+                      <InputNumber min={0} max={2} step={0.05} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="top_p" label={tp('form.fields.topP')}>
-                      <InputNumber min={0} max={1} step={0.05} style={{ width: '100%' }} />
+                    <Form.Item name='top_p' label={tp('form.fields.topP')}>
+                      <InputNumber min={0} max={1} step={0.05} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="max_output_tokens" label={tp('form.fields.maxOutputTokens')}>
-                      <InputNumber min={1} step={1} style={{ width: '100%' }} />
+                    <Form.Item name='max_output_tokens' label={tp('form.fields.maxOutputTokens')}>
+                      <InputNumber min={1} step={1} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="context_window_tokens" label={tp('form.fields.contextWindowTokens')}>
-                      <InputNumber min={1} step={1} style={{ width: '100%' }} />
+                    <Form.Item name='context_window_tokens' label={tp('form.fields.contextWindowTokens')}>
+                      <InputNumber min={1} step={1} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="max_concurrency" label={tp('form.fields.maxConcurrency')}>
-                      <InputNumber min={1} step={1} style={{ width: '100%' }} />
+                    <Form.Item name='max_concurrency' label={tp('form.fields.maxConcurrency')}>
+                      <InputNumber min={1} step={1} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="max_retry" label={tp('form.fields.maxRetry')}>
-                      <InputNumber min={0} step={1} style={{ width: '100%' }} />
+                    <Form.Item name='max_retry' label={tp('form.fields.maxRetry')}>
+                      <InputNumber min={0} step={1} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="timeout_seconds" label={tp('form.fields.timeoutSeconds')}>
-                      <InputNumber min={30} step={10} style={{ width: '100%' }} />
+                    <Form.Item name='timeout_seconds' label={tp('form.fields.timeoutSeconds')}>
+                      <InputNumber min={30} step={10} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="heartbeat_interval_seconds" label={tp('form.fields.heartbeatIntervalSeconds')}>
-                      <InputNumber min={5} step={1} style={{ width: '100%' }} />
+                    <Form.Item name='heartbeat_interval_seconds' label={tp('form.fields.heartbeatIntervalSeconds')}>
+                      <InputNumber min={5} step={1} className='agent-editor-form__number' />
                     </Form.Item>
 
-                    <Form.Item name="system_prompt" label={tp('form.fields.systemPrompt')}>
+                    <Form.Item name='system_prompt' label={tp('form.fields.systemPrompt')}>
                       <Input.TextArea rows={5} />
                     </Form.Item>
 
-                    <Form.Item name="response_style_json" label={tp('form.fields.responseStyle')}>
+                    <Form.Item name='response_style_json' label={tp('form.fields.responseStyle')}>
                       <Input.TextArea rows={5} placeholder='{"tone":"professional"}' />
                     </Form.Item>
 
-                    <Form.Item name="tool_policy_json" label={tp('form.fields.toolPolicy')}>
+                    <Form.Item name='tool_policy_json' label={tp('form.fields.toolPolicy')}>
                       <Input.TextArea rows={5} placeholder='{"allow": ["search", "shell"]}' />
                     </Form.Item>
 
-                    <Form.Item name="memory_policy_json" label={tp('form.fields.memoryPolicy')}>
+                    <Form.Item name='memory_policy_json' label={tp('form.fields.memoryPolicy')}>
                       <Input.TextArea rows={5} placeholder='{"type": "short_term"}' />
                     </Form.Item>
 
-                    <Form.Item name="handoff_policy_json" label={tp('form.fields.handoffPolicy')}>
+                    <Form.Item name='handoff_policy_json' label={tp('form.fields.handoffPolicy')}>
                       <Input.TextArea rows={5} placeholder='{"allow_handoff": true}' />
                     </Form.Item>
 
-                    <Form.Item name="execution_mode" label={tp('form.fields.executionMode')}>
+                    <Form.Item name='execution_mode' label={tp('form.fields.executionMode')}>
                       <Select
                         options={[
                           { label: tp('detail.enums.executionMode.external_pull'), value: 'external_pull' },
@@ -322,15 +327,15 @@ export function AgentEditorForm({
                       />
                     </Form.Item>
 
-                    <Form.Item name="runner_enabled" label={tp('form.fields.runnerEnabled')} valuePropName="checked">
+                    <Form.Item name='runner_enabled' label={tp('form.fields.runnerEnabled')} valuePropName='checked'>
                       <Switch />
                     </Form.Item>
 
-                    <Form.Item name="sandbox_profile" label={tp('form.fields.sandboxProfile')}>
-                      <Input placeholder="standard" maxLength={64} />
+                    <Form.Item name='sandbox_profile' label={tp('form.fields.sandboxProfile')}>
+                      <Input placeholder='standard' maxLength={64} />
                     </Form.Item>
 
-                    <Form.Item name="sandbox_policy_json" label={tp('form.fields.sandboxPolicy')}>
+                    <Form.Item name='sandbox_policy_json' label={tp('form.fields.sandboxPolicy')}>
                       <Input.TextArea rows={5} placeholder='{"network_mode":"whitelist","allowed_domains":["api.openai.com"]}' />
                     </Form.Item>
                   </>
@@ -341,11 +346,11 @@ export function AgentEditorForm({
                 label: tp('form.tabs.soul'),
                 children: (
                   <>
-                    <Form.Item name="soul_markdown" label={tp('form.fields.soulMarkdown')}>
+                    <Form.Item name='soul_markdown' label={tp('form.fields.soulMarkdown')}>
                       <Input.TextArea rows={14} placeholder={'# SOUL\n\n## Identity\nYou are ...\n\n## Boundaries\n- ...'} />
                     </Form.Item>
 
-                    <Form.Item name="change_summary" label={tp('form.fields.changeSummary')}>
+                    <Form.Item name='change_summary' label={tp('form.fields.changeSummary')}>
                       <Input maxLength={255} />
                     </Form.Item>
                   </>

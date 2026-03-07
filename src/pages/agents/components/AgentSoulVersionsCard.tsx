@@ -3,6 +3,7 @@ import { Button, Card, Input, Modal, Space, Table, Tag, Typography } from 'antd'
 import { HistoryOutlined, RollbackOutlined } from '@ant-design/icons'
 import type { AgentSoulVersion } from '../../../api/agents'
 import { useAgentSoul } from '../hooks/useAgentSoul'
+import './AgentSoulVersionsCard.css'
 
 const { Text } = Typography
 
@@ -24,9 +25,16 @@ export function AgentSoulVersionsCard({
   const [changeSummary, setChangeSummary] = useState('')
 
   return (
-    <Card title={<Space><HistoryOutlined /> SOUL Versions</Space>} style={{ marginBottom: 16 }}>
+    <Card
+      title={
+        <Space>
+          <HistoryOutlined /> SOUL Versions
+        </Space>
+      }
+      className='agent-soul-versions-card'
+    >
       <Table<AgentSoulVersion>
-        rowKey="id"
+        rowKey='id'
         loading={loading}
         dataSource={versions}
         pagination={false}
@@ -39,14 +47,14 @@ export function AgentSoulVersionsCard({
             render: (value: number) => (
               <Space>
                 <Text strong>v{value}</Text>
-                {soulVersion === value && <Tag color="green">current</Tag>}
+                {soulVersion === value ? <Tag color='green'>current</Tag> : null}
               </Space>
             ),
           },
           {
             title: 'Summary',
             key: 'change_summary',
-            render: (_, row) => row.change_summary || <Text type="secondary">No summary</Text>,
+            render: (_, row) => row.change_summary || <Text type='secondary'>No summary</Text>,
           },
           {
             title: 'Updated At',
@@ -60,7 +68,7 @@ export function AgentSoulVersionsCard({
             width: 140,
             render: (_, row) => (
               <Button
-                size="small"
+                size='small'
                 icon={<RollbackOutlined />}
                 disabled={!agentId || soulVersion === row.version}
                 onClick={() => {
@@ -92,7 +100,7 @@ export function AgentSoulVersionsCard({
         }}
         confirmLoading={loading}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space direction='vertical' className='agent-soul-versions-card__modal-body'>
           <Text>Change summary</Text>
           <Input
             value={changeSummary}

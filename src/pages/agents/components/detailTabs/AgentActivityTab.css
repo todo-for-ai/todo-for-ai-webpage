@@ -1,0 +1,37 @@
+.agent-activity-tab {
+  width: 100%;
+}
+
+.agent-activity-tab__source {
+  width: 180px;
+}
+
+.agent-activity-tab__level {
+  width: 150px;
+}
+
+.agent-activity-tab__number {
+  width: 140px;
+}
+
+.agent-activity-tab__text {
+  width: 220px;
+}
+
+.agent-activity-tab__search {
+  width: 280px;
+}
+
+.agent-activity-tab__datetime {
+  width: 200px;
+}
+
+.agent-activity-tab__payload {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  background: #f7f7f7;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 12px;
+}

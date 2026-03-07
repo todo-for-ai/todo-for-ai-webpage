@@ -15,6 +15,7 @@ import {
 import { CopyOutlined, EyeOutlined, KeyOutlined, LinkOutlined, StopOutlined } from '@ant-design/icons'
 import type { AgentKey } from '../../../api/agents'
 import { useAgentKeys } from '../hooks/useAgentKeys'
+import './AgentKeysCard.css'
 
 const { Paragraph, Text } = Typography
 
@@ -30,9 +31,7 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
   const [createdToken, setCreatedToken] = useState<string | null>(null)
-
   const [revealedToken, setRevealedToken] = useState<string | null>(null)
-
   const [connectModalOpen, setConnectModalOpen] = useState(false)
   const [ttlSeconds, setTtlSeconds] = useState(600)
   const [connectLink, setConnectLink] = useState<string | null>(null)
@@ -78,20 +77,24 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
 
   return (
     <Card
-      title={<Space><KeyOutlined /> Agent Keys</Space>}
+      title={
+        <Space>
+          <KeyOutlined /> Agent Keys
+        </Space>
+      }
       extra={
         <Space>
           <Button icon={<LinkOutlined />} onClick={() => setConnectModalOpen(true)} disabled={!agentId}>
             Generate Link
           </Button>
-          <Button type="primary" icon={<KeyOutlined />} onClick={() => setCreateModalOpen(true)} disabled={!agentId}>
+          <Button type='primary' icon={<KeyOutlined />} onClick={() => setCreateModalOpen(true)} disabled={!agentId}>
             Create Key
           </Button>
         </Space>
       }
     >
       <Table<AgentKey>
-        rowKey="id"
+        rowKey='id'
         loading={loading}
         dataSource={keys}
         pagination={false}
@@ -101,7 +104,7 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
           {
             title: 'Status',
             key: 'status',
-            render: (_, row) => (row.is_active ? <Tag color="green">active</Tag> : <Tag>revoked</Tag>),
+            render: (_, row) => (row.is_active ? <Tag color='green'>active</Tag> : <Tag>revoked</Tag>),
           },
           { title: 'Usage', dataIndex: 'usage_count', key: 'usage_count', width: 100 },
           {
@@ -110,17 +113,17 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
             width: 220,
             render: (_, row) => (
               <Space>
-                <Button size="small" icon={<EyeOutlined />} onClick={() => handleReveal(row.id)}>
+                <Button size='small' icon={<EyeOutlined />} onClick={() => handleReveal(row.id)}>
                   Reveal
                 </Button>
                 <Popconfirm
-                  title="Revoke this key?"
-                  description="This action cannot be undone."
-                  okText="Revoke"
-                  cancelText="Cancel"
+                  title='Revoke this key?'
+                  description='This action cannot be undone.'
+                  okText='Revoke'
+                  cancelText='Cancel'
                   onConfirm={() => revokeKey(row.id)}
                 >
-                  <Button size="small" danger icon={<StopOutlined />} disabled={!row.is_active}>
+                  <Button size='small' danger icon={<StopOutlined />} disabled={!row.is_active}>
                     Revoke
                   </Button>
                 </Popconfirm>
@@ -130,11 +133,11 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
         ]}
       />
 
-      {keys.length === 0 && (
-        <Paragraph type="secondary" style={{ marginTop: 12 }}>
+      {keys.length === 0 ? (
+        <Paragraph type='secondary' className='agent-keys-card__empty'>
           No keys yet. Create one to allow your agent to connect.
         </Paragraph>
-      )}
+      ) : null}
 
       <Modal
         title={`Create Key for ${agentName || 'Agent'}`}
@@ -146,67 +149,67 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
         <Input
           value={newKeyName}
           onChange={(event) => setNewKeyName(event.target.value)}
-          placeholder="prod-key-1"
+          placeholder='prod-key-1'
           maxLength={128}
         />
       </Modal>
 
       <Modal
-        title="New Key Token"
+        title='New Key Token'
         open={!!createdToken}
         onCancel={() => setCreatedToken(null)}
         onOk={() => setCreatedToken(null)}
-        okText="Close"
-        cancelButtonProps={{ style: { display: 'none' } }}
+        okText='Close'
+        cancelButtonProps={{ className: 'agent-keys-card__hide-cancel' }}
       >
         <Paragraph>Save this token now. It may not be shown again.</Paragraph>
         <Input.TextArea value={createdToken || ''} rows={3} readOnly />
-        <Button icon={<CopyOutlined />} onClick={() => createdToken && copyText(createdToken, 'Token copied')}>
+        <Button icon={<CopyOutlined />} onClick={() => (createdToken ? void copyText(createdToken, 'Token copied') : null)}>
           Copy Token
         </Button>
       </Modal>
 
       <Modal
-        title="Revealed Token"
+        title='Revealed Token'
         open={!!revealedToken}
         onCancel={() => setRevealedToken(null)}
         onOk={() => setRevealedToken(null)}
-        okText="Close"
-        cancelButtonProps={{ style: { display: 'none' } }}
+        okText='Close'
+        cancelButtonProps={{ className: 'agent-keys-card__hide-cancel' }}
       >
         <Input.TextArea value={revealedToken || ''} rows={3} readOnly />
-        <Button icon={<CopyOutlined />} onClick={() => revealedToken && copyText(revealedToken, 'Token copied')}>
+        <Button icon={<CopyOutlined />} onClick={() => (revealedToken ? void copyText(revealedToken, 'Token copied') : null)}>
           Copy Token
         </Button>
       </Modal>
 
       <Modal
-        title="Generate Connect Link"
+        title='Generate Connect Link'
         open={connectModalOpen}
         onCancel={() => setConnectModalOpen(false)}
         onOk={handleGenerateConnectLink}
         confirmLoading={loading}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space direction='vertical' className='agent-keys-card__connect-body'>
           <Text>TTL (seconds)</Text>
           <InputNumber
             min={60}
             max={3600}
             value={ttlSeconds}
             onChange={(value) => setTtlSeconds(Number(value || 600))}
-            style={{ width: '100%' }}
+            className='agent-keys-card__full-width'
           />
 
-          {connectLink && (
+          {connectLink ? (
             <>
               <Text strong>Connect Link</Text>
               <Input.TextArea rows={4} value={connectLink} readOnly />
-              <Button icon={<CopyOutlined />} onClick={() => copyText(connectLink, 'Connect link copied')}>
+              <Button icon={<CopyOutlined />} onClick={() => void copyText(connectLink, 'Connect link copied')}>
                 Copy Link
               </Button>
-              {connectExpiresAt && <Text type="secondary">Expires at: {connectExpiresAt}</Text>}
+              {connectExpiresAt ? <Text type='secondary'>Expires at: {connectExpiresAt}</Text> : null}
             </>
-          )}
+          ) : null}
         </Space>
       </Modal>
     </Card>

@@ -1,0 +1,31 @@
+.agent-workspace-activity-center {
+  width: 100%;
+}
+
+.agent-workspace-activity-center__agent {
+  width: 240px;
+}
+
+.agent-workspace-activity-center__source {
+  width: 180px;
+}
+
+.agent-workspace-activity-center__level {
+  width: 150px;
+}
+
+.agent-workspace-activity-center__number {
+  width: 140px;
+}
+
+.agent-workspace-activity-center__text {
+  width: 220px;
+}
+
+.agent-workspace-activity-center__search {
+  width: 280px;
+}
+
+.agent-workspace-activity-center__datetime {
+  width: 200px;
+}

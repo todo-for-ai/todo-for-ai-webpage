@@ -1,0 +1,15 @@
+.agent-tasks-tab {
+  width: 100%;
+}
+
+.agent-tasks-tab__status {
+  width: 180px;
+}
+
+.agent-tasks-tab__project {
+  width: 240px;
+}
+
+.agent-tasks-tab__search {
+  width: 280px;
+}

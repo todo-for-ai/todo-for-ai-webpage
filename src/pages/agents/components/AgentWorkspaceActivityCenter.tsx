@@ -1,59 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  Badge,
-  Card,
-  Descriptions,
-  Empty,
-  Input,
-  InputNumber,
-  Modal,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Typography,
-  message,
-} from 'antd'
-import type { ColumnsType } from 'antd/es/table'
-import { agentInsightsApi, agentsApi, type AgentActivityItem } from '../../../api/agents'
+import { Card, Empty, Input, InputNumber, Select, Space, Table, Tag, Typography } from 'antd'
+import type { AgentActivityItem } from '../../../api/agents'
+import { agentInsightsApi, agentsApi } from '../../../api/agents'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
+import {
+  activityLevelValues,
+  activitySourceValues,
+  emptyPagination,
+  normalizeDateTimeFilterValue,
+} from './detailTabs/shared'
+import { buildWorkspaceActivityColumns } from './workspaceActivity/WorkspaceActivityColumns'
+import { WorkspaceActivityDetailModal } from './workspaceActivity/WorkspaceActivityDetailModal'
+import './AgentWorkspaceActivityCenter.css'
 
 const { Search } = Input
 const { Text } = Typography
-
-const activitySourceValues = ['agent_run', 'agent_task_attempt', 'agent_task_event', 'task_log', 'agent_audit']
-const activityLevelValues = ['info', 'warn', 'error']
-
-const activityLevelStatus: Record<string, 'success' | 'warning' | 'error' | 'default' | 'processing'> = {
-  info: 'default',
-  warn: 'warning',
-  error: 'error',
-}
-
-const emptyPagination = { page: 1, per_page: 20, total: 0, has_prev: false, has_next: false }
-
-function formatDateTime(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-  return date.toLocaleString()
-}
-
-function normalizeDateTimeFilterValue(value: string) {
-  const text = value.trim()
-  if (!text) {
-    return undefined
-  }
-  const parsed = new Date(text)
-  if (Number.isNaN(parsed.getTime())) {
-    return undefined
-  }
-  return parsed.toISOString()
-}
 
 interface AgentWorkspaceActivityCenterProps {
   workspaceId: number | null
@@ -174,8 +135,6 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
       setPagination(data.pagination || emptyPagination)
       setSourceSummary(data.summary?.sources || {})
       setLevelSummary(data.summary?.levels || {})
-    } catch (error: any) {
-      message.error(error?.message || tp('messages.loadAgentsFailed'))
     } finally {
       setLoading(false)
     }
@@ -196,7 +155,6 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
     riskMax,
     from,
     to,
-    tp,
   ])
 
   useEffect(() => {
@@ -231,85 +189,13 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
     void loadActivities()
   }, [loadActivities])
 
-  const columns: ColumnsType<AgentActivityItem> = useMemo(
-    () => [
-      {
-        title: tp('workspaceActivity.agent', { defaultValue: 'Agent' }),
-        key: 'agent',
-        width: 220,
-        render: (_, row) => (
-          <Space direction="vertical" size={2}>
-            <span>{row.agent_display_name || row.agent_name || '-'}</span>
-            <Text type="secondary">{row.agent_id ? `#${row.agent_id}` : '-'}</Text>
-          </Space>
-        ),
-      },
-      {
-        title: tp('detail.activity.source', { defaultValue: 'Source' }),
-        dataIndex: 'source',
-        key: 'source',
-        width: 150,
-        render: (value) => <Tag>{getActivitySourceLabel(value)}</Tag>,
-      },
-      {
-        title: tp('detail.activity.eventType', { defaultValue: 'Event Type' }),
-        dataIndex: 'event_type',
-        key: 'event_type',
-        width: 220,
-        render: (value) => <Text code>{value}</Text>,
-      },
-      {
-        title: tp('detail.activity.level', { defaultValue: 'Level' }),
-        dataIndex: 'level',
-        key: 'level',
-        width: 100,
-        render: (value) => <Badge status={activityLevelStatus[value] || 'default'} text={getActivityLevelLabel(value)} />,
-      },
-      {
-        title: tp('detail.activity.related', { defaultValue: 'Related' }),
-        key: 'related',
-        width: 250,
-        render: (_, row) => (
-          <Space direction="vertical" size={2}>
-            {row.task_id ? (
-              <Text type="secondary">
-                {`${tp('detail.activity.taskId', { defaultValue: 'Task ID' })}: ${row.task_id}${row.task_title ? ` | ${row.task_title}` : ''}`}
-              </Text>
-            ) : null}
-            {row.project_id ? (
-              <Text type="secondary">
-                {`${tp('detail.activity.projectId', { defaultValue: 'Project ID' })}: ${row.project_id}${row.project_name ? ` | ${row.project_name}` : ''}`}
-              </Text>
-            ) : null}
-            {row.run_id ? <Text type="secondary">{`${tp('detail.activity.runId', { defaultValue: 'Run ID' })}: ${row.run_id}`}</Text> : null}
-            {row.attempt_id ? (
-              <Text type="secondary">{`${tp('detail.activity.attemptId', { defaultValue: 'Attempt ID' })}: ${row.attempt_id}`}</Text>
-            ) : null}
-          </Space>
-        ),
-      },
-      {
-        title: tp('detail.activity.message', { defaultValue: 'Message' }),
-        dataIndex: 'message',
-        key: 'message',
-        ellipsis: true,
-        render: (value, row) => (
-          <Space direction="vertical" size={2}>
-            <span>{value || '-'}</span>
-            {typeof row.risk_score === 'number' ? (
-              <Text type="secondary">{`${tp('detail.activity.riskScore', { defaultValue: 'Risk Score' })}: ${row.risk_score}`}</Text>
-            ) : null}
-          </Space>
-        ),
-      },
-      {
-        title: tp('detail.activity.occurredAt', { defaultValue: 'Occurred At' }),
-        dataIndex: 'occurred_at',
-        key: 'occurred_at',
-        width: 190,
-        render: (value) => formatDateTime(value),
-      },
-    ],
+  const columns = useMemo(
+    () =>
+      buildWorkspaceActivityColumns({
+        tp,
+        getActivityLevelLabel,
+        getActivitySourceLabel,
+      }),
     [tp, getActivityLevelLabel, getActivitySourceLabel]
   )
 
@@ -323,15 +209,15 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
 
   return (
     <Card title={tp('workspaceActivity.title', { defaultValue: 'Workspace Activity Center' })}>
-      <Space direction="vertical" style={{ width: '100%' }} size={12}>
+      <Space direction='vertical' className='agent-workspace-activity-center' size={12}>
         <Space wrap>
           <Select
             allowClear
             showSearch
             options={agentOptions}
-            optionFilterProp="label"
+            optionFilterProp='label'
             value={agentId}
-            style={{ width: 240 }}
+            className='agent-workspace-activity-center__agent'
             placeholder={tp('workspaceActivity.agentFilter', { defaultValue: 'Agent' })}
             onChange={(value) => {
               setAgentId(value)
@@ -343,7 +229,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
             placeholder={tp('detail.activity.sourceFilter', { defaultValue: 'Source' })}
             options={activitySourceOptions}
             value={source}
-            style={{ width: 180 }}
+            className='agent-workspace-activity-center__source'
             onChange={(value) => {
               setSource(value)
               setPagination((prev) => ({ ...prev, page: 1 }))
@@ -354,7 +240,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
             placeholder={tp('detail.activity.levelFilter', { defaultValue: 'Level' })}
             options={activityLevelOptions}
             value={level}
-            style={{ width: 150 }}
+            className='agent-workspace-activity-center__level'
             onChange={(value) => {
               setLevel(value)
               setPagination((prev) => ({ ...prev, page: 1 }))
@@ -363,7 +249,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
           <Input
             placeholder={tp('detail.activity.eventTypeFilter', { defaultValue: 'Event Type Contains' })}
             value={eventTypeInput}
-            style={{ width: 220 }}
+            className='agent-workspace-activity-center__text'
             onChange={(event) => setEventTypeInput(event.target.value)}
             onPressEnter={() => {
               setEventType(eventTypeInput.trim())
@@ -381,7 +267,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
               setTaskId(typeof value === 'number' ? value : undefined)
               setPagination((prev) => ({ ...prev, page: 1 }))
             }}
-            style={{ width: 140 }}
+            className='agent-workspace-activity-center__number'
           />
           <InputNumber
             min={1}
@@ -391,12 +277,12 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
               setProjectId(typeof value === 'number' ? value : undefined)
               setPagination((prev) => ({ ...prev, page: 1 }))
             }}
-            style={{ width: 140 }}
+            className='agent-workspace-activity-center__number'
           />
           <Input
             placeholder={tp('detail.activity.runIdFilter', { defaultValue: 'Run ID Contains' })}
             value={runIdInput}
-            style={{ width: 220 }}
+            className='agent-workspace-activity-center__text'
             onChange={(event) => setRunIdInput(event.target.value)}
             onPressEnter={() => {
               setRunId(runIdInput.trim())
@@ -409,7 +295,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
           <Input
             placeholder={tp('detail.activity.attemptIdFilter', { defaultValue: 'Attempt ID Contains' })}
             value={attemptIdInput}
-            style={{ width: 220 }}
+            className='agent-workspace-activity-center__text'
             onChange={(event) => setAttemptIdInput(event.target.value)}
             onPressEnter={() => {
               setAttemptId(attemptIdInput.trim())
@@ -427,7 +313,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
               setRiskMin(typeof value === 'number' ? value : undefined)
               setPagination((prev) => ({ ...prev, page: 1 }))
             }}
-            style={{ width: 140 }}
+            className='agent-workspace-activity-center__number'
           />
           <InputNumber
             min={0}
@@ -437,13 +323,13 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
               setRiskMax(typeof value === 'number' ? value : undefined)
               setPagination((prev) => ({ ...prev, page: 1 }))
             }}
-            style={{ width: 140 }}
+            className='agent-workspace-activity-center__number'
           />
           <Search
             placeholder={tp('detail.activity.search', { defaultValue: 'Search message or payload' })}
             allowClear
             value={queryInput}
-            style={{ width: 280 }}
+            className='agent-workspace-activity-center__search'
             onChange={(event) => setQueryInput(event.target.value)}
             onSearch={(value) => {
               setQuery(value)
@@ -451,24 +337,24 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
             }}
           />
           <Input
-            type="datetime-local"
+            type='datetime-local'
             value={from}
             placeholder={tp('detail.activity.from', { defaultValue: 'From' })}
+            className='agent-workspace-activity-center__datetime'
             onChange={(event) => {
               setFrom(event.target.value)
               setPagination((prev) => ({ ...prev, page: 1 }))
             }}
-            style={{ width: 200 }}
           />
           <Input
-            type="datetime-local"
+            type='datetime-local'
             value={to}
             placeholder={tp('detail.activity.to', { defaultValue: 'To' })}
+            className='agent-workspace-activity-center__datetime'
             onChange={(event) => {
               setTo(event.target.value)
               setPagination((prev) => ({ ...prev, page: 1 }))
             }}
-            style={{ width: 200 }}
           />
         </Space>
         <Space wrap size={[8, 8]}>
@@ -484,7 +370,7 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
           ))}
         </Space>
         <Table
-          rowKey="id"
+          rowKey='id'
           loading={loading}
           columns={columns}
           dataSource={items}
@@ -506,100 +392,15 @@ export function AgentWorkspaceActivityCenter({ workspaceId }: AgentWorkspaceActi
             }))
           }}
         />
-        <Text type="secondary">{tp('detail.activity.clickHint', { defaultValue: 'Click a row to view details.' })}</Text>
-        <Modal
-          title={tp('detail.activity.detailTitle', { defaultValue: 'Activity Detail' })}
-          open={!!detailItem}
-          onCancel={() => setDetailItem(null)}
-          onOk={() => setDetailItem(null)}
-          okText={tp('detail.activity.close', { defaultValue: 'Close' })}
-          cancelButtonProps={{ style: { display: 'none' } }}
-          width={900}
-        >
-          <Descriptions bordered size="small" column={2}>
-            <Descriptions.Item label={tp('workspaceActivity.agent', { defaultValue: 'Agent' })} span={2}>
-              {detailItem?.agent_display_name || detailItem?.agent_name || '-'}
-              {detailItem?.agent_id ? ` (#${detailItem.agent_id})` : ''}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.source', { defaultValue: 'Source' })}>
-              {getActivitySourceLabel(detailItem?.source)}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.level', { defaultValue: 'Level' })}>
-              {getActivityLevelLabel(detailItem?.level)}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.eventType', { defaultValue: 'Event Type' })} span={2}>
-              <Text code>{detailItem?.event_type || '-'}</Text>
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.occurredAt', { defaultValue: 'Occurred At' })}>
-              {formatDateTime(detailItem?.occurred_at)}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.related', { defaultValue: 'Related' })}>
-              {detailItem?.task_id
-                ? `${tp('detail.activity.taskId', { defaultValue: 'Task ID' })}: ${detailItem.task_id}`
-                : detailItem?.run_id
-                  ? `${tp('detail.activity.runId', { defaultValue: 'Run ID' })}: ${detailItem.run_id}`
-                  : detailItem?.attempt_id
-                    ? `${tp('detail.activity.attemptId', { defaultValue: 'Attempt ID' })}: ${detailItem.attempt_id}`
-                    : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.message', { defaultValue: 'Message' })} span={2}>
-              {detailItem?.message || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.riskScore', { defaultValue: 'Risk Score' })}>
-              {typeof detailItem?.risk_score === 'number' ? detailItem.risk_score : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.correlationId', { defaultValue: 'Correlation ID' })}>
-              {detailItem?.correlation_id || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.requestId', { defaultValue: 'Request ID' })}>
-              {detailItem?.request_id || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.durationMs', { defaultValue: 'Duration (ms)' })}>
-              {typeof detailItem?.duration_ms === 'number' ? detailItem.duration_ms : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.errorCode', { defaultValue: 'Error Code' })}>
-              {detailItem?.error_code || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.runId', { defaultValue: 'Run ID' })}>
-              {detailItem?.run_id || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.attemptId', { defaultValue: 'Attempt ID' })}>
-              {detailItem?.attempt_id || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.taskId', { defaultValue: 'Task ID' })}>
-              {detailItem?.task_id || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.projectId', { defaultValue: 'Project ID' })}>
-              {detailItem?.project_id || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.actor', { defaultValue: 'Actor' })}>
-              {detailItem?.actor_type || detailItem?.actor_id
-                ? `${detailItem?.actor_type || '-'}:${detailItem?.actor_id || '-'}`
-                : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.target', { defaultValue: 'Target' })}>
-              {detailItem?.target_type || detailItem?.target_id
-                ? `${detailItem?.target_type || '-'}:${detailItem?.target_id || '-'}`
-                : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={tp('detail.activity.payload', { defaultValue: 'Payload' })} span={2}>
-              <pre
-                style={{
-                  margin: 0,
-                  maxHeight: 260,
-                  overflow: 'auto',
-                  background: '#f7f7f7',
-                  border: '1px solid #f0f0f0',
-                  borderRadius: 6,
-                  padding: 12,
-                }}
-              >
-                {JSON.stringify(detailItem?.payload || {}, null, 2)}
-              </pre>
-            </Descriptions.Item>
-          </Descriptions>
-        </Modal>
+        <Text type='secondary'>{tp('detail.activity.clickHint', { defaultValue: 'Click a row to view details.' })}</Text>
       </Space>
+      <WorkspaceActivityDetailModal
+        tp={tp}
+        item={detailItem}
+        onClose={() => setDetailItem(null)}
+        getActivityLevelLabel={getActivityLevelLabel}
+        getActivitySourceLabel={getActivitySourceLabel}
+      />
     </Card>
   )
 }
