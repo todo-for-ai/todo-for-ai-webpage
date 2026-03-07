@@ -4,19 +4,51 @@
 
 import { apiClient } from './client/index.js'
 
+export interface DashboardProjectStats {
+  total: number
+  active: number
+}
+
+export interface DashboardTaskStats {
+  total: number
+  todo: number
+  in_progress: number
+  review: number
+  done: number
+  ai_executing: number
+}
+
+export interface DashboardScopeStats {
+  projects: DashboardProjectStats
+  tasks: DashboardTaskStats
+}
+
+export interface DashboardOrganizationSummary {
+  total: number
+  total_agents: number
+  active_agents_7d: number
+}
+
+export interface DashboardOrganizationItem {
+  organization_id: number
+  organization_name: string
+  my_role: string
+  total_agents: number
+  active_agents_7d: number
+  last_agent_activity_at: string | null
+}
+
 // 仪表盘统计数据类型
 export interface DashboardStats {
-  projects: {
-    total: number
-    active: number
+  projects: DashboardProjectStats
+  tasks: DashboardTaskStats
+  scopes?: {
+    owned: DashboardScopeStats
+    participated: DashboardScopeStats
   }
-  tasks: {
-    total: number
-    todo: number
-    in_progress: number
-    review: number
-    done: number
-    ai_executing: number
+  organizations?: {
+    summary: DashboardOrganizationSummary
+    top_organizations: DashboardOrganizationItem[]
   }
   recent_projects: Array<{
     id: number

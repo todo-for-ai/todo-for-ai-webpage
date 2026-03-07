@@ -5,7 +5,6 @@ import {
   DashboardOutlined,
   ProjectOutlined,
   AppstoreOutlined,
-  ApiOutlined,
   PushpinOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
@@ -109,11 +108,6 @@ const TopNavigation: React.FC = () => {
       key: '/todo-for-ai/pages',
       icon: <DashboardOutlined />,
       label: tn('menu.dashboard'),
-    },
-    {
-      key: '/todo-for-ai/pages/rule-marketplace',
-      icon: <AppstoreOutlined />,
-      label: tn('menu.rules'),
     },
     {
       key: '/todo-for-ai/pages/projects',

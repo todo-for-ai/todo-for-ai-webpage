@@ -66,6 +66,7 @@ import zhCNVariableDocs from './resources/zh-CN/pages/variableDocs.json'
 import zhCNApiDocumentation from './resources/zh-CN/pages/apiDocumentation.json'
 import zhCNMcpInstallation from './resources/zh-CN/pages/mcpInstallation.json'
 import zhCNKanban from './resources/zh-CN/pages/kanban.json'
+import zhCNAgents from './resources/zh-CN/pages/agents.json'
 
 import enCommon from './resources/en/common.json'
 import enNavigation from './resources/en/navigation.json'
@@ -94,6 +95,7 @@ import enVariableDocs from './resources/en/pages/variableDocs.json'
 import enApiDocumentation from './resources/en/pages/apiDocumentation.json'
 import enMcpInstallation from './resources/en/pages/mcpInstallation.json'
 import enKanban from './resources/en/pages/kanban.json'
+import enAgents from './resources/en/pages/agents.json'
 
 // 支持的语言
 export const SUPPORTED_LANGUAGES = ['zh-CN', 'en'] as const
@@ -129,6 +131,7 @@ const resources = {
     apiDocumentation: zhCNApiDocumentation,
     mcpInstallation: zhCNMcpInstallation,
     kanban: zhCNKanban,
+    agents: zhCNAgents,
   },
   en: {
     common: enCommon,
@@ -158,6 +161,7 @@ const resources = {
     apiDocumentation: enApiDocumentation,
     mcpInstallation: enMcpInstallation,
     kanban: enKanban,
+    agents: enAgents,
   },
 }
 
@@ -174,8 +178,12 @@ i18n
     // 支持的语言白名单
     supportedLngs: SUPPORTED_LANGUAGES,
 
-    // 接受语言变体（例如 zh -> zh-CN），减少无意义警告
-    nonExplicitSupportedLngs: true,
+    // i18next@25 与非显式语言匹配在 zh-CN 场景下会错误回退到英文
+    // 保持 strict 模式，仅允许白名单中的语言码，避免语言切换失效
+    nonExplicitSupportedLngs: false,
+
+    // 仅加载当前语言，避免额外回退层级（例如 zh）触发噪音告警
+    load: 'currentOnly',
     
     // 调试模式（生产环境应设为false）
     debug: import.meta.env.DEV,

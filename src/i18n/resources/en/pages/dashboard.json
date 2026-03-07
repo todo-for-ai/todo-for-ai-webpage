@@ -3,6 +3,17 @@
   "subtitle": "Welcome back! Here's your work overview",
   "stats": {
     "totalProjects": "Total Projects",
+    "ownedProjects": "Owned Projects",
+    "ownedTasks": "Owned Tasks",
+    "ownedInProgress": "Owned In Progress",
+    "ownedAiExecuting": "Owned AI Executing",
+    "participatedProjects": "Participated Projects",
+    "participatedTasks": "Participated Tasks",
+    "participatedInProgress": "Participated In Progress",
+    "participatedAiExecuting": "Participated AI Executing",
+    "totalOrganizations": "Organizations",
+    "totalAgents": "Total Agents",
+    "activeAgents7d": "Active Agents (7d)",
     "activeTasks": "Active Tasks",
     "completedTasks": "Completed Tasks",
     "pendingTasks": "Pending Tasks",
@@ -13,6 +24,10 @@
   },
   "sections": {
     "overview": "Overview",
+    "ownedScope": "Owned Scope",
+    "participatedScope": "Participated Scope",
+    "organizationAgentStats": "Organization & Agent Statistics",
+    "topOrganizations": "Top 5 Active Organizations",
     "recentProjects": "Recent Projects",
     "recentTasks": "Recent Tasks",
     "quickActions": "Quick Actions",
@@ -39,7 +54,8 @@
   "empty": {
     "noProjects": "No projects yet. Create your first project to get started!",
     "noTasks": "No tasks yet. Create your first task to get started!",
-    "noActivity": "No recent activity"
+    "noActivity": "No recent activity",
+    "noOrganizations": "No accessible organizations"
   },
   "taskStatus": {
     "todo": "To Do",
@@ -52,6 +68,11 @@
     "noDescription": "No description",
     "unknownProject": "Unknown project",
     "totalTasks": "Total Tasks"
+  },
+  "labels": {
+    "myRole": "My Role",
+    "lastAgentActivity": "Last Agent Activity",
+    "noRecentAgentActivity": "No recent activity"
   },
   "heatmap": {
     "title": "Activity Heatmap",

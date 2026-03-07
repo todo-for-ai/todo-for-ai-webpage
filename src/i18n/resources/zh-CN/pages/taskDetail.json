@@ -15,7 +15,8 @@
     "createTask": "创建任务",
     "createFromTask": "从此任务创建新任务",
     "taskStatus": "任务状态",
-    "taskActions": "任务操作"
+    "taskActions": "任务操作",
+    "viewLogs": "查看日志"
   },
   "status": {
     "todo": "待办",

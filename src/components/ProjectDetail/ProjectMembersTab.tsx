@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Card, Input, message, Popconfirm, Select, Space, Table, Tag, Typography } from 'antd'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { projectsApi, type ProjectMember } from '../../api/projects'
+import { agentsApi, type Agent } from '../../api/agents'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 
 const { Text } = Typography
 
 interface ProjectMembersTabProps {
   projectId: number
+  workspaceId?: number | null
   currentUserRole?: 'owner' | 'maintainer' | 'member' | 'viewer' | null
 }
 
@@ -25,11 +27,13 @@ const STATUS_COLORS: Record<string, string> = {
 
 export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
   projectId,
+  workspaceId,
   currentUserRole
 }) => {
   const { tp } = usePageTranslation('projectDetail')
   const tpRef = useRef(tp)
   const [items, setItems] = useState<ProjectMember[]>([])
+  const [agentItems, setAgentItems] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'maintainer' | 'member' | 'viewer'>('member')
@@ -55,9 +59,51 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
     }
   }, [projectId])
 
+  const loadAgents = useCallback(async () => {
+    if (!workspaceId) {
+      setAgentItems([])
+      return
+    }
+
+    try {
+      const data = await agentsApi.getAgents(workspaceId, { page: 1, per_page: 200 })
+      const filtered = (data.items || []).filter((agent) => {
+        const projects = agent.allowed_project_ids || []
+        return projects.length === 0 || projects.includes(projectId)
+      })
+      setAgentItems(filtered)
+    } catch (error: any) {
+      message.error(error?.message || tpRef.current('members.messages.loadAgentsFailed'))
+      setAgentItems([])
+    }
+  }, [workspaceId, projectId])
+
   useEffect(() => {
     loadMembers()
-  }, [loadMembers])
+    loadAgents()
+  }, [loadMembers, loadAgents])
+
+  const mergedItems = useMemo(() => {
+    const humanRows = items.map((member) => ({
+      row_id: `human-${member.id}`,
+      entity_type: 'human' as const,
+      status: member.status,
+      role: member.role,
+      member,
+      agent: null as Agent | null,
+    }))
+
+    const agentRows = agentItems.map((agent) => ({
+      row_id: `agent-${agent.id}`,
+      entity_type: 'agent' as const,
+      status: agent.status,
+      role: 'agent',
+      member: null as ProjectMember | null,
+      agent,
+    }))
+
+    return [...humanRows, ...agentRows]
+  }, [items, agentItems])
 
   const inviteMember = async () => {
     if (!inviteEmail.trim()) {
@@ -110,20 +156,51 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
     {
       title: tp('members.table.user'),
       key: 'user',
-      render: (_: any, member: ProjectMember) => (
+      render: (_: any, row: any) => {
+        if (row.entity_type === 'agent' && row.agent) {
+          return (
+            <div>
+              <div style={{ fontWeight: 500 }}>
+                {row.agent.name}
+              </div>
+              <Space>
+                <Text type="secondary">Agent #{row.agent.id}</Text>
+                <Tag>{tp('members.entity.agent')}</Tag>
+              </Space>
+            </div>
+          )
+        }
+        const member = row.member as ProjectMember
+        return (
         <div>
           <div style={{ fontWeight: 500 }}>
             {member.user?.full_name || member.user?.nickname || member.user?.username || `#${member.user_id}`}
           </div>
-          <Text type="secondary">ID: {member.user_id}</Text>
+          <Space>
+            <Text type="secondary">ID: {member.user_id}</Text>
+            <Tag>{tp('members.entity.human')}</Tag>
+          </Space>
         </div>
-      ),
+        )
+      },
+    },
+    {
+      title: tp('members.table.type'),
+      key: 'entity_type',
+      width: 120,
+      render: (_: any, row: any) => (
+        <Tag>{row.entity_type === 'agent' ? tp('members.entity.agent') : tp('members.entity.human')}</Tag>
+      )
     },
     {
       title: tp('members.table.role'),
       dataIndex: 'role',
       key: 'role',
-      render: (role: string, member: ProjectMember) => {
+      render: (role: string, row: any) => {
+        if (row.entity_type === 'agent') {
+          return <Tag>{tp('members.entity.agent')}</Tag>
+        }
+        const member = row.member as ProjectMember
         if (!canManage || role === 'owner') {
           return <Tag>{role}</Tag>
         }
@@ -152,7 +229,11 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
       title: tp('members.table.actions'),
       key: 'actions',
       width: 120,
-      render: (_: any, member: ProjectMember) => {
+      render: (_: any, row: any) => {
+        if (row.entity_type === 'agent') {
+          return null
+        }
+        const member = row.member as ProjectMember
         if (!canManage || member.role === 'owner') {
           return null
         }
@@ -184,7 +265,7 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
           <Space wrap>
             <Input
               value={inviteEmail}
-              placeholder={tp('members.form.emailPlaceholder')}
+              placeholder={`${tp('members.form.emailPlaceholder')} (${tp('members.form.humanOnly')})`}
               onChange={(event) => setInviteEmail(event.target.value)}
               style={{ width: 320 }}
             />
@@ -206,10 +287,10 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
         )}
 
         <Table
-          rowKey="id"
+          rowKey="row_id"
           loading={loading}
           columns={columns}
-          dataSource={items}
+          dataSource={mergedItems}
           pagination={false}
         />
       </Space>

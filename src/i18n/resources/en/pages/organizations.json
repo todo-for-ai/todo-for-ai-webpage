@@ -4,6 +4,11 @@
   "actions": {
     "create": "Create Organization"
   },
+  "viewMode": {
+    "label": "View",
+    "list": "List",
+    "card": "Card"
+  },
   "table": {
     "orgName": "Organization",
     "role": "My Role",
@@ -13,17 +18,52 @@
   "members": {
     "title": "Members of {{name}}",
     "emailPlaceholder": "Invite by user email",
+    "agentIdPlaceholder": "Invite by Agent ID",
     "emailRequired": "Please enter user email",
+    "agentIdRequired": "Please enter a valid Agent ID",
     "invite": "Invite",
+    "inviteAgent": "Invite Agent",
+    "createAgent": "Create Agent",
     "remove": "Remove",
     "confirmOk": "Confirm",
     "confirmCancel": "Cancel",
     "removeConfirmTitle": "Remove this member?",
     "removeConfirmDescription": "This member will lose organization access.",
+    "entity": {
+      "human": "Human",
+      "agent": "Agent"
+    },
     "table": {
       "user": "User",
+      "type": "Type",
       "role": "Role",
       "status": "Status",
+      "actions": "Actions"
+    }
+  },
+  "roles": {
+    "manage": "Role Manager",
+    "backToOrganizations": "Back to Organizations",
+    "manageTitle": "Manage Organization Roles",
+    "create": "Create Role",
+    "system": "System",
+    "titleRequired": "Please enter role title",
+    "titlePlaceholder": "Role title, e.g. Frontend Lead",
+    "descriptionPlaceholder": "Role description (optional)",
+    "contentPlaceholder": "Role definition content (Markdown, optional)",
+    "selectPlaceholder": "Select roles (multi-select, optional)",
+    "deleteConfirmTitle": "Delete this role?",
+    "deleteConfirmDesc": "This role will be removed from all members.",
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "content": "Definition Content"
+    },
+    "table": {
+      "title": "Title",
+      "key": "Role Key",
+      "description": "Description",
+      "content": "Definition",
       "actions": "Actions"
     }
   },
@@ -36,16 +76,36 @@
     "confirm": "Create",
     "cancel": "Cancel"
   },
+  "createAgentModal": {
+    "title": "Create Organization Agent",
+    "name": "Agent Name",
+    "nameRequired": "Please enter Agent name",
+    "description": "Description",
+    "confirm": "Create",
+    "cancel": "Cancel"
+  },
   "messages": {
     "loadFailed": "Failed to load organizations",
     "memberLoadFailed": "Failed to load organization members",
+    "agentMemberLoadFailed": "Failed to load organization agents",
+    "roleLoadFailed": "Failed to load organization roles",
     "createSuccess": "Organization created successfully",
     "createFailed": "Failed to create organization",
     "inviteSuccess": "Organization member invited successfully",
     "inviteFailed": "Failed to invite organization member",
+    "roleCreateSuccess": "Organization role created successfully",
+    "roleCreateFailed": "Failed to create organization role",
+    "roleDeleteSuccess": "Organization role deleted successfully",
+    "roleDeleteFailed": "Failed to delete organization role",
+    "createAgentSuccess": "Organization agent created successfully",
+    "createAgentFailed": "Failed to create organization agent",
+    "agentInviteSuccess": "Organization agent invited successfully",
+    "agentInviteFailed": "Failed to invite organization agent",
     "memberUpdated": "Organization member updated successfully",
     "memberUpdateFailed": "Failed to update organization member",
     "memberRemoved": "Organization member removed successfully",
-    "memberRemoveFailed": "Failed to remove organization member"
+    "memberRemoveFailed": "Failed to remove organization member",
+    "agentMemberRemoved": "Organization agent removed successfully",
+    "agentMemberRemoveFailed": "Failed to remove organization agent"
   }
 }

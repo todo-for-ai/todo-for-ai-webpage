@@ -46,7 +46,10 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         alignItems: 'center',
         minHeight: '200px'
       }}>
-        <Spin size="large" tip={tc('authGuard.verifying')} />
+        <div style={{ textAlign: 'center' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 12 }}>{tc('authGuard.verifying')}</div>
+        </div>
       </div>
     )
   }

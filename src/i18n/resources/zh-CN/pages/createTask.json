@@ -65,6 +65,19 @@
       "tags": {
         "label": "标签",
         "placeholder": "可选择已有标签或直接输入自定义标签"
+      },
+      "assignees": {
+        "label": "指派对象",
+        "placeholder": "选择人类成员或Agent"
+      },
+      "mentions": {
+        "label": "@提及",
+        "placeholder": "选择要提及的成员"
+      },
+      "attachments": {
+        "title": "附件",
+        "hint": "拖拽文件到此处，或点击选择文件",
+        "subHint": "任务保存成功后会自动上传这些附件"
       }
     },
     "simple": {

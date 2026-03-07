@@ -3,6 +3,17 @@
   "subtitle": "欢迎回来！这里是您的工作概览",
   "stats": {
     "totalProjects": "总项目数",
+    "ownedProjects": "我拥有项目数",
+    "ownedTasks": "我拥有任务数",
+    "ownedInProgress": "我拥有进行中任务",
+    "ownedAiExecuting": "我拥有AI执行中",
+    "participatedProjects": "我参与项目数",
+    "participatedTasks": "我参与任务数",
+    "participatedInProgress": "我参与进行中任务",
+    "participatedAiExecuting": "我参与AI执行中",
+    "totalOrganizations": "参与组织数",
+    "totalAgents": "组织Agent总数",
+    "activeAgents7d": "7天活跃Agent",
     "activeTasks": "活跃任务",
     "completedTasks": "已完成任务",
     "pendingTasks": "待处理任务",
@@ -13,6 +24,10 @@
   },
   "sections": {
     "overview": "概览",
+    "ownedScope": "我拥有的数据",
+    "participatedScope": "我参与的数据",
+    "organizationAgentStats": "组织与Agent统计",
+    "topOrganizations": "活跃组织 Top 5",
     "recentProjects": "最近项目",
     "recentTasks": "最近任务",
     "quickActions": "快速操作",
@@ -39,7 +54,8 @@
   "empty": {
     "noProjects": "还没有项目，创建第一个项目开始吧！",
     "noTasks": "还没有任务，创建第一个任务开始吧！",
-    "noActivity": "暂无最近活动"
+    "noActivity": "暂无最近活动",
+    "noOrganizations": "暂无可访问组织"
   },
   "taskStatus": {
     "todo": "待处理",
@@ -52,6 +68,11 @@
     "noDescription": "无描述",
     "unknownProject": "未知项目",
     "totalTasks": "总任务数"
+  },
+  "labels": {
+    "myRole": "我的角色",
+    "lastAgentActivity": "最近Agent活跃",
+    "noRecentAgentActivity": "暂无活跃记录"
   },
   "heatmap": {
     "title": "活跃度热力图",

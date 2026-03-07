@@ -12,6 +12,10 @@ class ApiHttpError extends Error {
   }
 }
 
+interface RequestContext {
+  retryUnauthorized?: boolean
+}
+
 /**
  * API Client class
  * Main entry point for all API requests
@@ -19,13 +23,78 @@ class ApiHttpError extends Error {
 export class ApiClient {
   private baseURL: string
   private timeout: number
+  private refreshInFlight: Promise<boolean> | null = null
 
   constructor(config: ApiClientConfig) {
     this.baseURL = config.baseURL
     this.timeout = config.timeout
   }
 
-  async request<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
+  private isLoginEndpoint(endpoint: string): boolean {
+    return endpoint.includes('/auth/login')
+  }
+
+  private isAuthStateEndpoint(endpoint: string): boolean {
+    return endpoint.includes('/auth/me') || endpoint.includes('/auth/refresh')
+  }
+
+  private shouldTrySilentRefresh(endpoint: string, context: RequestContext): boolean {
+    if (context.retryUnauthorized === false) {
+      return false
+    }
+    if (endpoint.includes('/auth/refresh')) {
+      return false
+    }
+    return !this.isLoginEndpoint(endpoint)
+  }
+
+  private async trySilentRefresh(): Promise<boolean> {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    const hasRefreshToken = !!localStorage.getItem('refresh_token')
+    if (!hasRefreshToken) {
+      return false
+    }
+
+    if (this.refreshInFlight) {
+      return this.refreshInFlight
+    }
+
+    const refreshPromise = (async () => {
+      try {
+        const authStoreModule = await import('../../stores/useAuthStore')
+        const refreshed = await authStoreModule.useAuthStore.getState().refreshTokens()
+        return refreshed
+      } catch (error) {
+        console.error('[ApiClient] Silent refresh failed:', error)
+        return false
+      }
+    })()
+
+    this.refreshInFlight = refreshPromise
+    try {
+      return await refreshPromise
+    } finally {
+      this.refreshInFlight = null
+    }
+  }
+
+  private async handleUnauthorizedRedirect(): Promise<void> {
+    try {
+      const mod = await import('../../utils/authRedirect')
+      mod.handleUnauthorized()
+    } catch (redirectError) {
+      console.error('[ApiClient] Failed to handle unauthorized redirect:', redirectError)
+    }
+  }
+
+  async request<T = any>(
+    endpoint: string,
+    options?: RequestInit,
+    context: RequestContext = { retryUnauthorized: true }
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), this.timeout)
@@ -34,8 +103,10 @@ export class ApiClient {
     // 优先使用当前存储键 auth_token，兼容历史键 access_token
     const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token')
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...options?.headers as Record<string, string>,
+    }
+    if (!(options?.body instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json'
     }
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
@@ -62,12 +133,17 @@ export class ApiClient {
           // Keep fallback message when response body is not JSON
         }
 
-        if (status === 401 && !endpoint.includes('/auth/login')) {
-          try {
-            const mod = await import('../../utils/authRedirect')
-            mod.handleUnauthorized()
-          } catch (redirectError) {
-            console.error('[ApiClient] Failed to handle unauthorized redirect:', redirectError)
+        if (status === 401) {
+          const refreshed = this.shouldTrySilentRefresh(endpoint, context)
+            ? await this.trySilentRefresh()
+            : false
+
+          if (refreshed) {
+            return this.request<T>(endpoint, options, { retryUnauthorized: false })
+          }
+
+          if (this.isAuthStateEndpoint(endpoint)) {
+            await this.handleUnauthorizedRedirect()
           }
         }
 

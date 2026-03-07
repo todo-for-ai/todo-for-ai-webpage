@@ -65,6 +65,19 @@
       "tags": {
         "label": "Tags",
         "placeholder": "Select existing labels or type custom tags"
+      },
+      "assignees": {
+        "label": "Assignees",
+        "placeholder": "Select humans or agents"
+      },
+      "mentions": {
+        "label": "Mentions",
+        "placeholder": "Select members to @mention"
+      },
+      "attachments": {
+        "title": "Attachments",
+        "hint": "Drag files here or click to select files",
+        "subHint": "Files will be uploaded after task is saved"
       }
     },
     "simple": {

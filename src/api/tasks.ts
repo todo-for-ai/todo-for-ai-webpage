@@ -1,4 +1,5 @@
 import { apiClient } from './client/index.js'
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 // 分页响应类型
 export interface PaginatedResponse<T> {
@@ -32,6 +33,9 @@ export interface Task {
   completion_rate: number
   completed_at?: string
   tags: string[]
+  assignees?: Array<{ type: 'human' | 'agent'; id: number }>
+  mentions?: Array<{ type: 'human' | 'agent'; id: number }>
+  revision?: number
   created_at: string
   updated_at: string
   created_by: string
@@ -66,6 +70,8 @@ export interface CreateTaskData {
   priority?: 'low' | 'medium' | 'high' | 'urgent'
   due_date?: string
   tags?: string[]
+  assignees?: Array<{ type: 'human' | 'agent'; id: number }>
+  mentions?: Array<{ type: 'human' | 'agent'; id: number }>
   is_ai_task?: boolean
   related_files?: string[]  // 添加related_files属性
   creator_type?: string  // 添加creator_type属性
@@ -81,6 +87,9 @@ export interface UpdateTaskData {
   due_date?: string
   completion_rate?: number
   tags?: string[]
+  assignees?: Array<{ type: 'human' | 'agent'; id: number }>
+  mentions?: Array<{ type: 'human' | 'agent'; id: number }>
+  expected_revision?: number
   is_ai_task?: boolean  // 添加is_ai_task属性
   related_files?: string[]  // 添加related_files属性
   created_by?: string  // 添加created_by属性
@@ -95,6 +104,33 @@ export interface TaskQueryParams {
   priority?: string
   sort_by?: string
   sort_order?: 'asc' | 'desc'
+}
+
+export interface TaskLog {
+  id: number
+  task_id: number
+  actor_type: 'human' | 'agent' | 'system'
+  actor_user_id?: number | null
+  actor_agent_id?: number | null
+  content: string
+  content_type: string
+  created_at: string
+  updated_at: string
+  created_by?: string
+}
+
+export interface TaskAttachment {
+  id: number
+  task_id: number
+  filename: string
+  original_filename: string
+  file_path: string
+  file_size: number
+  mime_type?: string
+  is_image?: boolean
+  uploaded_at?: string
+  uploaded_by?: string
+  file_size_human?: string
 }
 
 // 任务API服务
@@ -152,19 +188,35 @@ export class TasksApi {
 
   // 获取任务附件
   async getTaskAttachments(id: number) {
-    return apiClient.get(`/tasks/${id}/attachments`)
+    return apiClient.get<TaskAttachment[]>(`/tasks/${id}/attachments`)
   }
 
   // 上传任务附件
   async uploadTaskAttachment(id: number, file: File, onProgress?: (progress: number) => void) {
     const formData = new FormData()
     formData.append('file', file)
-    return apiClient.upload<{ file_path: string; original_filename: string; file_size: number }>(`/tasks/${id}/attachments`, formData)
+    return apiClient.upload<TaskAttachment>(`/tasks/${id}/attachments`, formData)
   }
 
   // 删除任务附件
   async deleteTaskAttachment(taskId: number, attachmentId: number) {
     return apiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}`)
+  }
+
+  getTaskAttachmentDownloadUrl(taskId: number, attachmentId: number) {
+    return `${getApiBaseUrl()}/tasks/${taskId}/attachments/${attachmentId}/download`
+  }
+
+  async getTaskLogs(taskId: number, params?: { page?: number; per_page?: number }) {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', String(params.page))
+    if (params?.per_page) queryParams.append('per_page', String(params.per_page))
+    const suffix = queryParams.toString() ? `?${queryParams.toString()}` : ''
+    return apiClient.get<{ items: TaskLog[]; pagination?: any }>(`/tasks/${taskId}/logs${suffix}`)
+  }
+
+  async appendTaskLog(taskId: number, content: string, contentType = 'text/markdown') {
+    return apiClient.post<TaskLog>(`/tasks/${taskId}/logs`, { content, content_type: contentType })
   }
 
   // 批量删除任务

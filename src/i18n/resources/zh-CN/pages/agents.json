@@ -1,0 +1,267 @@
+{
+  "title": "Agent管理",
+  "subtitle": "创建并管理工作区 Agent、凭证与连接方式。",
+  "createTitle": "创建Agent",
+  "editTitle": "编辑Agent",
+  "form": {
+    "description": "在一个页面里配置 Agent 的身份、运行参数与 SOUL。",
+    "workspace": "选择工作区",
+    "cancel": "取消",
+    "create": "创建",
+    "save": "保存",
+    "tabs": {
+      "basic": "基础",
+      "runtime": "运行时",
+      "soul": "SOUL.md"
+    },
+    "fields": {
+      "name": "Agent名称",
+      "displayName": "展示名",
+      "description": "描述",
+      "avatarUrl": "头像URL",
+      "homepageUrl": "主页URL",
+      "contactEmail": "联系邮箱",
+      "status": "状态",
+      "capabilityTags": "能力标签（逗号分隔）",
+      "allowedProjectIds": "允许项目ID（逗号分隔）",
+      "llmProvider": "LLM提供商",
+      "llmModel": "LLM模型",
+      "reasoningMode": "推理模式",
+      "executionMode": "执行模式",
+      "temperature": "温度",
+      "topP": "Top P",
+      "maxOutputTokens": "最大输出Tokens",
+      "contextWindowTokens": "上下文窗口Tokens",
+      "maxConcurrency": "最大并发",
+      "maxRetry": "最大重试",
+      "timeoutSeconds": "超时秒数",
+      "heartbeatIntervalSeconds": "心跳间隔秒数",
+      "systemPrompt": "系统提示词",
+      "responseStyle": "response_style（JSON对象）",
+      "toolPolicy": "tool_policy（JSON对象）",
+      "memoryPolicy": "memory_policy（JSON对象）",
+      "handoffPolicy": "handoff_policy（JSON对象）",
+      "runnerEnabled": "是否启用Runner",
+      "sandboxProfile": "沙箱档位",
+      "sandboxPolicy": "沙箱策略（JSON对象）",
+      "soulMarkdown": "SOUL Markdown",
+      "changeSummary": "变更说明"
+    },
+    "status": {
+      "active": "启用",
+      "inactive": "停用",
+      "revoked": "已撤销"
+    },
+    "reasoning": {
+      "balanced": "平衡",
+      "fast": "快速",
+      "deep": "深度"
+    },
+    "validation": {
+      "nameRequired": "请输入Agent名称",
+      "workspaceRequired": "请先选择工作区"
+    }
+  },
+  "table": {
+    "title": "Agent列表",
+    "agent": "Agent",
+    "status": "状态",
+    "capabilities": "能力",
+    "actions": "操作",
+    "edit": "编辑",
+    "revoke": "撤销",
+    "revokeConfirmTitle": "确认撤销这个Agent？",
+    "revokeConfirmDesc": "撤销后将停止 Agent 运行时访问。",
+    "search": "搜索 Agent 名称/展示名",
+    "statusFilter": "状态筛选",
+    "totalCount": "共 {{count}} 个",
+    "viewDetail": "详情"
+  },
+  "viewMode": {
+    "label": "视图",
+    "list": "列表",
+    "card": "卡片"
+  },
+  "cards": {
+    "keys": "Agent密钥",
+    "soulVersions": "SOUL版本",
+    "secrets": "Agent机密"
+  },
+  "detail": {
+    "title": "Agent详情",
+    "tabs": {
+      "overview": "概览",
+      "activity": "活动轨迹",
+      "projects": "参与项目",
+      "interactions": "交互用户",
+      "tasks": "任务记录",
+      "runs": "运行记录",
+      "keys": "密钥",
+      "soul": "SOUL版本",
+      "secrets": "机密"
+    },
+    "common": {
+      "yes": "是",
+      "no": "否"
+    },
+    "overview": {
+      "agentId": "Agent ID",
+      "workspaceId": "工作区ID",
+      "displayName": "展示名",
+      "creatorUserId": "创建者用户ID",
+      "executionMode": "执行模式",
+      "runnerEnabled": "托管Runner",
+      "sandboxProfile": "沙箱档位",
+      "allowedProjectIds": "允许项目ID",
+      "configVersion": "配置版本",
+      "runnerConfigVersion": "Runner配置版本",
+      "soulVersion": "SOUL版本",
+      "createdAt": "创建时间",
+      "updatedAt": "更新时间"
+    },
+    "enums": {
+      "executionMode": {
+        "external_pull": "外部拉取",
+        "managed_runner": "托管Runner"
+      },
+      "reasoningMode": {
+        "balanced": "平衡",
+        "fast": "快速",
+        "deep": "深度"
+      },
+      "taskStatus": {
+        "todo": "待办",
+        "in_progress": "进行中",
+        "review": "评审中",
+        "done": "已完成",
+        "cancelled": "已取消"
+      },
+      "runState": {
+        "queued": "排队中",
+        "leased": "已租约",
+        "running": "运行中",
+        "succeeded": "成功",
+        "failed": "失败",
+        "cancelled": "已取消",
+        "expired": "已过期"
+      },
+      "attemptState": {
+        "queued": "排队中",
+        "leased": "已租约",
+        "running": "运行中",
+        "committed": "已提交",
+        "aborted": "已中止",
+        "cancelled": "已取消",
+        "failed": "失败",
+        "succeeded": "成功",
+        "expired": "已过期",
+        "released": "已释放"
+      }
+    },
+    "activity": {
+      "source": "来源",
+      "eventType": "事件类型",
+      "level": "级别",
+      "related": "关联对象",
+      "riskScore": "风险分",
+      "message": "消息",
+      "occurredAt": "发生时间",
+      "sourceFilter": "来源筛选",
+      "levelFilter": "级别筛选",
+      "eventTypeFilter": "事件类型包含",
+      "taskIdFilter": "任务ID",
+      "projectIdFilter": "项目ID",
+      "runIdFilter": "运行ID包含",
+      "attemptIdFilter": "尝试ID包含",
+      "minRiskFilter": "最小风险分",
+      "maxRiskFilter": "最大风险分",
+      "search": "搜索消息或载荷",
+      "from": "开始时间",
+      "to": "结束时间",
+      "clickHint": "单击任意一行查看详情。",
+      "detailTitle": "活动详情",
+      "close": "关闭",
+      "correlationId": "关联ID",
+      "runId": "运行ID",
+      "attemptId": "尝试ID",
+      "taskId": "任务ID",
+      "projectId": "项目ID",
+      "actor": "行为主体",
+      "target": "目标",
+      "payload": "载荷",
+      "sources": {
+        "agent_run": "运行记录",
+        "agent_task_attempt": "任务尝试",
+        "agent_task_event": "任务事件",
+        "task_log": "任务日志",
+        "agent_audit": "审计"
+      },
+      "levels": {
+        "info": "信息",
+        "warn": "警告",
+        "error": "错误"
+      },
+      "requestId": "请求ID",
+      "durationMs": "耗时（毫秒）",
+      "errorCode": "错误码"
+    },
+    "projects": {
+      "project": "项目",
+      "allowed": "白名单",
+      "touchedTasks": "触达任务数",
+      "committedTasks": "完成提交数",
+      "interactionLogs": "交互日志数",
+      "lastActivity": "最后活动时间",
+      "search": "搜索项目名称"
+    },
+    "interactions": {
+      "user": "用户",
+      "interactionCount": "交互次数",
+      "taskCount": "关联任务数",
+      "lastInteraction": "最后交互时间",
+      "search": "搜索用户名称或邮箱"
+    },
+    "tasks": {
+      "task": "任务",
+      "status": "状态",
+      "lastAttempt": "最近尝试",
+      "agentLogs": "Agent日志数",
+      "lastActivity": "最后活动时间",
+      "statusFilter": "任务状态筛选",
+      "search": "搜索任务标题或内容",
+      "projectFilter": "项目筛选"
+    },
+    "runs": {
+      "run": "运行ID",
+      "state": "状态",
+      "scheduledAt": "调度时间",
+      "endedAt": "结束时间",
+      "failure": "失败信息",
+      "stateFilter": "运行状态筛选"
+    }
+  },
+  "messages": {
+    "loadAgentsFailed": "加载Agent失败",
+    "createSuccess": "Agent创建成功",
+    "createFailed": "创建Agent失败",
+    "updateSuccess": "Agent更新成功",
+    "updateFailed": "更新Agent失败",
+    "revokeSuccess": "Agent撤销成功",
+    "revokeFailed": "撤销Agent失败",
+    "agentNotFound": "未找到Agent",
+    "agentNotFoundDesc": "该 Agent 不存在于你可访问的工作区中。",
+    "backToAgents": "返回Agent列表"
+  },
+  "workspaceTabs": {
+    "agents": "Agent列表",
+    "activityCenter": "活动中心"
+  },
+  "workspaceActivity": {
+    "title": "工作区活动中心",
+    "agent": "Agent",
+    "agentFilter": "按Agent筛选"
+  },
+  "detailPage": {
+    "workspace": "工作区"
+  }
+}

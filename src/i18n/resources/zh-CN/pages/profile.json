@@ -20,6 +20,22 @@
     "profile": "个人信息",
     "tokens": "API Token"
   },
+  "avatar": {
+    "title": "系统默认头像",
+    "description": "当前仅支持系统内置头像，不支持上传自定义图片。",
+    "randomButton": "随机切换头像",
+    "preview": "默认头像库预览",
+    "messages": {
+      "randomSuccess": "头像已切换",
+      "randomFailed": "头像切换失败",
+      "selectSuccess": "头像已更新",
+      "selectFailed": "头像更新失败"
+    },
+    "selectButton": "选择头像",
+    "modalTitle": "选择系统头像",
+    "pageInfo": "第 {{current}} / {{total}} 页",
+    "totalCount": "共 {{total}} 个可选头像"
+  },
   "basicInfo": {
     "title": "基本信息",
     "username": "用户名",

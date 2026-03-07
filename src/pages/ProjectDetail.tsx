@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Card, Tabs, Spin, Button } from 'antd'
-import { ArrowLeftOutlined, HomeOutlined } from '@ant-design/icons'
+import { Card, Tabs, Spin, Button, Space, Tag } from 'antd'
+import {
+  ArrowLeftOutlined,
+  HomeOutlined,
+  EditOutlined,
+  PlusOutlined,
+  PushpinFilled,
+  PushpinOutlined,
+} from '@ant-design/icons'
 import { useProjectStore } from '../stores'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { TaskListSection } from '../components/ProjectDetail/TaskListSection'
@@ -9,9 +16,8 @@ import { StatisticsSection } from '../components/ProjectDetail/StatisticsSection
 import { ProjectInfoSection } from '../components/ProjectDetail/ProjectInfoSection'
 import { ContextRulesTab } from '../components/ProjectDetail/ContextRulesTab'
 import { ProjectMembersTab } from '../components/ProjectDetail/ProjectMembersTab'
-import { LinkButton } from '../components/SmartLink'
 import { useProjectPin } from '../hooks/useProjectPin'
-import { useTaskFilters } from '../hooks/useTaskFilters'
+import NotificationChannelManager from '../components/NotificationChannelManager'
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -25,8 +31,7 @@ const ProjectDetail = () => {
     fetchProject
   } = useProjectStore()
 
-  const { isPinned, handleTogglePin } = useProjectPin(id || '0')
-  const { taskFilters, setTaskFilters } = useTaskFilters()
+  const { isPinned, pinLoading, checkPinStatus, handleTogglePin } = useProjectPin(id || '0')
 
   useEffect(() => {
     if (id) {
@@ -41,6 +46,10 @@ const ProjectDetail = () => {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    checkPinStatus()
+  }, [checkPinStatus])
+
   const handleTabChange = (activeKey: string) => {
     setSearchParams({ tab: activeKey })
   }
@@ -53,6 +62,16 @@ const ProjectDetail = () => {
   const handleRefreshTasks = async () => {
     // Refresh is handled by TaskListSection hook
     return Promise.resolve()
+  }
+
+  const handleEditProject = () => {
+    if (!id) return
+    navigate(`/todo-for-ai/pages/projects/${id}/edit`)
+  }
+
+  const handleCreateTask = () => {
+    if (!id) return
+    navigate(`/todo-for-ai/pages/tasks/create?project_id=${id}`)
   }
 
   if (projectLoading || !currentProject) {
@@ -77,23 +96,32 @@ const ProjectDetail = () => {
       <Card style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/todo-for-ai/pages/projects')}
-              >
-                {tc('actions.back')}
-              </Button>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/todo-for-ai/pages/projects')}>
+              {tc('actions.back')}
+            </Button>
             <span style={{ color: '#999' }}>|</span>
             <HomeOutlined style={{ color: '#1890ff' }} />
             <span style={{ color: '#666' }}>{currentProject.name}</span>
+            <Tag color={currentProject.status === 'active' ? 'green' : 'orange'}>
+              {tp(`status.${currentProject.status}`)}
+            </Tag>
           </div>
-          <div>
+          <Space size="small">
             <Button
+              icon={isPinned ? <PushpinFilled /> : <PushpinOutlined />}
               onClick={handleTogglePin}
+              loading={pinLoading}
+              type={isPinned ? 'primary' : 'default'}
             >
               {isPinned ? tp('buttons.pinned') : tp('buttons.pin')}
             </Button>
-          </div>
+            <Button icon={<EditOutlined />} onClick={handleEditProject}>
+              {tp('buttons.editProject')}
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateTask}>
+              {tp('buttons.newTask')}
+            </Button>
+          </Space>
         </div>
       </Card>
 
@@ -137,7 +165,21 @@ const ProjectDetail = () => {
               children: (
                 <ProjectMembersTab
                   projectId={parseInt(id || '0')}
+                  workspaceId={currentProject.organization_id}
                   currentUserRole={currentProject.current_user_role}
+                />
+              )
+            },
+            {
+              key: 'notifications',
+              label: '通知设置',
+              children: (
+                <NotificationChannelManager
+                  scopeType="project"
+                  scopeId={parseInt(id || '0')}
+                  title="项目通知设置"
+                  description="配置当前项目的外部通知同步渠道。"
+                  canManage={['owner', 'maintainer'].includes(currentProject.current_user_role || '')}
                 />
               )
             }

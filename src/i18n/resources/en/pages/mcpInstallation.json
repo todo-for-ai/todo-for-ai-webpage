@@ -1,227 +1,49 @@
 {
-  "title": "MCP Installation",
-  "subtitle": "Connect AI IDEs to Todo for AI with MCP",
-  "pageTitle": "MCP Installation - Todo for AI",
+  "title": "AI Access",
+  "subtitle": "Connect AI agents to Todo for AI via Skill, MCP, or OpenClaw",
+  "pageTitle": "AI Access - Todo for AI",
   "tabs": {
-    "overview": "Overview",
-    "installation": "Installation",
-    "claude": "Claude Desktop",
-    "cursor": "Cursor IDE",
-    "otherIdes": "Other IDEs",
-    "configuration": "Configuration",
-    "testing": "Testing"
+    "skill": "Skill",
+    "mcp": "MCP",
+    "openclaw": "OpenClaw"
   },
-  "overview": {
-    "title": "MCP Feature Overview",
-    "description": "Todo for AI's MCP (Model Context Protocol) server allows AI assistants to directly access and manage your tasks. Through MCP, AI can read task information, create new tasks, update progress, enabling true intelligent task management.",
-    "whatIsMcp": {
-      "title": "What is MCP?",
-      "description": "MCP (Model Context Protocol) is an open protocol launched by Anthropic that allows AI assistants to securely access external tools and data sources. Through MCP, AI can directly interact with your Todo for AI account, enabling:",
-      "features": [
-        "Intelligent task planning and decomposition",
-        "Automatic task creation and assignment",
-        "Real-time task progress tracking",
-        "Context-aware intelligent suggestions based on project context"
-      ]
-    },
-    "supportedTools": {
-      "title": "Supported Tools (6)",
-      "getProjectTasks": "Get pending tasks by project name with status filtering",
-      "getTaskById": "Get detailed task information by ID, including project context rules",
-      "createTask": "Create new tasks in specified projects with priority, due date, etc.",
-      "submitFeedback": "Submit feedback for tasks and update status (in_progress/review/done)",
-      "getProjectInfo": "Get detailed project information including statistics, recent tasks",
-      "listUserProjects": "List all projects accessible to the user with optional statistics"
-    },
-    "requirements": {
-      "title": "Requirements",
-      "node": "Node.js 18+ environment (for running npx commands)",
-      "backend": "Todo for AI backend service accessible",
-      "ide": "AI IDE with MCP protocol support (Claude Desktop, Cursor, Windsurf, etc.)",
-      "token": "Valid API Token (for authentication)"
-    }
+  "skill": {
+    "title": "Skill-based Integration",
+    "description": "Best for autonomous agents. The platform provides a standard Skill Markdown so agents can authenticate, pull tasks, renew leases, commit results, and append logs.",
+    "alertTitle": "Recommended Path",
+    "alertDescription": "Use Skill + HTTP API Token for the most complete integration capabilities.",
+    "pathLabel": "Skill document path",
+    "pathValue": "docs/AGENT_RUNTIME_SKILL.md",
+    "stepsTitle": "Integration Steps",
+    "steps": [
+      "Create an Agent in the platform and generate credentials",
+      "Provide the Skill Markdown to the Agent as runtime instructions",
+      "Use /agent/auth/introspect to exchange key for short-lived access token",
+      "Complete execution flow with pull/events/commit/logs endpoints"
+    ]
   },
-  "installation": {
-    "title": "MCP Configuration Guide",
-    "alert": {
-      "message": "No Additional Software Required",
-      "description": "Todo for AI's MCP integration uses the @todo-for-ai/mcp npm package. Simply configure the JSON to use it."
-    },
-    "steps": {
-      "first": {
-        "title": "Step 1: Get API Token",
-        "description": {
-          "prefix": "Go to",
-          "linkText": "Profile -> API Token",
-          "suffix": "page to create your dedicated Token. This Token is used to authenticate MCP clients."
-        }
-      },
-      "second": {
-        "title": "Step 2: Copy MCP Configuration",
-        "description": "Based on your AI client, copy the configuration to the appropriate location:",
-        "claude": "Claude Desktop Configuration",
-        "cursor": "Cursor IDE Configuration",
-        "windsurf": "Windsurf Configuration"
-      },
-      "third": {
-        "title": "Step 3: Verify Configuration",
-        "description": "After configuration, verify that MCP is working properly:",
-        "items": {
-          "restart": "Completely close and restart your AI client",
-          "testCommand": "Enter test commands in conversation, such as 'Get my project list'",
-          "verify": "Check if AI can return project or task information correctly"
-        }
-      }
-    }
+  "mcp": {
+    "title": "MCP Integration",
+    "description": "Fast onboarding for MCP-capable clients such as Claude Desktop, Cursor, and Cline.",
+    "commandTitle": "Example MCP command",
+    "command": "npx -y @todo-for-ai/mcp@latest --api-base-url https://api.todo-for-ai.com --api-token YOUR_API_TOKEN",
+    "recommendationsTitle": "Recommendations",
+    "recommendations": [
+      "Enable auto-reconnect in your client",
+      "Use least-privilege tokens and rotate periodically",
+      "Set --log-level debug when troubleshooting"
+    ]
   },
-  "claude": {
-    "title": "Claude Desktop Configuration",
-    "description": "Claude Desktop is the official desktop application provided by Anthropic with native MCP support.",
-    "steps": {
-      "configLocation": {
-        "title": "Configuration File Location",
-        "macos": "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json",
-        "windows": "Windows: %APPDATA%/Claude/claude_desktop_config.json"
-      },
-      "editConfig": {
-        "title": "Edit Configuration",
-        "description": "Open the configuration file and add Todo for AI configuration in the mcpServers section:"
-      },
-      "restart": {
-        "title": "Restart Claude Desktop",
-        "description": "After saving the configuration file, completely quit Claude Desktop and reopen it. The MCP server will be automatically downloaded and installed on first launch."
-      },
-      "verify": {
-        "title": "Verify Installation",
-        "description": "In Claude conversation, you should see a hammer icon (Tools). Click it to see available Todo for AI tools."
-      }
-    }
-  },
-  "cursor": {
-    "title": "Cursor IDE Configuration",
-    "description": "Cursor is an AI-powered code editor based on VS Code with MCP protocol support.",
-    "steps": {
-      "openSettings": {
-        "title": "Open Settings",
-        "description": "Click the settings icon (⚙️) in the lower left corner -> MCP, or press Cmd/Ctrl + Shift + P and search for 'MCP'."
-      },
-      "addServer": {
-        "title": "Add MCP Server",
-        "description": "Click the 'Add MCP Server' button and fill in as follows:",
-        "name": "Name: todo-for-ai",
-        "type": "Type: command",
-        "command": "Command: npx -y @todo-for-ai/mcp@latest --api-base-url https://api.todo-for-ai.com --api-token YOUR_API_TOKEN"
-      },
-      "save": {
-        "title": "Save Configuration",
-        "description": "After saving, Cursor will automatically start the MCP server. If the status shows green, the configuration is successful."
-      },
-      "useInChat": {
-        "title": "Use in Chat",
-        "description": "In Cursor's AI conversation, MCP tools will be automatically called when needed. You can also directly ask about task-related information."
-      }
-    }
-  },
-  "otherIdes": {
-    "title": "Other MCP-Compatible IDEs",
-    "description": "In addition to Claude Desktop and Cursor, many tools support the MCP protocol:",
-    "ides": {
-      "windsurf": {
-        "title": "Windsurf",
-        "description": "AI IDE launched by Codeium. Search for MCP in settings to configure. Similar configuration method to Cursor."
-      },
-      "cline": {
-        "title": "Cline (VS Code Extension)",
-        "description": "VS Code AI programming assistant extension with MCP tool support. Add MCP server configuration in Cline settings."
-      },
-      "continue": {
-        "title": "Continue (VS Code Extension)",
-        "description": "Open source AI programming assistant. Add MCP server configuration in config.json."
-      }
-    },
-    "genericConfig": {
-      "title": "Generic Configuration Format",
-      "description": "Most MCP clients use the following JSON format:"
-    }
-  },
-  "configuration": {
-    "title": "Configuration Parameters",
-    "description": "The MCP server supports the following configuration parameters:",
-    "params": {
-      "apiBaseUrl": {
-        "name": "--api-base-url",
-        "description": "Todo for AI API base URL",
-        "default": "https://api.todo-for-ai.com"
-      },
-      "apiToken": {
-        "name": "--api-token",
-        "description": "Your API Token for authentication",
-        "required": true
-      },
-      "logLevel": {
-        "name": "--log-level",
-        "description": "Log level, options: debug, info, warn, error",
-        "default": "info"
-      }
-    },
-    "envVars": {
-      "title": "Environment Variable Configuration",
-      "description": "You can also use environment variables instead of command line parameters:",
-      "vars": [
-        "TODO_API_BASE_URL - API base URL",
-        "TODO_API_TOKEN - API Token",
-        "LOG_LEVEL - Log level"
-      ]
-    },
-    "security": {
-      "title": "Security Tips",
-      "tips": [
-        "API Token is like your password, do not share it with others",
-        "Do not commit configuration files with real Tokens to code repositories",
-        "Regularly rotate your API Tokens",
-        "If you suspect Token leakage, delete and recreate it immediately"
-      ]
-    }
-  },
-  "testing": {
-    "title": "Testing & Verification",
-    "description": "After configuration, use the following methods to test if MCP is working properly:",
-    "testCommands": {
-      "title": "Test Command Examples",
-      "listProjects": "List all my projects",
-      "getProjectInfo": "Get information for project [project name]",
-      "listTasks": "Get pending tasks for project [project name]",
-      "createTask": "Create a task in project [project name] with title [task title]"
-    },
-    "troubleshooting": {
-      "title": "Troubleshooting",
-      "errors": [
-        {
-          "symptom": "Error: 'npx: command not found'",
-          "solution": "Ensure Node.js is properly installed and npm global bin directory is in PATH"
-        },
-        {
-          "symptom": "Error: 'Invalid or expired token'",
-          "solution": "Check if API Token is correct, expired, or deleted"
-        },
-        {
-          "symptom": "MCP server starts but no response",
-          "solution": "Check log output, use --log-level debug for detailed logs"
-        },
-        {
-          "symptom": "Cannot see tool icon in Claude",
-          "solution": "Ensure configuration file format is correct, restart Claude Desktop, wait for auto-installation to complete"
-        }
-      ]
-    },
-    "support": {
-      "title": "Get Help",
-      "description": "If you still have issues, get help through the following channels:",
-      "channels": [
-        "Visit our Discord community",
-        "Email support@todo-for-ai.com",
-        "Submit an Issue on GitHub"
-      ]
-    }
+  "openclaw": {
+    "title": "OpenClaw/HTTP Integration",
+    "description": "For custom runtimes. The HTTP protocol supports pull-based execution, lease renewal, event streaming, idempotent commits, and task logs.",
+    "protocolTitle": "Protocol Essentials",
+    "protocol": [
+      "Auth: Agent Key -> /agent/auth/introspect -> access token",
+      "Pull: /agent/tasks/pull returns attempt_id and lease_id",
+      "During execution: /lease/renew + /events + /logs",
+      "Finish: /agent/tasks/{id}/commit with Idempotency-Key"
+    ],
+    "notice": "OpenClaw integration must strictly follow lease and idempotency rules to avoid update races."
   }
 }

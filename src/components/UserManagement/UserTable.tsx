@@ -7,6 +7,7 @@ import {
   CrownOutlined
 } from '@ant-design/icons'
 import type { User } from '../../stores/useAuthStore'
+import { resolveUserAvatarSrc } from '../../utils/defaultAvatars'
 
 interface UserTableProps {
   users: User[]
@@ -39,7 +40,12 @@ export const UserTable: React.FC<UserTableProps> = ({
       render: (record: User) => (
         <Space>
           <Avatar
-            src={record.avatar_url}
+            src={resolveUserAvatarSrc(
+              typeof record.preferences?.avatar_token === 'string'
+                ? record.preferences.avatar_token
+                : record.avatar_url,
+              `${record.id}-${record.username || record.email || 'user'}`
+            )}
             icon={<UserOutlined />}
             size="default"
           />

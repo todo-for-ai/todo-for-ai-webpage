@@ -15,7 +15,8 @@
     "createTask": "Create Task",
     "createFromTask": "Create New Task from This Task",
     "taskStatus": "Task Status",
-    "taskActions": "Task Actions"
+    "taskActions": "Task Actions",
+    "viewLogs": "View Logs"
   },
   "status": {
     "todo": "To Do",

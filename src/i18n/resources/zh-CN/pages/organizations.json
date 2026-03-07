@@ -4,6 +4,11 @@
   "actions": {
     "create": "创建组织"
   },
+  "viewMode": {
+    "label": "视图",
+    "list": "列表",
+    "card": "卡片"
+  },
   "table": {
     "orgName": "组织",
     "role": "我的角色",
@@ -13,17 +18,52 @@
   "members": {
     "title": "{{name}} 的成员",
     "emailPlaceholder": "输入用户邮箱进行邀请",
+    "agentIdPlaceholder": "输入 Agent ID 邀请",
     "emailRequired": "请输入用户邮箱",
+    "agentIdRequired": "请输入有效的 Agent ID",
     "invite": "邀请",
+    "inviteAgent": "邀请Agent",
+    "createAgent": "创建Agent",
     "remove": "移除",
     "confirmOk": "确认",
     "confirmCancel": "取消",
     "removeConfirmTitle": "确认移除该成员？",
     "removeConfirmDescription": "移除后该成员将失去组织访问权限。",
+    "entity": {
+      "human": "人类",
+      "agent": "Agent"
+    },
     "table": {
       "user": "成员",
+      "type": "类型",
       "role": "角色",
       "status": "状态",
+      "actions": "操作"
+    }
+  },
+  "roles": {
+    "manage": "角色管理",
+    "backToOrganizations": "返回组织页",
+    "manageTitle": "管理组织角色",
+    "create": "创建角色",
+    "system": "系统",
+    "titleRequired": "请输入角色标题",
+    "titlePlaceholder": "角色标题，例如：前端负责人",
+    "descriptionPlaceholder": "角色描述（可选）",
+    "contentPlaceholder": "角色设定内容（支持 Markdown，可选）",
+    "selectPlaceholder": "选择角色（可多选，可为空）",
+    "deleteConfirmTitle": "确认删除该角色？",
+    "deleteConfirmDesc": "删除后，该角色会从所有成员上移除。",
+    "form": {
+      "title": "标题",
+      "description": "描述",
+      "content": "设定内容"
+    },
+    "table": {
+      "title": "标题",
+      "key": "角色键",
+      "description": "描述",
+      "content": "设定内容",
       "actions": "操作"
     }
   },
@@ -36,16 +76,36 @@
     "confirm": "创建",
     "cancel": "取消"
   },
+  "createAgentModal": {
+    "title": "创建组织Agent",
+    "name": "Agent 名称",
+    "nameRequired": "请输入Agent名称",
+    "description": "描述",
+    "confirm": "创建",
+    "cancel": "取消"
+  },
   "messages": {
     "loadFailed": "加载组织列表失败",
     "memberLoadFailed": "加载组织成员失败",
+    "agentMemberLoadFailed": "加载组织Agent失败",
+    "roleLoadFailed": "加载组织角色失败",
     "createSuccess": "组织创建成功",
     "createFailed": "组织创建失败",
     "inviteSuccess": "邀请组织成员成功",
     "inviteFailed": "邀请组织成员失败",
+    "roleCreateSuccess": "组织角色创建成功",
+    "roleCreateFailed": "组织角色创建失败",
+    "roleDeleteSuccess": "组织角色删除成功",
+    "roleDeleteFailed": "组织角色删除失败",
+    "createAgentSuccess": "组织Agent创建成功",
+    "createAgentFailed": "组织Agent创建失败",
+    "agentInviteSuccess": "邀请组织Agent成功",
+    "agentInviteFailed": "邀请组织Agent失败",
     "memberUpdated": "更新组织成员成功",
     "memberUpdateFailed": "更新组织成员失败",
     "memberRemoved": "移除组织成员成功",
-    "memberRemoveFailed": "移除组织成员失败"
+    "memberRemoveFailed": "移除组织成员失败",
+    "agentMemberRemoved": "移除组织Agent成功",
+    "agentMemberRemoveFailed": "移除组织Agent失败"
   }
 }

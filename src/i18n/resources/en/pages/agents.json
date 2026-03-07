@@ -1,0 +1,267 @@
+{
+  "title": "Agent Management",
+  "subtitle": "Create and manage workspace agents, credentials, and connect links.",
+  "createTitle": "Create Agent",
+  "editTitle": "Edit Agent",
+  "form": {
+    "description": "Configure profile, runtime and SOUL settings in one place.",
+    "workspace": "Select workspace",
+    "cancel": "Cancel",
+    "create": "Create",
+    "save": "Save",
+    "tabs": {
+      "basic": "Basic",
+      "runtime": "Runtime",
+      "soul": "SOUL.md"
+    },
+    "fields": {
+      "name": "Agent Name",
+      "displayName": "Display Name",
+      "description": "Description",
+      "avatarUrl": "Avatar URL",
+      "homepageUrl": "Homepage URL",
+      "contactEmail": "Contact Email",
+      "status": "Status",
+      "capabilityTags": "Capability Tags (comma-separated)",
+      "allowedProjectIds": "Allowed Project IDs (comma-separated)",
+      "llmProvider": "LLM Provider",
+      "llmModel": "LLM Model",
+      "reasoningMode": "Reasoning Mode",
+      "executionMode": "Execution Mode",
+      "temperature": "Temperature",
+      "topP": "Top P",
+      "maxOutputTokens": "Max Output Tokens",
+      "contextWindowTokens": "Context Window Tokens",
+      "maxConcurrency": "Max Concurrency",
+      "maxRetry": "Max Retry",
+      "timeoutSeconds": "Timeout Seconds",
+      "heartbeatIntervalSeconds": "Heartbeat Interval Seconds",
+      "systemPrompt": "System Prompt",
+      "responseStyle": "response_style (JSON object)",
+      "toolPolicy": "tool_policy (JSON object)",
+      "memoryPolicy": "memory_policy (JSON object)",
+      "handoffPolicy": "handoff_policy (JSON object)",
+      "runnerEnabled": "Runner Enabled",
+      "sandboxProfile": "Sandbox Profile",
+      "sandboxPolicy": "Sandbox Policy (JSON object)",
+      "soulMarkdown": "SOUL Markdown",
+      "changeSummary": "Change Summary"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "revoked": "Revoked"
+    },
+    "reasoning": {
+      "balanced": "Balanced",
+      "fast": "Fast",
+      "deep": "Deep"
+    },
+    "validation": {
+      "nameRequired": "Please input agent name",
+      "workspaceRequired": "Please select a workspace first"
+    }
+  },
+  "table": {
+    "title": "Agents",
+    "agent": "Agent",
+    "status": "Status",
+    "capabilities": "Capabilities",
+    "actions": "Actions",
+    "edit": "Edit",
+    "revoke": "Revoke",
+    "revokeConfirmTitle": "Revoke this agent?",
+    "revokeConfirmDesc": "This will stop agent runtime access.",
+    "search": "Search agent name/display name",
+    "statusFilter": "Status",
+    "totalCount": "{{count}} total",
+    "viewDetail": "Detail"
+  },
+  "viewMode": {
+    "label": "View",
+    "list": "List",
+    "card": "Card"
+  },
+  "cards": {
+    "keys": "Agent Keys",
+    "soulVersions": "SOUL Versions",
+    "secrets": "Agent Secrets"
+  },
+  "detail": {
+    "title": "Agent Detail",
+    "tabs": {
+      "overview": "Overview",
+      "activity": "Activity",
+      "projects": "Projects",
+      "interactions": "Interactions",
+      "tasks": "Tasks",
+      "runs": "Runs",
+      "keys": "Keys",
+      "soul": "SOUL Versions",
+      "secrets": "Secrets"
+    },
+    "common": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "overview": {
+      "agentId": "Agent ID",
+      "workspaceId": "Workspace ID",
+      "displayName": "Display Name",
+      "creatorUserId": "Creator User ID",
+      "executionMode": "Execution Mode",
+      "runnerEnabled": "Managed Runner",
+      "sandboxProfile": "Sandbox Profile",
+      "allowedProjectIds": "Allowed Project IDs",
+      "configVersion": "Config Version",
+      "runnerConfigVersion": "Runner Config Version",
+      "soulVersion": "SOUL Version",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "enums": {
+      "executionMode": {
+        "external_pull": "External Pull",
+        "managed_runner": "Managed Runner"
+      },
+      "reasoningMode": {
+        "balanced": "Balanced",
+        "fast": "Fast",
+        "deep": "Deep"
+      },
+      "taskStatus": {
+        "todo": "To Do",
+        "in_progress": "In Progress",
+        "review": "In Review",
+        "done": "Done",
+        "cancelled": "Cancelled"
+      },
+      "runState": {
+        "queued": "Queued",
+        "leased": "Leased",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "attemptState": {
+        "queued": "Queued",
+        "leased": "Leased",
+        "running": "Running",
+        "committed": "Committed",
+        "aborted": "Aborted",
+        "cancelled": "Cancelled",
+        "failed": "Failed",
+        "succeeded": "Succeeded",
+        "expired": "Expired",
+        "released": "Released"
+      }
+    },
+    "activity": {
+      "source": "Source",
+      "eventType": "Event Type",
+      "level": "Level",
+      "related": "Related",
+      "riskScore": "Risk Score",
+      "message": "Message",
+      "occurredAt": "Occurred At",
+      "sourceFilter": "Source Filter",
+      "levelFilter": "Level",
+      "eventTypeFilter": "Event Type Contains",
+      "taskIdFilter": "Task ID",
+      "projectIdFilter": "Project ID",
+      "runIdFilter": "Run ID Contains",
+      "attemptIdFilter": "Attempt ID Contains",
+      "minRiskFilter": "Min Risk",
+      "maxRiskFilter": "Max Risk",
+      "search": "Search message or payload",
+      "from": "From",
+      "to": "To",
+      "clickHint": "Click a row to view details.",
+      "detailTitle": "Activity Detail",
+      "close": "Close",
+      "correlationId": "Correlation ID",
+      "runId": "Run ID",
+      "attemptId": "Attempt ID",
+      "taskId": "Task ID",
+      "projectId": "Project ID",
+      "actor": "Actor",
+      "target": "Target",
+      "payload": "Payload",
+      "sources": {
+        "agent_run": "Agent Run",
+        "agent_task_attempt": "Task Attempt",
+        "agent_task_event": "Task Event",
+        "task_log": "Task Log",
+        "agent_audit": "Audit"
+      },
+      "levels": {
+        "info": "Info",
+        "warn": "Warning",
+        "error": "Error"
+      },
+      "requestId": "Request ID",
+      "durationMs": "Duration (ms)",
+      "errorCode": "Error Code"
+    },
+    "projects": {
+      "project": "Project",
+      "allowed": "Allowed",
+      "touchedTasks": "Touched Tasks",
+      "committedTasks": "Committed Tasks",
+      "interactionLogs": "Interaction Logs",
+      "lastActivity": "Last Activity",
+      "search": "Search project name"
+    },
+    "interactions": {
+      "user": "User",
+      "interactionCount": "Interactions",
+      "taskCount": "Task Count",
+      "lastInteraction": "Last Interaction",
+      "search": "Search name or email"
+    },
+    "tasks": {
+      "task": "Task",
+      "status": "Status",
+      "lastAttempt": "Last Attempt",
+      "agentLogs": "Agent Logs",
+      "lastActivity": "Last Activity",
+      "statusFilter": "Task Status",
+      "search": "Search title or content",
+      "projectFilter": "Project"
+    },
+    "runs": {
+      "run": "Run",
+      "state": "State",
+      "scheduledAt": "Scheduled At",
+      "endedAt": "Ended At",
+      "failure": "Failure",
+      "stateFilter": "Run State"
+    }
+  },
+  "messages": {
+    "loadAgentsFailed": "Failed to load agents",
+    "createSuccess": "Agent created successfully",
+    "createFailed": "Failed to create agent",
+    "updateSuccess": "Agent updated successfully",
+    "updateFailed": "Failed to update agent",
+    "revokeSuccess": "Agent revoked successfully",
+    "revokeFailed": "Failed to revoke agent",
+    "agentNotFound": "Agent not found",
+    "agentNotFoundDesc": "The agent does not exist in your accessible workspaces.",
+    "backToAgents": "Back to Agents"
+  },
+  "workspaceTabs": {
+    "agents": "Agent List",
+    "activityCenter": "Activity Center"
+  },
+  "workspaceActivity": {
+    "title": "Workspace Activity Center",
+    "agent": "Agent",
+    "agentFilter": "Filter by agent"
+  },
+  "detailPage": {
+    "workspace": "Workspace"
+  }
+}

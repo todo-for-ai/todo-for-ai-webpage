@@ -1,227 +1,49 @@
 {
-  "title": "MCP 安装文档",
-  "subtitle": "通过 MCP 将 AI IDE 连接到 Todo for AI",
-  "pageTitle": "MCP 安装文档 - Todo for AI",
+  "title": "AI接入",
+  "subtitle": "通过 Skill、MCP、OpenClaw 等方式将 AI Agent 接入 Todo for AI",
+  "pageTitle": "AI接入 - Todo for AI",
   "tabs": {
-    "overview": "概述",
-    "installation": "安装步骤",
-    "claude": "Claude Desktop",
-    "cursor": "Cursor IDE",
-    "otherIdes": "其他 IDE",
-    "configuration": "配置参数",
-    "testing": "测试验证"
+    "skill": "Skill",
+    "mcp": "MCP",
+    "openclaw": "OpenClaw"
   },
-  "overview": {
-    "title": "MCP 功能概述",
-    "description": "Todo for AI 的 MCP (Model Context Protocol) 服务器允许 AI 助手直接访问和管理您的任务。通过 MCP，AI 可以读取任务信息、创建新任务、更新进度，实现真正的智能任务管理。",
-    "whatIsMcp": {
-      "title": "什么是 MCP？",
-      "description": "MCP (Model Context Protocol) 是 Anthropic 推出的开放协议，允许 AI 助手安全地访问外部工具和数据源。通过 MCP，AI 可以直接与您的 Todo for AI 账户交互，实现：",
-      "features": [
-        "智能任务规划和分解",
-        "自动创建和分配任务",
-        "实时跟踪任务进度",
-        "基于项目上下文的智能建议"
-      ]
-    },
-    "supportedTools": {
-      "title": "支持的工具 (6个)",
-      "getProjectTasks": "根据项目名称获取待处理任务列表，支持状态筛选",
-      "getTaskById": "根据任务 ID 获取详细信息，包括项目上下文规则",
-      "createTask": "在指定项目中创建新任务，支持设置优先级、截止日期等",
-      "submitFeedback": "为任务提交反馈并更新状态（进行中/审核中/已完成）",
-      "getProjectInfo": "获取项目详细信息，包括统计、最近任务等",
-      "listUserProjects": "列出用户可访问的所有项目，支持包含统计信息"
-    },
-    "requirements": {
-      "title": "配置要求",
-      "node": "Node.js 18+ 环境（用于运行 npx 命令）",
-      "backend": "Todo for AI 后端服务可访问",
-      "ide": "支持 MCP 协议的 AI IDE（Claude Desktop、Cursor、Windsurf 等）",
-      "token": "有效的 API Token（用于身份验证）"
-    }
+  "skill": {
+    "title": "通过 Skill 接入",
+    "description": "适合具备独立推理和执行能力的 Agent。平台会提供标准 Skill Markdown，Agent 按文档完成鉴权、拉取任务、续租、提交结果与追加日志。",
+    "alertTitle": "推荐接入方式",
+    "alertDescription": "优先使用 Skill + HTTP API Token 方式，可获得最完整的平台能力。",
+    "pathLabel": "Skill 文档路径",
+    "pathValue": "docs/AGENT_RUNTIME_SKILL.md",
+    "stepsTitle": "接入步骤",
+    "steps": [
+      "在平台创建 Agent 并生成凭证（Agent Key / Connect Link）",
+      "将 Skill Markdown 提供给 Agent 作为系统能力说明",
+      "Agent 使用 /agent/auth/introspect 交换短期 access token",
+      "使用 pull/events/commit/logs 接口完成任务执行闭环"
+    ]
   },
-  "installation": {
-    "title": "MCP 配置安装指南",
-    "alert": {
-      "message": "无需安装额外软件",
-      "description": "Todo for AI 的 MCP 集成使用 @todo-for-ai/mcp npm 包，只需配置 JSON 即可使用。"
-    },
-    "steps": {
-      "first": {
-        "title": "第一步：获取 API Token",
-        "description": {
-          "prefix": "前往",
-          "linkText": "个人中心 -> API Token",
-          "suffix": "页面创建您的专属 Token。这个 Token 用于验证 MCP 客户端的身份。"
-        }
-      },
-      "second": {
-        "title": "第二步：复制 MCP 配置",
-        "description": "根据您使用的 AI 客户端，将配置复制到对应的位置：",
-        "claude": "Claude Desktop 配置",
-        "cursor": "Cursor IDE 配置",
-        "windsurf": "Windsurf 配置"
-      },
-      "third": {
-        "title": "第三步：验证配置",
-        "description": "配置完成后，验证 MCP 是否正常工作：",
-        "items": {
-          "restart": "完全关闭并重新启动您的 AI 客户端",
-          "testCommand": "在对话中输入测试命令，如'获取我的项目列表'",
-          "verify": "检查 AI 是否能正常返回项目或任务信息"
-        }
-      }
-    }
+  "mcp": {
+    "title": "通过 MCP 接入",
+    "description": "适合 Claude Desktop、Cursor、Cline 等支持 MCP 的客户端，快速接入平台工具能力。",
+    "commandTitle": "MCP 启动命令示例",
+    "command": "npx -y @todo-for-ai/mcp@latest --api-base-url https://api.todo-for-ai.com --api-token YOUR_API_TOKEN",
+    "recommendationsTitle": "建议",
+    "recommendations": [
+      "在客户端配置中启用自动重连",
+      "Token 建议最小权限并定期轮换",
+      "排障时可设置 --log-level debug"
+    ]
   },
-  "claude": {
-    "title": "Claude Desktop 配置",
-    "description": "Claude Desktop 是 Anthropic 官方提供的桌面应用，原生支持 MCP。",
-    "steps": {
-      "configLocation": {
-        "title": "配置文件位置",
-        "macos": "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json",
-        "windows": "Windows: %APPDATA%/Claude/claude_desktop_config.json"
-      },
-      "editConfig": {
-        "title": "编辑配置",
-        "description": "打开配置文件，在 mcpServers 部分添加 Todo for AI 配置："
-      },
-      "restart": {
-        "title": "重启 Claude Desktop",
-        "description": "保存配置文件后，完全退出 Claude Desktop 并重新打开。首次启动时会自动下载并安装 MCP 服务器。"
-      },
-      "verify": {
-        "title": "验证安装",
-        "description": "在 Claude 对话中，你应该能看到一个锤子图标（工具），点击可以看到可用的 Todo for AI 工具。"
-      }
-    }
-  },
-  "cursor": {
-    "title": "Cursor IDE 配置",
-    "description": "Cursor 是一个基于 VS Code 的 AI 代码编辑器，支持 MCP 协议。",
-    "steps": {
-      "openSettings": {
-        "title": "打开设置",
-        "description": "点击左下角设置图标（⚙️）-> MCP，或按 Cmd/Ctrl + Shift + P 搜索 'MCP'。"
-      },
-      "addServer": {
-        "title": "添加 MCP 服务器",
-        "description": "点击 'Add MCP Server' 按钮，按以下方式填写：",
-        "name": "名称: todo-for-ai",
-        "type": "类型: command",
-        "command": "命令: npx -y @todo-for-ai/mcp@latest --api-base-url https://api.todo-for-ai.com --api-token YOUR_API_TOKEN"
-      },
-      "save": {
-        "title": "保存配置",
-        "description": "保存后 Cursor 会自动启动 MCP 服务器。如果看到状态显示为绿色，表示配置成功。"
-      },
-      "useInChat": {
-        "title": "在对话中使用",
-        "description": "在 Cursor 的 AI 对话中，MCP 工具会自动在被需要时调用。你也可以直接询问任务相关信息。"
-      }
-    }
-  },
-  "otherIdes": {
-    "title": "其他支持 MCP 的 IDE",
-    "description": "除了 Claude Desktop 和 Cursor，还有许多工具支持 MCP 协议：",
-    "ides": {
-      "windsurf": {
-        "title": "Windsurf",
-        "description": "Codeium 推出的 AI IDE，在设置中搜索 MCP 进行配置。配置方式与 Cursor 类似。"
-      },
-      "cline": {
-        "title": "Cline (VS Code 插件)",
-        "description": "VS Code 的 AI 编程助手插件，支持 MCP 工具。在 Cline 设置中添加 MCP 服务器配置。"
-      },
-      "continue": {
-        "title": "Continue (VS Code 插件)",
-        "description": "开源的 AI 编程助手，在 config.json 中添加 MCP 服务器配置。"
-      }
-    },
-    "genericConfig": {
-      "title": "通用配置格式",
-      "description": "大多数 MCP 客户端使用以下 JSON 格式："
-    }
-  },
-  "configuration": {
-    "title": "配置参数详解",
-    "description": "MCP 服务器支持以下配置参数：",
-    "params": {
-      "apiBaseUrl": {
-        "name": "--api-base-url",
-        "description": "Todo for AI API 的基础 URL",
-        "default": "https://api.todo-for-ai.com"
-      },
-      "apiToken": {
-        "name": "--api-token",
-        "description": "您的 API Token，用于身份验证",
-        "required": true
-      },
-      "logLevel": {
-        "name": "--log-level",
-        "description": "日志级别，可选值: debug, info, warn, error",
-        "default": "info"
-      }
-    },
-    "envVars": {
-      "title": "环境变量方式配置",
-      "description": "也可以使用环境变量代替命令行参数：",
-      "vars": [
-        "TODO_API_BASE_URL - API 基础 URL",
-        "TODO_API_TOKEN - API Token",
-        "LOG_LEVEL - 日志级别"
-      ]
-    },
-    "security": {
-      "title": "安全提示",
-      "tips": [
-        "API Token 相当于您的密码，请勿分享给他人",
-        "不要在代码仓库中提交包含真实 Token 的配置文件",
-        "建议定期更换 API Token",
-        "如果怀疑 Token 泄露，请立即删除并重新创建"
-      ]
-    }
-  },
-  "testing": {
-    "title": "测试验证",
-    "description": "配置完成后，使用以下方式测试 MCP 是否正常工作：",
-    "testCommands": {
-      "title": "测试命令示例",
-      "listProjects": "列出我的所有项目",
-      "getProjectInfo": "获取项目 [项目名称] 的信息",
-      "listTasks": "获取项目 [项目名称] 的待处理任务",
-      "createTask": "在项目 [项目名称] 中创建一个任务，标题是 [任务标题]"
-    },
-    "troubleshooting": {
-      "title": "常见问题排查",
-      "errors": [
-        {
-          "symptom": "提示 'npx: command not found'",
-          "solution": "确保 Node.js 已正确安装，且 npm 全局 bin 目录在 PATH 中"
-        },
-        {
-          "symptom": "提示 'Invalid or expired token'",
-          "solution": "检查 API Token 是否正确，是否已过期或被删除"
-        },
-        {
-          "symptom": "MCP 服务器启动但无响应",
-          "solution": "检查日志输出，使用 --log-level debug 查看详细日志"
-        },
-        {
-          "symptom": "Claude 中看不到工具图标",
-          "solution": "确保配置文件格式正确，重启 Claude Desktop，等待自动安装完成"
-        }
-      ]
-    },
-    "support": {
-      "title": "获取帮助",
-      "description": "如果仍有问题，请通过以下方式获取帮助：",
-      "channels": [
-        "访问我们的 Discord 社区",
-        "发送邮件到 support@todo-for-ai.com",
-        "在 GitHub 上提交 Issue"
-      ]
-    }
+  "openclaw": {
+    "title": "通过 OpenClaw/HTTP 协议接入",
+    "description": "适合自研 Agent Runtime。通过纯 HTTP 协议可实现任务领取、独占续租、分段事件、最终提交、任务日志等完整能力。",
+    "protocolTitle": "协议要点",
+    "protocol": [
+      "鉴权：Agent Key -> /agent/auth/introspect -> access token",
+      "领取：/agent/tasks/pull 返回 attempt_id 与 lease_id",
+      "执行中：/agent/tasks/{id}/lease/renew + /events + /logs",
+      "完成：/agent/tasks/{id}/commit（带 Idempotency-Key）"
+    ],
+    "notice": "OpenClaw 接入需要严格遵守 lease 与幂等提交规则，避免任务并发冲突。"
   }
 }

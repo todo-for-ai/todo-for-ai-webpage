@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Button,
   Card,
@@ -6,28 +7,30 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
-  Select,
+  Segmented,
   Space,
-  Table,
-  Tag,
   Typography
 } from 'antd'
-import { DeleteOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, OrderedListOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   organizationsApi,
   type Organization,
-  type OrganizationMember
+  type OrganizationMember,
+  type OrganizationRoleDefinition,
 } from '../api/organizations'
+import { organizationAgentsApi, type OrganizationAgentMember } from '../api/organizationAgents'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { OrganizationsCardView } from './organizations/components/OrganizationsCardView'
+import { OrganizationsListView } from './organizations/components/OrganizationsListView'
+import { OrganizationMembersCard } from './organizations/components/OrganizationMembersCard'
+import NotificationChannelManager from '../components/NotificationChannelManager'
+import {
+  loadOrganizationsViewModeFromIndexedDb,
+  saveOrganizationsViewModeToIndexedDb,
+  type OrganizationsViewMode,
+} from './organizations/storage'
 
 const { Title, Paragraph, Text } = Typography
-
-const ORG_ROLE_OPTIONS = [
-  { label: 'Admin', value: 'admin' },
-  { label: 'Member', value: 'member' },
-  { label: 'Viewer', value: 'viewer' },
-]
 
 const ORG_STATUS_COLORS: Record<string, string> = {
   active: 'green',
@@ -37,15 +40,22 @@ const ORG_STATUS_COLORS: Record<string, string> = {
 
 const Organizations = () => {
   const { tp } = usePageTranslation('organizations')
+  const navigate = useNavigate()
   const tpRef = useRef(tp)
   const [orgs, setOrgs] = useState<Organization[]>([])
   const [members, setMembers] = useState<OrganizationMember[]>([])
+  const [agentMembers, setAgentMembers] = useState<OrganizationAgentMember[]>([])
+  const [organizationRoles, setOrganizationRoles] = useState<OrganizationRoleDefinition[]>([])
   const [loading, setLoading] = useState(false)
+  const [viewMode, setViewMode] = useState<OrganizationsViewMode>('list')
   const [createVisible, setCreateVisible] = useState(false)
+  const [createAgentVisible, setCreateAgentVisible] = useState(false)
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
+  const [inviteAgentId, setInviteAgentId] = useState('')
+  const [inviteRoleIds, setInviteRoleIds] = useState<number[]>([])
   const [createForm] = Form.useForm()
+  const [createAgentForm] = Form.useForm()
 
   useEffect(() => {
     tpRef.current = tp
@@ -91,17 +101,57 @@ const Organizations = () => {
     }
   }, [])
 
+  const loadAgentMembers = useCallback(async (organizationId: number) => {
+    try {
+      const data = await organizationAgentsApi.getOrganizationAgentMembers(organizationId)
+      setAgentMembers(data.items || [])
+    } catch (error: any) {
+      message.error(error?.message || tpRef.current('messages.agentMemberLoadFailed'))
+      setAgentMembers([])
+    }
+  }, [])
+
+  const loadOrganizationRoles = useCallback(async (organizationId: number) => {
+    try {
+      const data = await organizationsApi.getOrganizationRoles(organizationId)
+      const items = data.items || []
+      setOrganizationRoles(items)
+      setInviteRoleIds((current) => current.filter((roleId) => items.some((role) => role.id === roleId)))
+    } catch (error: any) {
+      message.error(error?.message || tpRef.current('messages.roleLoadFailed'))
+      setOrganizationRoles([])
+    }
+  }, [])
+
   useEffect(() => {
     loadOrganizations()
   }, [loadOrganizations])
 
   useEffect(() => {
+    let active = true
+    void loadOrganizationsViewModeFromIndexedDb().then((mode) => {
+      if (active) {
+        setViewMode(mode)
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
     if (selectedOrgId) {
       loadMembers(selectedOrgId)
+      loadAgentMembers(selectedOrgId)
+      loadOrganizationRoles(selectedOrgId)
     } else {
       setMembers([])
+      setAgentMembers([])
+      setOrganizationRoles([])
+      setInviteRoleIds([])
     }
-  }, [selectedOrgId, loadMembers])
+  }, [selectedOrgId, loadMembers, loadAgentMembers, loadOrganizationRoles])
 
   const createOrganization = async () => {
     try {
@@ -134,10 +184,11 @@ const Organizations = () => {
       setLoading(true)
       await organizationsApi.inviteOrganizationMember(selectedOrgId, {
         email: inviteEmail.trim(),
-        role: inviteRole,
+        role_ids: inviteRoleIds,
       })
       message.success(tp('messages.inviteSuccess'))
       setInviteEmail('')
+      setInviteRoleIds([])
       await loadMembers(selectedOrgId)
     } catch (error: any) {
       message.error(error?.message || tp('messages.inviteFailed'))
@@ -146,16 +197,16 @@ const Organizations = () => {
     }
   }
 
-  const updateMemberRole = async (
+  const updateMemberRoles = async (
     member: OrganizationMember,
-    role: 'admin' | 'member' | 'viewer'
+    roleIds: number[]
   ) => {
     if (!selectedOrgId) {
       return
     }
     try {
       setLoading(true)
-      await organizationsApi.updateOrganizationMember(selectedOrgId, member.user_id, { role })
+      await organizationsApi.updateOrganizationMember(selectedOrgId, member.user_id, { role_ids: roleIds })
       message.success(tp('messages.memberUpdated'))
       await loadMembers(selectedOrgId)
     } catch (error: any) {
@@ -181,6 +232,108 @@ const Organizations = () => {
     }
   }
 
+  const createAgent = async () => {
+    if (!selectedOrgId) {
+      return
+    }
+    try {
+      const values = await createAgentForm.validateFields()
+      setLoading(true)
+      await organizationAgentsApi.createOrganizationAgent(selectedOrgId, {
+        name: values.name,
+        description: values.description,
+      })
+      message.success(tp('messages.createAgentSuccess'))
+      setCreateAgentVisible(false)
+      createAgentForm.resetFields()
+      await loadAgentMembers(selectedOrgId)
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return
+      }
+      message.error(error?.message || tp('messages.createAgentFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const inviteAgentMember = async () => {
+    if (!selectedOrgId) {
+      return
+    }
+    const parsedAgentId = Number(inviteAgentId)
+    if (!parsedAgentId || Number.isNaN(parsedAgentId)) {
+      message.warning(tp('members.agentIdRequired'))
+      return
+    }
+    try {
+      setLoading(true)
+      await organizationAgentsApi.inviteOrganizationAgentMember(selectedOrgId, parsedAgentId)
+      message.success(tp('messages.agentInviteSuccess'))
+      setInviteAgentId('')
+      await loadAgentMembers(selectedOrgId)
+    } catch (error: any) {
+      message.error(error?.message || tp('messages.agentInviteFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const removeAgentMember = async (member: OrganizationAgentMember) => {
+    if (!selectedOrgId) {
+      return
+    }
+    try {
+      setLoading(true)
+      await organizationAgentsApi.removeOrganizationAgentMember(selectedOrgId, member.id)
+      message.success(tp('messages.agentMemberRemoved'))
+      await loadAgentMembers(selectedOrgId)
+    } catch (error: any) {
+      message.error(error?.message || tp('messages.agentMemberRemoveFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const openRoleManagerPage = () => {
+    if (!selectedOrgId) {
+      return
+    }
+    navigate(`/todo-for-ai/pages/organizations/${selectedOrgId}/roles`)
+  }
+
+  const mergedMemberRows = useMemo(() => {
+    const humanRows = members.map((member) => ({
+      row_id: `human-${member.id}`,
+      entity_type: 'human' as const,
+      member,
+      agentMember: null as OrganizationAgentMember | null,
+      status: member.status,
+    }))
+
+    const agentRows = agentMembers.map((agentMember) => ({
+      row_id: `agent-${agentMember.id}`,
+      entity_type: 'agent' as const,
+      member: null as OrganizationMember | null,
+      agentMember,
+      status: agentMember.status,
+    }))
+    return [...humanRows, ...agentRows]
+  }, [members, agentMembers])
+
+  const roleOptions = useMemo(
+    () =>
+      organizationRoles
+        .filter((item) => item.is_active && item.key !== 'owner')
+        .map((item) => ({ label: item.name, value: item.id })),
+    [organizationRoles]
+  )
+
+  const handleViewModeChange = (mode: OrganizationsViewMode) => {
+    setViewMode(mode)
+    void saveOrganizationsViewModeToIndexedDb(mode)
+  }
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -189,152 +342,96 @@ const Organizations = () => {
             <Title level={2} className="page-title">{tp('title')}</Title>
             <Paragraph className="page-description">{tp('subtitle')}</Paragraph>
           </div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
-            {tp('actions.create')}
-          </Button>
+          <Space>
+            <Space>
+              <Text type="secondary">{tp('viewMode.label')}</Text>
+              <Segmented<OrganizationsViewMode>
+                value={viewMode}
+                onChange={(value) => handleViewModeChange(value)}
+                options={[
+                  {
+                    value: 'list',
+                    label: (
+                      <Space size={6}>
+                        <OrderedListOutlined />
+                        {tp('viewMode.list')}
+                      </Space>
+                    ),
+                  },
+                  {
+                    value: 'card',
+                    label: (
+                      <Space size={6}>
+                        <AppstoreOutlined />
+                        {tp('viewMode.card')}
+                      </Space>
+                    ),
+                  },
+                ]}
+              />
+            </Space>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
+              {tp('actions.create')}
+            </Button>
+          </Space>
         </div>
       </div>
 
       <Card style={{ marginBottom: 16 }}>
-        <Table
-          rowKey="id"
-          loading={loading}
-          dataSource={orgs}
-          pagination={false}
-          onRow={(record) => ({
-            onClick: () => setSelectedOrgId(record.id),
-          })}
-          rowClassName={(record) => record.id === selectedOrgId ? 'ant-table-row-selected' : ''}
-          columns={[
-            {
-              title: tp('table.orgName'),
-              key: 'name',
-              render: (_: any, org: Organization) => (
-                <Space>
-                  <TeamOutlined style={{ color: '#1890ff' }} />
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{org.name}</div>
-                    <Text type="secondary">{org.slug}</Text>
-                  </div>
-                </Space>
-              )
-            },
-            {
-              title: tp('table.role'),
-              dataIndex: 'current_user_role',
-              key: 'current_user_role',
-              render: (value: string) => <Tag>{value || '-'}</Tag>
-            },
-            {
-              title: tp('table.members'),
-              key: 'member_count',
-              render: (_: any, org: Organization) => org.member_count ?? '-',
-              width: 120
-            },
-            {
-              title: tp('table.projects'),
-              key: 'project_count',
-              render: (_: any, org: Organization) => org.project_count ?? '-',
-              width: 120
-            }
-          ]}
-        />
+        {viewMode === 'list' ? (
+          <OrganizationsListView
+            tp={tp}
+            orgs={orgs}
+            loading={loading}
+            selectedOrgId={selectedOrgId}
+            onSelectOrg={setSelectedOrgId}
+          />
+        ) : (
+          <OrganizationsCardView
+            tp={tp}
+            orgs={orgs}
+            loading={loading}
+            selectedOrgId={selectedOrgId}
+            onSelectOrg={setSelectedOrgId}
+          />
+        )}
       </Card>
 
       {selectedOrg && (
-        <Card title={tp('members.title', { name: selectedOrg.name })}>
-          <Space direction="vertical" style={{ width: '100%' }} size={16}>
-            {canManageMembers && (
-              <Space wrap>
-                <Input
-                  value={inviteEmail}
-                  placeholder={tp('members.emailPlaceholder')}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  style={{ width: 320 }}
-                />
-                <Select
-                  value={inviteRole}
-                  options={ORG_ROLE_OPTIONS}
-                  style={{ width: 140 }}
-                  onChange={(value) => setInviteRole(value)}
-                />
-                <Button type="primary" onClick={inviteMember}>{tp('members.invite')}</Button>
-              </Space>
-            )}
+        <OrganizationMembersCard
+          tp={tp}
+          organizationName={selectedOrg.name}
+          canManageMembers={canManageMembers}
+          loading={loading}
+          inviteEmail={inviteEmail}
+          inviteRoleIds={inviteRoleIds}
+          inviteAgentId={inviteAgentId}
+          memberRows={mergedMemberRows}
+          roleOptions={roleOptions}
+          statusColorMap={ORG_STATUS_COLORS}
+          onInviteEmailChange={setInviteEmail}
+          onInviteRoleChange={setInviteRoleIds}
+          onInviteAgentIdChange={setInviteAgentId}
+          onInviteMember={inviteMember}
+          onInviteAgent={inviteAgentMember}
+          onOpenCreateAgent={() => setCreateAgentVisible(true)}
+          onOpenRoleManager={openRoleManagerPage}
+          onUpdateMemberRoles={updateMemberRoles}
+          onRemoveMember={removeMember}
+          onRemoveAgentMember={removeAgentMember}
+        />
+      )}
 
-            <Table
-              rowKey="id"
-              loading={loading}
-              pagination={false}
-              dataSource={members}
-              columns={[
-                {
-                  title: tp('members.table.user'),
-                  key: 'user',
-                  render: (_: any, member: OrganizationMember) => (
-                    <div>
-                      <div style={{ fontWeight: 500 }}>
-                        {member.user?.full_name || member.user?.nickname || member.user?.username || `#${member.user_id}`}
-                      </div>
-                      <Text type="secondary">ID: {member.user_id}</Text>
-                    </div>
-                  )
-                },
-                {
-                  title: tp('members.table.role'),
-                  key: 'role',
-                  render: (_: any, member: OrganizationMember) => {
-                    if (!canManageMembers || member.role === 'owner') {
-                      return <Tag>{member.role}</Tag>
-                    }
-                    return (
-                      <Select
-                        size="small"
-                        value={member.role}
-                        options={ORG_ROLE_OPTIONS}
-                        style={{ width: 140 }}
-                        onChange={(value) => updateMemberRole(member, value)}
-                      />
-                    )
-                  }
-                },
-                {
-                  title: tp('members.table.status'),
-                  dataIndex: 'status',
-                  key: 'status',
-                  render: (status: string) => (
-                    <Tag color={ORG_STATUS_COLORS[status] || 'default'}>
-                      {status}
-                    </Tag>
-                  )
-                },
-                {
-                  title: tp('members.table.actions'),
-                  key: 'actions',
-                  width: 120,
-                  render: (_: any, member: OrganizationMember) => {
-                    if (!canManageMembers || member.role === 'owner') {
-                      return null
-                    }
-                    return (
-                      <Popconfirm
-                        title={tp('members.removeConfirmTitle')}
-                        description={tp('members.removeConfirmDescription')}
-                        onConfirm={() => removeMember(member)}
-                        okText={tp('members.confirmOk')}
-                        cancelText={tp('members.confirmCancel')}
-                      >
-                        <Button danger size="small" icon={<DeleteOutlined />}>
-                          {tp('members.remove')}
-                        </Button>
-                      </Popconfirm>
-                    )
-                  }
-                }
-              ]}
-            />
-          </Space>
-        </Card>
+      {selectedOrg && (
+        <div style={{ marginTop: 16 }}>
+          <NotificationChannelManager
+            scopeType="organization"
+            scopeId={selectedOrg.id}
+            title="组织通知设置"
+            description="配置当前组织级别的外部通知同步渠道。"
+            canManage={canManageMembers}
+          />
+        </div>
       )}
 
       <Modal
@@ -358,6 +455,29 @@ const Organizations = () => {
             <Input />
           </Form.Item>
           <Form.Item name="description" label={tp('createModal.description')}>
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={tp('createAgentModal.title')}
+        open={createAgentVisible}
+        onOk={createAgent}
+        onCancel={() => setCreateAgentVisible(false)}
+        confirmLoading={loading}
+        okText={tp('createAgentModal.confirm')}
+        cancelText={tp('createAgentModal.cancel')}
+      >
+        <Form layout="vertical" form={createAgentForm}>
+          <Form.Item
+            name="name"
+            label={tp('createAgentModal.name')}
+            rules={[{ required: true, message: tp('createAgentModal.nameRequired') }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label={tp('createAgentModal.description')}>
             <Input.TextArea rows={3} />
           </Form.Item>
         </Form>

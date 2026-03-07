@@ -57,13 +57,19 @@
   "members": {
     "table": {
       "user": "User",
+      "type": "Type",
       "role": "Role",
       "status": "Status",
       "actions": "Actions"
     },
+    "entity": {
+      "human": "Human",
+      "agent": "Agent"
+    },
     "form": {
       "emailPlaceholder": "Invite by user email",
-      "emailRequired": "Please enter user email"
+      "emailRequired": "Please enter user email",
+      "humanOnly": "human only"
     },
     "actions": {
       "invite": "Invite Member",
@@ -82,7 +88,8 @@
       "updateSuccess": "Project member updated successfully",
       "updateFailed": "Failed to update project member",
       "removeSuccess": "Project member removed successfully",
-      "removeFailed": "Failed to remove project member"
+      "removeFailed": "Failed to remove project member",
+      "loadAgentsFailed": "Failed to load agents"
     }
   },
   "tasks": {
