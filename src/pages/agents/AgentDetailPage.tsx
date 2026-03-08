@@ -30,6 +30,8 @@ export default function AgentDetailPage() {
   const agentId = parsePositiveInt(params.agentId || null)
   const activeTab: AgentDetailTabKey = isAgentDetailTabKey(params.tabKey) ? params.tabKey : DEFAULT_TAB
   const preferredWorkspaceId = parsePositiveInt(searchParams.get('workspace_id'))
+  const currentQueryText = searchParams.toString()
+  const loadAgentsFailedMessage = tp('messages.loadAgentsFailed', { defaultValue: 'Failed to load agents' })
 
   const [workspaces, setWorkspaces] = useState<Organization[]>([])
   const [workspaceId, setWorkspaceId] = useState<number | null>(preferredWorkspaceId || null)
@@ -47,15 +49,15 @@ export default function AgentDetailPage() {
 
   const syncWorkspaceQuery = useCallback(
     (resolvedWorkspaceId: number) => {
-      const current = parsePositiveInt(searchParams.get('workspace_id'))
+      const next = new URLSearchParams(currentQueryText)
+      const current = parsePositiveInt(next.get('workspace_id'))
       if (current === resolvedWorkspaceId) {
         return
       }
-      const next = new URLSearchParams(searchParams)
       next.set('workspace_id', String(resolvedWorkspaceId))
       setSearchParams(next, { replace: true })
     },
-    [searchParams, setSearchParams]
+    [currentQueryText, setSearchParams]
   )
 
   const loadWorkspaces = useCallback(async () => {
@@ -121,16 +123,16 @@ export default function AgentDetailPage() {
     setResolving(false)
 
     if (lastError) {
-      message.error(lastError?.message || tp('messages.loadAgentsFailed'))
+      message.error(lastError?.message || loadAgentsFailedMessage)
     }
-  }, [agentId, preferredWorkspaceId, syncWorkspaceQuery, tp, workspaces])
+  }, [agentId, preferredWorkspaceId, syncWorkspaceQuery, loadAgentsFailedMessage, workspaces])
 
   useEffect(() => {
     loadWorkspaces().catch((error: any) => {
-      message.error(error?.message || tp('messages.loadAgentsFailed'))
+      message.error(error?.message || loadAgentsFailedMessage)
       setResolving(false)
     })
-  }, [loadWorkspaces, tp])
+  }, [loadWorkspaces, loadAgentsFailedMessage])
 
   useEffect(() => {
     if (workspaces.length > 0 || agentId === undefined) {
@@ -146,15 +148,14 @@ export default function AgentDetailPage() {
       return
     }
 
-    const queryText = searchParams.toString()
     navigate(
       {
         pathname: `/todo-for-ai/pages/agents/${agentId}/${DEFAULT_TAB}`,
-        search: queryText ? `?${queryText}` : '',
+        search: currentQueryText ? `?${currentQueryText}` : '',
       },
       { replace: true }
     )
-  }, [agentId, navigate, params.tabKey, searchParams])
+  }, [agentId, navigate, params.tabKey, currentQueryText])
 
   const reloadAgent = useCallback(async () => {
     if (!workspaceId || !agentId) {
@@ -181,7 +182,7 @@ export default function AgentDetailPage() {
         return
       }
 
-      const query = new URLSearchParams(searchParams)
+      const query = new URLSearchParams(currentQueryText)
       const effectiveWorkspaceId = workspaceId || preferredWorkspaceId
       if (effectiveWorkspaceId) {
         query.set('workspace_id', String(effectiveWorkspaceId))
@@ -193,7 +194,7 @@ export default function AgentDetailPage() {
         search: queryText ? `?${queryText}` : '',
       })
     },
-    [activeTab, agentId, navigate, preferredWorkspaceId, searchParams, workspaceId]
+    [activeTab, agentId, navigate, preferredWorkspaceId, currentQueryText, workspaceId]
   )
 
   if (resolving) {

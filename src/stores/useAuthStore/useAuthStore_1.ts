@@ -243,7 +243,7 @@ export const useAuthStore = create<AuthState>()(
             return false
           }
           try {
-            set({ isLoading: true, error: null })
+            set({ error: null })
             const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
               method: 'POST',
               headers: {
@@ -281,12 +281,9 @@ export const useAuthStore = create<AuthState>()(
               get().clearAuth()
             }
             set({
-              error: error?.message || 'Token刷新失败',
-              isLoading: false
+              error: error?.message || 'Token刷新失败'
             })
             return false
-          } finally {
-            set({ isLoading: false })
           }
         },
         checkTokenExpiration: () => {
