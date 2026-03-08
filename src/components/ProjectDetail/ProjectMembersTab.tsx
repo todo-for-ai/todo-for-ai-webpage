@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Card, Input, message, Popconfirm, Select, Space, Table, Tag, Typography } from 'antd'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import { projectsApi, type ProjectMember } from '../../api/projects'
 import { agentsApi, type Agent } from '../../api/agents'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
@@ -31,6 +32,7 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
   currentUserRole
 }) => {
   const { tp } = usePageTranslation('projectDetail')
+  const navigate = useNavigate()
   const tpRef = useRef(tp)
   const [items, setItems] = useState<ProjectMember[]>([])
   const [agentItems, setAgentItems] = useState<Agent[]>([])
@@ -105,6 +107,11 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
     return [...humanRows, ...agentRows]
   }, [items, agentItems])
 
+  const goToAgentDetail = useCallback((agentId: number) => {
+    const query = workspaceId ? `?workspace_id=${workspaceId}` : ''
+    navigate(`/todo-for-ai/pages/agents/${agentId}/overview${query}`)
+  }, [navigate, workspaceId])
+
   const inviteMember = async () => {
     if (!inviteEmail.trim()) {
       message.warning(tp('members.form.emailRequired'))
@@ -161,7 +168,9 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
           return (
             <div>
               <div style={{ fontWeight: 500 }}>
-                {row.agent.name}
+                <Typography.Link onClick={() => goToAgentDetail(row.agent.id)}>
+                  {row.agent.name}
+                </Typography.Link>
               </div>
               <Space>
                 <Text type="secondary">Agent #{row.agent.id}</Text>
