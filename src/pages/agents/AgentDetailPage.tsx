@@ -74,7 +74,7 @@ export default function AgentDetailPage() {
       return
     }
 
-    if (workspaces.length === 0) {
+    if (workspaces.length === 0 && !preferredWorkspaceId) {
       setResolving(false)
       setNotFound(true)
       setAgent(null)
@@ -88,7 +88,7 @@ export default function AgentDetailPage() {
     const workspaceIds = workspaces.map((item) => item.id)
     const candidates: number[] = []
 
-    if (preferredWorkspaceId && workspaceIds.includes(preferredWorkspaceId)) {
+    if (preferredWorkspaceId) {
       candidates.push(preferredWorkspaceId)
     }
 
