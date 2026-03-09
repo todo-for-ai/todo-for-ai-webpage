@@ -9,6 +9,7 @@ import { AgentDetailTabs, isAgentDetailTabKey, type AgentDetailTabKey } from './
 
 const { Title, Text } = Typography
 const DEFAULT_TAB: AgentDetailTabKey = 'overview'
+const AGENT_RESOLVE_MAX_CONCURRENCY = 6
 
 function parsePositiveInt(value: string | null): number | undefined {
   if (!value) {
@@ -19,6 +20,61 @@ function parsePositiveInt(value: string | null): number | undefined {
     return undefined
   }
   return parsed
+}
+
+function buildUniqueWorkspaceCandidates(values: Array<number | null | undefined>): number[] {
+  const result: number[] = []
+  const seen = new Set<number>()
+  for (const value of values) {
+    if (!value || value <= 0 || seen.has(value)) {
+      continue
+    }
+    seen.add(value)
+    result.push(value)
+  }
+  return result
+}
+
+async function probeAgentAcrossWorkspaces(agentId: number, workspaceCandidates: number[]) {
+  const candidates = buildUniqueWorkspaceCandidates(workspaceCandidates)
+  if (candidates.length === 0) {
+    return { match: null as { agent: Agent; workspaceId: number } | null, lastError: null as any }
+  }
+
+  let cursor = 0
+  let match: { agent: Agent; workspaceId: number } | null = null
+  let lastError: any = null
+
+  const workerCount = Math.min(AGENT_RESOLVE_MAX_CONCURRENCY, candidates.length)
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (true) {
+      if (match) {
+        return
+      }
+
+      const index = cursor
+      cursor += 1
+      if (index >= candidates.length) {
+        return
+      }
+
+      const workspaceId = candidates[index]
+      try {
+        const detail = await agentsApi.getAgent(workspaceId, agentId)
+        if (!match) {
+          match = { agent: detail, workspaceId }
+        }
+        return
+      } catch (error: any) {
+        if (error?.status !== 404 && error?.status !== 403) {
+          lastError = error
+        }
+      }
+    }
+  })
+
+  await Promise.all(workers)
+  return { match, lastError }
 }
 
 export default function AgentDetailPage() {
@@ -60,85 +116,113 @@ export default function AgentDetailPage() {
     [currentQueryText, setSearchParams]
   )
 
-  const loadWorkspaces = useCallback(async () => {
+  const fetchWorkspaces = useCallback(async () => {
     const data = await organizationsApi.getOrganizations({ page: 1, per_page: 200 })
-    setWorkspaces(data.items || [])
+    return data.items || []
   }, [])
 
-  const resolveAgent = useCallback(async () => {
-    if (!agentId) {
-      setResolving(false)
-      setNotFound(true)
-      setAgent(null)
-      setWorkspaceId(null)
-      return
-    }
+  useEffect(() => {
+    let cancelled = false
 
-    if (workspaces.length === 0 && !preferredWorkspaceId) {
-      setResolving(false)
-      setNotFound(true)
-      setAgent(null)
-      setWorkspaceId(null)
-      return
-    }
-
-    setResolving(true)
-    setNotFound(false)
-
-    const workspaceIds = workspaces.map((item) => item.id)
-    const candidates: number[] = []
-
-    if (preferredWorkspaceId) {
-      candidates.push(preferredWorkspaceId)
-    }
-
-    for (const id of workspaceIds) {
-      if (!candidates.includes(id)) {
-        candidates.push(id)
-      }
-    }
-
-    let lastError: any = null
-
-    for (const candidateWorkspaceId of candidates) {
-      try {
-        const detail = await agentsApi.getAgent(candidateWorkspaceId, agentId)
-        setAgent(detail)
-        setWorkspaceId(candidateWorkspaceId)
-        syncWorkspaceQuery(candidateWorkspaceId)
-        setNotFound(false)
-        setResolving(false)
+    const applyResolvedAgent = (resolvedAgent: Agent, resolvedWorkspaceId: number) => {
+      if (cancelled) {
         return
-      } catch (error: any) {
-        if (error?.status === 404 || error?.status === 403) {
-          continue
+      }
+      setAgent(resolvedAgent)
+      setWorkspaceId(resolvedWorkspaceId)
+      syncWorkspaceQuery(resolvedWorkspaceId)
+      setNotFound(false)
+      setResolving(false)
+    }
+
+    const resolveAgent = async () => {
+      if (!agentId) {
+        setResolving(false)
+        setNotFound(true)
+        setAgent(null)
+        setWorkspaceId(null)
+        return
+      }
+
+      if (agent && workspaceId && agent.id === agentId && (!preferredWorkspaceId || preferredWorkspaceId === workspaceId)) {
+        setResolving(false)
+        setNotFound(false)
+        return
+      }
+
+      setResolving(true)
+      setNotFound(false)
+
+      const preferredCandidates = buildUniqueWorkspaceCandidates([preferredWorkspaceId])
+      const preferredProbe = await probeAgentAcrossWorkspaces(agentId, preferredCandidates)
+
+      if (cancelled) {
+        return
+      }
+
+      if (preferredProbe.match) {
+        applyResolvedAgent(preferredProbe.match.agent, preferredProbe.match.workspaceId)
+        if (workspaces.length === 0) {
+          void fetchWorkspaces()
+            .then((items) => {
+              if (!cancelled) {
+                setWorkspaces(items)
+              }
+            })
+            .catch(() => {
+              // Ignore workspace-name hydration failures; detail data is already resolved.
+            })
         }
-        lastError = error
+        return
+      }
+
+      let workspaceItems = workspaces
+      let workspaceFetchError: any = null
+
+      if (workspaceItems.length === 0) {
+        try {
+          workspaceItems = await fetchWorkspaces()
+          if (cancelled) {
+            return
+          }
+          setWorkspaces(workspaceItems)
+        } catch (error: any) {
+          workspaceFetchError = error
+          workspaceItems = []
+        }
+      }
+
+      const fallbackCandidates = buildUniqueWorkspaceCandidates(
+        workspaceItems.map((item) => item.id).filter((id) => !preferredCandidates.includes(id))
+      )
+      const fallbackProbe = await probeAgentAcrossWorkspaces(agentId, fallbackCandidates)
+
+      if (cancelled) {
+        return
+      }
+
+      if (fallbackProbe.match) {
+        applyResolvedAgent(fallbackProbe.match.agent, fallbackProbe.match.workspaceId)
+        return
+      }
+
+      setAgent(null)
+      setWorkspaceId(null)
+      setNotFound(true)
+      setResolving(false)
+
+      const finalError = preferredProbe.lastError || fallbackProbe.lastError || workspaceFetchError
+      if (finalError) {
+        message.error(finalError?.message || loadAgentsFailedMessage)
       }
     }
 
-    setAgent(null)
-    setWorkspaceId(null)
-    setNotFound(true)
-    setResolving(false)
+    void resolveAgent()
 
-    if (lastError) {
-      message.error(lastError?.message || loadAgentsFailedMessage)
+    return () => {
+      cancelled = true
     }
-  }, [agentId, preferredWorkspaceId, syncWorkspaceQuery, loadAgentsFailedMessage, workspaces])
-
-  useEffect(() => {
-    loadWorkspaces().catch((error: any) => {
-      message.error(error?.message || loadAgentsFailedMessage)
-      setResolving(false)
-    })
-  }, [loadWorkspaces, loadAgentsFailedMessage])
-
-  useEffect(() => {
-    if (workspaces.length > 0 || agentId === undefined) {
-      void resolveAgent()
-    }
-  }, [workspaces, resolveAgent, agentId])
+  }, [agent, agentId, loadAgentsFailedMessage, fetchWorkspaces, preferredWorkspaceId, syncWorkspaceQuery, workspaceId])
 
   useEffect(() => {
     if (!agentId) {
