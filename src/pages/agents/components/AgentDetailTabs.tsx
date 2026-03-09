@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, Tabs } from 'antd'
 import type { Agent } from '../../../api/agents'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
@@ -52,6 +52,14 @@ export function AgentDetailTabs({
   const [internalActiveTab, setInternalActiveTab] = useState<AgentDetailTabKey>('overview')
   const activeTab = controlledActiveTab && isAgentDetailTabKey(controlledActiveTab) ? controlledActiveTab : internalActiveTab
 
+  const [loadedTabs, setLoadedTabs] = useState<AgentDetailTabKey[]>(() => [activeTab])
+
+  useEffect(() => {
+    setLoadedTabs((previous) => (previous.includes(activeTab) ? previous : [...previous, activeTab]))
+  }, [activeTab])
+
+  const isTabLoaded = (tabKey: AgentDetailTabKey) => loadedTabs.includes(tabKey)
+
   const handleTabChange = (nextKey: string) => {
     if (!isAgentDetailTabKey(nextKey)) {
       return
@@ -71,54 +79,66 @@ export function AgentDetailTabs({
           {
             key: 'overview',
             label: tp('detail.tabs.overview', { defaultValue: 'Overview' }),
-            children: <AgentOverviewTab agent={agent} />,
+            children: isTabLoaded('overview') ? <AgentOverviewTab agent={agent} /> : null,
           },
           {
             key: 'activity',
             label: tp('detail.tabs.activity', { defaultValue: 'Activity' }),
-            children: <AgentActivityTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'activity'} />,
+            children: isTabLoaded('activity') ? (
+              <AgentActivityTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'activity'} />
+            ) : null,
           },
           {
             key: 'projects',
             label: tp('detail.tabs.projects', { defaultValue: 'Projects' }),
-            children: <AgentProjectsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'projects'} />,
+            children: isTabLoaded('projects') ? (
+              <AgentProjectsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'projects'} />
+            ) : null,
           },
           {
             key: 'interactions',
             label: tp('detail.tabs.interactions', { defaultValue: 'Interactions' }),
-            children: <AgentInteractionsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'interactions'} />,
+            children: isTabLoaded('interactions') ? (
+              <AgentInteractionsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'interactions'} />
+            ) : null,
           },
           {
             key: 'tasks',
             label: tp('detail.tabs.tasks', { defaultValue: 'Tasks' }),
-            children: <AgentTasksTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'tasks'} />,
+            children: isTabLoaded('tasks') ? (
+              <AgentTasksTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'tasks'} />
+            ) : null,
           },
           {
             key: 'runs',
             label: tp('detail.tabs.runs', { defaultValue: 'Runs' }),
-            children: <AgentRunsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'runs'} />,
+            children: isTabLoaded('runs') ? (
+              <AgentRunsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'runs'} />
+            ) : null,
           },
           {
             key: 'keys',
             label: tp('detail.tabs.keys', { defaultValue: 'Keys' }),
-            children: <AgentKeysCard workspaceId={workspaceId} agentId={agent.id} agentName={agent.name} />,
+            children: isTabLoaded('keys') ? (
+              <AgentKeysCard workspaceId={workspaceId} agentId={agent.id} agentName={agent.name} />
+            ) : null,
           },
           {
             key: 'soul',
             label: tp('detail.tabs.soul', { defaultValue: 'SOUL Versions' }),
-            children: (
+            children: isTabLoaded('soul') ? (
               <AgentSoulVersionsCard
                 workspaceId={workspaceId}
                 agentId={agent.id}
                 soulVersion={agent.soul_version}
                 onAfterRollback={onAfterRollback}
               />
-            ),
+            ) : null,
           },
           {
             key: 'secrets',
             label: tp('detail.tabs.secrets', { defaultValue: 'Secrets' }),
-            children: <AgentSecretsCard workspaceId={workspaceId} agentId={agent.id} />,
+            children: isTabLoaded('secrets') ? <AgentSecretsCard workspaceId={workspaceId} agentId={agent.id} /> : null,
           },
         ]}
       />
