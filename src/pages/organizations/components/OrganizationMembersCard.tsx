@@ -2,6 +2,7 @@ import { ApiOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
 import { Button, Card, Input, Popconfirm, Select, Space, Table, Tag, Typography } from 'antd'
 import type { OrganizationMember } from '../../../api/organizations'
 import type { OrganizationAgentMember } from '../../../api/organizationAgents'
+import { LinkButton } from '../../../components/SmartLink'
 
 const { Text } = Typography
 
@@ -109,11 +110,18 @@ export function OrganizationMembersCard({
               key: 'user',
               render: (_, row) => {
                 if (row.entity_type === 'agent' && row.agentMember?.agent) {
+                  const agent = row.agentMember.agent
                   return (
                     <div>
-                      <div style={{ fontWeight: 500 }}>{row.agentMember.agent.name}</div>
+                      <LinkButton
+                        to={`/todo-for-ai/pages/agents/${agent.id}`}
+                        type="link"
+                        style={{ padding: 0, fontWeight: 600, height: 'auto' }}
+                      >
+                        {agent.name}
+                      </LinkButton>
                       <Space>
-                        <Text type="secondary">Agent #{row.agentMember.agent.id}</Text>
+                        <Text type="secondary">Agent #{agent.id}</Text>
                         <Tag>{tp('members.entity.agent')}</Tag>
                       </Space>
                     </div>
