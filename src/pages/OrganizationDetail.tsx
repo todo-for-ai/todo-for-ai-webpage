@@ -23,6 +23,7 @@ import {
   type OrganizationRoleDefinition,
 } from '../api/organizations'
 import { organizationAgentsApi, type OrganizationAgentMember } from '../api/organizationAgents'
+import { organizationEventsApi, type OrganizationEvent } from '../api/organizationEvents'
 import { projectsApi, type Project } from '../api/projects'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { OrganizationMembersCard } from './organizations/components/OrganizationMembersCard'
@@ -35,6 +36,30 @@ const ORG_STATUS_COLORS: Record<string, string> = {
   active: 'green',
   invited: 'blue',
   removed: 'default',
+}
+
+const EVENT_LABEL_KEY_MAP: Record<string, string> = {
+  'task.created': 'taskCreated',
+  'task.updated': 'taskUpdated',
+  'task.status_changed': 'taskStatusChanged',
+  'task.deleted': 'taskDeleted',
+  'task.log.appended': 'taskLogAppended',
+  'project.created': 'projectCreated',
+  'project.updated': 'projectUpdated',
+  'project.archived': 'projectArchived',
+  'project.restored': 'projectRestored',
+  'project.deleted': 'projectDeleted',
+  'member.invited': 'memberInvited',
+  'member.updated': 'memberUpdated',
+  'member.removed': 'memberRemoved',
+  'agent.created': 'agentCreated',
+  'agent.invited': 'agentInvited',
+  'agent.removed': 'agentRemoved',
+  'agent.accepted': 'agentAccepted',
+  'agent.rejected': 'agentRejected',
+  'org.created': 'orgCreated',
+  'org.updated': 'orgUpdated',
+  'org.archived': 'orgArchived',
 }
 
 const extractProjectItems = (payload: any): Project[] => {
@@ -65,10 +90,13 @@ const OrganizationDetail = () => {
   const [agentMembers, setAgentMembers] = useState<OrganizationAgentMember[]>([])
   const [organizationRoles, setOrganizationRoles] = useState<OrganizationRoleDefinition[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [events, setEvents] = useState<OrganizationEvent[]>([])
+  const [eventsPagination, setEventsPagination] = useState<{ page: number; per_page: number; total: number } | null>(null)
 
   const [pageLoading, setPageLoading] = useState(false)
   const [membersLoading, setMembersLoading] = useState(false)
   const [projectsLoading, setProjectsLoading] = useState(false)
+  const [eventsLoading, setEventsLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
 
   const [createAgentVisible, setCreateAgentVisible] = useState(false)
@@ -94,6 +122,17 @@ const OrganizationDetail = () => {
       return date.toLocaleString(language, { hour12: false })
     },
     [language]
+  )
+
+  const formatEventType = useCallback(
+    (eventType: string) => {
+      const key = EVENT_LABEL_KEY_MAP[eventType]
+      if (key) {
+        return tp(`detail.activity.eventTypes.${key}`, { defaultValue: eventType })
+      }
+      return eventType
+    },
+    [tp]
   )
 
   const loadOrganization = useCallback(async () => {
@@ -172,6 +211,26 @@ const OrganizationDetail = () => {
       setProjects([])
     } finally {
       setProjectsLoading(false)
+    }
+  }, [parsedOrganizationId])
+
+  const loadEvents = useCallback(async (page = 1) => {
+    if (!parsedOrganizationId) {
+      return
+    }
+    try {
+      setEventsLoading(true)
+      const response = await organizationEventsApi.getOrganizationEvents(parsedOrganizationId, {
+        page,
+        per_page: 20,
+      })
+      setEvents(response.items || [])
+      setEventsPagination(response.pagination || null)
+    } catch (error: any) {
+      message.error(error?.message || tpRef.current('detail.activity.loadFailed'))
+      setEvents([])
+    } finally {
+      setEventsLoading(false)
     }
   }, [parsedOrganizationId])
 
@@ -403,7 +462,78 @@ const OrganizationDetail = () => {
     ]
   }, [formatDateTime, tp])
 
+  const eventColumns = useMemo(() => {
+    return [
+      {
+        title: tp('detail.activity.columns.time'),
+        key: 'occurred_at',
+        width: 180,
+        render: (_: unknown, record: OrganizationEvent) =>
+          formatDateTime(record.occurred_at || record.created_at || undefined),
+      },
+      {
+        title: tp('detail.activity.columns.event'),
+        key: 'event',
+        render: (_: unknown, record: OrganizationEvent) => {
+          const detailText =
+            record.message ||
+            record.payload?.task_title ||
+            record.payload?.project_name ||
+            ''
+          return (
+            <div>
+              <div style={{ fontWeight: 600 }}>{formatEventType(record.event_type)}</div>
+              {detailText ? (
+                <div style={{ color: '#8c8c8c', fontSize: 12 }}>{detailText}</div>
+              ) : null}
+            </div>
+          )
+        },
+      },
+      {
+        title: tp('detail.activity.columns.actor'),
+        key: 'actor',
+        width: 160,
+        render: (_: unknown, record: OrganizationEvent) => (
+          <span>{record.actor_name || record.actor_id || '-'}</span>
+        ),
+      },
+      {
+        title: tp('detail.activity.columns.related'),
+        key: 'related',
+        width: 220,
+        render: (_: unknown, record: OrganizationEvent) => {
+          const hasProject = !!record.project_id
+          const hasTask = !!record.task_id
+          if (!hasProject && !hasTask) {
+            return <span>-</span>
+          }
+          return (
+            <Space size={8} wrap>
+              {hasProject ? (
+                <LinkButton to={`/todo-for-ai/pages/projects/${record.project_id}`} type="link">
+                  {record.payload?.project_name || tp('detail.activity.labels.project')}
+                </LinkButton>
+              ) : null}
+              {hasTask ? (
+                <LinkButton to={`/todo-for-ai/pages/tasks/${record.task_id}`} type="link">
+                  {record.payload?.task_title || `#${record.task_id}`}
+                </LinkButton>
+              ) : null}
+            </Space>
+          )
+        },
+      },
+    ]
+  }, [formatDateTime, formatEventType, tp])
+
   const activeTab = searchParams.get('tab') || 'members'
+
+  useEffect(() => {
+    if (activeTab === 'activity') {
+      void loadEvents(1)
+    }
+  }, [activeTab, loadEvents])
 
   if (pageLoading && !organization) {
     return (
@@ -502,6 +632,36 @@ const OrganizationDetail = () => {
                     canManage={!!canManageMembers}
                   />
                 </Space>
+              ),
+            },
+            {
+              key: 'activity',
+              label: tp('detail.tabs.activity'),
+              children: (
+                <Table
+                  rowKey="id"
+                  loading={eventsLoading}
+                  dataSource={events}
+                  columns={eventColumns}
+                  pagination={{
+                    current: eventsPagination?.page || 1,
+                    pageSize: eventsPagination?.per_page || 20,
+                    total: eventsPagination?.total || 0,
+                    showSizeChanger: false,
+                  }}
+                  onChange={(pagination) => {
+                    const nextPage = pagination.current || 1
+                    void loadEvents(nextPage)
+                  }}
+                  locale={{
+                    emptyText: (
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={tp('detail.activity.empty')}
+                      />
+                    ),
+                  }}
+                />
               ),
             },
             {

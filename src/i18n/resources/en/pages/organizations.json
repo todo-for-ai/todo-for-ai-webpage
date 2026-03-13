@@ -103,7 +103,44 @@
     },
     "tabs": {
       "members": "Members",
+      "activity": "Activity",
       "projects": "Projects"
+    },
+    "activity": {
+      "columns": {
+        "time": "Time",
+        "event": "Event",
+        "actor": "Actor",
+        "related": "Related"
+      },
+      "labels": {
+        "project": "Project"
+      },
+      "eventTypes": {
+        "taskCreated": "Task created",
+        "taskUpdated": "Task updated",
+        "taskStatusChanged": "Task status changed",
+        "taskDeleted": "Task deleted",
+        "taskLogAppended": "Task log appended",
+        "projectCreated": "Project created",
+        "projectUpdated": "Project updated",
+        "projectArchived": "Project archived",
+        "projectRestored": "Project restored",
+        "projectDeleted": "Project deleted",
+        "memberInvited": "Member invited",
+        "memberUpdated": "Member updated",
+        "memberRemoved": "Member removed",
+        "agentCreated": "Agent created",
+        "agentInvited": "Agent invited",
+        "agentRemoved": "Agent removed",
+        "agentAccepted": "Agent accepted invitation",
+        "agentRejected": "Agent rejected invitation",
+        "orgCreated": "Organization created",
+        "orgUpdated": "Organization updated",
+        "orgArchived": "Organization archived"
+      },
+      "empty": "No activity yet",
+      "loadFailed": "Failed to load organization activity"
     },
     "projects": {
       "columns": {

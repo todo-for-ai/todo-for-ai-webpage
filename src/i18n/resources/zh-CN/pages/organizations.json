@@ -103,7 +103,44 @@
     },
     "tabs": {
       "members": "成员",
+      "activity": "活跃动态",
       "projects": "项目"
+    },
+    "activity": {
+      "columns": {
+        "time": "时间",
+        "event": "事件",
+        "actor": "操作者",
+        "related": "关联对象"
+      },
+      "labels": {
+        "project": "项目"
+      },
+      "eventTypes": {
+        "taskCreated": "任务创建",
+        "taskUpdated": "任务更新",
+        "taskStatusChanged": "任务状态变化",
+        "taskDeleted": "任务删除",
+        "taskLogAppended": "任务日志追加",
+        "projectCreated": "项目创建",
+        "projectUpdated": "项目更新",
+        "projectArchived": "项目归档",
+        "projectRestored": "项目恢复",
+        "projectDeleted": "项目删除",
+        "memberInvited": "成员邀请",
+        "memberUpdated": "成员更新",
+        "memberRemoved": "成员移除",
+        "agentCreated": "Agent 创建",
+        "agentInvited": "Agent 邀请",
+        "agentRemoved": "Agent 移除",
+        "agentAccepted": "Agent 接受邀请",
+        "agentRejected": "Agent 拒绝邀请",
+        "orgCreated": "组织创建",
+        "orgUpdated": "组织更新",
+        "orgArchived": "组织归档"
+      },
+      "empty": "暂无组织活跃记录",
+      "loadFailed": "加载组织活跃记录失败"
     },
     "projects": {
       "columns": {
