@@ -84,6 +84,47 @@
     "confirm": "Create",
     "cancel": "Cancel"
   },
+  "detail": {
+    "title": "Organization Detail",
+    "subtitle": "Review organization info, members, and projects",
+    "back": "Back to Organizations",
+    "noDescription": "No description yet",
+    "status": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "stats": {
+      "members": "Members",
+      "projects": "Projects"
+    },
+    "fields": {
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "tabs": {
+      "members": "Members",
+      "projects": "Projects"
+    },
+    "projects": {
+      "columns": {
+        "name": "Project",
+        "status": "Status",
+        "tasks": "Tasks",
+        "lastActivity": "Last Activity",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View",
+        "tasks": "Tasks"
+      },
+      "empty": "No projects yet",
+      "loadFailed": "Failed to load organization projects"
+    },
+    "notifications": {
+      "title": "Organization Notifications",
+      "description": "Configure external notification channels for this organization."
+    }
+  },
   "messages": {
     "loadFailed": "Failed to load organizations",
     "memberLoadFailed": "Failed to load organization members",

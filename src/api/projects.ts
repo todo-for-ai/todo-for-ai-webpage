@@ -101,6 +101,7 @@ export interface ProjectQueryParams {
   sort_by?: string
   sort_order?: 'asc' | 'desc'
   include_stats?: boolean
+  organization_id?: number
 }
 
 // 项目API服务

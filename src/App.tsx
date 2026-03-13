@@ -11,6 +11,7 @@ import {
   Dashboard,
   Projects,
   Organizations,
+  OrganizationDetail,
   OrganizationRoles,
   ProjectDetail,
   CreateProject,
@@ -96,6 +97,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="projects" element={<Projects />} />
               <Route path="organizations" element={<Organizations />} />
+              <Route path="organizations/:organizationId" element={<OrganizationDetail />} />
               <Route path="organizations/:organizationId/roles" element={<OrganizationRoles />} />
               <Route path="projects/create" element={<CreateProject />} />
               <Route path="projects/:id" element={<ProjectDetail />} />

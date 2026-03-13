@@ -1,6 +1,7 @@
 import { Space, Table, Tag, Typography } from 'antd'
 import { TeamOutlined } from '@ant-design/icons'
 import type { Organization } from '../../../api/organizations'
+import { LinkButton } from '../../../components/SmartLink'
 
 const { Text } = Typography
 
@@ -8,16 +9,14 @@ interface OrganizationsListViewProps {
   tp: (key: string, options?: Record<string, unknown>) => string
   orgs: Organization[]
   loading: boolean
-  selectedOrgId: number | null
-  onSelectOrg: (organizationId: number) => void
+  onOpenOrganization: (organizationId: number) => void
 }
 
 export function OrganizationsListView({
   tp,
   orgs,
   loading,
-  selectedOrgId,
-  onSelectOrg,
+  onOpenOrganization,
 }: OrganizationsListViewProps) {
   return (
     <Table
@@ -26,9 +25,14 @@ export function OrganizationsListView({
       dataSource={orgs}
       pagination={false}
       onRow={(record) => ({
-        onClick: () => onSelectOrg(record.id),
+        onClick: (event) => {
+          const target = event.target as HTMLElement
+          if (target.closest('a')) {
+            return
+          }
+          onOpenOrganization(record.id)
+        },
       })}
-      rowClassName={(record) => (record.id === selectedOrgId ? 'ant-table-row-selected' : '')}
       columns={[
         {
           title: tp('table.orgName'),
@@ -37,7 +41,13 @@ export function OrganizationsListView({
             <Space>
               <TeamOutlined style={{ color: '#1890ff' }} />
               <div>
-                <div style={{ fontWeight: 500 }}>{org.name}</div>
+                <LinkButton
+                  to={`/todo-for-ai/pages/organizations/${org.id}`}
+                  type="link"
+                  style={{ padding: 0, fontWeight: 600, height: 'auto' }}
+                >
+                  {org.name}
+                </LinkButton>
                 <Text type="secondary">{org.slug}</Text>
               </div>
             </Space>

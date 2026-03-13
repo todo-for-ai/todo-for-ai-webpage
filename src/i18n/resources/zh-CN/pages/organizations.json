@@ -84,6 +84,47 @@
     "confirm": "创建",
     "cancel": "取消"
   },
+  "detail": {
+    "title": "组织详情",
+    "subtitle": "查看组织信息、成员与项目",
+    "back": "返回组织列表",
+    "noDescription": "暂无组织描述",
+    "status": {
+      "active": "活跃",
+      "archived": "已归档"
+    },
+    "stats": {
+      "members": "成员",
+      "projects": "项目"
+    },
+    "fields": {
+      "createdAt": "创建时间",
+      "updatedAt": "更新时间"
+    },
+    "tabs": {
+      "members": "成员",
+      "projects": "项目"
+    },
+    "projects": {
+      "columns": {
+        "name": "项目",
+        "status": "状态",
+        "tasks": "任务数",
+        "lastActivity": "最近活动",
+        "actions": "操作"
+      },
+      "actions": {
+        "view": "查看",
+        "tasks": "任务"
+      },
+      "empty": "暂无项目",
+      "loadFailed": "加载组织项目失败"
+    },
+    "notifications": {
+      "title": "组织通知设置",
+      "description": "配置当前组织级别的外部通知同步渠道。"
+    }
+  },
   "messages": {
     "loadFailed": "加载组织列表失败",
     "memberLoadFailed": "加载组织成员失败",

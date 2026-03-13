@@ -1,6 +1,7 @@
 import { Card, Col, Empty, Row, Space, Tag, Typography } from 'antd'
 import { TeamOutlined } from '@ant-design/icons'
 import type { Organization } from '../../../api/organizations'
+import { LinkButton } from '../../../components/SmartLink'
 
 const { Text } = Typography
 
@@ -8,16 +9,14 @@ interface OrganizationsCardViewProps {
   tp: (key: string, options?: Record<string, unknown>) => string
   orgs: Organization[]
   loading: boolean
-  selectedOrgId: number | null
-  onSelectOrg: (organizationId: number) => void
+  onOpenOrganization: (organizationId: number) => void
 }
 
 export function OrganizationsCardView({
   tp,
   orgs,
   loading,
-  selectedOrgId,
-  onSelectOrg,
+  onOpenOrganization,
 }: OrganizationsCardViewProps) {
   if (!loading && orgs.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -29,20 +28,25 @@ export function OrganizationsCardView({
         <Col key={org.id} xs={24} sm={12} lg={8} xl={6}>
           <Card
             hoverable
-            onClick={() => onSelectOrg(org.id)}
-            style={{
-              borderColor: org.id === selectedOrgId ? '#1677ff' : undefined,
-              boxShadow:
-                org.id === selectedOrgId ? '0 0 0 2px rgba(22,119,255,0.18)' : undefined,
+            onClick={(event) => {
+              const target = event.target as HTMLElement
+              if (target.closest('a')) {
+                return
+              }
+              onOpenOrganization(org.id)
             }}
           >
             <Space align="start">
               <TeamOutlined style={{ color: '#1890ff', fontSize: 18, marginTop: 4 }} />
               <div style={{ minWidth: 0 }}>
-                <div
+                <LinkButton
+                  to={`/todo-for-ai/pages/organizations/${org.id}`}
+                  type="link"
                   style={{
+                    padding: 0,
                     fontSize: 16,
                     fontWeight: 600,
+                    height: 'auto',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -50,7 +54,7 @@ export function OrganizationsCardView({
                   title={org.name}
                 >
                   {org.name}
-                </div>
+                </LinkButton>
                 <Text type="secondary">{org.slug || '-'}</Text>
               </div>
             </Space>

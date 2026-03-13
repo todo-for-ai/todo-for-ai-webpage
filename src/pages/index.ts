@@ -1,6 +1,7 @@
 export { default as Dashboard } from './Dashboard'
 export { default as Projects } from './Projects'
 export { default as Organizations } from './Organizations'
+export { default as OrganizationDetail } from './OrganizationDetail'
 export { default as OrganizationRoles } from './OrganizationRoles'
 export { default as ProjectDetail } from './ProjectDetail'
 export { default as CreateProject } from './CreateProject'
