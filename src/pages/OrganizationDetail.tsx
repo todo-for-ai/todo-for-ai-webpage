@@ -124,6 +124,14 @@ const OrganizationDetail = () => {
     [language]
   )
 
+  const formatNumber = useCallback(
+    (value?: number) => {
+      if (value === undefined || value === null || Number.isNaN(value)) return '-'
+      return value.toLocaleString(language)
+    },
+    [language]
+  )
+
   const formatEventType = useCallback(
     (eventType: string) => {
       const key = EVENT_LABEL_KEY_MAP[eventType]
@@ -400,6 +408,75 @@ const OrganizationDetail = () => {
     [organizationRoles]
   )
 
+  const memberStats = useMemo(() => {
+    const humanActive = members.filter((member) => member.status === 'active').length
+    const humanInvited = members.filter((member) => member.status === 'invited').length
+    const aiActive = agentMembers.filter((member) => member.status === 'active').length
+    const aiInvited = agentMembers.filter((member) => member.status === 'invited').length
+    const total = humanActive + humanInvited + aiActive + aiInvited
+    return {
+      total,
+      humanActive,
+      aiActive,
+      invited: humanInvited + aiInvited,
+    }
+  }, [members, agentMembers])
+
+  const projectStats = useMemo(() => {
+    const counts = {
+      total: projects.length,
+      active: 0,
+      archived: 0,
+      deleted: 0,
+    }
+    projects.forEach((project) => {
+      if (project.status === 'active') {
+        counts.active += 1
+      } else if (project.status === 'archived') {
+        counts.archived += 1
+      } else if (project.status === 'deleted') {
+        counts.deleted += 1
+      }
+    })
+    return counts
+  }, [projects])
+
+  const activityStats = useMemo(() => {
+    const now = Date.now()
+    const windowMs = 7 * 24 * 60 * 60 * 1000
+    let activeProjects7d = 0
+    let latestActivityAt: string | undefined
+    let latestActivityTs = 0
+
+    const considerTime = (value?: string) => {
+      if (!value) return
+      const ts = new Date(value).getTime()
+      if (Number.isNaN(ts)) return
+      if (ts > latestActivityTs) {
+        latestActivityTs = ts
+        latestActivityAt = value
+      }
+    }
+
+    projects.forEach((project) => {
+      const activityAt = project.last_activity_at || project.updated_at
+      considerTime(activityAt)
+      if (activityAt) {
+        const ts = new Date(activityAt).getTime()
+        if (!Number.isNaN(ts) && now - ts <= windowMs) {
+          activeProjects7d += 1
+        }
+      }
+    })
+
+    considerTime(organization?.updated_at)
+
+    return {
+      activeProjects7d,
+      latestActivityAt: latestActivityAt || organization?.updated_at,
+    }
+  }, [projects, organization?.updated_at])
+
   const projectColumns = useMemo(() => {
     return [
       {
@@ -571,14 +648,64 @@ const OrganizationDetail = () => {
           ) : (
             <Text type="secondary">{tp('detail.noDescription')}</Text>
           )}
-          <Space wrap size={24}>
+          <div
+            style={{
+              display: 'grid',
+              gap: 16,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            }}
+          >
             <div>
               <Text type="secondary">{tp('detail.stats.members')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{organization?.member_count ?? '-'}</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(membersLoading ? undefined : memberStats.total)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.humanMembers')}</Text>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(membersLoading ? undefined : memberStats.humanActive)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.aiMembers')}</Text>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(membersLoading ? undefined : memberStats.aiActive)}
+              </div>
             </div>
             <div>
               <Text type="secondary">{tp('detail.stats.projects')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{organization?.project_count ?? '-'}</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(projectsLoading ? undefined : projectStats.total)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.projectsActive')}</Text>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(projectsLoading ? undefined : projectStats.active)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.projectsArchived')}</Text>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(projectsLoading ? undefined : projectStats.archived)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.projectsDeleted')}</Text>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(projectsLoading ? undefined : projectStats.deleted)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.activeProjects7d')}</Text>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                {formatNumber(projectsLoading ? undefined : activityStats.activeProjects7d)}
+              </div>
+            </div>
+            <div>
+              <Text type="secondary">{tp('detail.stats.lastActivity')}</Text>
+              <div style={{ fontSize: 14 }}>{formatDateTime(activityStats.latestActivityAt)}</div>
             </div>
             <div>
               <Text type="secondary">{tp('detail.fields.createdAt')}</Text>
@@ -588,7 +715,7 @@ const OrganizationDetail = () => {
               <Text type="secondary">{tp('detail.fields.updatedAt')}</Text>
               <div style={{ fontSize: 14 }}>{formatDateTime(organization?.updated_at)}</div>
             </div>
-          </Space>
+          </div>
         </Space>
       </Card>
 

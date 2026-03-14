@@ -89,14 +89,22 @@
     "subtitle": "查看组织信息、成员与项目",
     "back": "返回组织列表",
     "noDescription": "暂无组织描述",
-    "status": {
-      "active": "活跃",
-      "archived": "已归档"
-    },
-    "stats": {
-      "members": "成员",
-      "projects": "项目"
-    },
+  "status": {
+    "active": "活跃",
+    "archived": "已归档",
+    "deleted": "已废弃"
+  },
+  "stats": {
+    "members": "成员总数",
+    "humanMembers": "人类成员",
+    "aiMembers": "AI 成员",
+    "projects": "项目总数",
+    "projectsActive": "进行中项目",
+    "projectsArchived": "已归档项目",
+    "projectsDeleted": "已废弃项目",
+    "activeProjects7d": "近 7 天活跃项目",
+    "lastActivity": "最近活跃时间"
+  },
     "fields": {
       "createdAt": "创建时间",
       "updatedAt": "更新时间"

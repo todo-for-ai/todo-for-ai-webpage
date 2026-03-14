@@ -89,14 +89,22 @@
     "subtitle": "Review organization info, members, and projects",
     "back": "Back to Organizations",
     "noDescription": "No description yet",
-    "status": {
-      "active": "Active",
-      "archived": "Archived"
-    },
-    "stats": {
-      "members": "Members",
-      "projects": "Projects"
-    },
+  "status": {
+    "active": "Active",
+    "archived": "Archived",
+    "deleted": "Deleted"
+  },
+  "stats": {
+    "members": "Total Members",
+    "humanMembers": "Human Members",
+    "aiMembers": "AI Members",
+    "projects": "Total Projects",
+    "projectsActive": "Active Projects",
+    "projectsArchived": "Archived Projects",
+    "projectsDeleted": "Deleted Projects",
+    "activeProjects7d": "Active Projects (7d)",
+    "lastActivity": "Last Activity"
+  },
     "fields": {
       "createdAt": "Created At",
       "updatedAt": "Updated At"
