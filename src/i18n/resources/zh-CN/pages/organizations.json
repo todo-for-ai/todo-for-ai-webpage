@@ -96,14 +96,20 @@
   },
   "stats": {
     "members": "成员总数",
+    "membersOverview": "成员概览",
     "humanMembers": "人类成员",
     "aiMembers": "AI 成员",
+    "invitedMembers": "邀请中",
     "projects": "项目总数",
+    "projectsOverview": "项目概览",
     "projectsActive": "进行中项目",
     "projectsArchived": "已归档项目",
     "projectsDeleted": "已废弃项目",
     "activeProjects7d": "近 7 天活跃项目",
-    "lastActivity": "最近活跃时间"
+    "lastActivity": "最近活跃时间",
+    "activityOverview": "活跃概览",
+    "activeRoles": "启用角色",
+    "totalRoles": "角色总数"
   },
     "fields": {
       "createdAt": "创建时间",

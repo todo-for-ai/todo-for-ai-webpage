@@ -96,14 +96,20 @@
   },
   "stats": {
     "members": "Total Members",
+    "membersOverview": "Members Overview",
     "humanMembers": "Human Members",
     "aiMembers": "AI Members",
+    "invitedMembers": "Invited",
     "projects": "Total Projects",
+    "projectsOverview": "Projects Overview",
     "projectsActive": "Active Projects",
     "projectsArchived": "Archived Projects",
     "projectsDeleted": "Deleted Projects",
     "activeProjects7d": "Active Projects (7d)",
-    "lastActivity": "Last Activity"
+    "lastActivity": "Last Activity",
+    "activityOverview": "Activity Overview",
+    "activeRoles": "Active Roles",
+    "totalRoles": "Total Roles"
   },
     "fields": {
       "createdAt": "Created At",

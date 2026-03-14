@@ -29,6 +29,7 @@ import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { OrganizationMembersCard } from './organizations/components/OrganizationMembersCard'
 import NotificationChannelManager from '../components/NotificationChannelManager'
 import { LinkButton } from '../components/SmartLink'
+import './OrganizationDetail.css'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -422,6 +423,12 @@ const OrganizationDetail = () => {
     }
   }, [members, agentMembers])
 
+  const roleStats = useMemo(() => {
+    const total = organizationRoles.length
+    const active = organizationRoles.filter((role) => role.is_active).length
+    return { total, active }
+  }, [organizationRoles])
+
   const projectStats = useMemo(() => {
     const counts = {
       total: projects.length,
@@ -440,6 +447,26 @@ const OrganizationDetail = () => {
     })
     return counts
   }, [projects])
+
+  const memberBarSegments = useMemo(() => {
+    const total = memberStats.total || 0
+    const getWidth = (value: number) => (total > 0 ? `${(value / total) * 100}%` : '0%')
+    return [
+      { key: 'human', width: getWidth(memberStats.humanActive), color: '#1677ff' },
+      { key: 'ai', width: getWidth(memberStats.aiActive), color: '#52c41a' },
+      { key: 'invited', width: getWidth(memberStats.invited), color: '#faad14' },
+    ]
+  }, [memberStats])
+
+  const projectBarSegments = useMemo(() => {
+    const total = projectStats.total || 0
+    const getWidth = (value: number) => (total > 0 ? `${(value / total) * 100}%` : '0%')
+    return [
+      { key: 'active', width: getWidth(projectStats.active), color: '#1677ff' },
+      { key: 'archived', width: getWidth(projectStats.archived), color: '#bfbfbf' },
+      { key: 'deleted', width: getWidth(projectStats.deleted), color: '#ff7875' },
+    ]
+  }, [projectStats])
 
   const activityStats = useMemo(() => {
     const now = Date.now()
@@ -634,89 +661,130 @@ const OrganizationDetail = () => {
         </div>
       </div>
 
-      <Card style={{ marginBottom: 16 }}>
-        <Space direction="vertical" size={10} style={{ width: '100%' }}>
-          <Space align="center" wrap>
-            <Title level={3} style={{ margin: 0 }}>{organization?.name || '-'}</Title>
-            <Tag color={organization?.status === 'active' ? 'green' : 'orange'}>
-              {tp(`detail.status.${organization?.status || 'active'}`)}
-            </Tag>
-            {organization?.slug && <Text type="secondary">{organization.slug}</Text>}
-          </Space>
-          {organization?.description ? (
-            <Paragraph style={{ marginBottom: 0 }}>{organization.description}</Paragraph>
-          ) : (
-            <Text type="secondary">{tp('detail.noDescription')}</Text>
-          )}
-          <div
-            style={{
-              display: 'grid',
-              gap: 16,
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            }}
-          >
+      <Card className="org-summary-card" style={{ marginBottom: 16 }}>
+        <div className="org-summary">
+          <div className="org-summary__head">
             <div>
-              <Text type="secondary">{tp('detail.stats.members')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(membersLoading ? undefined : memberStats.total)}
+              <div className="org-summary__title">
+                <Title level={3} style={{ margin: 0 }}>{organization?.name || '-'}</Title>
+                <Tag color={organization?.status === 'active' ? 'green' : 'orange'}>
+                  {tp(`detail.status.${organization?.status || 'active'}`)}
+                </Tag>
+                {organization?.slug && (
+                  <span className="org-summary__slug">{organization.slug}</span>
+                )}
               </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.humanMembers')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(membersLoading ? undefined : memberStats.humanActive)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.aiMembers')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(membersLoading ? undefined : memberStats.aiActive)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.projects')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(projectsLoading ? undefined : projectStats.total)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.projectsActive')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(projectsLoading ? undefined : projectStats.active)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.projectsArchived')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(projectsLoading ? undefined : projectStats.archived)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.projectsDeleted')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(projectsLoading ? undefined : projectStats.deleted)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.activeProjects7d')}</Text>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>
-                {formatNumber(projectsLoading ? undefined : activityStats.activeProjects7d)}
-              </div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.stats.lastActivity')}</Text>
-              <div style={{ fontSize: 14 }}>{formatDateTime(activityStats.latestActivityAt)}</div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.fields.createdAt')}</Text>
-              <div style={{ fontSize: 14 }}>{formatDateTime(organization?.created_at)}</div>
-            </div>
-            <div>
-              <Text type="secondary">{tp('detail.fields.updatedAt')}</Text>
-              <div style={{ fontSize: 14 }}>{formatDateTime(organization?.updated_at)}</div>
+              {organization?.description ? (
+                <Paragraph style={{ marginBottom: 0 }}>{organization.description}</Paragraph>
+              ) : (
+                <Text type="secondary">{tp('detail.noDescription')}</Text>
+              )}
             </div>
           </div>
-        </Space>
+
+          <div className="org-summary__grid">
+            <div className="org-summary__panel">
+              <div className="org-summary__panel-top">
+                <Text type="secondary">{tp('detail.stats.membersOverview')}</Text>
+                <div className="org-summary__panel-metric">
+                  {formatNumber(membersLoading ? undefined : memberStats.total)}
+                </div>
+              </div>
+              <div className="org-summary__bar">
+                {memberBarSegments.map((segment) => (
+                  <span
+                    key={segment.key}
+                    className="org-summary__bar-segment"
+                    style={{ width: segment.width, background: segment.color }}
+                  />
+                ))}
+              </div>
+              <div className="org-summary__legend">
+                <span className="org-summary__legend-item">
+                  <span className="org-summary__dot" style={{ background: '#1677ff' }} />
+                  {tp('detail.stats.humanMembers')} {formatNumber(membersLoading ? undefined : memberStats.humanActive)}
+                </span>
+                <span className="org-summary__legend-item">
+                  <span className="org-summary__dot" style={{ background: '#52c41a' }} />
+                  {tp('detail.stats.aiMembers')} {formatNumber(membersLoading ? undefined : memberStats.aiActive)}
+                </span>
+                <span className="org-summary__legend-item">
+                  <span className="org-summary__dot" style={{ background: '#faad14' }} />
+                  {tp('detail.stats.invitedMembers')} {formatNumber(membersLoading ? undefined : memberStats.invited)}
+                </span>
+              </div>
+            </div>
+
+            <div className="org-summary__panel">
+              <div className="org-summary__panel-top">
+                <Text type="secondary">{tp('detail.stats.projectsOverview')}</Text>
+                <div className="org-summary__panel-metric">
+                  {formatNumber(projectsLoading ? undefined : projectStats.total)}
+                </div>
+              </div>
+              <div className="org-summary__bar">
+                {projectBarSegments.map((segment) => (
+                  <span
+                    key={segment.key}
+                    className="org-summary__bar-segment"
+                    style={{ width: segment.width, background: segment.color }}
+                  />
+                ))}
+              </div>
+              <div className="org-summary__legend">
+                <span className="org-summary__legend-item">
+                  <span className="org-summary__dot" style={{ background: '#1677ff' }} />
+                  {tp('detail.stats.projectsActive')} {formatNumber(projectsLoading ? undefined : projectStats.active)}
+                </span>
+                <span className="org-summary__legend-item">
+                  <span className="org-summary__dot" style={{ background: '#bfbfbf' }} />
+                  {tp('detail.stats.projectsArchived')} {formatNumber(projectsLoading ? undefined : projectStats.archived)}
+                </span>
+                <span className="org-summary__legend-item">
+                  <span className="org-summary__dot" style={{ background: '#ff7875' }} />
+                  {tp('detail.stats.projectsDeleted')} {formatNumber(projectsLoading ? undefined : projectStats.deleted)}
+                </span>
+              </div>
+            </div>
+
+            <div className="org-summary__panel">
+              <div className="org-summary__panel-top">
+                <Text type="secondary">{tp('detail.stats.activityOverview')}</Text>
+                <div className="org-summary__panel-metric">
+                  {formatNumber(projectsLoading ? undefined : activityStats.activeProjects7d)}
+                </div>
+              </div>
+              <div className="org-summary__stats">
+                <div className="org-summary__stat">
+                  <span className="org-summary__stat-label">{tp('detail.stats.activeProjects7d')}</span>
+                  <span className="org-summary__stat-value">
+                    {formatNumber(projectsLoading ? undefined : activityStats.activeProjects7d)}
+                  </span>
+                </div>
+                <div className="org-summary__stat">
+                  <span className="org-summary__stat-label">{tp('detail.stats.lastActivity')}</span>
+                  <span className="org-summary__stat-value">{formatDateTime(activityStats.latestActivityAt)}</span>
+                </div>
+                <div className="org-summary__stat">
+                  <span className="org-summary__stat-label">{tp('detail.stats.activeRoles')}</span>
+                  <span className="org-summary__stat-value">{formatNumber(roleStats.active)}</span>
+                </div>
+                <div className="org-summary__stat">
+                  <span className="org-summary__stat-label">{tp('detail.stats.totalRoles')}</span>
+                  <span className="org-summary__stat-value">{formatNumber(roleStats.total)}</span>
+                </div>
+                <div className="org-summary__stat">
+                  <span className="org-summary__stat-label">{tp('detail.fields.createdAt')}</span>
+                  <span className="org-summary__stat-value">{formatDateTime(organization?.created_at)}</span>
+                </div>
+                <div className="org-summary__stat">
+                  <span className="org-summary__stat-label">{tp('detail.fields.updatedAt')}</span>
+                  <span className="org-summary__stat-value">{formatDateTime(organization?.updated_at)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </Card>
 
       <Card>
