@@ -36,6 +36,7 @@
     "@milkdown/react": "^7.15.2",
     "@milkdown/theme-nord": "^7.15.2",
     "@milkdown/utils": "^7.15.2",
+    "@monaco-editor/react": "^4.7.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "antd": "^5.29.1",
     "axios": "^1.11.0",

@@ -40,6 +40,7 @@ import UserManagement from './pages/UserManagement'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TestTelegramGroup from './pages/TestTelegramGroup'
+import CommandLineDemo from './pages/CommandLineDemo'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -114,6 +115,7 @@ function App() {
               <Route path="rule-marketplace" element={<RuleMarketplace />} />
               <Route path="mcp-installation" element={<MCPInstallation />} />
               <Route path="api-documentation" element={<APIDocumentation />} />
+              <Route path="command-line-demo" element={<CommandLineDemo />} />
               <Route path="agents" element={<AgentsPage />} />
               <Route path="agents/create" element={<AgentCreatePage />} />
               <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
