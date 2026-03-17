@@ -16,6 +16,8 @@ interface AgentProjectsTabProps {
   active: boolean
 }
 
+type SortField = 'project_name' | 'touched_task_count' | 'committed_task_count' | 'interaction_log_count' | 'interaction_days' | 'submission_rate' | 'activity_score' | 'last_activity_at'
+
 export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjectsTabProps) {
   const { tp } = usePageTranslation('agents')
   const navigate = useNavigate()
@@ -24,6 +26,8 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
   const [pagination, setPagination] = useState(emptyPagination)
   const [query, setQuery] = useState('')
   const [queryInput, setQueryInput] = useState('')
+  const [sortBy, setSortBy] = useState<SortField>('last_activity_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }))
@@ -43,13 +47,15 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
         page: pagination.page,
         per_page: pagination.per_page,
         search: query || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
       })
       setItems(data.items || [])
       setPagination(data.pagination || emptyPagination)
     } finally {
       setLoading(false)
     }
-  }, [workspaceId, agentId, pagination.page, pagination.per_page, query])
+  }, [workspaceId, agentId, pagination.page, pagination.per_page, query, sortBy, sortOrder])
 
   useEffect(() => {
     if (!active) {
@@ -106,7 +112,9 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
       {
         title: tp('detail.projects.project', { defaultValue: 'Project' }),
         key: 'project_name',
+        dataIndex: 'project_name',
         width: 240,
+        sorter: true,
         render: (_, row) => (
           <Space direction='vertical' size={2}>
             <Typography.Link
@@ -166,32 +174,55 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
         dataIndex: 'touched_task_count',
         key: 'touched_task_count',
         width: 130,
+        sorter: true,
       },
       {
         title: tp('detail.projects.committedTasks', { defaultValue: 'Committed Tasks' }),
         dataIndex: 'committed_task_count',
         key: 'committed_task_count',
         width: 140,
+        sorter: true,
       },
       {
         title: tp('detail.projects.commitRate', { defaultValue: 'Commit Rate' }),
-        key: 'commit_rate',
+        key: 'submission_rate',
+        dataIndex: 'submission_rate',
         width: 130,
-        render: (_, row) => {
+        sorter: true,
+        render: (value, row) => {
           const touched = Number(row.touched_task_count || 0)
           const committed = Number(row.committed_task_count || 0)
           if (touched <= 0) {
             return <Text type='secondary'>-</Text>
           }
-          const rate = Math.round((committed / touched) * 100)
+          const rate = value ?? Math.round((committed / touched) * 100)
           return <Tag color={rate >= 70 ? 'green' : rate >= 40 ? 'blue' : 'orange'}>{rate}%</Tag>
         },
+      },
+      {
+        title: tp('detail.projects.interactionDays', { defaultValue: 'Interaction Days' }),
+        dataIndex: 'interaction_days',
+        key: 'interaction_days',
+        width: 140,
+        sorter: true,
       },
       {
         title: tp('detail.projects.interactionLogs', { defaultValue: 'Interaction Logs' }),
         dataIndex: 'interaction_log_count',
         key: 'interaction_log_count',
         width: 140,
+        sorter: true,
+      },
+      {
+        title: tp('detail.projects.activityScore', { defaultValue: 'Activity Score' }),
+        dataIndex: 'activity_score',
+        key: 'activity_score',
+        width: 140,
+        sorter: true,
+        render: (value) => {
+          const score = Number(value || 0)
+          return <Tag color={score >= 80 ? 'green' : score >= 50 ? 'blue' : score >= 20 ? 'orange' : 'red'}>{score.toFixed(1)}</Tag>
+        },
       },
       {
         title: tp('detail.projects.activitySignals', { defaultValue: 'Activity Signals' }),
@@ -208,6 +239,7 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
         dataIndex: 'last_activity_at',
         key: 'last_activity_at',
         width: 180,
+        sorter: true,
         render: (value) => formatDateTime(value),
       },
     ],
@@ -250,12 +282,24 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
           },
           style: { cursor: 'pointer' },
         })}
-        onChange={(pageInfo) => {
+        onChange={(paginationInfo, filters, sorter) => {
           setPagination((prev) => ({
             ...prev,
-            page: pageInfo.current || 1,
-            per_page: pageInfo.pageSize || prev.per_page,
+            page: paginationInfo.current || 1,
+            per_page: paginationInfo.pageSize || prev.per_page,
           }))
+
+          // Handle sorting
+          if (sorter && typeof sorter === 'object' && 'field' in sorter) {
+            const sortField = sorter.field as SortField
+            const sortDirection = sorter.order === 'ascend' ? 'asc' : 'desc'
+            if (sortField && sortField !== sortBy) {
+              setSortBy(sortField)
+            }
+            if (sortDirection !== sortOrder) {
+              setSortOrder(sortDirection)
+            }
+          }
         }}
       />
     </Space>
