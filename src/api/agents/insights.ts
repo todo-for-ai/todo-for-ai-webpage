@@ -37,6 +37,14 @@ export interface AgentInteractionQuery {
   page?: number
   per_page?: number
   search?: string
+  min_interactions?: number
+  max_interactions?: number
+  min_tasks?: number
+  max_tasks?: number
+  from?: string
+  to?: string
+  sort_by?: 'user_id' | 'interaction_count' | 'task_count' | 'project_count' | 'last_interaction_at' | 'first_interaction_at'
+  sort_order?: 'asc' | 'desc'
 }
 
 export interface AgentTaskInsightQuery {

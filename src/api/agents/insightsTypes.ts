@@ -80,10 +80,22 @@ export interface AgentInteractionInsightItem {
   user_id: number
   display_name: string
   email?: string
+  username?: string
+  nickname?: string
+  full_name?: string
   avatar_url?: string
+  user_created_at?: string | null
+  user_last_login_at?: string | null
   interaction_count: number
   task_count: number
+  project_count: number
+  total_content_length: number
+  avg_content_length: number
+  avg_interactions_per_day: number
+  first_interaction_at?: string | null
   last_interaction_at?: string | null
+  days_since_last_interaction: number
+  activity_score: number
 }
 
 export interface AgentInteractionInsightListResponse {
