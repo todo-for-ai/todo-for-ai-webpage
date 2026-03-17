@@ -29,6 +29,8 @@ export interface AgentProjectQuery {
   page?: number
   per_page?: number
   search?: string
+  sort_by?: 'project_id' | 'project_name' | 'touched_task_count' | 'committed_task_count' | 'interaction_log_count' | 'interaction_days' | 'submission_rate' | 'activity_score' | 'last_activity_at'
+  sort_order?: 'asc' | 'desc'
 }
 
 export interface AgentInteractionQuery {

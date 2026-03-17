@@ -66,6 +66,9 @@ export interface AgentProjectInsightItem {
   committed_task_count: number
   interaction_log_count: number
   last_activity_at?: string | null
+  interaction_days: number
+  submission_rate: number
+  activity_score: number
 }
 
 export interface AgentProjectInsightListResponse {
