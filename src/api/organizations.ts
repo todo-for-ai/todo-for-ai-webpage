@@ -12,7 +12,10 @@ export interface Organization {
   current_user_role?: string | null
   current_user_roles?: string[]
   member_count?: number
+  agent_count?: number
   project_count?: number
+  active_role_count?: number
+  last_activity_at?: string | null
 }
 
 export interface OrganizationRoleDefinition {

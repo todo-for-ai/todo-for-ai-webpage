@@ -117,7 +117,30 @@
       "runnerConfigVersion": "Runner配置版本",
       "soulVersion": "SOUL版本",
       "createdAt": "创建时间",
-      "updatedAt": "更新时间"
+      "updatedAt": "更新时间",
+      "empty": "-",
+      "capabilityTags": "能力标签",
+      "summary": {
+        "status": "当前状态",
+        "executionMode": "执行模式",
+        "llmModel": "当前模型"
+      },
+      "sections": {
+        "identity": "身份与归属",
+        "runtime": "运行与访问控制",
+        "model": "模型与生成参数",
+        "limits": "并发与稳定性限制"
+      },
+      "tableColumns": {
+        "field": "字段",
+        "value": "值"
+      },
+      "sectionSubtitles": {
+        "runtime": "描述 Agent 的执行方式与权限边界",
+        "model": "描述模型选择与生成参数配置",
+        "limits": "描述并发、重试、超时与版本限制"
+      },
+      "headline": "运行画像与行为特征"
     },
     "enums": {
       "executionMode": {
@@ -212,7 +235,17 @@
       "committedTasks": "完成提交数",
       "interactionLogs": "交互日志数",
       "lastActivity": "最后活动时间",
-      "search": "搜索项目名称"
+      "search": "搜索项目名称",
+      "status": "项目状态",
+      "color": "主题色",
+      "noColor": "未设置",
+      "commitRate": "提交率",
+      "activitySignals": "活跃度",
+      "statusValues": {
+        "active": "活跃",
+        "archived": "已归档",
+        "deleted": "已删除"
+      }
     },
     "interactions": {
       "user": "用户",

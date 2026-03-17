@@ -2,7 +2,8 @@
   "title": "Organizations",
   "subtitle": "Manage organization spaces and shared members",
   "actions": {
-    "create": "Create Organization"
+    "create": "Create Organization",
+    "view": "View Details"
   },
   "viewMode": {
     "label": "View",
@@ -13,7 +14,20 @@
     "orgName": "Organization",
     "role": "My Role",
     "members": "Members",
-    "projects": "Projects"
+    "agents": "Agents",
+    "projects": "Projects",
+    "activeRoles": "Active Roles",
+    "summary": "Summary",
+    "activity": "Activity"
+  },
+  "roleLabels": {
+    "owner": "Owner",
+    "admin": "Administrator",
+    "member": "Member",
+    "viewer": "Viewer"
+  },
+  "card": {
+    "moreRoles": "+{{count}} more"
   },
   "members": {
     "title": "Members of {{name}}",
@@ -36,8 +50,13 @@
     "table": {
       "user": "User",
       "type": "Type",
+      "membershipId": "Membership ID",
+      "linkedId": "Linked ID",
       "role": "Role",
+      "capabilities": "Capabilities",
       "status": "Status",
+      "joinedAt": "Joined At",
+      "updatedAt": "Updated At",
       "actions": "Actions"
     }
   },
@@ -115,10 +134,43 @@
       "createdAt": "Created At",
       "updatedAt": "Updated At"
     },
+    "overview": {
+      "title": "Workspace Overview",
+      "subtitle": "Summarize access, governance, and next actions for this organization",
+      "slug": "Slug",
+      "myAccess": "My Access",
+      "manageAccess": "Manage Access",
+      "manageEnabled": "Can manage members and notifications",
+      "manageDisabled": "Read-only access",
+      "healthSignals": "Signals",
+      "noSignals": "Nothing needs immediate follow-up"
+    },
     "tabs": {
       "members": "Members",
       "activity": "Activity",
       "projects": "Projects"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "subtitle": "Quick scan of the latest organization events",
+      "actor": "Actor",
+      "viewAll": "View all activity",
+      "empty": "No recent activity"
+    },
+    "projectSpotlight": {
+      "title": "Project Spotlight",
+      "subtitle": "Highlight projects by freshest activity",
+      "taskCount": "Tasks",
+      "lastActivity": "Last Activity",
+      "viewAll": "View all projects",
+      "empty": "No projects to highlight"
+    },
+    "signals": {
+      "invitedMembers": "{{count}} pending invites",
+      "inactiveRoles": "{{count}} inactive roles",
+      "deletedProjects": "{{count}} deleted projects",
+      "archivedProjects": "{{count}} archived projects",
+      "noProjects": "No projects yet"
     },
     "activity": {
       "columns": {

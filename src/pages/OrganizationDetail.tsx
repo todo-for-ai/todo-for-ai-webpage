@@ -13,9 +13,14 @@ import {
   Table,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import {
+  ArrowLeftOutlined,
+  FolderOpenOutlined,
+  HistoryOutlined,
+} from '@ant-design/icons'
 import {
   organizationsApi,
   type Organization,
@@ -29,6 +34,14 @@ import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { OrganizationMembersCard } from './organizations/components/OrganizationMembersCard'
 import NotificationChannelManager from '../components/NotificationChannelManager'
 import { LinkButton } from '../components/SmartLink'
+import { formatFullDateTime, formatRelativeTimeI18n } from '../utils/dateUtils'
+import {
+  getRoleKeys,
+  roleColorMap,
+  statusColorMap,
+  translateRoleLabel,
+  translateStatusLabel,
+} from './organizations/components/organizationViewShared'
 import './OrganizationDetail.css'
 
 const { Title, Paragraph, Text } = Typography
@@ -37,6 +50,12 @@ const ORG_STATUS_COLORS: Record<string, string> = {
   active: 'green',
   invited: 'blue',
   removed: 'default',
+}
+
+const PROJECT_STATUS_COLORS: Record<string, string> = {
+  active: 'green',
+  archived: 'orange',
+  deleted: 'default',
 }
 
 const EVENT_LABEL_KEY_MAP: Record<string, string> = {
@@ -79,6 +98,12 @@ const extractProjectItems = (payload: any): Project[] => {
   return []
 }
 
+const getProjectTaskCount = (project: Project) => (
+  project.total_tasks ??
+  project.stats?.total_tasks ??
+  0
+)
+
 const OrganizationDetail = () => {
   const { organizationId } = useParams<{ organizationId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -111,6 +136,7 @@ const OrganizationDetail = () => {
   }, [tp])
 
   const parsedOrganizationId = Number(organizationId)
+  const activeTab = searchParams.get('tab') || 'members'
 
   const canManageMembers =
     organization?.current_user_role === 'owner' || organization?.current_user_role === 'admin'
@@ -223,7 +249,7 @@ const OrganizationDetail = () => {
     }
   }, [parsedOrganizationId])
 
-  const loadEvents = useCallback(async (page = 1) => {
+  const loadEvents = useCallback(async (page = 1, perPage = 20) => {
     if (!parsedOrganizationId) {
       return
     }
@@ -231,7 +257,7 @@ const OrganizationDetail = () => {
       setEventsLoading(true)
       const response = await organizationEventsApi.getOrganizationEvents(parsedOrganizationId, {
         page,
-        per_page: 20,
+        per_page: perPage,
       })
       setEvents(response.items || [])
       setEventsPagination(response.pagination || null)
@@ -243,6 +269,10 @@ const OrganizationDetail = () => {
     }
   }, [parsedOrganizationId])
 
+  const refreshActivityPreview = useCallback(async () => {
+    await loadEvents(1, activeTab === 'activity' ? 20 : 6)
+  }, [activeTab, loadEvents])
+
   useEffect(() => {
     if (!parsedOrganizationId || Number.isNaN(parsedOrganizationId)) {
       return
@@ -252,7 +282,8 @@ const OrganizationDetail = () => {
     loadAgentMembers()
     loadOrganizationRoles()
     loadProjects()
-  }, [parsedOrganizationId, loadOrganization, loadMembers, loadAgentMembers, loadOrganizationRoles, loadProjects])
+    void loadEvents(1, 6)
+  }, [parsedOrganizationId, loadOrganization, loadMembers, loadAgentMembers, loadOrganizationRoles, loadProjects, loadEvents])
 
   const inviteMember = async () => {
     if (!parsedOrganizationId) {
@@ -272,6 +303,7 @@ const OrganizationDetail = () => {
       setInviteEmail('')
       setInviteRoleIds([])
       await loadMembers()
+      await refreshActivityPreview()
     } catch (error: any) {
       message.error(error?.message || tp('messages.inviteFailed'))
     } finally {
@@ -288,6 +320,7 @@ const OrganizationDetail = () => {
       await organizationsApi.updateOrganizationMember(parsedOrganizationId, member.user_id, { role_ids: roleIds })
       message.success(tp('messages.memberUpdated'))
       await loadMembers()
+      await refreshActivityPreview()
     } catch (error: any) {
       message.error(error?.message || tp('messages.memberUpdateFailed'))
     } finally {
@@ -304,6 +337,7 @@ const OrganizationDetail = () => {
       await organizationsApi.removeOrganizationMember(parsedOrganizationId, member.user_id)
       message.success(tp('messages.memberRemoved'))
       await loadMembers()
+      await refreshActivityPreview()
     } catch (error: any) {
       message.error(error?.message || tp('messages.memberRemoveFailed'))
     } finally {
@@ -326,6 +360,7 @@ const OrganizationDetail = () => {
       setCreateAgentVisible(false)
       createAgentForm.resetFields()
       await loadAgentMembers()
+      await refreshActivityPreview()
     } catch (error: any) {
       if (error?.errorFields) {
         return
@@ -351,6 +386,7 @@ const OrganizationDetail = () => {
       message.success(tp('messages.agentInviteSuccess'))
       setInviteAgentId('')
       await loadAgentMembers()
+      await refreshActivityPreview()
     } catch (error: any) {
       message.error(error?.message || tp('messages.agentInviteFailed'))
     } finally {
@@ -367,6 +403,7 @@ const OrganizationDetail = () => {
       await organizationAgentsApi.removeOrganizationAgentMember(parsedOrganizationId, member.id)
       message.success(tp('messages.agentMemberRemoved'))
       await loadAgentMembers()
+      await refreshActivityPreview()
     } catch (error: any) {
       message.error(error?.message || tp('messages.agentMemberRemoveFailed'))
     } finally {
@@ -504,6 +541,126 @@ const OrganizationDetail = () => {
     }
   }, [projects, organization?.updated_at])
 
+  const currentRoleKeys = useMemo(
+    () => (organization ? getRoleKeys(organization) : []),
+    [organization]
+  )
+
+  const recentProjects = useMemo(() => {
+    const getTimestamp = (value?: string) => {
+      if (!value) return 0
+      const timestamp = new Date(value).getTime()
+      return Number.isNaN(timestamp) ? 0 : timestamp
+    }
+
+    return [...projects]
+      .sort((left, right) => {
+        const rightTs = getTimestamp(right.last_activity_at || right.updated_at || right.created_at)
+        const leftTs = getTimestamp(left.last_activity_at || left.updated_at || left.created_at)
+        return rightTs - leftTs
+      })
+      .slice(0, 4)
+  }, [projects])
+
+  const activityPreviewItems = useMemo(
+    () => events.slice(0, 5),
+    [events]
+  )
+
+  const organizationSignals = useMemo(() => {
+    const signals: Array<{ key: string; color: string; text: string }> = []
+
+    if (memberStats.invited > 0) {
+      signals.push({
+        key: 'invited',
+        color: 'gold',
+        text: tp('detail.signals.invitedMembers', { count: memberStats.invited }),
+      })
+    }
+
+    const inactiveRoles = Math.max(roleStats.total - roleStats.active, 0)
+    if (inactiveRoles > 0) {
+      signals.push({
+        key: 'inactiveRoles',
+        color: 'blue',
+        text: tp('detail.signals.inactiveRoles', { count: inactiveRoles }),
+      })
+    }
+
+    if (projectStats.deleted > 0) {
+      signals.push({
+        key: 'deletedProjects',
+        color: 'red',
+        text: tp('detail.signals.deletedProjects', { count: projectStats.deleted }),
+      })
+    } else if (projectStats.archived > 0) {
+      signals.push({
+        key: 'archivedProjects',
+        color: 'orange',
+        text: tp('detail.signals.archivedProjects', { count: projectStats.archived }),
+      })
+    }
+
+    if (projectStats.total === 0) {
+      signals.push({
+        key: 'noProjects',
+        color: 'blue',
+        text: tp('detail.signals.noProjects'),
+      })
+    }
+
+    return signals
+  }, [memberStats.invited, projectStats.archived, projectStats.deleted, projectStats.total, roleStats.active, roleStats.total, tp])
+
+  const profileFacts = useMemo(() => [
+    {
+      key: 'slug',
+      label: tp('detail.overview.slug'),
+      value: organization?.slug || '-',
+    },
+    {
+      key: 'access',
+      label: tp('detail.overview.myAccess'),
+      value: currentRoleKeys.length
+        ? currentRoleKeys.map((roleKey) => translateRoleLabel(tp, roleKey)).join(' / ')
+        : '-',
+    },
+    {
+      key: 'manage',
+      label: tp('detail.overview.manageAccess'),
+      value: canManageMembers
+        ? tp('detail.overview.manageEnabled')
+        : tp('detail.overview.manageDisabled'),
+    },
+    {
+      key: 'roles',
+      label: tp('detail.stats.totalRoles'),
+      value: formatNumber(roleStats.total),
+    },
+  ], [canManageMembers, currentRoleKeys, formatNumber, organization?.slug, roleStats.total, tp])
+
+  const getEventSummary = useCallback((record: OrganizationEvent) => {
+    const payload = record.payload || {}
+    const changedFields = Array.isArray(payload.changed_fields)
+      ? payload.changed_fields.filter(Boolean).join(', ')
+      : ''
+
+    return (
+      record.message ||
+      payload.task_title ||
+      payload.project_name ||
+      payload.organization_name ||
+      payload.agent_name ||
+      changedFields ||
+      formatEventType(record.event_type)
+    )
+  }, [formatEventType])
+
+  const getEventTimestamp = useCallback(
+    (record: OrganizationEvent) => record.occurred_at || record.created_at,
+    []
+  )
+
   const projectColumns = useMemo(() => {
     return [
       {
@@ -631,8 +788,6 @@ const OrganizationDetail = () => {
     ]
   }, [formatDateTime, formatEventType, tp])
 
-  const activeTab = searchParams.get('tab') || 'members'
-
   useEffect(() => {
     if (activeTab === 'activity') {
       void loadEvents(1)
@@ -667,13 +822,26 @@ const OrganizationDetail = () => {
             <div>
               <div className="org-summary__title">
                 <Title level={3} style={{ margin: 0 }}>{organization?.name || '-'}</Title>
-                <Tag color={organization?.status === 'active' ? 'green' : 'orange'}>
-                  {tp(`detail.status.${organization?.status || 'active'}`)}
+                <Tag color={statusColorMap[organization?.status || 'active'] || 'default'}>
+                  {translateStatusLabel(tp, organization?.status || 'active')}
                 </Tag>
                 {organization?.slug && (
                   <span className="org-summary__slug">{organization.slug}</span>
                 )}
               </div>
+              {currentRoleKeys.length > 0 ? (
+                <Space size={[8, 8]} wrap style={{ marginBottom: 12 }}>
+                  {currentRoleKeys.map((roleKey) => (
+                    <Tag
+                      key={roleKey}
+                      color={roleColorMap[roleKey] || 'default'}
+                      style={{ marginInlineEnd: 0 }}
+                    >
+                      {translateRoleLabel(tp, roleKey)}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : null}
               {organization?.description ? (
                 <Paragraph style={{ marginBottom: 0 }}>{organization.description}</Paragraph>
               ) : (
@@ -784,6 +952,156 @@ const OrganizationDetail = () => {
               </div>
             </div>
           </div>
+
+          <div className="org-insights">
+            <div className="org-insights__panel">
+              <div className="org-insights__panel-head">
+                <div>
+                  <Text strong>{tp('detail.overview.title')}</Text>
+                  <div className="org-insights__panel-subtitle">{tp('detail.overview.subtitle')}</div>
+                </div>
+              </div>
+
+              <div className="org-insights__facts">
+                {profileFacts.map((fact) => (
+                  <div key={fact.key} className="org-insights__fact">
+                    <span className="org-insights__fact-label">{fact.label}</span>
+                    <span className="org-insights__fact-value">{fact.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="org-insights__actions">
+                <Button size="small" onClick={() => setSearchParams({ tab: 'members' })}>
+                  {tp('detail.tabs.members')}
+                </Button>
+                <Button size="small" onClick={() => setSearchParams({ tab: 'activity' })}>
+                  {tp('detail.tabs.activity')}
+                </Button>
+                <Button size="small" onClick={() => setSearchParams({ tab: 'projects' })}>
+                  {tp('detail.tabs.projects')}
+                </Button>
+                {canManageMembers ? (
+                  <Button size="small" onClick={openRoleManagerPage}>
+                    {tp('roles.manage')}
+                  </Button>
+                ) : null}
+              </div>
+
+              <div>
+                <div className="org-insights__section-title">{tp('detail.overview.healthSignals')}</div>
+                {organizationSignals.length > 0 ? (
+                  <Space size={[8, 8]} wrap>
+                    {organizationSignals.map((signal) => (
+                      <Tag key={signal.key} color={signal.color} style={{ marginInlineEnd: 0 }}>
+                        {signal.text}
+                      </Tag>
+                    ))}
+                  </Space>
+                ) : (
+                  <Text type="secondary">{tp('detail.overview.noSignals')}</Text>
+                )}
+              </div>
+            </div>
+
+            <div className="org-insights__panel">
+              <div className="org-insights__panel-head">
+                <div>
+                  <Text strong>{tp('detail.recentActivity.title')}</Text>
+                  <div className="org-insights__panel-subtitle">{tp('detail.recentActivity.subtitle')}</div>
+                </div>
+                <Button type="link" size="small" onClick={() => setSearchParams({ tab: 'activity' })}>
+                  {tp('detail.recentActivity.viewAll')}
+                </Button>
+              </div>
+
+              {eventsLoading && activityPreviewItems.length === 0 ? (
+                <div className="org-insights__empty">
+                  <Spin size="small" />
+                </div>
+              ) : activityPreviewItems.length > 0 ? (
+                <div className="org-insights__list">
+                  {activityPreviewItems.map((record) => {
+                    const eventAt = getEventTimestamp(record)
+                    return (
+                      <div key={record.id} className="org-insights__list-item">
+                        <div className="org-insights__list-icon">
+                          <HistoryOutlined />
+                        </div>
+                        <div className="org-insights__list-main">
+                          <div className="org-insights__list-title">{formatEventType(record.event_type)}</div>
+                          <div className="org-insights__list-body">{getEventSummary(record)}</div>
+                          <div className="org-insights__list-meta">
+                            <span>{tp('detail.recentActivity.actor')}: {record.actor_name || record.actor_type || '-'}</span>
+                            <Tooltip title={formatFullDateTime(eventAt)}>
+                              <span>{formatRelativeTimeI18n(eventAt, tp)}</span>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="org-insights__empty">
+                  <Text type="secondary">{tp('detail.recentActivity.empty')}</Text>
+                </div>
+              )}
+            </div>
+
+            <div className="org-insights__panel">
+              <div className="org-insights__panel-head">
+                <div>
+                  <Text strong>{tp('detail.projectSpotlight.title')}</Text>
+                  <div className="org-insights__panel-subtitle">{tp('detail.projectSpotlight.subtitle')}</div>
+                </div>
+                <Button type="link" size="small" onClick={() => setSearchParams({ tab: 'projects' })}>
+                  {tp('detail.projectSpotlight.viewAll')}
+                </Button>
+              </div>
+
+              {projectsLoading && recentProjects.length === 0 ? (
+                <div className="org-insights__empty">
+                  <Spin size="small" />
+                </div>
+              ) : recentProjects.length > 0 ? (
+                <div className="org-insights__list">
+                  {recentProjects.map((project) => {
+                    const projectActivityAt = project.last_activity_at || project.updated_at || project.created_at
+                    return (
+                      <div key={project.id} className="org-insights__list-item">
+                        <div className="org-insights__list-icon">
+                          <FolderOpenOutlined />
+                        </div>
+                        <div className="org-insights__list-main">
+                          <div className="org-insights__list-title">
+                            <LinkButton to={`/todo-for-ai/pages/projects/${project.id}`} type="link" style={{ padding: 0, height: 'auto' }}>
+                              {project.name}
+                            </LinkButton>
+                          </div>
+                          <div className="org-insights__list-meta">
+                            <Tag color={PROJECT_STATUS_COLORS[project.status] || 'default'} style={{ marginInlineEnd: 0 }}>
+                              {translateStatusLabel(tp, project.status)}
+                            </Tag>
+                            <span>{tp('detail.projectSpotlight.taskCount')}: {formatNumber(getProjectTaskCount(project))}</span>
+                          </div>
+                          <div className="org-insights__list-meta">
+                            <Tooltip title={formatFullDateTime(projectActivityAt)}>
+                              <span>{tp('detail.projectSpotlight.lastActivity')}: {formatRelativeTimeI18n(projectActivityAt, tp)}</span>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="org-insights__empty">
+                  <Text type="secondary">{tp('detail.projectSpotlight.empty')}</Text>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -799,6 +1117,7 @@ const OrganizationDetail = () => {
                 <Space direction="vertical" size={16} style={{ width: '100%' }}>
                   <OrganizationMembersCard
                     tp={tp}
+                    organizationId={parsedOrganizationId}
                     organizationName={organization?.name || ''}
                     canManageMembers={!!canManageMembers}
                     loading={membersLoading || actionLoading}

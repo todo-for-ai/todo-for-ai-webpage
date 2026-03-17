@@ -33,7 +33,7 @@
   background: #f5f5f5;
   border: 1px solid #f0f0f0;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
 }
 
 .org-summary__grid {
@@ -45,7 +45,7 @@
 .org-summary__panel {
   background: #fafafa;
   border: 1px solid #f0f0f0;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -68,7 +68,7 @@
 .org-summary__bar {
   height: 6px;
   background: #f0f0f0;
-  border-radius: 999px;
+  border-radius: 6px;
   overflow: hidden;
   display: flex;
 }
@@ -110,7 +110,7 @@
   padding: 6px 8px;
   background: #ffffff;
   border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .org-summary__stat-label {
@@ -122,4 +122,132 @@
   font-size: 13px;
   color: #1f1f1f;
   font-weight: 500;
+}
+
+.org-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.org-insights__panel {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.org-insights__panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.org-insights__panel-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-insights__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.org-insights__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.org-insights__fact-label,
+.org-insights__section-title {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-insights__fact-value {
+  font-size: 13px;
+  color: #1f1f1f;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.org-insights__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.org-insights__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.org-insights__list-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.org-insights__list-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e6f4ff;
+  color: #1677ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.org-insights__list-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.org-insights__list-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.org-insights__list-body {
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.org-insights__list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-insights__empty {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }

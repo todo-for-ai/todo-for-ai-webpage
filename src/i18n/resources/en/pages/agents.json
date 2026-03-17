@@ -117,7 +117,30 @@
       "runnerConfigVersion": "Runner Config Version",
       "soulVersion": "SOUL Version",
       "createdAt": "Created At",
-      "updatedAt": "Updated At"
+      "updatedAt": "Updated At",
+      "empty": "-",
+      "capabilityTags": "Capability Tags",
+      "summary": {
+        "status": "Status",
+        "executionMode": "Execution Mode",
+        "llmModel": "Current Model"
+      },
+      "sections": {
+        "identity": "Identity & Ownership",
+        "runtime": "Runtime & Access Control",
+        "model": "Model & Generation",
+        "limits": "Concurrency & Reliability Limits"
+      },
+      "tableColumns": {
+        "field": "Field",
+        "value": "Value"
+      },
+      "sectionSubtitles": {
+        "runtime": "Execution mode and access boundary",
+        "model": "Model choice and generation profile",
+        "limits": "Concurrency, retry, timeout and version guardrails"
+      },
+      "headline": "Operational profile and behavior signature"
     },
     "enums": {
       "executionMode": {
@@ -212,7 +235,17 @@
       "committedTasks": "Committed Tasks",
       "interactionLogs": "Interaction Logs",
       "lastActivity": "Last Activity",
-      "search": "Search project name"
+      "search": "Search project name",
+      "status": "Status",
+      "color": "Color",
+      "noColor": "N/A",
+      "commitRate": "Commit Rate",
+      "activitySignals": "Activity Signals",
+      "statusValues": {
+        "active": "Active",
+        "archived": "Archived",
+        "deleted": "Deleted"
+      }
     },
     "interactions": {
       "user": "User",

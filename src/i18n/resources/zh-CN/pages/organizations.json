@@ -2,7 +2,8 @@
   "title": "组织管理",
   "subtitle": "管理组织空间与共享成员",
   "actions": {
-    "create": "创建组织"
+    "create": "创建组织",
+    "view": "查看详情"
   },
   "viewMode": {
     "label": "视图",
@@ -13,7 +14,20 @@
     "orgName": "组织",
     "role": "我的角色",
     "members": "成员数",
-    "projects": "项目数"
+    "agents": "Agent 数",
+    "projects": "项目数",
+    "activeRoles": "启用角色",
+    "summary": "概览",
+    "activity": "活跃情况"
+  },
+  "roleLabels": {
+    "owner": "所有者",
+    "admin": "管理员",
+    "member": "成员",
+    "viewer": "查看者"
+  },
+  "card": {
+    "moreRoles": "+{{count}} 个角色"
   },
   "members": {
     "title": "{{name}} 的成员",
@@ -36,8 +50,13 @@
     "table": {
       "user": "成员",
       "type": "类型",
+      "membershipId": "关系ID",
+      "linkedId": "对象ID",
       "role": "角色",
+      "capabilities": "能力标签",
       "status": "状态",
+      "joinedAt": "加入时间",
+      "updatedAt": "更新时间",
       "actions": "操作"
     }
   },
@@ -115,10 +134,43 @@
       "createdAt": "创建时间",
       "updatedAt": "更新时间"
     },
+    "overview": {
+      "title": "空间概览",
+      "subtitle": "汇总当前组织的访问、治理与下一步操作",
+      "slug": "Slug",
+      "myAccess": "我的访问权限",
+      "manageAccess": "管理能力",
+      "manageEnabled": "可管理成员与通知",
+      "manageDisabled": "只读访问",
+      "healthSignals": "关注项",
+      "noSignals": "当前没有需要立即处理的提醒"
+    },
     "tabs": {
       "members": "成员",
       "activity": "活跃动态",
       "projects": "项目"
+    },
+    "recentActivity": {
+      "title": "近期动态",
+      "subtitle": "快速浏览最近发生的组织事件",
+      "actor": "操作者",
+      "viewAll": "查看全部动态",
+      "empty": "暂无近期动态"
+    },
+    "projectSpotlight": {
+      "title": "项目聚焦",
+      "subtitle": "按最近活跃度展示重点项目",
+      "taskCount": "任务数",
+      "lastActivity": "最近活跃",
+      "viewAll": "查看全部项目",
+      "empty": "暂无可展示的项目"
+    },
+    "signals": {
+      "invitedMembers": "{{count}} 个待处理邀请",
+      "inactiveRoles": "{{count}} 个未启用角色",
+      "deletedProjects": "{{count}} 个已废弃项目",
+      "archivedProjects": "{{count}} 个已归档项目",
+      "noProjects": "还没有项目"
     },
     "activity": {
       "columns": {

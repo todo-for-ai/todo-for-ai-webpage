@@ -31,7 +31,8 @@ import {
   AgentsPage,
   AgentCreatePage,
   AgentDetailPage,
-  AgentEditPage
+  AgentEditPage,
+  UserProfilePage
 } from './pages'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
@@ -118,6 +119,7 @@ function App() {
               <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
               <Route path="agents/:agentId/:tabKey" element={<AgentDetailPage />} />
               <Route path="agents/:agentId" element={<AgentDetailPage />} />
+              <Route path="users/:userId" element={<UserProfilePage />} />
               <Route path="custom-prompts" element={<CustomPrompts />}>
                 <Route index element={<Navigate to="project-prompts" replace />} />
                 <Route path="project-prompts" element={<CustomPrompts />} />

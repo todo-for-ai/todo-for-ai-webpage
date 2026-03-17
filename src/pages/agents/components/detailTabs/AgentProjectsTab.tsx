@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Input, Space, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
+import { useNavigate } from 'react-router-dom'
 import { agentInsightsApi, type AgentProjectInsightItem } from '../../../../api/agents'
 import { usePageTranslation } from '../../../../i18n/hooks/useTranslation'
 import { emptyPagination, formatDateTime } from './shared'
@@ -17,6 +18,7 @@ interface AgentProjectsTabProps {
 
 export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjectsTabProps) {
   const { tp } = usePageTranslation('agents')
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [items, setItems] = useState<AgentProjectInsightItem[]>([])
   const [pagination, setPagination] = useState(emptyPagination)
@@ -56,17 +58,97 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
     void loadProjects()
   }, [active, loadProjects])
 
+  const goToProjectDetail = useCallback(
+    (projectId: number) => {
+      const query = workspaceId ? `?workspace_id=${workspaceId}` : ''
+      navigate(`/todo-for-ai/pages/projects/${projectId}${query}`)
+    },
+    [navigate, workspaceId]
+  )
+
+  const getProjectStatusMeta = useCallback(
+    (value?: string | null) => {
+      const key = String(value || '').trim().toLowerCase()
+      if (!key) {
+        return {
+          label: '-',
+          color: 'default' as const,
+        }
+      }
+      if (key === 'active') {
+        return {
+          label: tp('detail.projects.statusValues.active', { defaultValue: 'Active' }),
+          color: 'green' as const,
+        }
+      }
+      if (key === 'archived') {
+        return {
+          label: tp('detail.projects.statusValues.archived', { defaultValue: 'Archived' }),
+          color: 'orange' as const,
+        }
+      }
+      if (key === 'deleted') {
+        return {
+          label: tp('detail.projects.statusValues.deleted', { defaultValue: 'Deleted' }),
+          color: 'red' as const,
+        }
+      }
+      return {
+        label: key,
+        color: 'blue' as const,
+      }
+    },
+    [tp]
+  )
+
   const columns: ColumnsType<AgentProjectInsightItem> = useMemo(
     () => [
       {
         title: tp('detail.projects.project', { defaultValue: 'Project' }),
         key: 'project_name',
+        width: 240,
         render: (_, row) => (
           <Space direction='vertical' size={2}>
-            <span>{row.project_name}</span>
+            <Typography.Link
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                goToProjectDetail(row.project_id)
+              }}
+            >
+              {row.project_name}
+            </Typography.Link>
             <Text type='secondary'>{'#' + row.project_id}</Text>
           </Space>
         ),
+      },
+      {
+        title: tp('detail.projects.status', { defaultValue: 'Status' }),
+        dataIndex: 'project_status',
+        key: 'project_status',
+        width: 120,
+        render: (value) => {
+          const meta = getProjectStatusMeta(value)
+          return <Tag color={meta.color}>{meta.label}</Tag>
+        },
+      },
+      {
+        title: tp('detail.projects.color', { defaultValue: 'Color' }),
+        key: 'project_color',
+        dataIndex: 'project_color',
+        width: 120,
+        render: (value) => {
+          const color = String(value || '').trim()
+          if (!color) {
+            return <Text type='secondary'>{tp('detail.projects.noColor', { defaultValue: '-' })}</Text>
+          }
+          return (
+            <span className='agent-projects-tab__color'>
+              <span className='agent-projects-tab__color-swatch' style={{ backgroundColor: color }} />
+              <span className='agent-projects-tab__color-code'>{color}</span>
+            </span>
+          )
+        },
       },
       {
         title: tp('detail.projects.allowed', { defaultValue: 'Allowed' }),
@@ -92,10 +174,34 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
         width: 140,
       },
       {
+        title: tp('detail.projects.commitRate', { defaultValue: 'Commit Rate' }),
+        key: 'commit_rate',
+        width: 130,
+        render: (_, row) => {
+          const touched = Number(row.touched_task_count || 0)
+          const committed = Number(row.committed_task_count || 0)
+          if (touched <= 0) {
+            return <Text type='secondary'>-</Text>
+          }
+          const rate = Math.round((committed / touched) * 100)
+          return <Tag color={rate >= 70 ? 'green' : rate >= 40 ? 'blue' : 'orange'}>{rate}%</Tag>
+        },
+      },
+      {
         title: tp('detail.projects.interactionLogs', { defaultValue: 'Interaction Logs' }),
         dataIndex: 'interaction_log_count',
         key: 'interaction_log_count',
         width: 140,
+      },
+      {
+        title: tp('detail.projects.activitySignals', { defaultValue: 'Activity Signals' }),
+        key: 'activity_signals',
+        width: 140,
+        render: (_, row) => {
+          const touched = Number(row.touched_task_count || 0)
+          const logs = Number(row.interaction_log_count || 0)
+          return touched + logs
+        },
       },
       {
         title: tp('detail.projects.lastActivity', { defaultValue: 'Last Activity' }),
@@ -105,7 +211,7 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
         render: (value) => formatDateTime(value),
       },
     ],
-    [tp]
+    [tp, getProjectStatusMeta, goToProjectDetail]
   )
 
   return (
@@ -126,12 +232,24 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
         loading={loading}
         columns={columns}
         dataSource={items}
+        scroll={{ x: 1320 }}
         pagination={{
           current: pagination.page,
           pageSize: pagination.per_page,
           total: pagination.total,
           showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
         }}
+        onRow={(record) => ({
+          onClick: (event) => {
+            const target = event.target as HTMLElement
+            if (target.closest('a')) {
+              return
+            }
+            goToProjectDetail(record.project_id)
+          },
+          style: { cursor: 'pointer' },
+        })}
         onChange={(pageInfo) => {
           setPagination((prev) => ({
             ...prev,
@@ -145,3 +263,4 @@ export function AgentProjectsTab({ workspaceId, agentId, active }: AgentProjects
 }
 
 export default AgentProjectsTab
+
