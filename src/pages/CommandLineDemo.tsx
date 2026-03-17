@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Typography, Space, Button, Card } from 'antd'
 import { CodeOutlined } from '@ant-design/icons'
-import CommandLinePlayer, { CommandLineScript } from '../components/CommandLinePlayer/CommandLinePlayer'
+import CommandLinePlayer, { type CommandLineScript } from '../components/CommandLinePlayer/CommandLinePlayer'
 
 const { Title, Text } = Typography
 
