@@ -121,14 +121,14 @@ const Organizations = () => {
                 ]}
               />
             </Space>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
+            <Button type="primary" className="flat-btn" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
               {tp('actions.create')}
             </Button>
           </Space>
         </div>
       </div>
 
-      <Card>
+      <Card className="flat-card">
         {viewMode === 'list' ? (
           <OrganizationsListView
             tp={tp}

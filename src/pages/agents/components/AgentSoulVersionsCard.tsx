@@ -69,12 +69,14 @@ export function AgentSoulVersionsCard({
             render: (_, row) => (
               <Button
                 size='small'
+                type="text"
                 icon={<RollbackOutlined />}
                 disabled={!agentId || soulVersion === row.version}
                 onClick={() => {
                   setRollbackTarget(row)
                   setChangeSummary(`rollback to v${row.version}`)
                 }}
+                className="flat-btn flat-btn--secondary"
               >
                 Rollback
               </Button>
@@ -99,6 +101,7 @@ export function AgentSoulVersionsCard({
           setRollbackTarget(null)
         }}
         confirmLoading={loading}
+        className='flat-modal'
       >
         <Space direction='vertical' className='agent-soul-versions-card__modal-body'>
           <Text>Change summary</Text>

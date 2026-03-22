@@ -94,7 +94,7 @@ export function OrganizationMembersCard({
   }
 
   return (
-    <Card title={tp('members.title', { name: organizationName })}>
+    <Card className="flat-card" title={tp('members.title', { name: organizationName })}>
       <Space direction="vertical" style={{ width: '100%' }} size={16}>
         {canManageMembers && (
           <Space wrap>
@@ -114,26 +114,27 @@ export function OrganizationMembersCard({
               style={{ width: 260 }}
               onChange={(value) => onInviteRoleChange(value as number[])}
             />
-            <Button type="primary" onClick={onInviteMember}>{tp('members.invite')}</Button>
+            <Button type="primary" className="flat-btn" onClick={onInviteMember}>{tp('members.invite')}</Button>
             <Input
               value={inviteAgentId}
               placeholder={tp('members.agentIdPlaceholder')}
               onChange={(event) => onInviteAgentIdChange(event.target.value)}
               style={{ width: 220 }}
             />
-            <Button icon={<ApiOutlined />} onClick={onInviteAgent}>
+            <Button className="flat-btn" icon={<ApiOutlined />} onClick={onInviteAgent}>
               {tp('members.inviteAgent')}
             </Button>
-            <Button icon={<ApiOutlined />} onClick={onOpenCreateAgent}>
+            <Button className="flat-btn" icon={<ApiOutlined />} onClick={onOpenCreateAgent}>
               {tp('members.createAgent')}
             </Button>
-            <Button icon={<SettingOutlined />} onClick={onOpenRoleManager}>
+            <Button className="flat-btn" icon={<SettingOutlined />} onClick={onOpenRoleManager}>
               {tp('roles.manage')}
             </Button>
           </Space>
         )}
 
         <Table<OrganizationMemberRow>
+          className="flat-table"
           rowKey="row_id"
           loading={loading}
           size="small"
@@ -327,7 +328,7 @@ export function OrganizationMembersCard({
                       okText={tp('members.confirmOk')}
                       cancelText={tp('members.confirmCancel')}
                     >
-                      <Button danger size="small" icon={<DeleteOutlined />}>
+                      <Button className="flat-btn" danger size="small" icon={<DeleteOutlined />}>
                         {tp('members.remove')}
                       </Button>
                     </Popconfirm>

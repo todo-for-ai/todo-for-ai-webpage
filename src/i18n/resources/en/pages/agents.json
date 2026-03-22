@@ -15,6 +15,7 @@
       "soul": "SOUL.md"
     },
     "fields": {
+      "avatar": "Avatar",
       "name": "Agent Name",
       "displayName": "Display Name",
       "description": "Description",

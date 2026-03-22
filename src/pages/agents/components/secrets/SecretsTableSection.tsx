@@ -99,18 +99,22 @@ export function SecretsTableSection({
                 <Space>
                   <Button
                     size='small'
+                    type="text"
                     icon={<EyeOutlined />}
                     disabled={!row.is_active}
                     onClick={() => onReveal(row)}
+                    className="flat-btn flat-btn--secondary"
                   >
                     Reveal
                   </Button>
                   {!isShared ? (
                     <Button
                       size='small'
+                      type="text"
                       icon={<ShareAltOutlined />}
                       disabled={!row.is_active}
                       onClick={() => onShare(row)}
+                      className="flat-btn flat-btn--primary"
                     >
                       Share
                     </Button>
@@ -118,9 +122,11 @@ export function SecretsTableSection({
                   {!isShared ? (
                     <Button
                       size='small'
+                      type="text"
                       icon={<ReloadOutlined />}
                       disabled={!row.is_active}
                       onClick={() => onRotate(row)}
+                      className="flat-btn flat-btn--secondary"
                     >
                       Rotate
                     </Button>
@@ -132,7 +138,14 @@ export function SecretsTableSection({
                       cancelText='Cancel'
                       onConfirm={() => onRevoke(row)}
                     >
-                      <Button size='small' danger icon={<StopOutlined />} disabled={!row.is_active}>
+                      <Button
+                        size='small'
+                        type="text"
+                        danger
+                        icon={<StopOutlined />}
+                        disabled={!row.is_active}
+                        className="flat-btn flat-btn--danger"
+                      >
                         Revoke
                       </Button>
                     </Popconfirm>

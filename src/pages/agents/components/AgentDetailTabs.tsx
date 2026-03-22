@@ -71,10 +71,11 @@ export function AgentDetailTabs({
   }
 
   return (
-    <Card title={tp('detail.title', { defaultValue: 'Agent Detail' })} className='agent-detail-tabs-card'>
+    <Card title={tp('detail.title', { defaultValue: 'Agent Detail' })} className='agent-detail-tabs-card flat-card'>
       <Tabs
         activeKey={activeTab}
         onChange={handleTabChange}
+        className='flat-tabs'
         items={[
           {
             key: 'overview',

@@ -1,6 +1,18 @@
 export type AgentStatus = 'active' | 'inactive' | 'revoked'
 export type AgentReasoningMode = 'balanced' | 'fast' | 'deep'
 
+// Agent 权限角色类型
+export type AgentRole = 'owner' | 'maintainer' | 'viewer'
+
+// Agent 成员（Owner）信息
+export interface AgentMember {
+  user_id: number
+  username: string
+  email: string
+  role: AgentRole
+  joined_at: string
+}
+
 export interface Agent {
   id: number
   workspace_id: number
@@ -41,6 +53,10 @@ export interface Agent {
   created_at: string
   updated_at: string
   created_by?: string
+  // 权限相关字段
+  current_user_role?: AgentRole  // 当前用户在该 Agent 中的角色
+  is_owner?: boolean              // 当前用户是否是 Owner
+  members?: AgentMember[]         // Agent 的所有成员
 }
 
 export interface AgentListResponse {

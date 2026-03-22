@@ -1,0 +1,149 @@
+/* Agents Page - Flat Design Style */
+
+/* 扁平化按钮基础样式 */
+.agents-page__action-btn {
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  height: 32px;
+  padding: 0 12px;
+}
+
+.agents-page__action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* 主要操作按钮 - 扁平化 */
+.agents-page__action-btn--primary {
+  color: #1677ff;
+}
+
+.agents-page__action-btn--primary:hover {
+  color: #4096ff;
+  background-color: rgba(22, 119, 255, 0.06);
+}
+
+/* 编辑按钮 */
+.agents-page__action-btn--edit {
+  color: #595959;
+}
+
+.agents-page__action-btn--edit:hover {
+  color: #1677ff;
+  background-color: rgba(22, 119, 255, 0.06);
+}
+
+/* 危险操作按钮 */
+.agents-page__action-btn--danger {
+  color: #ff4d4f;
+}
+
+.agents-page__action-btn--danger:hover {
+  color: #ff7875;
+  background-color: rgba(255, 77, 79, 0.06);
+}
+
+.agents-page__action-btn--danger:disabled {
+  color: rgba(0, 0, 0, 0.25);
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+/* 卡片操作区按钮 */
+.agents-page__card-actions .ant-btn {
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.agents-page__card-actions .ant-btn-text:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* 列表行悬停效果 */
+.agents-page__table .ant-table-tbody > tr {
+  transition: background-color 0.2s ease;
+}
+
+.agents-page__table .ant-table-tbody > tr:hover {
+  background-color: #fafafa;
+}
+
+/* 卡片悬停效果 - 扁平化阴影 */
+.agents-page__card {
+  transition: all 0.2s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.agents-page__card:hover {
+  border-color: #d9d9d9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 筛选器样式 */
+.agents-page__filter-select .ant-select-selector {
+  border-radius: 4px;
+}
+
+/* 搜索框样式 */
+.agents-page__search-input {
+  border-radius: 4px;
+}
+
+/* 标签样式 - 扁平化 */
+.agents-page__tag {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Owner 标签特殊样式 */
+.agents-page__tag--owner {
+  background-color: #fff7e6;
+  border: 1px solid #ffd8bf;
+  color: #fa8c16;
+}
+
+/* 状态标签 */
+.agents-page__status-tag {
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-weight: 500;
+}
+
+/* 分页器样式 */
+.agents-page__pagination .ant-pagination-item {
+  border-radius: 4px;
+}
+
+.agents-page__pagination .ant-pagination-item-active {
+  background-color: #1677ff;
+  border-color: #1677ff;
+}
+
+.agents-page__pagination .ant-pagination-item-active a {
+  color: #fff;
+}
+
+/* 空状态样式 */
+.agents-page__empty {
+  padding: 48px 0;
+}
+
+/* 页面标题区域 */
+.agents-page__header {
+  margin-bottom: 24px;
+}
+
+/* 工作区选择器 */
+.agents-page__workspace-select .ant-select-selector {
+  border-radius: 4px;
+}
+
+/* 视图切换按钮 */
+.agents-page__view-toggle {
+  border-radius: 4px;
+}
+
+.agents-page__view-toggle .ant-segmented-item {
+  border-radius: 2px;
+}

@@ -113,7 +113,7 @@ const Dashboard = () => {
       </Title>
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.ownedProjects')}
               value={owned.projects.total || 0}
@@ -123,7 +123,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.ownedTasks')}
               value={owned.tasks.total || 0}
@@ -133,7 +133,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.ownedInProgress')}
               value={(owned.tasks.in_progress || 0) + (owned.tasks.review || 0)}
@@ -143,7 +143,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.ownedAiExecuting')}
               value={owned.tasks.ai_executing || 0}
@@ -157,7 +157,7 @@ const Dashboard = () => {
       <Title level={4}>{tp('sections.participatedScope')}</Title>
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.participatedProjects')}
               value={participated.projects.total || 0}
@@ -167,7 +167,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.participatedTasks')}
               value={participated.tasks.total || 0}
@@ -177,7 +177,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.participatedInProgress')}
               value={(participated.tasks.in_progress || 0) + (participated.tasks.review || 0)}
@@ -187,7 +187,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.participatedAiExecuting')}
               value={participated.tasks.ai_executing || 0}
@@ -201,7 +201,7 @@ const Dashboard = () => {
       <Title level={4}>{tp('sections.organizationAgentStats')}</Title>
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={8}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.totalOrganizations')}
               value={orgSummary.total || 0}
@@ -211,7 +211,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.totalAgents')}
               value={orgSummary.total_agents || 0}
@@ -221,7 +221,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card loading={loading}>
+          <Card loading={loading} className="flat-card">
             <Statistic
               title={tp('stats.activeAgents7d')}
               value={orgSummary.active_agents_7d || 0}
@@ -234,7 +234,7 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24}>
-          <Card title={tp('sections.topOrganizations')} variant="borderless" loading={loading}>
+          <Card title={tp('sections.topOrganizations')} variant="borderless" loading={loading} className="flat-card">
             {topOrganizations.length > 0 ? (
               <List
                 dataSource={topOrganizations}
@@ -245,7 +245,7 @@ const Dashboard = () => {
                       title={
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span>{item.organization_name}</span>
-                          <Tag color="blue">
+                          <Tag color="blue" className="flat-tag flat-tag--owner">
                             {tp('labels.myRole')}: {item.my_role}
                           </Tag>
                         </div>
@@ -286,7 +286,7 @@ const Dashboard = () => {
       {/* 最近项目和任务 */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title={tp('sections.recentProjects')} variant="borderless" loading={loading}>
+          <Card title={tp('sections.recentProjects')} variant="borderless" loading={loading} className="flat-card">
             {stats?.recent_projects && stats.recent_projects.length > 0 ? (
               <List
                 dataSource={stats.recent_projects}
@@ -317,7 +317,7 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title={tp('sections.recentTasks')} variant="borderless" loading={loading}>
+          <Card title={tp('sections.recentTasks')} variant="borderless" loading={loading} className="flat-card">
             {stats?.recent_tasks && stats.recent_tasks.length > 0 ? (
               <List
                 dataSource={stats.recent_tasks}
@@ -328,7 +328,7 @@ const Dashboard = () => {
                       title={
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span>{task.title}</span>
-                          <Tag color={getStatusColor(task.status)}>
+                          <Tag color={getStatusColor(task.status)} className="flat-tag flat-tag--status">
                             {getStatusText(task.status)}
                           </Tag>
                         </div>

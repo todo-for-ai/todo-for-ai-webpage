@@ -111,6 +111,7 @@ const OrganizationRoles = () => {
       <div className="page-header">
         <Space direction="vertical" size={8}>
           <Button
+            className="flat-btn"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate('/todo-for-ai/pages/organizations')}
           >
@@ -128,7 +129,7 @@ const OrganizationRoles = () => {
       </div>
 
       {canManage && (
-        <Card style={{ marginBottom: 16 }}>
+        <Card className="flat-card" style={{ marginBottom: 16 }}>
           <Form form={form} layout="vertical">
             <Form.Item
               name="title"
@@ -143,15 +144,16 @@ const OrganizationRoles = () => {
             <Form.Item name="content" label={tp('roles.form.content')}>
               <Input.TextArea rows={5} placeholder={tp('roles.contentPlaceholder')} />
             </Form.Item>
-            <Button type="primary" icon={<PlusOutlined />} loading={creating} onClick={createRole}>
+            <Button type="primary" className="flat-btn" icon={<PlusOutlined />} loading={creating} onClick={createRole}>
               {tp('roles.create')}
             </Button>
           </Form>
         </Card>
       )}
 
-      <Card>
+      <Card className="flat-card">
         <Table<OrganizationRoleDefinition>
+          className="flat-table"
           rowKey="id"
           loading={loading}
           pagination={false}
@@ -207,7 +209,7 @@ const OrganizationRoles = () => {
                     okText={tp('members.confirmOk')}
                     cancelText={tp('members.confirmCancel')}
                   >
-                    <Button danger size="small" icon={<DeleteOutlined />}>
+                    <Button className="flat-btn" danger size="small" icon={<DeleteOutlined />}>
                       {tp('members.remove')}
                     </Button>
                   </Popconfirm>

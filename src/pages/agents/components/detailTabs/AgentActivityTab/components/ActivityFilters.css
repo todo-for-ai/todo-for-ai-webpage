@@ -1,0 +1,27 @@
+.activity-filters {
+  width: 100%;
+}
+
+.activity-filters__source {
+  width: 180px;
+}
+
+.activity-filters__level {
+  width: 150px;
+}
+
+.activity-filters__number {
+  width: 140px;
+}
+
+.activity-filters__text {
+  width: 220px;
+}
+
+.activity-filters__search {
+  width: 280px;
+}
+
+.activity-filters__datetime {
+  width: 200px;
+}

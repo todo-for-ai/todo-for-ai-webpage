@@ -38,6 +38,7 @@ export function ShareSecretModal({
       confirmLoading={loading}
       okText='Grant Access'
       width={880}
+      className='flat-modal'
     >
       <Space direction='vertical' className='agent-secrets-share-modal__form' size={14}>
         <Select
@@ -127,7 +128,13 @@ export function ShareSecretModal({
                   onConfirm={() => onRevokeShare(row.id)}
                   disabled={!row.is_active}
                 >
-                  <Button size='small' danger disabled={!row.is_active}>
+                  <Button
+                    size='small'
+                    type="text"
+                    danger
+                    disabled={!row.is_active}
+                    className="flat-btn flat-btn--danger"
+                  >
                     Revoke
                   </Button>
                 </Popconfirm>

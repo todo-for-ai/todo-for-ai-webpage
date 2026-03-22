@@ -7,7 +7,13 @@ import type {
 } from './types'
 
 export class AgentsApi {
-  async getAgents(workspaceId: number, params?: { search?: string; status?: string; page?: number; per_page?: number }) {
+  async getAgents(workspaceId: number, params?: {
+    search?: string;
+    status?: string;
+    page?: number;
+    per_page?: number;
+    ownership?: 'all' | 'mine' | 'collaborating'  // 权限筛选: all-所有, mine-我创建的/拥有的, collaborating-我协作的
+  }) {
     const query = new URLSearchParams()
     if (params?.search) {
       query.set('search', params.search)
@@ -20,6 +26,9 @@ export class AgentsApi {
     }
     if (params?.per_page) {
       query.set('per_page', String(params.per_page))
+    }
+    if (params?.ownership) {
+      query.set('ownership', params.ownership)
     }
 
     const qs = query.toString()

@@ -18,7 +18,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   fallback
 }) => {
   const { tc } = useTranslation()
-  const { user, isAuthenticated, isLoading } = useAuthStore()
+  const { user, isAuthenticated, isLoading, token, checkAuth, fetchCurrentUser } = useAuthStore()
   const [isChecking, setIsChecking] = useState(true)
 
   // 使用useCallback来稳定checkAuth函数引用
@@ -29,13 +29,23 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   useEffect(() => {
     const verifyAuth = async () => {
       if (requireAuth) {
-        await stableCheckAuth()
+        // 如果有token但没有用户信息，获取用户信息
+        if (token && !user) {
+          try {
+            await fetchCurrentUser()
+          } catch (error) {
+            console.error('[AuthGuard] 获取用户信息失败:', error)
+          }
+        } else if (!token) {
+          // 没有token，检查认证状态
+          await stableCheckAuth()
+        }
       }
       setIsChecking(false)
     }
 
     verifyAuth()
-  }, [requireAuth, stableCheckAuth])
+  }, [requireAuth, stableCheckAuth, token, user, fetchCurrentUser])
 
   // 显示加载状态
   if (isLoading || isChecking) {

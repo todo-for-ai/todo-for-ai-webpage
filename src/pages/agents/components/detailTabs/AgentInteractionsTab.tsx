@@ -205,8 +205,9 @@ export function AgentInteractionsTab({ workspaceId, agentId, active }: AgentInte
           />
           <Button
             icon={<FilterOutlined />}
-            type={showFilters ? 'primary' : 'default'}
+            type={showFilters ? 'primary' : 'text'}
             onClick={() => setShowFilters(!showFilters)}
+            className="flat-btn flat-btn--secondary"
           >
             Filters
           </Button>
@@ -278,20 +279,28 @@ export function AgentInteractionsTab({ workspaceId, agentId, active }: AgentInte
               </Space>
 
               <Space>
-                <Button type="primary" onClick={() => {
-                  setPagination((prev) => ({ ...prev, page: 1 }))
-                  loadInteractions()
-                }}>
+                <Button
+                  type="text"
+                  onClick={() => {
+                    setPagination((prev) => ({ ...prev, page: 1 }))
+                    loadInteractions()
+                  }}
+                  className="flat-btn flat-btn--primary"
+                >
                   Apply Filters
                 </Button>
-                <Button onClick={() => {
-                  setMinInteractions(undefined)
-                  setMaxInteractions(undefined)
-                  setMinTasks(undefined)
-                  setMaxTasks(undefined)
-                  setDateRange(null)
-                  setPagination((prev) => ({ ...prev, page: 1 }))
-                }}>
+                <Button
+                  type="text"
+                  onClick={() => {
+                    setMinInteractions(undefined)
+                    setMaxInteractions(undefined)
+                    setMinTasks(undefined)
+                    setMaxTasks(undefined)
+                    setDateRange(null)
+                    setPagination((prev) => ({ ...prev, page: 1 }))
+                  }}
+                  className="flat-btn flat-btn--secondary"
+                >
                   Clear
                 </Button>
               </Space>

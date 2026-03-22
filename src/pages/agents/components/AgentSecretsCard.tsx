@@ -251,7 +251,12 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
         </Space>
       }
       extra={
-        <Button type='primary' onClick={() => setCreateOpen(true)} disabled={!agentId}>
+        <Button
+          type='text'
+          onClick={() => setCreateOpen(true)}
+          disabled={!agentId}
+          className="flat-btn flat-btn--primary"
+        >
           Add Secret
         </Button>
       }

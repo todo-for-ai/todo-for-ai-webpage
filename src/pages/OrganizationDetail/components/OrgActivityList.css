@@ -1,0 +1,90 @@
+/**
+ * OrgActivityList 组件样式
+ */
+
+.org-activity-list {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.org-activity-list__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.org-activity-list__subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-activity-list__items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.org-activity-list__item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.org-activity-list__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e6f4ff;
+  color: #1677ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.org-activity-list__content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.org-activity-list__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.org-activity-list__body {
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.org-activity-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-activity-list__empty {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}

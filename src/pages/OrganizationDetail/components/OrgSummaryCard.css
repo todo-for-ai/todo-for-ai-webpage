@@ -1,0 +1,19 @@
+/**
+ * OrgSummaryCard 组件样式
+ */
+
+.org-summary-card {
+  margin-bottom: 16px;
+}
+
+.org-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.org-summary__insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  Avatar,
   Button,
   Card,
   Col,
@@ -26,6 +27,7 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import type { Agent, AgentStatus } from '../../api/agents'
+import { resolveUserAvatarSrc } from '../../utils/defaultAvatars'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentWorkspaceActivityCenter } from './components/AgentWorkspaceActivityCenter'
 import { useAgentsPage } from './hooks/useAgentsPage'
@@ -34,6 +36,7 @@ import {
   saveAgentsViewModeToIndexedDb,
   type AgentsViewMode,
 } from './storage'
+import './AgentsPage.css'
 
 const { Title, Paragraph, Text } = Typography
 const { Search } = Input
@@ -63,6 +66,8 @@ export default function AgentsPage() {
     applyAgentSearch,
     agentStatusFilter,
     updateAgentStatusFilter,
+    ownershipFilter,
+    updateOwnershipFilter,
     updateAgentPage,
     loading,
     revokeAgent,
@@ -108,6 +113,7 @@ export default function AgentsPage() {
             onChange={(event) => updateAgentSearchInput(event.target.value)}
             onSearch={applyAgentSearch}
             style={{ width: 280 }}
+            className="agents-page__search-input"
           />
           <Select
             allowClear
@@ -120,6 +126,18 @@ export default function AgentsPage() {
             ]}
             onChange={(value) => updateAgentStatusFilter((value || '') as AgentStatus | '')}
             style={{ width: 160 }}
+            className="agents-page__filter-select"
+          />
+          <Select
+            value={ownershipFilter}
+            options={[
+              { value: 'all', label: tp('ownership.all', { defaultValue: 'All Agents' }) },
+              { value: 'mine', label: tp('ownership.mine', { defaultValue: 'My Agents' }) },
+              { value: 'collaborating', label: tp('ownership.collaborating', { defaultValue: 'Collaborating' }) },
+            ]}
+            onChange={(value) => updateOwnershipFilter(value as 'all' | 'mine' | 'collaborating')}
+            style={{ width: 160 }}
+            className="agents-page__filter-select"
           />
           <Text type="secondary">
             {tp('table.totalCount', { defaultValue: '{{count}} total', count: agentsPagination.total })}
@@ -132,25 +150,44 @@ export default function AgentsPage() {
           rowKey="id"
           loading={loading}
           dataSource={agents}
+          className="agents-page__table"
           pagination={{
             current: agentsPagination.page,
             pageSize: agentsPagination.per_page,
             total: agentsPagination.total,
             showSizeChanger: true,
+            className: 'agents-page__pagination',
           }}
           onChange={(pagination) => {
             updateAgentPage(pagination.current || 1, pagination.pageSize || agentsPagination.per_page)
           }}
+          onRow={(record) => ({
+            onClick: () => toAgentDetail(record.id),
+            style: { cursor: 'pointer' },
+          })}
           columns={[
             {
               title: tp('table.agent'),
               key: 'name',
               render: (_, row) => (
-                <Space>
-                  <RobotOutlined style={{ color: '#1677ff' }} />
+                <Space align="center">
+                  <Avatar
+                    src={resolveUserAvatarSrc(row.avatar_url, row.name)}
+                    size={40}
+                    style={{ backgroundColor: '#1677ff' }}
+                  >
+                    {row.display_name?.charAt(0) || row.name.charAt(0)}
+                  </Avatar>
                   <div>
-                    <div style={{ fontWeight: 600 }}>{row.display_name || row.name}</div>
-                    <Text type="secondary">#{row.id}</Text>
+                    <Space size={4}>
+                      <div style={{ fontWeight: 600 }}>{row.display_name || row.name}</div>
+                      {row.is_owner && (
+                        <Tag color="gold" className="agents-page__tag agents-page__tag--owner" style={{ fontSize: 11, padding: '0 4px', lineHeight: '16px' }}>
+                          {tp('ownership.owner', { defaultValue: 'Owner' })}
+                        </Tag>
+                      )}
+                    </Space>
+                    <Text type="secondary" style={{ fontSize: 12 }}>#{row.id}</Text>
                   </div>
                 </Space>
               ),
@@ -180,15 +217,20 @@ export default function AgentsPage() {
               render: (_, row) => (
                 <Space>
                   <Button
-                    size="small"
+                    type="text"
                     icon={<RobotOutlined />}
-                    onClick={() => toAgentDetail(row.id)}
+                    className="agents-page__action-btn agents-page__action-btn--primary"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      toAgentDetail(row.id)
+                    }}
                   >
                     {tp('table.viewDetail', { defaultValue: 'Detail' })}
                   </Button>
                   <Button
-                    size="small"
+                    type="text"
                     icon={<EditOutlined />}
+                    className="agents-page__action-btn agents-page__action-btn--edit"
                     onClick={(event) => {
                       event.stopPropagation()
                       navigate(
@@ -204,20 +246,19 @@ export default function AgentsPage() {
                     description={tp('table.revokeConfirmDesc')}
                     okText={tp('table.revoke')}
                     cancelText={tp('form.cancel')}
-                    onConfirm={(event) => {
-                      event?.stopPropagation()
-                      return revokeAgent(row.id)
-                    }}
+                    onConfirm={() => revokeAgent(row.id)}
                   >
-                    <Button
-                      size="small"
-                      danger
-                      icon={<StopOutlined />}
-                      onClick={(event) => event.stopPropagation()}
-                      disabled={row.status === 'revoked'}
-                    >
-                      {tp('table.revoke')}
-                    </Button>
+                    <span onClick={(event) => event.stopPropagation()}>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<StopOutlined />}
+                        className="agents-page__action-btn agents-page__action-btn--danger"
+                        disabled={row.status === 'revoked'}
+                      >
+                        {tp('table.revoke')}
+                      </Button>
+                    </span>
                   </Popconfirm>
                 </Space>
               ),
@@ -225,7 +266,7 @@ export default function AgentsPage() {
           ]}
         />
       ) : agents.length === 0 && !loading ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} className="agents-page__empty" />
       ) : (
         <Space direction="vertical" style={{ width: '100%' }} size={16}>
           <Row gutter={[16, 16]}>
@@ -233,11 +274,14 @@ export default function AgentsPage() {
               <Col key={row.id} xs={24} sm={12} lg={8} xl={6}>
                 <Card
                   hoverable
+                  onClick={() => toAgentDetail(row.id)}
+                  className="agents-page__card"
                   actions={[
                     <Button
                       key="detail"
                       type="text"
                       icon={<RobotOutlined />}
+                      className="agents-page__action-btn agents-page__action-btn--primary"
                       onClick={(event) => {
                         event.stopPropagation()
                         toAgentDetail(row.id)
@@ -249,6 +293,7 @@ export default function AgentsPage() {
                       key="edit"
                       type="text"
                       icon={<EditOutlined />}
+                      className="agents-page__action-btn agents-page__action-btn--edit"
                       onClick={(event) => {
                         event.stopPropagation()
                         navigate(
@@ -273,6 +318,7 @@ export default function AgentsPage() {
                         type="text"
                         danger
                         icon={<StopOutlined />}
+                        className="agents-page__action-btn agents-page__action-btn--danger"
                         onClick={(event) => event.stopPropagation()}
                         disabled={row.status === 'revoked'}
                       >
@@ -281,13 +327,26 @@ export default function AgentsPage() {
                     </Popconfirm>,
                   ]}
                 >
-                  <Space align="start">
-                    <RobotOutlined style={{ color: '#1677ff', fontSize: 18, marginTop: 4 }} />
+                  <Space align="start" style={{ marginBottom: 12 }}>
+                    <Avatar
+                      src={resolveUserAvatarSrc(row.avatar_url, row.name)}
+                      size={48}
+                      style={{ backgroundColor: '#1677ff' }}
+                    >
+                      {row.display_name?.charAt(0) || row.name.charAt(0)}
+                    </Avatar>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-                        {row.display_name || row.name}
-                      </div>
-                      <Text type="secondary">#{row.id}</Text>
+                      <Space size={4} wrap>
+                        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+                          {row.display_name || row.name}
+                        </div>
+                        {row.is_owner && (
+                          <Tag color="gold" style={{ fontSize: 11, padding: '0 4px', lineHeight: '16px' }}>
+                            {tp('ownership.owner', { defaultValue: 'Owner' })}
+                          </Tag>
+                        )}
+                      </Space>
+                      <Text type="secondary" style={{ fontSize: 12 }}>#{row.id}</Text>
                     </div>
                   </Space>
 

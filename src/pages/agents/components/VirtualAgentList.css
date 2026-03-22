@@ -1,0 +1,89 @@
+.virtual-agent-list {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.virtual-agent-list__card {
+  transition: all 0.2s ease;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 0;
+}
+
+.virtual-agent-list__card:last-child {
+  border-bottom: none;
+}
+
+.virtual-agent-list__card:hover {
+  background: #f6ffed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.virtual-agent-list__content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.virtual-agent-list__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.virtual-agent-list__name {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.virtual-agent-list__owner-tag {
+  font-size: 10px;
+  padding: 0 4px;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+
+.virtual-agent-list__status-tag {
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.virtual-agent-list__meta {
+  font-size: 12px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.virtual-agent-list__loading {
+  padding: 16px;
+}
+
+.virtual-agent-list__skeleton-card {
+  margin-bottom: 8px;
+}
+
+.virtual-agent-list__skeleton-card .ant-skeleton-avatar {
+  margin-right: 12px;
+}
+
+.virtual-agent-list__empty {
+  padding: 48px 0;
+}
+
+.virtual-agent-list__loading-more {
+  padding: 16px;
+  text-align: center;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .virtual-agent-list__meta {
+    display: none;
+  }
+}

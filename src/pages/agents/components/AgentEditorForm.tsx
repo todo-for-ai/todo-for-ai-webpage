@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { Button, Card, Form, Input, InputNumber, Select, Space, Switch, Tabs, message } from 'antd'
+import { Button, Card, Form, Input, InputNumber, Select, Space, Switch, Tabs, message, Row, Col } from 'antd'
 import type { Agent, AgentStatus } from '../../../api/agents'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 import type { AgentFormPayload, AgentFormValues } from './agentFormTypes'
+import AgentAvatarUpload from './AgentAvatarUpload'
 import './AgentEditorForm.css'
 
 interface WorkspaceOption {
@@ -207,43 +208,55 @@ export function AgentEditorForm({
                 label: tp('form.tabs.basic'),
                 children: (
                   <>
-                    <Form.Item
-                      name='name'
-                      label={tp('form.fields.name')}
-                      rules={[{ required: true, message: tp('form.validation.nameRequired') }]}
-                    >
-                      <Input placeholder='writer-agent-prod' maxLength={128} />
-                    </Form.Item>
+                    <Row gutter={24}>
+                      <Col xs={24} md={8} lg={6}>
+                        <Form.Item
+                          name="avatar_url"
+                          label={tp('form.fields.avatar')}
+                        >
+                          <AgentAvatarUpload
+                            workspaceId={workspaceId || 0}
+                            agentName={form.getFieldValue('display_name') || form.getFieldValue('name')}
+                            size={120}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={16} lg={18}>
+                        <Form.Item
+                          name="name"
+                          label={tp('form.fields.name')}
+                          rules={[{ required: true, message: tp('form.validation.nameRequired') }]}
+                        >
+                          <Input placeholder='writer-agent-prod' maxLength={128} />
+                        </Form.Item>
 
-                    <Form.Item name='display_name' label={tp('form.fields.displayName')}>
-                      <Input placeholder='Creative Writer Bot' maxLength={128} />
-                    </Form.Item>
+                        <Form.Item name="display_name" label={tp('form.fields.displayName')}>
+                          <Input placeholder='Creative Writer Bot' maxLength={128} />
+                        </Form.Item>
 
-                    <Form.Item name='description' label={tp('form.fields.description')}>
-                      <Input.TextArea rows={3} maxLength={500} />
-                    </Form.Item>
+                        <Form.Item name="description" label={tp('form.fields.description')}>
+                          <Input.TextArea rows={3} maxLength={500} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-                    <Form.Item name='avatar_url' label={tp('form.fields.avatarUrl')}>
+                    <Form.Item name="homepage_url" label={tp('form.fields.homepageUrl')}>
                       <Input placeholder='https://...' maxLength={512} />
                     </Form.Item>
 
-                    <Form.Item name='homepage_url' label={tp('form.fields.homepageUrl')}>
-                      <Input placeholder='https://...' maxLength={512} />
-                    </Form.Item>
-
-                    <Form.Item name='contact_email' label={tp('form.fields.contactEmail')}>
+                    <Form.Item name="contact_email" label={tp('form.fields.contactEmail')}>
                       <Input placeholder='agent@company.com' maxLength={255} />
                     </Form.Item>
 
-                    <Form.Item name='status' label={tp('form.fields.status')}>
+                    <Form.Item name="status" label={tp('form.fields.status')}>
                       <Select options={statusOptions} />
                     </Form.Item>
 
-                    <Form.Item name='capability_tags_text' label={tp('form.fields.capabilityTags')}>
+                    <Form.Item name="capability_tags_text" label={tp('form.fields.capabilityTags')}>
                       <Input placeholder='write, review' />
                     </Form.Item>
 
-                    <Form.Item name='allowed_project_ids_text' label={tp('form.fields.allowedProjectIds')}>
+                    <Form.Item name="allowed_project_ids_text" label={tp('form.fields.allowedProjectIds')}>
                       <Input placeholder='1, 2, 3' />
                     </Form.Item>
                   </>

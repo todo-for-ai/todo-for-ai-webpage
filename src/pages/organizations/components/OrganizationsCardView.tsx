@@ -74,6 +74,7 @@ export function OrganizationsCardView({
 
             return (
               <Card
+                className="flat-card"
                 hoverable
                 bodyStyle={{ padding: 18, height: '100%' }}
                 style={{

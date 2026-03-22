@@ -84,10 +84,22 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
       }
       extra={
         <Space>
-          <Button icon={<LinkOutlined />} onClick={() => setConnectModalOpen(true)} disabled={!agentId}>
+          <Button
+            type="text"
+            icon={<LinkOutlined />}
+            onClick={() => setConnectModalOpen(true)}
+            disabled={!agentId}
+            className="flat-btn flat-btn--primary"
+          >
             Generate Link
           </Button>
-          <Button type='primary' icon={<KeyOutlined />} onClick={() => setCreateModalOpen(true)} disabled={!agentId}>
+          <Button
+            type="text"
+            icon={<KeyOutlined />}
+            onClick={() => setCreateModalOpen(true)}
+            disabled={!agentId}
+            className="flat-btn flat-btn--primary"
+          >
             Create Key
           </Button>
         </Space>
@@ -107,13 +119,15 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
             render: (_, row) => (row.is_active ? <Tag color='green'>active</Tag> : <Tag>revoked</Tag>),
           },
           { title: 'Usage', dataIndex: 'usage_count', key: 'usage_count', width: 100 },
-          {
-            title: 'Actions',
-            key: 'actions',
-            width: 220,
-            render: (_, row) => (
+          { title: 'Actions', key: 'actions', width: 220, render: (_, row) => (
               <Space>
-                <Button size='small' icon={<EyeOutlined />} onClick={() => handleReveal(row.id)}>
+                <Button
+                  size='small'
+                  type="text"
+                  icon={<EyeOutlined />}
+                  onClick={() => handleReveal(row.id)}
+                  className="flat-btn flat-btn--secondary"
+                >
                   Reveal
                 </Button>
                 <Popconfirm
@@ -123,7 +137,14 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
                   cancelText='Cancel'
                   onConfirm={() => revokeKey(row.id)}
                 >
-                  <Button size='small' danger icon={<StopOutlined />} disabled={!row.is_active}>
+                  <Button
+                    size='small'
+                    type="text"
+                    danger
+                    icon={<StopOutlined />}
+                    disabled={!row.is_active}
+                    className="flat-btn flat-btn--danger"
+                  >
                     Revoke
                   </Button>
                 </Popconfirm>
@@ -145,6 +166,7 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
         onCancel={() => setCreateModalOpen(false)}
         onOk={handleCreateKey}
         confirmLoading={loading}
+        className='flat-modal'
       >
         <Input
           value={newKeyName}
@@ -161,10 +183,15 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
         onOk={() => setCreatedToken(null)}
         okText='Close'
         cancelButtonProps={{ className: 'agent-keys-card__hide-cancel' }}
+        className='flat-modal'
       >
         <Paragraph>Save this token now. It may not be shown again.</Paragraph>
         <Input.TextArea value={createdToken || ''} rows={3} readOnly />
-        <Button icon={<CopyOutlined />} onClick={() => (createdToken ? void copyText(createdToken, 'Token copied') : null)}>
+        <Button
+          icon={<CopyOutlined />}
+          onClick={() => (createdToken ? void copyText(createdToken, 'Token copied') : null)}
+          className="flat-btn flat-btn--primary"
+        >
           Copy Token
         </Button>
       </Modal>
@@ -176,9 +203,14 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
         onOk={() => setRevealedToken(null)}
         okText='Close'
         cancelButtonProps={{ className: 'agent-keys-card__hide-cancel' }}
+        className='flat-modal'
       >
         <Input.TextArea value={revealedToken || ''} rows={3} readOnly />
-        <Button icon={<CopyOutlined />} onClick={() => (revealedToken ? void copyText(revealedToken, 'Token copied') : null)}>
+        <Button
+          icon={<CopyOutlined />}
+          onClick={() => (revealedToken ? void copyText(revealedToken, 'Token copied') : null)}
+          className="flat-btn flat-btn--primary"
+        >
           Copy Token
         </Button>
       </Modal>
@@ -189,6 +221,7 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
         onCancel={() => setConnectModalOpen(false)}
         onOk={handleGenerateConnectLink}
         confirmLoading={loading}
+        className='flat-modal'
       >
         <Space direction='vertical' className='agent-keys-card__connect-body'>
           <Text>TTL (seconds)</Text>
@@ -204,7 +237,11 @@ export function AgentKeysCard({ workspaceId, agentId, agentName }: AgentKeysCard
             <>
               <Text strong>Connect Link</Text>
               <Input.TextArea rows={4} value={connectLink} readOnly />
-              <Button icon={<CopyOutlined />} onClick={() => void copyText(connectLink, 'Connect link copied')}>
+              <Button
+                icon={<CopyOutlined />}
+                onClick={() => void copyText(connectLink, 'Connect link copied')}
+                className="flat-btn flat-btn--primary"
+              >
                 Copy Link
               </Button>
               {connectExpiresAt ? <Text type='secondary'>Expires at: {connectExpiresAt}</Text> : null}

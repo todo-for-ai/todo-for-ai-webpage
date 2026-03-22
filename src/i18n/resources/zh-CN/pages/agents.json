@@ -15,6 +15,7 @@
       "soul": "SOUL.md"
     },
     "fields": {
+      "avatar": "头像",
       "name": "Agent名称",
       "displayName": "展示名",
       "description": "描述",

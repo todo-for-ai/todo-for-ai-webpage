@@ -52,10 +52,10 @@ const TaskLogs = () => {
 
   return (
     <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1400px' }}>
-      <Card style={{ marginBottom: 16 }}>
+      <Card className="flat-card" style={{ marginBottom: 16 }}>
         <Space style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/todo-for-ai/pages/tasks/${taskId}`)}>
+            <Button type="text" className="flat-btn flat-btn--secondary" icon={<ArrowLeftOutlined />} onClick={() => navigate(`/todo-for-ai/pages/tasks/${taskId}`)}>
               Back to task
             </Button>
             <Title level={4} style={{ margin: 0 }}>Task Logs #{taskId}</Title>
@@ -63,7 +63,7 @@ const TaskLogs = () => {
         </Space>
       </Card>
 
-      <Card title="Append Log" style={{ marginBottom: 16 }}>
+      <Card className="flat-card" title="Append Log" style={{ marginBottom: 16 }}>
         <Space direction="vertical" style={{ width: '100%' }}>
           <TextArea
             rows={4}
@@ -71,13 +71,13 @@ const TaskLogs = () => {
             placeholder="Append a log line for this task"
             onChange={(event) => setContent(event.target.value)}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={appendLog} loading={loading}>
+          <Button type="text" className="flat-btn flat-btn--primary" icon={<PlusOutlined />} onClick={appendLog} loading={loading}>
             Append
           </Button>
         </Space>
       </Card>
 
-      <Card title="Log Stream">
+      <Card className="flat-card" title="Log Stream">
         <List
           loading={loading}
           dataSource={items}

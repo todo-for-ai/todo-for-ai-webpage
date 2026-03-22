@@ -110,7 +110,7 @@ const TaskDetail: React.FC = () => {
       />
 
       <div style={{ marginBottom: 12 }}>
-        <Button onClick={() => navigate(`/todo-for-ai/pages/tasks/${task.id}/logs`)}>
+        <Button type="text" className="flat-btn flat-btn--secondary" onClick={() => navigate(`/todo-for-ai/pages/tasks/${task.id}/logs`)}>
           {tp('actions.viewLogs') || 'View Logs'}
         </Button>
       </div>
@@ -124,7 +124,7 @@ const TaskDetail: React.FC = () => {
         tp={tp}
       />
 
-      <Card title="Attachments" style={{ marginTop: 16 }}>
+      <Card className="flat-card" title="Attachments" style={{ marginTop: 16 }}>
         <Space direction="vertical" style={{ width: '100%' }}>
           <Upload
             multiple
@@ -141,7 +141,7 @@ const TaskDetail: React.FC = () => {
               return false
             }}
           >
-            <Button icon={<UploadOutlined />}>Upload Attachment</Button>
+            <Button type="text" className="flat-btn flat-btn--primary" icon={<UploadOutlined />}>Upload Attachment</Button>
           </Upload>
 
           <List
@@ -151,7 +151,7 @@ const TaskDetail: React.FC = () => {
             renderItem={(item) => (
               <List.Item
                 actions={[
-                  <a key="download" href={tasksApi.getTaskAttachmentDownloadUrl(task.id, item.id)} target="_blank" rel="noreferrer">
+                  <a key="download" className="ant-btn ant-btn-text flat-btn flat-btn--primary" href={tasksApi.getTaskAttachmentDownloadUrl(task.id, item.id)} target="_blank" rel="noreferrer">
                     Download
                   </a>,
                   <Popconfirm
@@ -159,7 +159,7 @@ const TaskDetail: React.FC = () => {
                     title="Remove this attachment?"
                     onConfirm={() => removeAttachment(item)}
                   >
-                    <Button danger size="small" icon={<DeleteOutlined />}>Remove</Button>
+                    <Button type="text" className="flat-btn flat-btn--danger" size="small" icon={<DeleteOutlined />}>Remove</Button>
                   </Popconfirm>,
                 ]}
               >

@@ -27,6 +27,7 @@ export function useAgentsPage() {
   const [agentSearch, setAgentSearch] = useState('')
   const [agentSearchInput, setAgentSearchInput] = useState('')
   const [agentStatusFilter, setAgentStatusFilter] = useState<AgentStatus | ''>('')
+  const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'mine' | 'collaborating'>('all')
   const [loading, setLoading] = useState(false)
 
   const loadWorkspaces = useCallback(async () => {
@@ -52,6 +53,7 @@ export function useAgentsPage() {
         per_page: agentsPagination.per_page,
         search: agentSearch || undefined,
         status: agentStatusFilter || undefined,
+        ownership: ownershipFilter,
       })
       setAgents(data.items || [])
       setAgentsPagination(data.pagination || emptyPagination)
@@ -66,6 +68,7 @@ export function useAgentsPage() {
     agentsPagination.per_page,
     agentSearch,
     agentStatusFilter,
+    ownershipFilter,
   ])
 
   const createAgent = useCallback(
@@ -149,6 +152,11 @@ export function useAgentsPage() {
     setAgentsPagination((prev) => ({ ...prev, page: 1 }))
   }, [])
 
+  const updateOwnershipFilter = useCallback((value: 'all' | 'mine' | 'collaborating') => {
+    setOwnershipFilter(value)
+    setAgentsPagination((prev) => ({ ...prev, page: 1 }))
+  }, [])
+
   const updateAgentPage = useCallback((page: number, perPage?: number) => {
     setAgentsPagination((prev) => ({
       ...prev,
@@ -182,6 +190,8 @@ export function useAgentsPage() {
     applyAgentSearch,
     agentStatusFilter,
     updateAgentStatusFilter,
+    ownershipFilter,
+    updateOwnershipFilter,
     updateAgentPage,
     loading,
     createAgent,

@@ -189,10 +189,66 @@ export class ApiClient {
     return this.request<T>(endpoint, { method: 'DELETE' })
   }
 
-  async upload<T = any>(endpoint: string, formData: FormData): Promise<T> {
+  async upload<T = any>(endpoint: string, formData: FormData, onProgress?: (progress: number) => void): Promise<T> {
+    // 如果提供了 onProgress 回调，使用 XMLHttpRequest 来跟踪进度
+    if (onProgress && typeof window !== 'undefined') {
+      return this.uploadWithProgress<T>(endpoint, formData, onProgress)
+    }
     return this.request<T>(endpoint, {
       method: 'POST',
       body: formData
+    })
+  }
+
+  private async uploadWithProgress<T = any>(
+    endpoint: string,
+    formData: FormData,
+    onProgress: (progress: number) => void
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token')
+
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded * 100) / event.total)
+          onProgress(progress)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            // 处理后端标准响应结构 { code, data, message, ... }
+            if (data && typeof data === 'object' && 'data' in data) {
+              resolve(data.data as T)
+            } else {
+              resolve(data as T)
+            }
+          } catch {
+            resolve(xhr.responseText as T)
+          }
+        } else {
+          reject(new ApiHttpError(xhr.status, `HTTP error! status: ${xhr.status}`))
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error occurred'))
+      })
+
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Upload aborted'))
+      })
+
+      xhr.open('POST', url)
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      }
+      xhr.send(formData)
     })
   }
 }

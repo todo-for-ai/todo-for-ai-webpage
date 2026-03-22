@@ -83,9 +83,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadProgress(0)
 
     try {
-      const response = await (apiClient as any).upload(
+      const formData = new FormData()
+      formData.append('file', file as File)
+      const response = await apiClient.upload(
         `/tasks/${taskId}/attachments`,
-        file as File,
+        formData,
         (progress: number) => {
           setUploadProgress(progress)
           onProgress?.({ percent: progress })

@@ -1,0 +1,94 @@
+{
+  "storage": {
+    "page": {
+      "title": "存储配置",
+      "description": "配置文件存储，用于 Agent 头像和上传文件"
+    },
+    "form": {
+      "title": {
+        "create": "创建存储配置",
+        "edit": "编辑存储配置"
+      },
+      "fields": {
+        "provider": "存储提供商",
+        "isActive": "设为默认",
+        "localBasePath": "本地路径",
+        "localBaseUrl": "访问 URL",
+        "accessKeyId": "Access Key ID",
+        "accessKeySecret": "Access Key Secret",
+        "bucketName": "Bucket 名称",
+        "region": "区域",
+        "endpoint": "Endpoint（可选）",
+        "customDomain": "自定义域名（可选）"
+      },
+      "hint": {
+        "activate": {
+          "title": "激活配置",
+          "description": "同一时间只能有一个存储配置处于激活状态。文件将上传到激活的存储中。"
+        }
+      },
+      "validation": {
+        "localBasePathRequired": "请输入本地路径",
+        "localBaseUrlRequired": "请输入访问 URL",
+        "accessKeyIdRequired": "请输入 Access Key ID",
+        "accessKeySecretRequired": "请输入 Access Key Secret",
+        "bucketNameRequired": "请输入 Bucket 名称",
+        "regionRequired": "请输入区域"
+      }
+    },
+    "list": {
+      "title": "存储配置列表",
+      "columns": {
+        "provider": "提供商",
+        "status": "状态",
+        "config": "配置",
+        "updatedAt": "更新时间",
+        "actions": "操作"
+      },
+      "status": {
+        "active": "已激活",
+        "inactive": "未激活"
+      },
+      "currentActive": "当前激活",
+      "actions": {
+        "add": "添加配置",
+        "activate": "激活",
+        "edit": "编辑",
+        "delete": "删除"
+      },
+      "confirmDelete": {
+        "title": "删除存储配置",
+        "description": "确定要删除此存储配置吗？删除后无法恢复。"
+      }
+    },
+    "info": {
+      "local": {
+        "title": "本地存储",
+        "description": "将文件存储在服务器本地文件系统中。适合单服务器部署。"
+      },
+      "cloud": {
+        "title": "云存储",
+        "description": "使用云对象存储服务，提供更好的可扩展性和 CDN 支持。",
+        "oss": "阿里云 OSS",
+        "cos": "腾讯云 COS",
+        "s3": "AWS S3 / S3兼容服务"
+      },
+      "active": {
+        "title": "激活配置",
+        "description": "您可以配置多个存储后端，但同一时间只能有一个处于激活状态。"
+      }
+    },
+    "messages": {
+      "loadFailed": "加载存储配置失败",
+      "createSuccess": "存储配置创建成功",
+      "createFailed": "创建存储配置失败",
+      "updateSuccess": "存储配置更新成功",
+      "updateFailed": "更新存储配置失败",
+      "deleteSuccess": "存储配置删除成功",
+      "deleteFailed": "删除存储配置失败",
+      "activateSuccess": "存储配置激活成功",
+      "activateFailed": "激活存储配置失败",
+      "saveFailed": "保存存储配置失败"
+    }
+  }
+}

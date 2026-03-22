@@ -14,7 +14,14 @@ interface CreateSecretModalProps {
 
 export function CreateSecretModal({ open, loading, form, onFormChange, onCancel, onConfirm }: CreateSecretModalProps) {
   return (
-    <Modal title='Add Secret' open={open} onCancel={onCancel} onOk={onConfirm} confirmLoading={loading}>
+    <Modal
+      title='Add Secret'
+      open={open}
+      onCancel={onCancel}
+      onOk={onConfirm}
+      confirmLoading={loading}
+      className='flat-modal'
+    >
       <Space direction='vertical' className='agent-secrets-create-modal__form'>
         <Input
           placeholder='OPENAI_API_KEY'

@@ -1,0 +1,10 @@
+.heatmap-cell {
+  border: 1px solid #e1e4e8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.1);
+  border-color: #1890ff;
+}

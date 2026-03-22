@@ -33,6 +33,7 @@ export function OrganizationsListView({
 }: OrganizationsListViewProps) {
   return (
     <Table
+      className="flat-table"
       rowKey="id"
       loading={loading}
       dataSource={orgs}

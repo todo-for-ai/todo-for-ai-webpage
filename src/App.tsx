@@ -32,6 +32,7 @@ import {
   AgentCreatePage,
   AgentDetailPage,
   AgentEditPage,
+  StorageConfigPage,
   UserProfilePage
 } from './pages'
 import Login from './pages/Login'
@@ -118,6 +119,7 @@ function App() {
               <Route path="command-line-demo" element={<CommandLineDemo />} />
               <Route path="agents" element={<AgentsPage />} />
               <Route path="agents/create" element={<AgentCreatePage />} />
+              <Route path="agents/storage-config/:workspaceId" element={<StorageConfigPage />} />
               <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
               <Route path="agents/:agentId/:tabKey" element={<AgentDetailPage />} />
               <Route path="agents/:agentId" element={<AgentDetailPage />} />

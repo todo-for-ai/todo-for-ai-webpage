@@ -810,13 +810,13 @@ const OrganizationDetail = () => {
             <Title level={2} className="page-title">{tp('detail.title')}</Title>
             <Paragraph className="page-description">{tp('detail.subtitle')}</Paragraph>
           </div>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/todo-for-ai/pages/organizations')}>
+          <Button className="flat-btn" icon={<ArrowLeftOutlined />} onClick={() => navigate('/todo-for-ai/pages/organizations')}>
             {tp('detail.back')}
           </Button>
         </div>
       </div>
 
-      <Card className="org-summary-card" style={{ marginBottom: 16 }}>
+      <Card className="org-summary-card flat-card" style={{ marginBottom: 16 }}>
         <div className="org-summary">
           <div className="org-summary__head">
             <div>
@@ -972,17 +972,17 @@ const OrganizationDetail = () => {
               </div>
 
               <div className="org-insights__actions">
-                <Button size="small" onClick={() => setSearchParams({ tab: 'members' })}>
+                <Button className="flat-btn" size="small" onClick={() => setSearchParams({ tab: 'members' })}>
                   {tp('detail.tabs.members')}
                 </Button>
-                <Button size="small" onClick={() => setSearchParams({ tab: 'activity' })}>
+                <Button className="flat-btn" size="small" onClick={() => setSearchParams({ tab: 'activity' })}>
                   {tp('detail.tabs.activity')}
                 </Button>
-                <Button size="small" onClick={() => setSearchParams({ tab: 'projects' })}>
+                <Button className="flat-btn" size="small" onClick={() => setSearchParams({ tab: 'projects' })}>
                   {tp('detail.tabs.projects')}
                 </Button>
                 {canManageMembers ? (
-                  <Button size="small" onClick={openRoleManagerPage}>
+                  <Button className="flat-btn" size="small" onClick={openRoleManagerPage}>
                     {tp('roles.manage')}
                   </Button>
                 ) : null}
@@ -1010,7 +1010,7 @@ const OrganizationDetail = () => {
                   <Text strong>{tp('detail.recentActivity.title')}</Text>
                   <div className="org-insights__panel-subtitle">{tp('detail.recentActivity.subtitle')}</div>
                 </div>
-                <Button type="link" size="small" onClick={() => setSearchParams({ tab: 'activity' })}>
+                <Button className="flat-btn" type="link" size="small" onClick={() => setSearchParams({ tab: 'activity' })}>
                   {tp('detail.recentActivity.viewAll')}
                 </Button>
               </div>
@@ -1055,7 +1055,7 @@ const OrganizationDetail = () => {
                   <Text strong>{tp('detail.projectSpotlight.title')}</Text>
                   <div className="org-insights__panel-subtitle">{tp('detail.projectSpotlight.subtitle')}</div>
                 </div>
-                <Button type="link" size="small" onClick={() => setSearchParams({ tab: 'projects' })}>
+                <Button className="flat-btn" type="link" size="small" onClick={() => setSearchParams({ tab: 'projects' })}>
                   {tp('detail.projectSpotlight.viewAll')}
                 </Button>
               </div>
@@ -1105,7 +1105,7 @@ const OrganizationDetail = () => {
         </div>
       </Card>
 
-      <Card>
+      <Card className="flat-card">
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setSearchParams({ tab: key })}
@@ -1153,6 +1153,7 @@ const OrganizationDetail = () => {
               label: tp('detail.tabs.activity'),
               children: (
                 <Table
+                  className="flat-table"
                   rowKey="id"
                   loading={eventsLoading}
                   dataSource={events}
@@ -1183,6 +1184,7 @@ const OrganizationDetail = () => {
               label: tp('detail.tabs.projects'),
               children: (
                 <Table
+                  className="flat-table"
                   rowKey="id"
                   loading={projectsLoading}
                   dataSource={projects}

@@ -334,22 +334,36 @@ const initializeAuth = () => {
   const urlAccessToken = urlParams.get('access_token')
   const urlRefreshToken = urlParams.get('refresh_token')
   const urlToken = urlParams.get('token') // 向后兼容旧格式
+
   if (urlAccessToken && urlRefreshToken) {
+    console.log('[AuthStore] 从URL提取到token')
     useAuthStore.getState().setTokens(urlAccessToken, urlRefreshToken)
     const newUrl = new URL(window.location.href)
     newUrl.searchParams.delete('access_token')
     newUrl.searchParams.delete('refresh_token')
     newUrl.searchParams.delete('token_type')
     window.history.replaceState({}, '', newUrl.toString())
-    useAuthStore.getState().fetchCurrentUser()
-    startTokenRefreshService()
+
+    // 延迟获取用户信息，确保token已设置
+    setTimeout(() => {
+      useAuthStore.getState().fetchCurrentUser().then(() => {
+        console.log('[AuthStore] 用户信息获取成功')
+      }).catch((err: any) => {
+        console.error('[AuthStore] 获取用户信息失败:', err)
+      })
+      startTokenRefreshService()
+    }, 100)
   } else if (urlToken) {
+    console.log('[AuthStore] 从URL提取到旧格式token')
     useAuthStore.getState().setToken(urlToken)
     const newUrl = new URL(window.location.href)
     newUrl.searchParams.delete('token')
     window.history.replaceState({}, '', newUrl.toString())
-    useAuthStore.getState().fetchCurrentUser()
-    startTokenRefreshService()
+
+    setTimeout(() => {
+      useAuthStore.getState().fetchCurrentUser()
+      startTokenRefreshService()
+    }, 100)
   } else if (token) {
     checkAuth()
     startTokenRefreshService()
