@@ -57,6 +57,10 @@ export class AgentsApi {
   async deleteAgent(workspaceId: number, agentId: number) {
     return apiClient.delete(`/workspaces/${workspaceId}/agents/${agentId}`)
   }
+
+  async revokeAgent(workspaceId: number, agentId: number) {
+    return apiClient.post(`/workspaces/${workspaceId}/agents/${agentId}/revoke`)
+  }
 }
 
 export const agentsApi = new AgentsApi()

@@ -171,7 +171,10 @@
     "url": "Please enter a valid URL",
     "phone": "Please enter a valid phone number",
     "password": "Password is too weak",
-    "confirmPassword": "Passwords do not match"
+    "confirmPassword": "Passwords do not match",
+    "projectRequired": "Please select a project",
+    "agentsRequired": "Please select target agents",
+    "valueRequired": "Please enter a value"
   },
   "messages": {
     "success": {

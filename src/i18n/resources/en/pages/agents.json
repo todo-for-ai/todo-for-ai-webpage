@@ -272,6 +272,45 @@
       "endedAt": "Ended At",
       "failure": "Failure",
       "stateFilter": "Run State"
+    },
+    "secrets": {
+      "title": "Agent Secrets & Collaboration",
+      "addSecret": "Add Secret",
+      "columns": {
+        "name": "Name",
+        "owner": "Owner",
+        "type": "Type",
+        "scope": "Scope",
+        "status": "Status",
+        "sharedTo": "Shared To",
+        "usage": "Usage",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "revoked": "Revoked"
+      },
+      "scope": {
+        "agent_private": "Agent Private",
+        "workspace_shared": "Workspace Shared",
+        "project_shared": "Project Shared"
+      },
+      "owner": {
+        "currentAgent": "Current Agent"
+      },
+      "actions": {
+        "reveal": "Reveal",
+        "share": "Share",
+        "rotate": "Rotate",
+        "revoke": "Revoke"
+      },
+      "confirm": {
+        "revokeTitle": "Revoke this secret?",
+        "revokeOk": "Revoke",
+        "revokeCancel": "Cancel"
+      },
+      "empty": "No secrets yet.",
+      "sharedNotice": "This agent currently has access to {{count}} shared secret(s) from other agents."
     }
   },
   "messages": {

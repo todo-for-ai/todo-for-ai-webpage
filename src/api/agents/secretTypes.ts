@@ -145,3 +145,72 @@ export interface RevealSharedAgentSecretResponse {
   owner_agent_name?: string | null
   share_id: number
 }
+
+// Approval Types
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired'
+export type GrantType = 'read' | 'write' | 'admin'
+
+export interface SecretApprovalRequest {
+  id: number
+  secretId: number
+  secretName: string
+  requesterId: number
+  requesterName: string
+  requesterAvatar?: string
+  grantType: GrantType
+  requestedAt: string
+  expiresAt?: string
+  justification: string
+  status: ApprovalStatus
+  reviewedAt?: string
+  reviewedBy?: string
+  reviewNotes?: string
+}
+
+export interface ApprovalRequestListResponse {
+  items: SecretApprovalRequest[]
+}
+
+// Audit Log Types
+export type AuditAction =
+  | 'created'
+  | 'updated'
+  | 'deleted'
+  | 'accessed'
+  | 'shared'
+  | 'revoked'
+  | 'rotated'
+  | 'approval_requested'
+  | 'approval_granted'
+  | 'approval_rejected'
+  | 'grant_created'
+  | 'grant_updated'
+  | 'grant_revoked'
+
+export type ActorType = 'user' | 'agent' | 'system'
+
+export interface SecretAuditEntry {
+  id: number
+  timestamp: string
+  actorType: ActorType
+  actorId: number
+  actorName: string
+  actorAvatar?: string
+  action: AuditAction
+  secretId: number
+  secretName: string
+  details: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+}
+
+export interface AuditLogResponse {
+  items: SecretAuditEntry[]
+  pagination: {
+    page: number
+    per_page: number
+    total: number
+    has_prev: boolean
+    has_next: boolean
+  }
+}

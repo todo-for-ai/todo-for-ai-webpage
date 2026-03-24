@@ -171,7 +171,10 @@
     "url": "请输入有效的URL",
     "phone": "请输入有效的手机号码",
     "password": "密码强度不够",
-    "confirmPassword": "两次输入的密码不一致"
+    "confirmPassword": "两次输入的密码不一致",
+    "projectRequired": "请选择项目",
+    "agentsRequired": "请选择目标 Agent",
+    "valueRequired": "请输入值"
   },
   "messages": {
     "success": {

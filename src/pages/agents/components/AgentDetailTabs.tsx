@@ -22,15 +22,8 @@ interface AgentDetailTabsProps {
 }
 
 export const AGENT_DETAIL_TAB_KEYS = [
-  'overview',
-  'activity',
-  'projects',
-  'interactions',
-  'tasks',
-  'runs',
-  'keys',
-  'soul',
-  'secrets',
+  'overview', 'activity', 'projects', 'interactions', 'tasks', 'runs',
+  'keys', 'soul', 'secrets',
 ] as const
 
 export type AgentDetailTabKey = (typeof AGENT_DETAIL_TAB_KEYS)[number]

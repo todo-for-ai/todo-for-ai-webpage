@@ -8,6 +8,7 @@ import {
   type AgentSecretShare,
 } from '../../../api/agents'
 import { useAgentSecrets } from '../hooks/useAgentSecrets'
+import { useTranslation } from 'react-i18next'
 import { CreateSecretModal } from './secrets/CreateSecretModal'
 import { RevealSecretModal } from './secrets/RevealSecretModal'
 import { RotateSecretModal } from './secrets/RotateSecretModal'
@@ -29,6 +30,7 @@ interface AgentSecretsCardProps {
 }
 
 export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps) {
+  const { t } = useTranslation('agents')
   const {
     secrets,
     loading,
@@ -79,7 +81,7 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
         setWorkspaceAgentOptions(options)
       } catch (error: any) {
         if (!cancelled) {
-          message.error(error?.message || 'Failed to load workspace agents')
+          message.error(error?.message || t('common:messages.error.loadFailed'))
         }
       }
     }
@@ -111,23 +113,23 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
     void loadCollaboration(collaborationProjectId)
   }, [workspaceId, agentId, collaborationProjectId, secrets, listSecretCollaboration])
 
-  const copyText = async (text: string, successMessage = 'Copied') => {
+  const copyText = async (text: string, successMessage = t('common:actions.copy')) => {
     try {
       await navigator.clipboard.writeText(text)
       message.success(successMessage)
     } catch {
-      message.error('Copy failed')
+      message.error(t('common:messages.error.copyFailed'))
     }
   }
 
   const handleCreate = async () => {
     if (!createForm.name.trim() || !createForm.value.trim()) {
-      message.warning('Please input secret name and value')
+      message.warning(t('common:validation.required'))
       return
     }
 
     if (createForm.scopeType === 'project_shared' && !createForm.projectId) {
-      message.warning('Project ID is required when scope is project_shared')
+      message.warning(t('common:validation.projectRequired'))
       return
     }
 
@@ -166,11 +168,11 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
       return
     }
     if (shareForm.targetSelector === 'manual' && shareForm.agentIds.length === 0) {
-      message.warning('Please select target agents')
+      message.warning(t('common:validation.agentsRequired'))
       return
     }
     if (shareForm.targetSelector === 'project_agents' && !shareForm.selectorProjectId && !shareTarget.project_id) {
-      message.warning('Project ID is required for project-based sharing')
+      message.warning(t('common:validation.projectRequired'))
       return
     }
 
@@ -209,7 +211,7 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
 
   const handleRotate = async () => {
     if (!rotateTarget || !rotateValue.trim()) {
-      message.warning('Please input new secret value')
+      message.warning(t('common:validation.valueRequired'))
       return
     }
 
@@ -247,7 +249,7 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
       title={
         <Space className='agent-secrets-card__title'>
           <LockOutlined />
-          Agent Secrets & Collaboration
+          {t('detail.secrets.title')}
         </Space>
       }
       extra={
@@ -257,7 +259,7 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
           disabled={!agentId}
           className="flat-btn flat-btn--primary"
         >
-          Add Secret
+          {t('detail.secrets.addSecret')}
         </Button>
       }
     >

@@ -7,6 +7,7 @@ import { useLanguage } from '../contexts/LanguageContext'
 import type { SupportedLanguage } from '../i18n'
 import { useAuthStore } from '../stores/useAuthStore'
 import NotificationChannelManager from '../components/NotificationChannelManager'
+import AdminLLMConfig from '../components/AdminLLMConfig'
 import { useNotificationCatalog } from '../modules/notifications'
 
 const { Title, Paragraph } = Typography
@@ -167,6 +168,11 @@ const Settings = () => {
           />
         </div>
       ) : null}
+
+      {/* 管理员大模型配置 */}
+      <div style={{ marginTop: 16 }}>
+        <AdminLLMConfig isAdmin={user?.role === 'admin'} />
+      </div>
     </div>
   )
 }
