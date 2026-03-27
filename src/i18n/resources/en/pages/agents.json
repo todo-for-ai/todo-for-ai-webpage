@@ -97,6 +97,7 @@
       "interactions": "Interactions",
       "tasks": "Tasks",
       "runs": "Runs",
+      "runtime": "Runtime",
       "keys": "Keys",
       "soul": "SOUL Versions",
       "secrets": "Secrets"
@@ -272,6 +273,78 @@
       "endedAt": "Ended At",
       "failure": "Failure",
       "stateFilter": "Run State"
+    },
+    "runtime": {
+      "title": "Runtime Configuration",
+      "subtitle": "Configure how this agent executes tasks",
+      "loading": "Loading runtime configuration...",
+      "notConfigured": "Runtime not configured",
+      "sections": {
+        "execution": "Execution Settings",
+        "sandbox": "Sandbox Configuration"
+      },
+      "fields": {
+        "executionMode": {
+          "label": "Execution Mode",
+          "tooltip": "How the agent receives and executes tasks",
+          "options": {
+            "external_pull": "External Pull Mode",
+            "managed_runner": "Managed Runner Mode"
+          },
+          "descriptions": {
+            "external_pull": "Agent actively polls the platform API for tasks. Suitable for self-hosted agents.",
+            "managed_runner": "Platform pushes tasks to the agent via webhook. Requires the agent to be reachable from the internet."
+          }
+        },
+        "runnerEnabled": {
+          "label": "Platform Runner",
+          "tooltip": "Enable platform-managed runner infrastructure",
+          "enabled": "Enabled - Platform manages task execution",
+          "disabled": "Disabled - Self-managed execution"
+        },
+        "configVersion": {
+          "label": "Config Version",
+          "tooltip": "Auto-incremented version number for configuration changes"
+        },
+        "sandboxProfile": {
+          "label": "Sandbox Profile",
+          "tooltip": "Security isolation level for code execution",
+          "options": {
+            "strict": "Strict Isolation (nsjail)",
+            "standard": "Standard (RestrictedPython)",
+            "permissive": "Permissive (Basic)"
+          },
+          "descriptions": {
+            "strict": "Full system isolation using nsjail. Blocks all system calls except whitelisted ones. Recommended for untrusted code.",
+            "standard": "Python-level restrictions using RestrictedPython. Prevents dangerous Python operations while maintaining performance.",
+            "permissive": "Minimal isolation. Only basic resource limits applied. Suitable for trusted internal scripts."
+          }
+        },
+        "networkMode": {
+          "label": "Network Access",
+          "tooltip": "Control network access for the sandbox",
+          "options": {
+            "whitelist": "Whitelist Mode",
+            "isolated": "Complete Isolation",
+            "full": "Full Access"
+          },
+          "descriptions": {
+            "whitelist": "Only allows connections to explicitly listed domains. Most secure option.",
+            "isolated": "Blocks all network access. Code cannot make any external connections.",
+            "full": "Unrestricted network access. Use with caution."
+          }
+        },
+        "allowedDomains": {
+          "label": "Allowed Domains",
+          "tooltip": "Domains the sandbox is permitted to connect to (one per line)",
+          "placeholder": "example.com\napi.example.com",
+          "help": "Enter one domain per line. Used when Network Access is set to Whitelist Mode."
+        }
+      },
+      "status": {
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      }
     },
     "secrets": {
       "title": "Agent Secrets & Collaboration",

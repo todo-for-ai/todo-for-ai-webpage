@@ -1,0 +1,239 @@
+.agent-runtime-tab {
+  padding: 8px 0;
+}
+
+.agent-runtime-tab__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 240px;
+}
+
+.agent-runtime-tab__empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 240px;
+  color: #8c8c8c;
+}
+
+.agent-runtime-tab__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.agent-runtime-tab__icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-runtime-tab__icon {
+  font-size: 24px;
+  color: #fff;
+}
+
+.agent-runtime-tab__title {
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+.agent-runtime-tab__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agent-runtime-tab__view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agent-runtime-tab__card {
+  margin-bottom: 0;
+  border-radius: 8px;
+}
+
+.agent-runtime-tab__card .ant-card-head {
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.agent-runtime-tab__card .ant-card-head-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Radio Group Styles */
+.agent-runtime-tab__radio-group {
+  width: 100%;
+}
+
+.agent-runtime-tab__radio-group .ant-space-vertical {
+  width: 100%;
+}
+
+.agent-runtime-tab__radio {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.agent-runtime-tab__radio:hover {
+  border-color: #40a9ff;
+}
+
+.agent-runtime-tab__radio.ant-radio-wrapper-checked {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.agent-runtime-tab__radio-content {
+  margin-left: 8px;
+}
+
+.agent-runtime-tab__radio-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.agent-runtime-tab__radio-description {
+  font-size: 13px;
+  color: #8c8c8c;
+  line-height: 1.5;
+}
+
+/* Switch Item */
+.agent-runtime-tab__switch-item {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #e8e8e8;
+}
+
+.agent-runtime-tab__switch-item .ant-switch {
+  min-width: 56px;
+}
+
+/* Select Styles */
+.agent-runtime-tab__select {
+  width: 100%;
+}
+
+.agent-runtime-tab__select-dropdown {
+  padding: 4px 0;
+}
+
+.agent-runtime-tab__select-option {
+  padding: 8px 4px;
+}
+
+.agent-runtime-tab__select-option-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #262626;
+}
+
+.agent-runtime-tab__select-option-desc {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* TextArea Styles */
+.agent-runtime-tab__textarea {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 13px;
+}
+
+/* View Mode Value Styles */
+.agent-runtime-tab__value-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agent-runtime-tab__value-tag {
+  font-size: 14px;
+  padding: 4px 12px;
+}
+
+.agent-runtime-tab__value-description {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin: 0 !important;
+  line-height: 1.5;
+}
+
+.agent-runtime-tab__version-tag {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 13px;
+}
+
+/* Domains Section */
+.agent-runtime-tab__domains-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed #e8e8e8;
+}
+
+.agent-runtime-tab__domains-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.agent-runtime-tab__domains-count {
+  color: #8c8c8c;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.agent-runtime-tab__domains-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agent-runtime-tab__domain-tag {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .agent-runtime-tab__header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .agent-runtime-tab__radio {
+    padding: 10px 12px;
+  }
+
+  .agent-runtime-tab__radio-label {
+    font-size: 13px;
+  }
+
+  .agent-runtime-tab__radio-description {
+    font-size: 12px;
+  }
+}

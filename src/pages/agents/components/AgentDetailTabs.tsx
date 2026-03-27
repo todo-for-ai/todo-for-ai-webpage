@@ -10,6 +10,7 @@ import { AgentInteractionsTab } from './detailTabs/AgentInteractionsTab'
 import { AgentOverviewTab } from './detailTabs/AgentOverviewTab'
 import { AgentProjectsTab } from './detailTabs/AgentProjectsTab'
 import { AgentRunsTab } from './detailTabs/AgentRunsTab'
+import { AgentRuntimeTab } from './detailTabs/AgentRuntimeTab'
 import { AgentTasksTab } from './detailTabs/AgentTasksTab'
 import './AgentDetailTabs.css'
 
@@ -22,7 +23,7 @@ interface AgentDetailTabsProps {
 }
 
 export const AGENT_DETAIL_TAB_KEYS = [
-  'overview', 'activity', 'projects', 'interactions', 'tasks', 'runs',
+  'overview', 'activity', 'projects', 'interactions', 'tasks', 'runs', 'runtime',
   'keys', 'soul', 'secrets',
 ] as const
 
@@ -108,6 +109,13 @@ export function AgentDetailTabs({
             label: tp('detail.tabs.runs', { defaultValue: 'Runs' }),
             children: isTabLoaded('runs') ? (
               <AgentRunsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'runs'} />
+            ) : null,
+          },
+          {
+            key: 'runtime',
+            label: tp('detail.tabs.runtime', { defaultValue: 'Runtime' }),
+            children: isTabLoaded('runtime') ? (
+              <AgentRuntimeTab workspaceId={workspaceId} agent={agent} active={activeTab === 'runtime'} />
             ) : null,
           },
           {

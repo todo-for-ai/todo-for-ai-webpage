@@ -102,9 +102,12 @@ describe('useTasks', () => {
   it('should delete a task', () => {
     const { result } = renderHook(() => useTasks());
 
-    // Add tasks
+    // Add tasks sequentially to ensure unique IDs
     act(() => {
       result.current.addTask({ title: 'Task 1' });
+    });
+
+    act(() => {
       result.current.addTask({ title: 'Task 2' });
     });
 

@@ -97,6 +97,7 @@
       "interactions": "交互用户",
       "tasks": "任务记录",
       "runs": "运行记录",
+      "runtime": "运行时",
       "keys": "密钥",
       "soul": "SOUL版本",
       "secrets": "机密"
@@ -272,6 +273,78 @@
       "endedAt": "结束时间",
       "failure": "失败信息",
       "stateFilter": "运行状态筛选"
+    },
+    "runtime": {
+      "title": "运行时配置",
+      "subtitle": "配置 Agent 如何接收和执行任务",
+      "loading": "正在加载运行时配置...",
+      "notConfigured": "运行时未配置",
+      "sections": {
+        "execution": "执行设置",
+        "sandbox": "沙盒配置"
+      },
+      "fields": {
+        "executionMode": {
+          "label": "执行模式",
+          "tooltip": "Agent 接收和执行任务的方式",
+          "options": {
+            "external_pull": "外部拉取模式",
+            "managed_runner": "托管运行模式"
+          },
+          "descriptions": {
+            "external_pull": "Agent 主动轮询平台 API 获取任务。适合自托管部署的 Agent。",
+            "managed_runner": "平台通过 Webhook 主动推送任务到 Agent。需要 Agent 能被公网访问。"
+          }
+        },
+        "runnerEnabled": {
+          "label": "平台运行器",
+          "tooltip": "启用平台托管的运行器基础设施",
+          "enabled": "已启用 - 平台管理任务执行",
+          "disabled": "已禁用 - 自行管理执行"
+        },
+        "configVersion": {
+          "label": "配置版本",
+          "tooltip": "配置变更时自动递增的版本号"
+        },
+        "sandboxProfile": {
+          "label": "沙盒隔离级别",
+          "tooltip": "代码执行时的安全隔离等级",
+          "options": {
+            "strict": "严格隔离 (nsjail)",
+            "standard": "标准隔离 (RestrictedPython)",
+            "permissive": "宽松隔离 (基础)"
+          },
+          "descriptions": {
+            "strict": "使用 nsjail 进行完整系统隔离。除白名单外的所有系统调用都会被阻止。推荐用于不受信任的代码。",
+            "standard": "使用 RestrictedPython 进行 Python 层面的限制。阻止危险的 Python 操作同时保持性能。",
+            "permissive": "最小隔离。仅应用基础资源限制。适合可信的内部脚本。"
+          }
+        },
+        "networkMode": {
+          "label": "网络访问",
+          "tooltip": "控制沙盒的网络访问权限",
+          "options": {
+            "whitelist": "白名单模式",
+            "isolated": "完全隔离",
+            "full": "完全访问"
+          },
+          "descriptions": {
+            "whitelist": "只允许连接到显式列出的域名。最安全的选择。",
+            "isolated": "阻止所有网络访问。代码无法建立任何外部连接。",
+            "full": "无限制的网络访问。请谨慎使用。"
+          }
+        },
+        "allowedDomains": {
+          "label": "允许访问的域名",
+          "tooltip": "沙盒允许连接的域名列表（每行一个）",
+          "placeholder": "example.com\napi.example.com",
+          "help": "每行输入一个域名。仅在"网络访问"设置为"白名单模式"时使用。"
+        }
+      },
+      "status": {
+        "enabled": "已启用",
+        "disabled": "已禁用"
+      }
     },
     "secrets": {
       "title": "Agent 机密与协作",
