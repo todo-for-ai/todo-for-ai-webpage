@@ -8,6 +8,7 @@ import {
   PushpinOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
+import NotificationBell from '../NotificationBell'
 import { LinkButton } from '../SmartLink'
 import { GitHubBadge } from '../GitHubBadge'
 import { pinsApi, type UserProjectPin, type ProjectTaskCount } from '../../api/pins'
@@ -303,6 +304,7 @@ const TopNavigation: React.FC = () => {
       >
         {/* 文档链接 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <NotificationBell />
           <LinkButton
             to="/todo-for-ai/pages/mcp-installation"
             type="text"
