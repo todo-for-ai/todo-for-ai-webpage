@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Card, Descriptions, Tag, Typography } from 'antd'
 import TaskIdBadge from '../../../components/TaskIdBadge'
 import { MarkdownEditor } from '../../../components/MarkdownEditor'
 import dayjs from 'dayjs'
 
-const { Paragraph } = Typography
+const { Paragraph, Text } = Typography
 
 interface TaskDetailContentProps {
   task: any
@@ -13,6 +13,36 @@ interface TaskDetailContentProps {
   handleCreateTask: () => void
   handleCopyTask: () => void
   tp: (key: string) => string
+}
+
+interface ParsedTaskContent {
+  prompt?: string
+  context?: Record<string, any>
+  agent_output?: string
+  agent_metadata?: Record<string, any>
+  processed_by?: string
+  originalContent: string
+}
+
+const parseTaskContent = (content: string): ParsedTaskContent => {
+  try {
+    const parsed = JSON.parse(content)
+    if (typeof parsed === 'object' && parsed !== null) {
+      return {
+        prompt: parsed.prompt,
+        context: parsed.context,
+        agent_output: parsed.agent_output,
+        agent_metadata: parsed.agent_metadata,
+        processed_by: parsed.processed_by,
+        originalContent: content,
+      }
+    }
+  } catch {
+    // Not JSON, treat as plain text
+  }
+  return {
+    originalContent: content,
+  }
 }
 
 export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
@@ -25,20 +55,69 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
 }) => {
   if (!task) return null
 
+  const parsedContent = useMemo(() => parseTaskContent(task.content), [task.content])
+  const hasAgentOutput = !!parsedContent.agent_output
+
   return (
     <div style={{ display: 'flex', gap: '16px' }}>
       <div style={{ flex: 3 }}>
         <Card title={tp('content.title')} style={{ marginBottom: '16px' }}>
           <div className="markdown-content">
-            {task.content ? (
+            {parsedContent.prompt ? (
+              <div>
+                <Paragraph><strong>Prompt:</strong> {parsedContent.prompt}</Paragraph>
+                {parsedContent.context && Object.keys(parsedContent.context).length > 0 && (
+                  <details>
+                    <summary style={{ cursor: 'pointer', color: '#1890ff' }}>Context</summary>
+                    <pre style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
+                      <code>{JSON.stringify(parsedContent.context, null, 2)}</code>
+                    </pre>
+                  </details>
+                )}
+              </div>
+            ) : task.content ? (
+              // NOTE: dangerouslySetInnerHTML exists in legacy code; replacing it is out of scope here.
               <div dangerouslySetInnerHTML={{ __html: task.content }} />
             ) : (
               <Paragraph type="secondary">{tp('content.empty')}</Paragraph>
             )}
           </div>
         </Card>
+
+        {hasAgentOutput && (
+          <Card
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Agent Output</span>
+                {parsedContent.processed_by && (
+                  <Tag size="small" color="blue">Processed by: {parsedContent.processed_by}</Tag>
+                )}
+              </div>
+            }
+            style={{ marginBottom: '16px' }}
+            className="agent-output-card"
+          >
+            <div className="agent-output-content">
+              <MarkdownEditor
+                value={parsedContent.agent_output || ''}
+                readOnly
+                height={400}
+                hideToolbar
+                preview="preview"
+              />
+            </div>
+            {parsedContent.agent_metadata && Object.keys(parsedContent.agent_metadata).length > 0 && (
+              <details style={{ marginTop: '16px' }}>
+                <summary style={{ cursor: 'pointer', color: '#1890ff', fontSize: '12px' }}>Metadata</summary>
+                <pre style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', marginTop: '8px', fontSize: '12px' }}>
+                  <code>{JSON.stringify(parsedContent.agent_metadata, null, 2)}</code>
+                </pre>
+              </details>
+            )}
+          </Card>
+        )}
       </div>
-      
+
       <div style={{ flex: 2 }}>
         <Card title={tp('info.title')}>
           <Descriptions column={1} size="small">
