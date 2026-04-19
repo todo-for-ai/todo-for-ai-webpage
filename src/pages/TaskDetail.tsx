@@ -1,177 +1,996 @@
-import React, { useEffect, useCallback, useState } from 'react'
-import { App, Button, Card, List, Popconfirm, Space, Upload } from 'antd'
-import { DeleteOutlined, UploadOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
-import { useTaskDetail } from '../hooks/useTaskDetail'
-import { usePageTranslation } from '../i18n/hooks/useTranslation'
-import { tasksApi, type TaskAttachment } from '../api/tasks'
-import { TaskDetailHeader } from './components/TaskDetail/TaskDetailHeader'
-import { TaskDetailContent } from './components/TaskDetail/TaskDetailContent'
-import { TaskDetailNavigation } from './components/TaskDetail/TaskDetailNavigation'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import {
+  Typography,
+  Button,
+  Space,
+  Card,
+  Tag,
+  Descriptions,
+  Progress,
+  Breadcrumb,
+  Spin,
+  message,
+  Row,
+  Col,
+  Popconfirm,
+  Select,
+  Collapse,
+  Tabs
+} from 'antd'
+import {
+  EditOutlined,
+  DeleteOutlined,
+  ArrowLeftOutlined,
+  HomeOutlined,
+  CopyOutlined,
+  FileTextOutlined,
+  PlusOutlined,
+  LeftOutlined,
+  RightOutlined,
+  SettingOutlined,
+  CheckCircleOutlined
+} from '@ant-design/icons'
+import { useTaskStore, useProjectStore } from '../stores'
+import { MarkdownEditor } from '../components/MarkdownEditor'
+import type { Task } from '../api/tasks'
+import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
+import type { ApiResponse } from '../api/client/types'
+import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
+import dayjs from 'dayjs'
+import TaskComments from '../components/TaskComments'
+import TaskActivityTimeline from '../components/TaskActivityTimeline'
+import TaskAssignment from '../components/TaskAssignment'
+import { useTaskRealtime } from '../hooks/useTaskRealtime'
+import styles from './TaskDetail.module.css'
+
+const { Title, Paragraph } = Typography
 
 const TaskDetail: React.FC = () => {
-  const { message } = App.useApp()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { t, tp, tc } = usePageTranslation('taskDetail')
-  const [attachments, setAttachments] = useState<TaskAttachment[]>([])
-  const [attachmentLoading, setAttachmentLoading] = useState(false)
-  
-  const {
-    task,
-    loading,
-    projectTasks,
-    projectContext,
-    contextLoading,
-    customButtons,
-    projects,
-    handleEdit,
-    handleDelete,
-    handlePreviousTask,
-    handleNextTask,
-  } = useTaskDetail(tp)
+  const [task, setTask] = useState<Task | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [projectTasks, setProjectTasks] = useState<Task[]>([])
+  const [projectContext, setProjectContext] = useState<ApiResponse<BuildContextResponse> | null>(null)
+  const [contextLoading, setContextLoading] = useState(false)
 
-  const handleCreateTask = useCallback(() => {
-    if (task?.project_id) {
-      navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}`)
-    } else {
-      navigate('/todo-for-ai/pages/tasks/create')
-    }
-  }, [task, navigate])
-
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Ctrl+N or Cmd+N - 新建任务
-    if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
-      event.preventDefault()
-      handleCreateTask()
-    }
-  }, [handleCreateTask])
+  const { getTask, deleteTask, fetchTasksByParams, updateTask } = useTaskStore()
+  const { projects, fetchProjects } = useProjectStore()
+  const { t: tc } = useTranslation('common')
+  const { t, tp } = usePageTranslation('taskDetail')
 
   useEffect(() => {
+    if (id) {
+      loadTask(parseInt(id, 10))
+    }
+  }, [id])
+
+  useTaskRealtime({
+    taskId: task?.id || 0,
+    onTaskUpdate: () => {
+      if (task?.id) loadTask(task.id)
+    },
+  })
+
+  // 加载项目列表
+  useEffect(() => {
+    fetchProjects()
+  }, [fetchProjects])
+
+  // 设置网页标题
+  useEffect(() => {
+    if (task && projects.length > 0) {
+      const project = projects.find(p => p.id === task.project_id)
+      const projectName = project?.name || tp('taskInfo.unknownProject')
+      document.title = `${projectName} - ${tp('title')} - Todo for AI`
+    }
+
+    // 组件卸载时恢复默认标题
+    return () => {
+      document.title = 'Todo for AI'
+    }
+  }, [task, projects, tp])
+
+  // 键盘快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 只在没有焦点在输入框时响应快捷键
+      if (event.target instanceof HTMLInputElement ||
+          event.target instanceof HTMLTextAreaElement ||
+          event.target instanceof HTMLSelectElement) {
+        return
+      }
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault()
+          handlePreviousTask()
+          break
+        case 'ArrowRight':
+          event.preventDefault()
+          handleNextTask()
+          break
+      }
+    }
+
     document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [projectTasks, task])
 
-  const loadAttachments = useCallback(async (taskId: number) => {
+  // 从localStorage加载任务筛选条件
+  const loadTaskFiltersFromStorage = () => {
     try {
-      setAttachmentLoading(true)
-      const items = await tasksApi.getTaskAttachments(taskId)
-      setAttachments(items || [])
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to load attachments')
-      setAttachments([])
+      const saved = localStorage.getItem('project-task-filters')
+      if (saved) {
+        return { ...JSON.parse(saved) }
+      }
+    } catch (error) {
+      console.warn('Failed to load task filters from localStorage:', error)
+    }
+    // 默认筛选条件：只显示待办任务
+    return {
+      status: 'todo,in_progress,review',
+      priority: '',
+      search: '',
+      sort_by: 'created_at',
+      sort_order: 'desc' as 'desc' | 'asc'
+    }
+  }
+
+  const loadTask = async (taskId: number) => {
+    try {
+      setLoading(true)
+      const result = await getTask(taskId)
+      if (result) {
+        setTask(result)
+        // 从localStorage获取用户在列表页设置的筛选条件
+        const taskFilters = loadTaskFiltersFromStorage()
+
+        // 加载同项目的任务，使用与列表页相同的筛选和排序条件
+        const projectTasksResult = await fetchTasksByParams({
+          project_id: result.project_id,
+          status: taskFilters.status,
+          priority: taskFilters.priority,
+          search: taskFilters.search,
+          sort_by: taskFilters.sort_by,
+          sort_order: taskFilters.sort_order
+        })
+        setProjectTasks(projectTasksResult || [])
+
+        // 加载项目上下文规则
+        if (result.project_id) {
+          loadProjectContext(result.project_id)
+        }
+      } else {
+        message.error(tp('messages.taskNotFound'))
+        navigate('/todo-for-ai/pages/tasks')
+      }
+    } catch (error) {
+      console.error('加载任务失败:', error)
+      message.error(tp('messages.loadTaskFailed'))
+      navigate('/todo-for-ai/pages/tasks')
     } finally {
-      setAttachmentLoading(false)
+      setLoading(false)
     }
-  }, [message])
+  }
 
-  useEffect(() => {
-    if (task?.id) {
-      loadAttachments(task.id)
-    }
-  }, [task?.id, loadAttachments])
-
-  const removeAttachment = async (attachment: TaskAttachment) => {
-    if (!task?.id) return
+  const loadProjectContext = async (projectId: number) => {
     try {
-      await tasksApi.deleteTaskAttachment(task.id, attachment.id)
-      message.success('Attachment removed')
-      await loadAttachments(task.id)
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to remove attachment')
+      setContextLoading(true)
+      const result = await contextRulesApi.buildProjectContext(projectId, true, false)
+      setProjectContext(result)
+    } catch (error) {
+      console.error('加载项目上下文失败:', error)
+    } finally {
+      setContextLoading(false)
     }
+  }
+
+  const handleEdit = () => {
+    if (task) {
+      navigate(`/todo-for-ai/pages/tasks/${task.id}/edit`)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!task) return
+
+    try {
+      await deleteTask(task.id)
+      message.success(tp('messages.deleteSuccess'))
+      navigate(`/todo-for-ai/pages/projects/${task.project_id}?tab=tasks`)
+    } catch (error) {
+      console.error('删除任务失败:', error)
+      message.error(tp('messages.deleteFailed'))
+    }
+  }
+
+  // 获取当前任务在项目任务列表中的索引
+  const getCurrentTaskIndex = () => {
+    if (!task || !projectTasks.length) return -1
+    return projectTasks.findIndex(t => t.id === task.id)
+  }
+
+  // 上一个任务
+  const handlePreviousTask = () => {
+    const currentIndex = getCurrentTaskIndex()
+    if (currentIndex > 0) {
+      const previousTask = projectTasks[currentIndex - 1]
+      navigate(`/todo-for-ai/pages/tasks/${previousTask.id}`)
+    }
+  }
+
+  // 下一个任务
+  const handleNextTask = () => {
+    const currentIndex = getCurrentTaskIndex()
+    if (currentIndex >= 0 && currentIndex < projectTasks.length - 1) {
+      const nextTask = projectTasks[currentIndex + 1]
+      navigate(`/todo-for-ai/pages/tasks/${nextTask.id}`)
+    }
+  }
+
+  // 创建新任务
+  const handleCreateTask = () => {
+    if (task) {
+      navigate(`/todo-for-ai/pages/tasks/create?project_id=${task.project_id}`)
+    }
+  }
+
+  // 修改任务状态
+  const handleStatusChange = async (newStatus: string) => {
+    if (!task) return
+
+    try {
+      // 计算新状态对应的进度
+      const newProgress = getTaskProgress(newStatus, task.completion_rate)
+
+      // 准备更新数据
+      const updateData: any = {
+        status: newStatus as 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled'
+      }
+
+      // 如果进度需要更新，也一起更新
+      if (newProgress !== task.completion_rate) {
+        updateData.completion_rate = newProgress
+      }
+
+      // 调用更新任务的API
+      const updatedTask = await updateTask(task.id, updateData)
+
+      if (updatedTask) {
+        // 更新本地状态
+        setTask(updatedTask as Task)
+        const statusText = getStatusText(newStatus)
+        const progressText = newProgress !== task.completion_rate ? tp('messages.progressUpdateSuccess') + `${newProgress}%` : ''
+        message.success(`${tp('messages.statusUpdateSuccess')}"${statusText}"${progressText}`)
+      }
+    } catch (error) {
+      console.error('更新任务状态失败:', error)
+      message.error(tp('messages.statusUpdateFailed'))
+    }
+  }
+
+  // 复制MCP执行任务的提示词
+  const handleCopyMCPPrompt = () => {
+    if (!task) return
+
+    const prompt = `请使用todo-for-ai MCP工具获取任务ID为${task.id}的详细信息，然后执行这个任务，完成后提交任务反馈报告。`
+
+    navigator.clipboard.writeText(prompt).then(() => {
+      message.success(tp('messages.mcpPromptCopied'))
+    }).catch(() => {
+      message.error(tp('messages.copyFailedManual'))
+    })
+  }
+
+  // 复制AI助手执行任务的详细提示词
+  const handleCopyAIPrompt = () => {
+    if (!task) return
+
+    const project = projects.find(p => p.id === task.project_id)
+    const prompt = `请帮我执行以下任务，这是一个完整的任务信息：
+
+**项目信息**：
+- 项目名称：${project?.name || '未知项目'}
+- 任务ID：${task.id}
+- 任务标题：${task.title}
+- 任务描述：${task.description || '无'}
+- 优先级：${task.priority}
+- 截止时间：${task.due_date ? dayjs(task.due_date).format('YYYY-MM-DD') : '无'}
+
+**任务详细内容**：
+${task.content || '无详细内容'}
+
+**执行要求**：
+请仔细阅读任务内容，按照要求完成任务，并在完成后提供详细的执行报告和结果说明。`
+
+    navigator.clipboard.writeText(prompt).then(() => {
+      message.success(tp('messages.aiPromptCopied'))
+    }).catch(() => {
+      message.error(tp('messages.copyFailed'))
+    })
+  }
+
+  // 复制任务完成确认提示词
+  const handleCopyTaskCompletionPrompt = () => {
+    if (!task) return
+
+    const prompt = `请检查并确认任务ID为${task.id}的任务执行状态：
+
+**任务信息**：
+- 任务ID：${task.id}
+- 任务标题：${task.title}
+- 当前状态：${task.status}
+- 完成进度：${task.completion_rate || 0}%
+
+**检查要求**：
+1. 仔细检查任务是否已经完全完成
+2. 如果任务已完成：
+   - 使用MCP工具将任务状态更新为"已完成"(done)
+   - 设置完成进度为100%
+   - 提交详细的任务完成报告
+3. 如果任务未完成：
+   - 继续执行任务内容直到完成
+   - 确保所有要求都已满足
+   - 完成后再次运行此检查
+
+**任务详细内容**：
+${task.content || '无详细内容'}
+
+请开始检查并执行相应操作。`
+
+    navigator.clipboard.writeText(prompt).then(() => {
+      message.success(tp('messages.completionPromptCopied'))
+    }).catch(() => {
+      message.error(tp('messages.copyFailed'))
+    })
+  }
+
+  // 复制快速完成任务提示词
+  const handleCopyQuickCompletePrompt = () => {
+    if (!task) return
+
+    const prompt = `请立即执行并完成任务ID为${task.id}的任务，完成后直接关闭：
+
+**任务信息**：
+- 任务ID：${task.id}
+- 任务标题：${task.title}
+- 优先级：${task.priority}
+
+**任务内容**：
+${task.content || '无详细内容'}
+
+**执行要求**：
+1. 立即开始执行上述任务内容
+2. 完成所有要求的工作
+3. 使用MCP工具将任务状态更新为"已完成"(done)
+4. 设置完成进度为100%
+5. 提交简要的完成报告
+
+请开始执行并在完成后立即关闭任务。`
+
+    navigator.clipboard.writeText(prompt).then(() => {
+      message.success(tp('messages.quickCompletePromptCopied'))
+    }).catch(() => {
+      message.error(tp('messages.copyFailed'))
+    })
+  }
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      todo: 'default',
+      in_progress: 'processing',
+      review: 'warning',
+      done: 'success',
+      cancelled: 'error'
+    }
+    return colors[status as keyof typeof colors] || 'default'
+  }
+
+  const getStatusText = (status: string) => {
+    const statusKey = status === 'in_progress' ? 'inProgress' : status
+    return tp(`status.${statusKey}`) || status
+  }
+
+  const getPriorityColor = (priority: string) => {
+    const colors = {
+      low: 'green',
+      medium: 'blue',
+      high: 'orange',
+      urgent: 'red'
+    }
+    return colors[priority as keyof typeof colors] || 'blue'
+  }
+
+  const getPriorityText = (priority: string) => {
+    return tp(`priority.${priority}`) || priority
+  }
+
+  const getStatusTag = (status: string) => {
+    const statusConfig = {
+      todo: { color: 'default' },
+      in_progress: { color: 'processing' },
+      review: { color: 'warning' },
+      done: { color: 'success' },
+      cancelled: { color: 'error' }
+    }
+    const config = statusConfig[status as keyof typeof statusConfig] || { color: 'default' }
+    return <Tag color={config.color}>{getStatusText(status)}</Tag>
+  }
+
+  // 根据任务状态计算进度条百分比
+  const getTaskProgress = (status: string, completion_rate?: number) => {
+    switch (status) {
+      case 'todo':
+        return 0
+      case 'in_progress':
+        return completion_rate || 25
+      case 'review':
+        return completion_rate || 80
+      case 'done':
+        return 100
+      case 'cancelled':
+        return completion_rate || 0
+      default:
+        return completion_rate || 0
+    }
+  }
+
+  const getPriorityTag = (priority: string) => {
+    const priorityConfig = {
+      low: { color: 'green' },
+      medium: { color: 'blue' },
+      high: { color: 'orange' },
+      urgent: { color: 'red' }
+    }
+    const config = priorityConfig[priority as keyof typeof priorityConfig] || { color: 'blue' }
+    const text = priority === 'urgent' ? tp('priority.urgent') : tp(`priority.${priority}Priority`)
+    return <Tag color={config.color}>{text}</Tag>
   }
 
   if (loading) {
-    return <div style={{ padding: '24px', textAlign: 'center' }}>{tc('status.loading')}</div>
+    return (
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Spin size="large" />
+      </div>
+    )
   }
 
   if (!task) {
-    return <div style={{ padding: '24px', textAlign: 'center' }}>{tp('messages.taskNotFound')}</div>
-  }
-
-  return (
-    <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1600px' }}>
-      <TaskDetailHeader
-        task={task}
-        projects={projects}
-        navigate={navigate}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onRefresh={() => {}}
-        tp={tp}
-      />
-
-      <TaskDetailNavigation
-        projectTasks={projectTasks}
-        task={task}
-        onPrevious={handlePreviousTask}
-        onNext={handleNextTask}
-        tp={tp}
-      />
-
-      <div style={{ marginBottom: 12 }}>
-        <Button type="text" className="flat-btn flat-btn--secondary" onClick={() => navigate(`/todo-for-ai/pages/tasks/${task.id}/logs`)}>
-          {tp('actions.viewLogs') || 'View Logs'}
+    return (
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Title level={3}>{tp('messages.taskNotFound')}</Title>
+        <Button type="primary" onClick={() => navigate('/todo-for-ai/pages/tasks')}>
+          {tp('messages.returnToTaskList')}
         </Button>
       </div>
+    )
+  }
 
-      <TaskDetailContent
-        task={task}
-        customButtons={customButtons}
-        handleCreateFromTask={() => {}}
-        handleCreateTask={() => {}}
-        handleCopyTask={() => {}}
-        tp={tp}
-      />
+  const project = projects.find(p => p.id === task.project_id)
 
-      <Card className="flat-card" title="Attachments" style={{ marginTop: 16 }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Upload
-            multiple
-            showUploadList={false}
-            beforeUpload={async (file) => {
-              if (!task?.id) return false
-              try {
-                await tasksApi.uploadTaskAttachment(task.id, file)
-                message.success(`Uploaded: ${file.name}`)
-                await loadAttachments(task.id)
-              } catch (error: any) {
-                message.error(error?.message || 'Upload failed')
-              }
-              return false
-            }}
-          >
-            <Button type="text" className="flat-btn flat-btn--primary" icon={<UploadOutlined />}>Upload Attachment</Button>
-          </Upload>
-
-          <List
-            loading={attachmentLoading}
-            dataSource={attachments}
-            locale={{ emptyText: 'No attachments' }}
-            renderItem={(item) => (
-              <List.Item
-                actions={[
-                  <a key="download" className="ant-btn ant-btn-text flat-btn flat-btn--primary" href={tasksApi.getTaskAttachmentDownloadUrl(task.id, item.id)} target="_blank" rel="noreferrer">
-                    Download
-                  </a>,
-                  <Popconfirm
-                    key="remove"
-                    title="Remove this attachment?"
-                    onConfirm={() => removeAttachment(item)}
-                  >
-                    <Button type="text" className="flat-btn flat-btn--danger" size="small" icon={<DeleteOutlined />}>Remove</Button>
-                  </Popconfirm>,
-                ]}
+  return (
+    <div className={styles.taskDetailContainer}>
+      {/* 顶部导航栏 */}
+      <Card className={styles.topNavCard} style={{ marginBottom: '16px' }}>
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Space>
+              <Button
+                type="primary"
+                icon={<LeftOutlined />}
+                onClick={handlePreviousTask}
+                disabled={getCurrentTaskIndex() <= 0}
+                title={tp('tooltips.previousTask')}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
               >
-                <List.Item.Meta
-                  title={item.original_filename}
-                  description={`${item.file_size_human || item.file_size || '-'}${item.uploaded_by ? ` • ${item.uploaded_by}` : ''}`}
-                />
-              </List.Item>
-            )}
-          />
-        </Space>
+                {tp('navigation.previousTask')}
+              </Button>
+              <Button
+                type="primary"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate(`/todo-for-ai/pages/projects/${task.project_id}?tab=tasks`)}
+                title={tp('tooltips.returnToProjectTaskList')}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
+              >
+                {tp('navigation.returnToProjectTaskList')}
+              </Button>
+            </Space>
+          </Col>
+          <Col>
+            <Breadcrumb>
+              <Breadcrumb.Item>
+                <HomeOutlined />
+                <span onClick={() => navigate('/todo-for-ai/pages')} style={{ cursor: 'pointer', marginLeft: '8px' }}>
+                  {tp('navigation.home')}
+                </span>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <span
+                  onClick={() => navigate(`/todo-for-ai/pages/projects/${task.project_id}?tab=tasks`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {tp('navigation.projectTaskList')}
+                </span>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>{task.title}</Breadcrumb.Item>
+            </Breadcrumb>
+          </Col>
+          <Col>
+            <Button
+              type="primary"
+              icon={<RightOutlined />}
+              onClick={handleNextTask}
+              disabled={getCurrentTaskIndex() >= projectTasks.length - 1 || getCurrentTaskIndex() === -1}
+              title={tp('tooltips.nextTask')}
+              style={{
+                backgroundColor: '#1890ff',
+                borderColor: '#1890ff'
+              }}
+            >
+              {tp('navigation.nextTask')}
+            </Button>
+          </Col>
+        </Row>
       </Card>
+
+      {/* 页面标题和状态 */}
+      <Card className={styles.titleCard}>
+        <Row gutter={[24, 16]}>
+          <Col span={24}>
+            <div className={styles.taskTitleRow}>
+              <div className={styles.taskIdBadge}>
+                #{task.id}
+              </div>
+              <div className={styles.taskTitleContainer}>
+                <Title
+                  level={2}
+                  className={styles.taskTitle}
+                  title={task.title}
+                  ellipsis={{
+                    tooltip: task.title.length > 50 ? task.title : false
+                  }}
+                >
+                  {task.title}
+                </Title>
+              </div>
+            </div>
+
+            <div className={styles.taskMetaRow}>
+              <Space size="middle" wrap>
+                {getStatusTag(task.status)}
+                {getPriorityTag(task.priority)}
+                {task.due_date && (
+                  <Tag icon={<FileTextOutlined />} color="default">
+                    {tp('dueDateFormat', { date: dayjs(task.due_date).format('MM-DD') })}
+                  </Tag>
+                )}
+              </Space>
+            </div>
+
+            {task.description && (
+              <Paragraph type="secondary" className={styles.titleDescription}>
+                {task.description}
+              </Paragraph>
+            )}
+          </Col>
+        </Row>
+
+        <div className={styles.bottomProgressBar}>
+          <Progress
+            percent={getTaskProgress(task.status, task.completion_rate)}
+            status={task.status === 'done' ? 'success' : task.status === 'cancelled' ? 'exception' : 'active'}
+            strokeWidth={4}
+            showInfo={false}
+            className={styles.titleCardProgress}
+          />
+        </div>
+      </Card>
+
+      {/* 操作按钮组 */}
+      <Card className={styles.actionCard}>
+        <Row gutter={[16, 16]} className={styles.actionGrid}>
+          <Col xs={24} sm={8} md={6} className={styles.actionCol}>
+            <div className={styles.actionSection}>{tp('actions.taskStatus')}</div>
+            <Select
+              value={task.status}
+              onChange={handleStatusChange}
+              style={{ width: '100%' }}
+              placeholder={tp('status.selectStatus')}
+            >
+              <Select.Option value="todo">{tp('status.todo')}</Select.Option>
+              <Select.Option value="in_progress">{tp('status.inProgress')}</Select.Option>
+              <Select.Option value="review">{tp('status.review')}</Select.Option>
+              <Select.Option value="done">{tp('status.done')}</Select.Option>
+            </Select>
+          </Col>
+
+          <Col xs={24} sm={16} md={18} className={styles.actionCol}>
+            <div className={styles.actionSection}>{tp('actions.taskActions')}</div>
+            <div className={styles.taskActionButtons}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreateTask}
+                style={{
+                  backgroundColor: '#52c41a',
+                  borderColor: '#52c41a'
+                }}
+                title={tp('tooltips.createTask')}
+              >
+                {tp('actions.createTask')}
+              </Button>
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={handleEdit}
+                style={{
+                  backgroundColor: '#fa8c16',
+                  borderColor: '#fa8c16'
+                }}
+                title={tp('tooltips.editTask')}
+              >
+                {tp('actions.edit')}
+              </Button>
+              <Popconfirm
+                title={tp('confirmations.deleteTitle')}
+                description={tp('confirmations.deleteDescription')}
+                onConfirm={handleDelete}
+                okText={tp('confirmations.confirmText')}
+                cancelText={tp('confirmations.cancelText')}
+              >
+                <Button
+                  type="primary"
+                  danger
+                  icon={<DeleteOutlined />}
+                  style={{
+                    backgroundColor: '#ff4d4f',
+                    borderColor: '#ff4d4f'
+                  }}
+                  title={tp('tooltips.deleteTask')}
+                >
+                  {tp('actions.delete')}
+                </Button>
+              </Popconfirm>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 复制提示词面板 */}
+      <Card className={styles.actionCard}>
+        <Title level={4} style={{ marginBottom: '16px', color: '#1890ff' }}>
+          <CopyOutlined style={{ marginRight: '8px' }} />
+          {tp('copyPrompts.title')}
+        </Title>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={6}>
+            <div className={styles.actionSection}>{tp('copyPrompts.mcpExecution')}</div>
+            <Button
+              type="primary"
+              icon={<CopyOutlined />}
+              onClick={handleCopyMCPPrompt}
+              block
+              title={tp('tooltips.mcpPrompt')}
+              style={{
+                backgroundColor: '#1890ff',
+                borderColor: '#1890ff'
+              }}
+            >
+              {tp('copyPrompts.mcpPromptButton')}
+            </Button>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              {tp('copyPrompts.mcpPromptDesc')}
+            </div>
+          </Col>
+
+          <Col xs={24} sm={12} md={6}>
+            <div className={styles.actionSection}>{tp('copyPrompts.aiExecution')}</div>
+            <Button
+              type="primary"
+              icon={<CopyOutlined />}
+              onClick={handleCopyAIPrompt}
+              block
+              title={tp('tooltips.aiPrompt')}
+              style={{
+                backgroundColor: '#1890ff',
+                borderColor: '#1890ff'
+              }}
+            >
+              {tp('copyPrompts.aiPromptButton')}
+            </Button>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              {tp('copyPrompts.aiPromptDesc')}
+            </div>
+          </Col>
+
+          <Col xs={24} sm={12} md={6}>
+            <div className={styles.actionSection}>{tp('copyPrompts.taskCompletion')}</div>
+            <Button
+              type="primary"
+              icon={<CopyOutlined />}
+              onClick={handleCopyTaskCompletionPrompt}
+              block
+              title={tp('tooltips.completionPrompt')}
+              style={{
+                backgroundColor: '#1890ff',
+                borderColor: '#1890ff'
+              }}
+            >
+              {tp('copyPrompts.completionPromptButton')}
+            </Button>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              {tp('copyPrompts.completionPromptDesc')}
+            </div>
+          </Col>
+
+          <Col xs={24} sm={12} md={6}>
+            <div className={styles.actionSection}>{tp('copyPrompts.quickComplete')}</div>
+            <Button
+              type="primary"
+              icon={<CopyOutlined />}
+              onClick={handleCopyQuickCompletePrompt}
+              block
+              title={tp('tooltips.quickCompletePrompt')}
+              style={{
+                backgroundColor: '#1890ff',
+                borderColor: '#1890ff'
+              }}
+            >
+              {tp('copyPrompts.quickCompleteButton')}
+            </Button>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              {tp('copyPrompts.quickCompleteDesc')}
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 任务信息 */}
+      <Card className={styles.infoCard}>
+        <Title level={3} className={styles.infoTitle}>{tp('taskInfo.title')}</Title>
+        <Descriptions
+          column={{ xs: 1, sm: 2, md: 3 }}
+          size="middle"
+          bordered
+          styles={{
+            label: { fontWeight: 500, backgroundColor: '#fafafa' },
+            content: { backgroundColor: '#fff' }
+          }}
+        >
+          <Descriptions.Item label={tp('taskInfo.project')}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {project && (
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    backgroundColor: project.color,
+                    marginRight: '8px'
+                  }}
+                />
+              )}
+              {project?.name || tp('taskInfo.unknownProject')}
+            </div>
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.status')}>
+            <Tag color={getStatusColor(task.status)}>
+              {getStatusText(task.status)}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.priority')}>
+            <Tag color={getPriorityColor(task.priority)}>
+              {getPriorityText(task.priority)}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.dueDate')}>
+            {task.due_date ? dayjs(task.due_date).format('YYYY-MM-DD') : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.progress')}>
+            <Progress
+              percent={getTaskProgress(task.status, task.completion_rate)}
+              size="small"
+              status={task.status === 'done' ? 'success' : task.status === 'cancelled' ? 'exception' : 'active'}
+            />
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.createdAt')}>
+            {dayjs(task.created_at).format('YYYY-MM-DD HH:mm:ss')}
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.updatedAt')}>
+            {dayjs(task.updated_at).format('YYYY-MM-DD HH:mm:ss')}
+          </Descriptions.Item>
+          <Descriptions.Item label={tp('taskInfo.createdBy')}>
+            {task.created_by || '-'}
+          </Descriptions.Item>
+        </Descriptions>
+
+        {task.tags && task.tags.length > 0 && (
+          <div className={styles.tagsContainer}>
+            <div className={styles.tagsLabel}>{tp('taskInfo.tags')}</div>
+            <div>
+              {task.tags.map((tag, index) => (
+                <Tag key={index} color="blue" style={{ marginBottom: '4px', marginRight: '8px' }}>
+                  {tag}
+                </Tag>
+              ))}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* 任务内容 & 协作 */}
+      <Card className={styles.contentCard}>
+        <Tabs
+          defaultActiveKey="content"
+          style={{ marginTop: 0 }}
+          items={[
+            {
+              key: 'content',
+              label: tp('taskContent.title'),
+              children: (
+                <div style={{ padding: '8px 0' }}>
+                  {task.content ? (
+                    <div className={styles.markdownContainer}>
+                      <MarkdownEditor
+                        key={`task-content-${task.id}`}
+                        value={task.content}
+                        readOnly
+                        autoHeight={true}
+                        hideToolbar
+                        preview="preview"
+                      />
+                    </div>
+                  ) : (
+                    <div className={styles.emptyContent}>
+                      <FileTextOutlined className={styles.emptyIcon} />
+                      <div className={styles.emptyTitle}>{tp('taskContent.empty.title')}</div>
+                      <div className={styles.emptySubtitle}>{tp('taskContent.empty.subtitle')}</div>
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: 'comments',
+              label: '评论',
+              children: task?.id ? <TaskComments taskId={task.id} /> : null,
+            },
+            {
+              key: 'activity',
+              label: '活动记录',
+              children: task?.id ? <TaskActivityTimeline taskId={task.id} /> : null,
+            },
+            {
+              key: 'assignment',
+              label: '指派',
+              children: task?.id ? (
+                <div style={{ padding: '8px 0' }}>
+                  <TaskAssignment
+                    value={(task.assignees || []).map((a: any) => ({
+                      id: a.id, type: a.type || 'human',
+                      name: a.name || a.nickname || '', avatar: a.avatar_url,
+                    }))}
+                    onChange={(assignees) => {
+                      updateTask(task.id, { assignees })
+                    }}
+                    projectId={task.project_id}
+                  />
+                </div>
+              ) : null,
+            },
+          ]}
+        />
+      </Card>
+
+      {/* 项目上下文规则预览 */}
+      <Card className={styles.contentCard}>
+        <Title level={3} className={styles.contentTitle}>
+          <Space>
+            <SettingOutlined />
+            {tp('projectContext.title')}
+          </Space>
+        </Title>
+        <Paragraph type="secondary" style={{ marginBottom: '16px' }}>
+          {tp('projectContext.description')}
+        </Paragraph>
+
+        {contextLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>{tp('projectContext.loading')}</div>
+          </div>
+        ) : projectContext && projectContext.data && projectContext.data.context_string ? (
+          <Collapse
+            items={[
+              {
+                key: 'context',
+                label: (
+                  <Space>
+                    <span>{tp('projectContext.rulesLabel')}</span>
+                    <Tag color="blue">{projectContext.data.rules.length} 条规则</Tag>
+                  </Space>
+                ),
+                children: (
+                  <div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <Tag color="green">{tp('projectContext.appliedRules')}</Tag>
+                      {projectContext.data.rules.map(rule => (
+                        <Tag
+                          key={rule.id}
+                          color={rule.is_global ? 'purple' : 'blue'}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => navigate(`/todo-for-ai/pages/context-rules/${rule.id}/edit`)}
+                        >
+                          {rule.is_global ? '🌐' : '📁'} {rule.name}
+                        </Tag>
+                      ))}
+                    </div>
+                    <div className={styles.markdownContainer}>
+                      <MarkdownEditor
+                        key={`project-context-${task.id}`}
+                        value={projectContext.data.context_string}
+                        readOnly
+                        autoHeight={true}
+                        hideToolbar
+                        preview="preview"
+                      />
+                    </div>
+                  </div>
+                )
+              }
+            ]}
+            defaultActiveKey={[]}
+            ghost
+          />
+        ) : (
+          <div className={styles.emptyContent}>
+            <SettingOutlined className={styles.emptyIcon} />
+            <div className={styles.emptyTitle}>{tp('projectContext.empty.title')}</div>
+            <div className={styles.emptySubtitle}>{tp('projectContext.empty.subtitle')}</div>
+          </div>
+        )}
+      </Card>
+
+      {/* 任务执行反馈 */}
+      {task.feedback_content && (
+        <Card className={styles.contentCard}>
+          <Title level={3} className={styles.contentTitle}>
+            <Space>
+              <CheckCircleOutlined />
+              {tp('taskFeedback.title')}
+            </Space>
+          </Title>
+          <Paragraph type="secondary" style={{ marginBottom: '16px' }}>
+            {tp('taskFeedback.description')}
+            {task.feedback_at && (
+              <span style={{ marginLeft: '8px' }}>
+                {tp('taskFeedback.feedbackTime')}{dayjs(task.feedback_at).format('YYYY-MM-DD HH:mm:ss')}
+              </span>
+            )}
+          </Paragraph>
+
+          <div className={styles.markdownContainer}>
+            <MarkdownEditor
+              key={`task-feedback-${task.id}`}
+              value={task.feedback_content}
+              readOnly
+              autoHeight={true}
+              hideToolbar
+              preview="preview"
+            />
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
