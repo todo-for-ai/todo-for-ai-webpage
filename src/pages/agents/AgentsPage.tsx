@@ -33,6 +33,9 @@ import { AgentWorkspaceActivityCenter } from './components/AgentWorkspaceActivit
 import AgentStatusPanel from '../../components/AgentStatusPanel'
 import ApprovalQueue from '../../components/ApprovalQueue'
 import { AgentTaskMonitor } from '../../components/AgentTaskMonitor'
+import AgentTeamManager from '../../components/AgentTeamManager.js'
+import AuditTrail from '../../components/AuditTrail.js'
+import GovernanceRuleEditor from '../../components/GovernanceRuleEditor.js'
 import { useAgentsPage } from './hooks/useAgentsPage'
 import {
   loadAgentsViewModeFromIndexedDb,
@@ -50,7 +53,7 @@ const statusColorMap: Record<string, string> = {
   revoked: 'default',
 }
 
-type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration'
+type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration' | 'teams' | 'audit'
 
 export default function AgentsPage() {
   const { tp, pageTitle, pageSubtitle } = usePageTranslation('agents')
@@ -474,6 +477,21 @@ export default function AgentsPage() {
                 </Card>
               </div>
             ),
+          },
+          {
+            key: 'teams',
+            label: '团队管理',
+            children: workspaceId ? <AgentTeamManager workspaceId={workspaceId} /> : null,
+          },
+          {
+            key: 'audit',
+            label: '审计日志',
+            children: workspaceId ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <AuditTrail workspaceId={workspaceId} />
+                <GovernanceRuleEditor workspaceId={workspaceId} />
+              </div>
+            ) : null,
           },
         ]}
       />
