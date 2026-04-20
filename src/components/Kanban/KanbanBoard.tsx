@@ -23,6 +23,8 @@ import type { Task } from '../../api/tasks'
 import KanbanColumn from './KanbanColumn'
 import KanbanCard from './KanbanCard'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../../utils/errorUtils'
+import { wsService } from '../../services/websocketService.js'
 
 // const { Title } = Typography
 
@@ -72,7 +74,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
       }
     } catch (error) {
       console.error('Failed to fetch kanban tasks:', error)
-      message.error(tc('kanban.messages.fetchFailed'))
+      message.error(getErrorMessage(error, tc('kanban.messages.fetchFailed')))
     } finally {
       setLoading(false)
     }
@@ -80,6 +82,19 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
 
   useEffect(() => {
     fetchKanbanTasks()
+  }, [projectId])
+
+  // WebSocket real-time updates: refresh board when tasks are updated by other users
+  useEffect(() => {
+    if (!projectId) return
+
+    const unsubUpdate = wsService.on('task_updated', () => {
+      fetchKanbanTasks()
+    })
+
+    return () => {
+      unsubUpdate()
+    }
   }, [projectId])
 
   // 计算按状态分组的任务
@@ -111,7 +126,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
   // 定义看板列
   const columns = [
     { id: 'todo', title: t('common:kanban.todo'), color: '#f0f0f0' },
-    { id: 'in_progress', title: t('common:kanban.in_progress'), color: '#e6f7ff' },
+    { id: 'in_progress', title: t('common:kanban.in_progress'), color: '#f0faf5' },
     { id: 'review', title: t('common:kanban.review'), color: '#fff7e6' },
     { id: 'done', title: t('common:kanban.done'), color: '#f6ffed' },
   ]
@@ -166,7 +181,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
         message.success(tc('kanban.messages.movedTo', { status: columns.find(c => c.id === newStatus)?.title }))
       }
     } catch (error) {
-      message.error(tc('kanban.messages.updateFailed'))
+      message.error(getErrorMessage(error, tc('kanban.messages.updateFailed')))
     }
   }
 

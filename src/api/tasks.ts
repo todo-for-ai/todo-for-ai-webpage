@@ -124,7 +124,6 @@ export interface TaskAttachment {
   task_id: number
   filename: string
   original_filename: string
-  file_path: string
   file_size: number
   mime_type?: string
   is_image?: boolean
@@ -234,9 +233,17 @@ export class TasksApi {
 
   // 批量更新任务优先级
   async batchUpdateTaskPriority(taskIds: number[], priority: Task['priority']) {
-    return apiClient.post('/tasks/batch/update-priority', { 
-      task_ids: taskIds, 
-      priority 
+    return apiClient.post('/tasks/batch/update-priority', {
+      task_ids: taskIds,
+      priority
+    })
+  }
+
+  // 批量指派任务
+  async batchAssignTasks(taskIds: number[], assignees: Array<{ type: 'human' | 'agent'; id: number }>) {
+    return apiClient.post('/tasks/batch/assign', {
+      task_ids: taskIds,
+      assignees
     })
   }
 }

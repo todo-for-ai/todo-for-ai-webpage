@@ -41,6 +41,7 @@ import dayjs from 'dayjs'
 import TaskComments from '../components/TaskComments'
 import TaskActivityTimeline from '../components/TaskActivityTimeline'
 import TaskAssignment from '../components/TaskAssignment'
+import TaskDependencies from '../components/TaskDependencies.js'
 import { useTaskRealtime } from '../hooks/useTaskRealtime'
 import styles from './TaskDetail.module.css'
 
@@ -887,6 +888,11 @@ ${task.content || '无详细内容'}
                   />
                 </div>
               ) : null,
+            },
+            {
+              key: 'dependencies',
+              label: '依赖关系',
+              children: task?.id ? <TaskDependencies taskId={task.id} /> : null,
             },
           ]}
         />
