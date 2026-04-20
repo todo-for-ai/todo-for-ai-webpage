@@ -30,6 +30,9 @@ import type { Agent, AgentStatus } from '../../api/agents'
 import { resolveUserAvatarSrc } from '../../utils/defaultAvatars'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentWorkspaceActivityCenter } from './components/AgentWorkspaceActivityCenter'
+import AgentStatusPanel from '../../components/AgentStatusPanel'
+import ApprovalQueue from '../../components/ApprovalQueue'
+import { AgentTaskMonitor } from '../../components/AgentTaskMonitor'
 import { useAgentsPage } from './hooks/useAgentsPage'
 import {
   loadAgentsViewModeFromIndexedDb,
@@ -47,7 +50,7 @@ const statusColorMap: Record<string, string> = {
   revoked: 'default',
 }
 
-type WorkspaceTabKey = 'agents' | 'activity_center'
+type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration'
 
 export default function AgentsPage() {
   const { tp, pageTitle, pageSubtitle } = usePageTranslation('agents')
@@ -174,7 +177,7 @@ export default function AgentsPage() {
                   <Avatar
                     src={resolveUserAvatarSrc(row.avatar_url, row.name)}
                     size={40}
-                    style={{ backgroundColor: '#1677ff' }}
+                    style={{ backgroundColor: '#00b96b' }}
                   >
                     {row.display_name?.charAt(0) || row.name.charAt(0)}
                   </Avatar>
@@ -331,7 +334,7 @@ export default function AgentsPage() {
                     <Avatar
                       src={resolveUserAvatarSrc(row.avatar_url, row.name)}
                       size={48}
-                      style={{ backgroundColor: '#1677ff' }}
+                      style={{ backgroundColor: '#00b96b' }}
                     >
                       {row.display_name?.charAt(0) || row.name.charAt(0)}
                     </Avatar>
@@ -454,6 +457,23 @@ export default function AgentsPage() {
             key: 'activity_center',
             label: tp('workspaceTabs.activityCenter', { defaultValue: 'Activity Center' }),
             children: <AgentWorkspaceActivityCenter workspaceId={workspaceId} />,
+          },
+          {
+            key: 'collaboration',
+            label: '协作中心',
+            children: (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <Card title="Agent 状态" size="small" className="flat-card">
+                  <AgentStatusPanel workspaceId={workspaceId} />
+                </Card>
+                <Card title="任务监控" size="small" className="flat-card">
+                  <AgentTaskMonitor workspaceId={workspaceId} />
+                </Card>
+                <Card title="审批队列" size="small" className="flat-card">
+                  <ApprovalQueue workspaceId={workspaceId} />
+                </Card>
+              </div>
+            ),
           },
         ]}
       />
