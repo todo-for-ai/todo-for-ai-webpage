@@ -36,6 +36,7 @@ import { AgentTaskMonitor } from '../../components/AgentTaskMonitor'
 import AgentTeamManager from '../../components/AgentTeamManager.js'
 import AuditTrail from '../../components/AuditTrail.js'
 import GovernanceRuleEditor from '../../components/GovernanceRuleEditor.js'
+import ReviewQueue from '../../components/ReviewQueue.js'
 import { useAgentsPage } from './hooks/useAgentsPage'
 import {
   loadAgentsViewModeFromIndexedDb,
@@ -53,7 +54,7 @@ const statusColorMap: Record<string, string> = {
   revoked: 'default',
 }
 
-type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration' | 'teams' | 'audit'
+type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration' | 'teams' | 'audit' | 'review'
 
 export default function AgentsPage() {
   const { tp, pageTitle, pageSubtitle } = usePageTranslation('agents')
@@ -492,6 +493,11 @@ export default function AgentsPage() {
                 <GovernanceRuleEditor workspaceId={workspaceId} />
               </div>
             ) : null,
+          },
+          {
+            key: 'review',
+            label: '输出审查',
+            children: workspaceId ? <ReviewQueue workspaceId={workspaceId} /> : null,
           },
         ]}
       />

@@ -42,6 +42,8 @@ import TaskComments from '../components/TaskComments'
 import TaskActivityTimeline from '../components/TaskActivityTimeline'
 import TaskAssignment from '../components/TaskAssignment'
 import TaskDependencies from '../components/TaskDependencies.js'
+import TaskChatThread from '../components/TaskChatThread.js'
+import TaskDelegation from '../components/TaskDelegation.js'
 import { useTaskRealtime } from '../hooks/useTaskRealtime'
 import styles from './TaskDetail.module.css'
 
@@ -662,6 +664,13 @@ ${task.content || '无详细内容'}
                   {tp('actions.delete')}
                 </Button>
               </Popconfirm>
+              {task?.id && project?.organization_id && (
+                <TaskDelegation
+                  taskId={task.id}
+                  workspaceId={project.organization_id}
+                  onDelegated={() => { loadTask(task.id) }}
+                />
+              )}
             </div>
           </Col>
         </Row>
@@ -865,6 +874,11 @@ ${task.content || '无详细内容'}
               key: 'comments',
               label: '评论',
               children: task?.id ? <TaskComments taskId={task.id} /> : null,
+            },
+            {
+              key: 'chat',
+              label: '对话',
+              children: task?.id ? <TaskChatThread taskId={task.id} /> : null,
             },
             {
               key: 'activity',
