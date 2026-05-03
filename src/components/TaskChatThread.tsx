@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Input, Button, Avatar, Space, Spin, Empty, message } from 'antd'
-import { SendOutlined, RobotOutlined, UserOutlined, DesktopOutlined, ReplyOutlined } from '@ant-design/icons'
+import { SendOutlined, RobotOutlined, UserOutlined, DesktopOutlined, MessageOutlined } from '@ant-design/icons'
 import { taskChatApi } from '../api/taskChat.js'
 import type { ChatMessage } from '../api/taskChat.js'
 import { getErrorMessage } from '../utils/errorUtils.js'
+import { useTaskRealtime } from '../hooks/useTaskRealtime'
 
 const ACTOR_CONFIG = {
   HUMAN: { color: '#00b96b', icon: <UserOutlined />, label: '用户', avatar: 'U' },
@@ -62,6 +63,12 @@ const TaskChatThread: React.FC<TaskChatThreadProps> = ({ taskId }) => {
   useEffect(() => {
     loadMessages(1)
   }, [loadMessages])
+
+  // Real-time: reload messages when WebSocket receives new comment
+  useTaskRealtime({
+    taskId,
+    onComment: () => { loadMessages(1) },
+  })
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -150,7 +157,7 @@ const TaskChatThread: React.FC<TaskChatThreadProps> = ({ taskId }) => {
             <Button
               type="link"
               size="small"
-              icon={<ReplyOutlined />}
+              icon={<MessageOutlined />}
               style={{ padding: 0, color: '#999', fontSize: 12 }}
               onClick={() => {
                 if (replyState.parentId === msg.id) {
