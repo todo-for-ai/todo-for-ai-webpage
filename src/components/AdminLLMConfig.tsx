@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, Form, Input, Select, Button, message, InputNumber, Space, Alert, Typography } from 'antd'
 import { SaveOutlined, ApiOutlined, ExperimentOutlined } from '@ant-design/icons'
 import { apiClient } from '../api'
-import { useAuthStore } from '../stores/useAuthStore'
 
-const { Title, Paragraph } = Typography
+const { Paragraph } = Typography
 const { Option } = Select
 
 // LLM 提供商选项
@@ -13,6 +12,7 @@ const LLM_PROVIDERS = [
   { value: 'azure', label: 'Azure OpenAI', description: '微软 Azure OpenAI 服务' },
   { value: 'anthropic', label: 'Anthropic', description: 'Claude 系列模型' },
   { value: 'ollama', label: 'Ollama', description: '本地部署的开源模型' },
+  { value: 'longcat', label: 'LongCat API', description: 'LongCat API 平台 - OpenAI 兼容格式' },
   { value: 'custom', label: '自定义', description: '兼容 OpenAI API 格式的自定义服务' },
 ]
 
@@ -22,6 +22,7 @@ const DEFAULT_MODELS: Record<string, string[]> = {
   azure: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
   ollama: ['llama2', 'mistral', 'codellama'],
+  longcat: ['LongCat-Flash-Lite', 'LongCat-Flash', 'LongCat-Pro'],
   custom: ['custom-model'],
 }
 
@@ -31,6 +32,7 @@ const DEFAULT_API_BASE: Record<string, string> = {
   azure: 'https://<your-resource>.openai.azure.com/openai',
   anthropic: 'https://api.anthropic.com/v1',
   ollama: 'http://localhost:11434',
+  longcat: 'https://api.longcat.chat/openai',
   custom: 'http://localhost:8000/v1',
 }
 
@@ -52,18 +54,11 @@ const AdminLLMConfig: React.FC<AdminLLMConfigProps> = ({ isAdmin }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [testLoading, setTestLoading] = useState(false)
-  const [config, setConfig] = useState<LLMConfig | null>(null)
+  const [, setConfig] = useState<LLMConfig | null>(null)
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
-  const { user } = useAuthStore()
 
   // 加载配置
-  useEffect(() => {
-    if (isAdmin) {
-      loadConfig()
-    }
-  }, [isAdmin])
-
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       const response = await apiClient.get('/system-settings/llm-config')
       const configData = response as LLMConfig
@@ -73,7 +68,13 @@ const AdminLLMConfig: React.FC<AdminLLMConfigProps> = ({ isAdmin }) => {
       console.error('Failed to load LLM config:', error)
       message.error('加载大模型配置失败')
     }
-  }
+  }, [form])
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadConfig()
+    }
+  }, [isAdmin, loadConfig])
 
   const handleSave = async (values: LLMConfig) => {
     if (!isAdmin) {
@@ -87,9 +88,10 @@ const AdminLLMConfig: React.FC<AdminLLMConfigProps> = ({ isAdmin }) => {
       message.success('大模型配置已保存')
       setConfig(values)
       setTestResult(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to save LLM config:', error)
-      message.error(error?.message || '保存配置失败')
+      const msg = error instanceof Error ? error.message : '保存配置失败'
+      message.error(msg)
     } finally {
       setLoading(false)
     }
@@ -116,13 +118,14 @@ const AdminLLMConfig: React.FC<AdminLLMConfigProps> = ({ isAdmin }) => {
         message: response?.message || '连接测试成功',
       })
       message.success('连接测试成功')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Test failed:', error)
+      const msg = error instanceof Error ? error.message : '连接测试失败'
       setTestResult({
         success: false,
-        message: error?.message || '连接测试失败',
+        message: msg,
       })
-      message.error(error?.message || '连接测试失败')
+      message.error(msg)
     } finally {
       setTestLoading(false)
     }
