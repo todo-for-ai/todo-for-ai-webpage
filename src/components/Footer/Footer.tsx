@@ -1,6 +1,5 @@
 import React from 'react'
 import { Layout } from 'antd'
-import { GithubOutlined } from '@ant-design/icons'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
 import './Footer.css'
 
@@ -15,7 +14,6 @@ const Footer: React.FC<FooterProps> = ({ className, style }) => {
   const { tc } = useTranslation()
 
   // 获取git信息和构建时间
-  const gitTag = __GIT_TAG__
   const commitId = __COMMIT_ID__
   const buildTime = __BUILD_TIME__
 

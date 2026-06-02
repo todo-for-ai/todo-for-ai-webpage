@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from 'react'
 import { message } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router-dom'

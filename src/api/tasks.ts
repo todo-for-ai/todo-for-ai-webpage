@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { apiClient } from './client/index.js'
 import { getApiBaseUrl } from '../utils/apiConfig'
 

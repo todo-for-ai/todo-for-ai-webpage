@@ -3,6 +3,7 @@ import { Card, Tooltip, Spin, message, Button } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { dashboardApi, type ActivityHeatmapData } from '../api/dashboard'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 import { useLanguage } from '../contexts/LanguageContext'
 
 interface ActivityHeatmapProps {
@@ -15,8 +16,6 @@ interface ActivityHeatmapProps {
 const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   className,
   style,
-  autoRefresh = true,
-  refreshInterval = 5 * 60 * 1000 // 默认5分钟
 }) => {
   const { tp } = usePageTranslation('dashboard')
   const { language } = useLanguage()
@@ -31,7 +30,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
       setHeatmapData(response.heatmap_data)
     } catch (error) {
       console.error('加载活跃度热力图失败:', error)
-      message.error(tp('heatmap.loadError'))
+      message.error(getErrorMessage(error, tp('heatmap.loadError')))
     } finally {
       setLoading(false)
     }
@@ -39,7 +38,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
   useEffect(() => {
     loadHeatmapData()
-  }, []) // 移除loadHeatmapData依赖，避免无限循环
+  }, [loadHeatmapData])
 
   // 自动刷新功能 - 暂时禁用以调试
   // useEffect(() => {
@@ -87,15 +86,6 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
     })
   }
 
-  // 获取活动描述
-  const getActivityDescription = (count: number): string => {
-    if (count === 0) return tp('heatmap.activity.none')
-    if (count === 1) return tp('heatmap.activity.single')
-    // 直接使用字符串替换，确保参数正确传递
-    const template = tp('heatmap.activity.multiple')
-    return template.replace('{count}', count.toString())
-  }
-
   // 生成详细的tooltip内容
   const getDetailedTooltipContent = (day: ActivityHeatmapData): React.ReactNode => {
     const date = formatDate(day.date)
@@ -126,7 +116,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             ✅ {tp('heatmap.tooltip.taskCompleted')}: <span style={{ fontWeight: 'bold' }}>{day.task_completed_count}</span>
           </div>
           <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #eee' }}>
-            {tp('heatmap.tooltip.totalActivity')}: <span style={{ fontWeight: 'bold', color: '#1890ff' }}>{day.count}</span>
+            {tp('heatmap.tooltip.totalActivity')}: <span style={{ fontWeight: 'bold', color: '#00b96b' }}>{day.count}</span>
           </div>
           {day.first_activity_at && (
             <div style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>
@@ -370,7 +360,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.transform = 'scale(1.1)'
-                              e.currentTarget.style.borderColor = '#1890ff'
+                              e.currentTarget.style.borderColor = '#00b96b'
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.transform = 'scale(1)'

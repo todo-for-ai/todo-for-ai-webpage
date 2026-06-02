@@ -35,6 +35,11 @@
       "tooltip": "可选字段，如果不填写将自动从内容中生成"
     },
     "assignToAI": "分配给AI执行",
+    "attachments": {
+      "title": "附件",
+      "hint": "拖拽文件到此处，或点击选择文件",
+      "subHint": "任务保存成功后会自动上传这些附件"
+    },
     "content": {
       "title": "任务内容",
       "tooltip": "支持Markdown格式，详细描述任务内容、需求和说明",

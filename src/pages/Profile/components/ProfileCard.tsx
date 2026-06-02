@@ -100,7 +100,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                     src={resolveUserAvatarSrc(option.token, avatarIdentitySeed)}
                     style={{
                       ...AVATAR_BORDER_STYLE,
-                      ...(isSelected ? { boxShadow: '0 0 0 2px #1677ff' } : {}),
+                      ...(isSelected ? { boxShadow: '0 0 0 2px #00b96b' } : {}),
                     }}
                   />
                 )

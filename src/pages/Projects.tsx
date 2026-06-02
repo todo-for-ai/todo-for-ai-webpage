@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import type { Project } from '../api/projects'
 import { useTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 import { useProjectStore } from '../stores'
 import { ProjectsCardView } from './projects/ProjectsCardView'
 import { ProjectsFiltersCard } from './projects/ProjectsFiltersCard'
@@ -41,26 +43,26 @@ const Projects = () => {
 
   const handleFilterChange = useCallback(
     (key: keyof ProjectFilters, value: string) => {
-      const newFilters = {
-        ...filters,
-        [key]: value,
-      }
-      setFilters(newFilters)
-      saveFiltersToStorage(newFilters)
+      setFilters((prev) => {
+        const newFilters = {
+          ...prev,
+          [key]: value,
+        }
+        saveFiltersToStorage(newFilters)
+        return newFilters
+      })
     },
-    [filters]
+    []
   )
 
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const debouncedSearch = useCallback(
-    (() => {
-      let timeoutId: ReturnType<typeof setTimeout>
-      return (searchTerm: string) => {
-        clearTimeout(timeoutId)
-        timeoutId = setTimeout(() => {
-          handleFilterChange('search', searchTerm)
-        }, 500)
-      }
-    })(),
+    (searchTerm: string) => {
+      clearTimeout(searchTimeoutRef.current)
+      searchTimeoutRef.current = setTimeout(() => {
+        handleFilterChange('search', searchTerm)
+      }, 500)
+    },
     [handleFilterChange]
   )
 
@@ -75,7 +77,7 @@ const Projects = () => {
 
   useEffect(() => {
     if (error) {
-      message.error(error)
+      message.error(getErrorMessage(error, String(error)))
       clearError()
     }
   }, [error, clearError])
@@ -112,23 +114,23 @@ const Projects = () => {
     navigate('/todo-for-ai/pages/projects/create')
   }
 
-  const handleEdit = (project: Project) => {
+  const handleEdit = useCallback((project: Project) => {
     navigate(`/todo-for-ai/pages/projects/${project.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (project: Project) => {
+  const handleDelete = useCallback(async (project: Project) => {
     const success = await deleteProject(project.id)
     if (success) {
       message.success(t('messages.deleteSuccess'))
     }
-  }
+  }, [deleteProject, t])
 
-  const handleArchive = async (project: Project) => {
+  const handleArchive = useCallback(async (project: Project) => {
     const success = await archiveProject(project.id)
     if (success) {
       message.success(t('messages.archiveSuccess'))
     }
-  }
+  }, [archiveProject, t])
 
   const handleTableChange = (tablePagination: any, _filters: any, sorter: any) => {
     const newParams: any = {

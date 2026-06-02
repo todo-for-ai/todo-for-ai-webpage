@@ -131,8 +131,8 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
               height: '60px',
               transform: 'translateY(-50%)',
               cursor: 'col-resize',
-              backgroundColor: isDragging ? '#1890ff' : '#f0f0f0',
-              border: `2px solid ${isDragging ? '#1890ff' : '#d9d9d9'}`,
+              backgroundColor: isDragging ? '#00b96b' : '#f0f0f0',
+              border: `2px solid ${isDragging ? '#00b96b' : '#d9d9d9'}`,
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
@@ -144,8 +144,8 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
             }}
             onMouseEnter={(e) => {
               if (!isDragging) {
-                e.currentTarget.style.backgroundColor = '#e6f7ff'
-                e.currentTarget.style.borderColor = '#1890ff'
+                e.currentTarget.style.backgroundColor = '#f0faf5'
+                e.currentTarget.style.borderColor = '#00b96b'
                 e.currentTarget.style.opacity = '1'
               }
             }}
@@ -175,7 +175,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
             position: 'fixed',
             top: '20px',
             right: '20px',
-            backgroundColor: '#1890ff',
+            backgroundColor: '#00b96b',
             color: '#fff',
             padding: '8px 16px',
             borderRadius: '6px',

@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Input, Button, List, Avatar, Tag, Spin, Empty, message } from 'antd'
 import { SendOutlined, RobotOutlined, UserOutlined, DesktopOutlined } from '@ant-design/icons'
-import { taskLogsApi, TaskLogEntry } from '../api/taskLogs'
-import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { taskLogsApi } from '../api/taskLogs.js'
+import type { TaskLogEntry } from '../api/taskLogs.js'
 import { getErrorMessage } from '../utils/errorUtils'
 
 const { TextArea } = Input
@@ -18,7 +18,6 @@ const ACTOR_CONFIG = {
 }
 
 const TaskComments: React.FC<TaskCommentsProps> = ({ taskId }) => {
-  const { tp } = usePageTranslation('taskDetail')
   const [logs, setLogs] = useState<TaskLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)

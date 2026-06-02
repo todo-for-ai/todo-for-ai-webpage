@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // 占位文件 - HeatmapGrid
 import React from 'react'
 
@@ -7,7 +8,7 @@ interface HeatmapGridProps {
   loading?: boolean
 }
 
-export const HeatmapGrid: React.FC<HeatmapGridProps> = ({ data, renderCell, loading }) => {
+export const HeatmapGrid: React.FC<HeatmapGridProps> = () => {
   return <div>Heatmap Grid</div>
 }
 

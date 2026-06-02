@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Button,
   Card,
@@ -74,23 +74,23 @@ const GovernanceRuleEditor: React.FC<GovernanceRuleEditorProps> = ({ workspaceId
   const [editingRule, setEditingRule] = useState<GovernanceRule | null>(null)
   const [form] = Form.useForm()
 
-  const loadRules = async () => {
+  const loadRules = useCallback(async () => {
     try {
       setLoading(true)
       const data = await governanceRulesApi.list(workspaceId)
       const loaded = data.rules && data.rules.length > 0 ? data.rules : defaultRules
       setRules(loaded)
-    } catch (error) {
+    } catch {
       // If endpoint does not exist yet, use defaults
       setRules(defaultRules)
     } finally {
       setLoading(false)
     }
-  }
+  }, [workspaceId])
 
   useEffect(() => {
     loadRules()
-  }, [workspaceId])
+  }, [loadRules])
 
   const handleSave = async () => {
     try {

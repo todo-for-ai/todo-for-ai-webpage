@@ -11,6 +11,7 @@ import {
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 
 const { Title, Paragraph } = Typography
 
@@ -32,6 +33,7 @@ const Dashboard = () => {
   // 加载仪表盘数据
   useEffect(() => {
     loadDashboardStats()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadDashboardStats = async () => {
@@ -41,7 +43,7 @@ const Dashboard = () => {
       setStats(data)
     } catch (error) {
       console.error('加载仪表盘数据失败:', error)
-      message.error(tc('messages.error.general'))
+      message.error(getErrorMessage(error, tc('messages.error.general')))
     } finally {
       setLoading(false)
     }
@@ -118,7 +120,7 @@ const Dashboard = () => {
               title={tp('stats.ownedProjects')}
               value={owned.projects.total || 0}
               prefix={<ProjectOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: '#00b96b' }}
             />
           </Card>
         </Col>
@@ -162,7 +164,7 @@ const Dashboard = () => {
               title={tp('stats.participatedProjects')}
               value={participated.projects.total || 0}
               prefix={<ProjectOutlined />}
-              valueStyle={{ color: '#1677ff' }}
+              valueStyle={{ color: '#00b96b' }}
             />
           </Card>
         </Col>
@@ -206,7 +208,7 @@ const Dashboard = () => {
               title={tp('stats.totalOrganizations')}
               value={orgSummary.total || 0}
               prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1677ff' }}
+              valueStyle={{ color: '#00b96b' }}
             />
           </Card>
         </Col>
@@ -241,7 +243,7 @@ const Dashboard = () => {
                 renderItem={(item) => (
                   <List.Item>
                     <List.Item.Meta
-                      avatar={<TeamOutlined style={{ color: '#1677ff' }} />}
+                      avatar={<TeamOutlined style={{ color: '#00b96b' }} />}
                       title={
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span>{item.organization_name}</span>
@@ -293,7 +295,7 @@ const Dashboard = () => {
                 renderItem={(project) => (
                   <List.Item>
                     <List.Item.Meta
-                      avatar={<ProjectOutlined style={{ color: '#1890ff' }} />}
+                      avatar={<ProjectOutlined style={{ color: '#00b96b' }} />}
                       title={project.name}
                       description={
                         <div>

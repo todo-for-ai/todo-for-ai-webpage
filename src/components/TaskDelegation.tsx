@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import { Button, Dropdown, Input, List, Popconfirm, Tag, Spin, message, Empty } from 'antd'
+import { Button, Dropdown, Input, Popconfirm, Tag, Spin, message, Empty } from 'antd'
 import type { MenuProps } from 'antd'
 import { RobotOutlined, SwapOutlined, SearchOutlined } from '@ant-design/icons'
 import { taskDelegationApi } from '../api/taskDelegation'

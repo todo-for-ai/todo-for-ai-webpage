@@ -2,7 +2,6 @@
  * 主题管理器 - 负责主题的注册、加载、切换和管理
  */
 import type { Theme, ThemeManagerConfig, ThemeChangeEvent } from './types'
-import { DEFAULT_CONFIG } from './constants'
 import { ThemeManagerCore } from './ThemeManagerCore'
 import { ThemeRegistry } from './ThemeRegistry'
 import { ThemePersistence } from './ThemePersistence'

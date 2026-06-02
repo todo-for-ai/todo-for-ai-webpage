@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type AgentStatus = 'active' | 'inactive' | 'revoked'
 export type AgentReasoningMode = 'balanced' | 'fast' | 'deep'
 

@@ -79,6 +79,7 @@ export default defineConfig(() => {
     },
     optimizeDeps: {
       include: ['antd'],
+      force: true,
     },
     server: {
       port: 50111,

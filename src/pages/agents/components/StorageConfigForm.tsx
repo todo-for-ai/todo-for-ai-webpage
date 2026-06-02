@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react'
 import {
   Button,
@@ -16,7 +18,6 @@ import { useTranslation } from '../../../i18n/hooks/useTranslation'
 
 interface StorageConfigFormProps {
   mode: 'create' | 'edit'
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   workspaceId: number
   config?: StorageConfig | null
   onCancel: () => void

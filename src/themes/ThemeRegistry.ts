@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ThemeRegistry 占位实现
 export class ThemeRegistry {
-  registerTheme(theme: any) {
+  registerTheme(_theme: any) {
     // 占位
   }
   
-  register(id: string, theme: any) {
+  register(_id: string, _theme: any) {
     // 占位
   }
   
-  getTheme(id: string) {
+  getTheme(_id: string) {
     return null
   }
 }

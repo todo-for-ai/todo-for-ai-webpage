@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Drawer, Descriptions, Table, Button, Modal, Form, Input, Select, Popconfirm, Tag, message, Space } from 'antd'
+import { Drawer, Descriptions, Table, Button, Modal, Form, Input, Select, Popconfirm, Tag, message } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons'
 import { agentTeamsApi } from '../api/agentTeams'
 import type { AgentTeam, AgentTeamMember } from '../api/agentTeams'
@@ -137,7 +137,7 @@ const AgentTeamDetail: React.FC<AgentTeamDetailProps> = ({ workspaceId, teamId, 
       title: '操作',
       key: 'action',
       width: 80,
-      render: (_: any, record: AgentTeamMember) => (
+      render: (_: unknown, record: AgentTeamMember) => (
         <Popconfirm
           title='确定移除该成员？'
           onConfirm={() => handleRemoveMember(record.id)}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import i18n from '../i18n'
 
 export interface ProjectData {

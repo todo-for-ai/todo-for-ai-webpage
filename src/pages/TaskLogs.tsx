@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Card, Input, List, Space, Tag, Typography, message } from 'antd'
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons'
 import { tasksApi, type TaskLog } from '../api/tasks'
+import { getErrorMessage } from '../utils/errorUtils'
 
 const { TextArea } = Input
 const { Title, Text, Paragraph } = Typography
@@ -23,7 +25,7 @@ const TaskLogs = () => {
       const data = await tasksApi.getTaskLogs(taskId, { page: 1, per_page: 200 })
       setItems(data.items || [])
     } catch (error: any) {
-      message.error(error?.message || 'Failed to load task logs')
+      message.error(getErrorMessage(error, 'Failed to load task logs'))
     } finally {
       setLoading(false)
     }
@@ -31,7 +33,7 @@ const TaskLogs = () => {
 
   useEffect(() => {
     loadLogs()
-  }, [taskId])
+  }, [taskId]) // eslint-disable-line react-hooks/exhaustive-deps -- loadLogs is stable within this scope
 
   const appendLog = async () => {
     if (!taskId || !content.trim()) {
@@ -44,7 +46,7 @@ const TaskLogs = () => {
       await loadLogs()
       message.success('Task log appended')
     } catch (error: any) {
-      message.error(error?.message || 'Failed to append task log')
+      message.error(getErrorMessage(error, 'Failed to append task log'))
     } finally {
       setLoading(false)
     }

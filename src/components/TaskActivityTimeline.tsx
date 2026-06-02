@@ -9,7 +9,8 @@ import {
   DeleteOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons'
-import { taskHistoryApi, TaskHistoryEntry } from '../api/taskHistory'
+import { taskHistoryApi } from '../api/taskHistory.js'
+import type { TaskHistoryEntry } from '../api/taskHistory.js'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { getErrorMessage } from '../utils/errorUtils'
 

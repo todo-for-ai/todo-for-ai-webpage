@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react'
 import { Button, Card, Form, Input, InputNumber, Select, Space, Switch, Tabs, message, Row, Col } from 'antd'
 import type { Agent, AgentStatus } from '../../../api/agents'

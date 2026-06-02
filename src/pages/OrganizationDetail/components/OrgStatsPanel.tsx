@@ -39,13 +39,13 @@ export const OrgStatsPanel: React.FC<OrgStatsPanelProps> = ({
     total > 0 ? `${(value / total) * 100}%` : '0%'
 
   const memberBarSegments: BarSegment[] = [
-    { key: 'human', width: getWidth(memberStats.humanActive, memberStats.total), color: '#1677ff' },
+    { key: 'human', width: getWidth(memberStats.humanActive, memberStats.total), color: '#00b96b' },
     { key: 'ai', width: getWidth(memberStats.aiActive, memberStats.total), color: '#52c41a' },
     { key: 'invited', width: getWidth(memberStats.invited, memberStats.total), color: '#faad14' },
   ]
 
   const projectBarSegments: BarSegment[] = [
-    { key: 'active', width: getWidth(projectStats.active, projectStats.total), color: '#1677ff' },
+    { key: 'active', width: getWidth(projectStats.active, projectStats.total), color: '#00b96b' },
     { key: 'archived', width: getWidth(projectStats.archived, projectStats.total), color: '#bfbfbf' },
     { key: 'deleted', width: getWidth(projectStats.deleted, projectStats.total), color: '#ff7875' },
   ]
@@ -71,7 +71,7 @@ export const OrgStatsPanel: React.FC<OrgStatsPanelProps> = ({
         </div>
         <div className="org-stats__legend">
           <span className="org-stats__legend-item">
-            <span className="org-stats__dot" style={{ background: '#1677ff' }} />
+            <span className="org-stats__dot" style={{ background: '#00b96b' }} />
             {tp('detail.stats.humanMembers')} {formatNumber(membersLoading ? undefined : memberStats.humanActive)}
           </span>
           <span className="org-stats__legend-item">
@@ -104,7 +104,7 @@ export const OrgStatsPanel: React.FC<OrgStatsPanelProps> = ({
         </div>
         <div className="org-stats__legend">
           <span className="org-stats__legend-item">
-            <span className="org-stats__dot" style={{ background: '#1677ff' }} />
+            <span className="org-stats__dot" style={{ background: '#00b96b' }} />
             {tp('detail.stats.projectsActive')} {formatNumber(projectsLoading ? undefined : projectStats.active)}
           </span>
           <span className="org-stats__legend-item">

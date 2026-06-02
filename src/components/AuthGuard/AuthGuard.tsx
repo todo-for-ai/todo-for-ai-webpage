@@ -18,7 +18,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   fallback
 }) => {
   const { tc } = useTranslation()
-  const { user, isAuthenticated, isLoading, token, checkAuth, fetchCurrentUser } = useAuthStore()
+  const { user, isAuthenticated, isLoading, token, fetchCurrentUser } = useAuthStore()
   const [isChecking, setIsChecking] = useState(true)
 
   // 使用useCallback来稳定checkAuth函数引用

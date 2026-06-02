@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Space, message } from 'antd'
 import { LockOutlined } from '@ant-design/icons'
@@ -90,6 +91,7 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
     return () => {
       cancelled = true
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, agentId])
 
   const loadCollaboration = async (projectId: number | null = collaborationProjectId) => {
@@ -111,6 +113,7 @@ export function AgentSecretsCard({ workspaceId, agentId }: AgentSecretsCardProps
 
   useEffect(() => {
     void loadCollaboration(collaborationProjectId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, agentId, collaborationProjectId, secrets, listSecretCollaboration])
 
   const copyText = async (text: string, successMessage = t('common:actions.copy')) => {

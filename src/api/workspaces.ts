@@ -6,7 +6,7 @@
 import { apiClient } from './client/index.js'
 import type { Organization } from './organizations'
 
-export interface Workspace extends Organization {}
+export type Workspace = Organization
 
 export interface WorkspaceListResponse {
   items: Workspace[]

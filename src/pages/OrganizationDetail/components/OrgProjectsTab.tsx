@@ -5,7 +5,6 @@
 import { Empty, Space, Table, Tag } from 'antd'
 import { LinkButton } from '../../../components/SmartLink'
 import type { Project } from '../../../api/projects'
-import { formatDateTime } from '../utils'
 
 interface OrgProjectsTabProps {
   projects: Project[]

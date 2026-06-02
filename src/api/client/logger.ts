@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * API客户端日志管理器
  */
 
 import type { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { RequestMetadata, LogLevel } from './types'
+import type { RequestMetadata } from './types'
 
 /**
  * 简单的日志管理器

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { Badge, Button, Card, List, Segmented, Space, Tag, Typography, message } from 'antd'
 import { useNavigate } from 'react-router-dom'

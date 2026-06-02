@@ -5,7 +5,7 @@
 import { Space } from 'antd'
 import { OrganizationMembersCard } from '../../organizations/components/OrganizationMembersCard'
 import NotificationChannelManager from '../../../components/NotificationChannelManager'
-import type { OrganizationMember, OrganizationRoleDefinition } from '../../../api/organizations'
+import type { OrganizationMember } from '../../../api/organizations'
 import type { OrganizationAgentMember } from '../../../api/organizationAgents'
 import type { MergedMemberRow } from '../types'
 

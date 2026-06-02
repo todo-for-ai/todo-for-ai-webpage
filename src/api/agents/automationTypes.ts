@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface AgentRunnerConfig {
   execution_mode: 'external_pull' | 'managed_runner' | string
   runner_enabled: boolean
@@ -60,7 +61,7 @@ export interface CreateAgentTriggerRequest {
   dedup_window_seconds?: number
 }
 
-export interface UpdateAgentTriggerRequest extends Partial<CreateAgentTriggerRequest> {}
+export type UpdateAgentTriggerRequest = Partial<CreateAgentTriggerRequest>
 
 export interface AgentRun {
   id: number
@@ -124,7 +125,7 @@ export interface CreateNotificationChannelRequest {
   config?: Record<string, any>
 }
 
-export interface UpdateNotificationChannelRequest extends Partial<CreateNotificationChannelRequest> {}
+export type UpdateNotificationChannelRequest = Partial<CreateNotificationChannelRequest>
 
 export interface EffectiveChannelsResponse {
   event_type?: string | null

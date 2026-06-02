@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { apiClient } from '../../api'
@@ -6,7 +7,6 @@ import {
   isTokenExpired,
   shouldRefreshToken,
   getTokenRemainingTime,
-  parseJWT
 } from '../../utils/jwtUtils'
 export interface User {
   id: number

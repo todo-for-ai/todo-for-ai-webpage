@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { Modal, Collapse, List, Button, Input, Space, Typography, Tag } from 'antd'
-import { SearchOutlined, CopyOutlined } from '@ant-design/icons'
+import { CopyOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
-import { getVariableDescription } from '../../utils/promptRenderer'
 
 const { Panel } = Collapse
 const Search = Input.Search

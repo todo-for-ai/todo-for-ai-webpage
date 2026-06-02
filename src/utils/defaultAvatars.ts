@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAvatar } from '@dicebear/core'
 import {
   adventurerNeutral,

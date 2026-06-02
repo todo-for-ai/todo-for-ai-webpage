@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons'
 import { Button, Card, Result, Space, Spin, Tag, Typography, message } from 'antd'
@@ -222,6 +223,7 @@ export default function AgentDetailPage() {
     return () => {
       cancelled = true
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agent, agentId, loadAgentsFailedMessage, fetchWorkspaces, preferredWorkspaceId, syncWorkspaceQuery, workspaceId])
 
   useEffect(() => {

@@ -8,9 +8,9 @@ import type { ReactNode } from 'react'
 import type { Organization } from '../../../api/organizations'
 
 export const roleColorMap: Record<string, string> = {
-  owner: 'gold',
-  admin: 'blue',
-  member: 'cyan',
+  owner: 'green',
+  admin: 'cyan',
+  member: 'default',
   viewer: 'default',
 }
 
@@ -71,31 +71,31 @@ export function getOrganizationStatItems(
   return [
     {
       key: 'members',
-      icon: <TeamOutlined style={{ color: '#1677ff' }} />,
+      icon: <TeamOutlined style={{ color: '#00b96b' }} />,
       label: tp('table.members'),
       value: org.member_count ?? 0,
-      tint: 'rgba(22, 119, 255, 0.08)',
+      tint: 'rgba(0, 185, 107, 0.06)',
     },
     {
       key: 'agents',
-      icon: <RobotOutlined style={{ color: '#52c41a' }} />,
+      icon: <RobotOutlined style={{ color: '#13c2c2' }} />,
       label: tp('table.agents'),
       value: org.agent_count ?? 0,
-      tint: 'rgba(82, 196, 26, 0.08)',
+      tint: 'rgba(19, 194, 194, 0.06)',
     },
     {
       key: 'projects',
-      icon: <FolderOpenOutlined style={{ color: '#13c2c2' }} />,
+      icon: <FolderOpenOutlined style={{ color: '#1890ff' }} />,
       label: tp('table.projects'),
       value: org.project_count ?? 0,
-      tint: 'rgba(19, 194, 194, 0.10)',
+      tint: 'rgba(24, 144, 255, 0.06)',
     },
     {
       key: 'activeRoles',
-      icon: <SafetyCertificateOutlined style={{ color: '#fa8c16' }} />,
+      icon: <SafetyCertificateOutlined style={{ color: '#7c6cf0' }} />,
       label: tp('table.activeRoles'),
       value: org.active_role_count ?? 0,
-      tint: 'rgba(250, 140, 22, 0.12)',
+      tint: 'rgba(124, 108, 240, 0.06)',
     },
   ]
 }

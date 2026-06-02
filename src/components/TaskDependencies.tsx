@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Tag, Input, Spin, message } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import { taskDependenciesApi, TaskDependencies } from '../api/taskDependencies'
+import { taskDependenciesApi } from '../api/taskDependencies.js'
+import type { TaskDependencies } from '../api/taskDependencies.js'
 import { getErrorMessage } from '../utils/errorUtils'
 
 interface TaskDependenciesProps {

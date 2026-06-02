@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Input, Popover, Avatar, List } from 'antd'
 import { UserOutlined } from '@ant-design/icons'

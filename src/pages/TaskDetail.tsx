@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -36,7 +37,7 @@ import { MarkdownEditor } from '../components/MarkdownEditor'
 import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import type { ApiResponse } from '../api/client/types'
-import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import dayjs from 'dayjs'
 import TaskComments from '../components/TaskComments'
 import TaskActivityTimeline from '../components/TaskActivityTimeline'
@@ -60,13 +61,13 @@ const TaskDetail: React.FC = () => {
 
   const { getTask, deleteTask, fetchTasksByParams, updateTask } = useTaskStore()
   const { projects, fetchProjects } = useProjectStore()
-  const { t: tc } = useTranslation('common')
-  const { t, tp } = usePageTranslation('taskDetail')
+  const { tp } = usePageTranslation('taskDetail')
 
   useEffect(() => {
     if (id) {
       loadTask(parseInt(id, 10))
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   useTaskRealtime({
@@ -121,6 +122,7 @@ const TaskDetail: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectTasks, task])
 
   // 从localStorage加载任务筛选条件

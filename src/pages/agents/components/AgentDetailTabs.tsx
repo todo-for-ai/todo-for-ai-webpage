@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from 'react'
 import { Card, Tabs } from 'antd'
 import type { Agent } from '../../../api/agents'

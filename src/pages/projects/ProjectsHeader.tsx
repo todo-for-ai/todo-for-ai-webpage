@@ -98,7 +98,7 @@ export const ProjectsHeader = ({
               }}
             >
               {loading ? (
-                <span style={{ color: '#1890ff' }}>{t('search.searching')}</span>
+                <span style={{ color: '#00b96b' }}>{t('search.searching')}</span>
               ) : total ? (
                 <>
                   {t('search.totalFound', { total })}

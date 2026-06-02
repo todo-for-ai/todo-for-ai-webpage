@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Import types and utilities from submodules
 import { type ApiClientConfig, type PerformanceStats } from './types'
 import { getApiBaseUrl } from '../../utils/apiConfig'

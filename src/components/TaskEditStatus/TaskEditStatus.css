@@ -45,7 +45,7 @@
 }
 
 .task-edit-status .ant-checkbox-wrapper:hover .ant-checkbox-inner {
-  border-color: #1890ff;
+  border-color: #00b96b;
 }
 
 /* 时间显示样式 */
@@ -55,12 +55,12 @@
 
 /* 保存按钮样式 */
 .task-edit-status .ant-btn-link {
-  color: #1890ff;
+  color: #00b96b;
   font-weight: 500;
 }
 
 .task-edit-status .ant-btn-link:hover {
-  color: #40a9ff;
+  color: #3cc884;
   text-decoration: underline;
 }
 

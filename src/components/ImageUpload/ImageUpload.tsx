@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { Upload, message, Modal, Progress } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'

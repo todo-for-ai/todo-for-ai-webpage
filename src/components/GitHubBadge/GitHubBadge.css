@@ -6,16 +6,16 @@
 
 .github-badge-triangle:hover {
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 185, 107, 0.15);
 }
 
 .github-badge-triangle:active {
   transform: scale(1.02);
-  box-shadow: 0 1px 4px rgba(24, 144, 255, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 185, 107, 0.1);
 }
 
 .github-badge-triangle:focus {
-  outline: 2px solid #1890ff;
+  outline: 2px solid #00b96b;
   outline-offset: 2px;
 }
 
@@ -28,16 +28,16 @@
 }
 
 .github-badge:hover {
-  color: #1890ff !important;
+  color: #00b96b !important;
   background-color: #f0f8ff !important;
-  border-color: #1890ff !important;
+  border-color: #00b96b !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 185, 107, 0.15);
 }
 
 .github-badge:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 185, 107, 0.1);
 }
 
 .github-badge-content {
@@ -60,7 +60,7 @@
 .github-badge-stats {
   display: flex;
   align-items: center;
-  background: rgba(24, 144, 255, 0.1);
+  background: rgba(0, 185, 107, 0.1);
   padding: 2px 6px;
   border-radius: 10px;
   margin-left: 4px;
@@ -75,7 +75,7 @@
 .github-badge-fork-count {
   font-size: 12px;
   font-weight: 600;
-  color: #1890ff;
+  color: #00b96b;
 }
 
 .github-badge-fork-icon {
@@ -85,7 +85,7 @@
 
 .github-badge:hover .github-badge-icon,
 .github-badge:hover .github-badge-text {
-  color: #1890ff;
+  color: #00b96b;
 }
 
 /* 响应式设计 */
@@ -114,7 +114,7 @@
   }
 
   .github-badge:hover::before {
-    border-top-color: #1890ff;
+    border-top-color: #00b96b;
   }
 }
 

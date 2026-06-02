@@ -53,25 +53,12 @@ export const useEditor = (options: UseEditorOptions) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isReady, setIsReady] = useState(false)
 
-  // 处理内容变化
-  const handleChange = useCallback((markdown: string) => {
-    if (onChange) {
-      onChange(markdown)
-      setHasUnsavedChanges(markdown !== lastSaved)
-    }
-
-    // 自动调整高度
-    if (autoHeight) {
-      adjustHeight()
-    }
-  }, [onChange, lastSaved, autoHeight])
-
   // 自动调整高度
   const adjustHeight = useCallback(() => {
     if (!autoHeight || !editorRef.current) return
 
     const proseMirrorElement = editorRef.current.querySelector('.ProseMirror') as HTMLElement
-    
+
     if (proseMirrorElement) {
       // 获取内容的实际高度
       const contentHeight = proseMirrorElement.scrollHeight
@@ -87,6 +74,19 @@ export const useEditor = (options: UseEditorOptions) => {
       editorRef.current!.style.height = `${finalHeight}px`
     }
   }, [autoHeight, minHeight, maxHeight])
+
+  // 处理内容变化
+  const handleChange = useCallback((markdown: string) => {
+    if (onChange) {
+      onChange(markdown)
+      setHasUnsavedChanges(markdown !== lastSaved)
+    }
+
+    // 自动调整高度
+    if (autoHeight) {
+      adjustHeight()
+    }
+  }, [onChange, lastSaved, autoHeight, adjustHeight])
 
   // 初始化编辑器
   useEffect(() => {
@@ -120,6 +120,7 @@ export const useEditor = (options: UseEditorOptions) => {
       }
       setIsReady(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // 只在组件挂载时初始化一次
 
   // 当外部value变化时更新编辑器内容
@@ -146,7 +147,7 @@ export const useEditor = (options: UseEditorOptions) => {
     }, autoSaveInterval)
 
     return () => clearTimeout(timer)
-  }, [value, autoSave, autoSaveInterval, hasUnsavedChanges, lastSaved, onSave, tc])
+  }, [value, autoSave, autoSaveInterval, hasUnsavedChanges, lastSaved, onSave, onChange, tc])
 
   // 手动保存
   const handleSave = useCallback(() => {

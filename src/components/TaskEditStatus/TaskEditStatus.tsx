@@ -42,15 +42,11 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
   
   // 是否有未保存的更改
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  
-  // 上次检查时间
-  const [lastCheckTime, setLastCheckTime] = useState(Date.now())
-  
+
   // 检查是否有未保存的更改
   const checkUnsavedChanges = useCallback(() => {
     const hasChanges = currentContent !== originalContent
     setHasUnsavedChanges(hasChanges)
-    setLastCheckTime(Date.now())
     return hasChanges
   }, [currentContent, originalContent])
   
@@ -108,7 +104,7 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
           minute: '2-digit'
         })
       }
-    } catch (error) {
+    } catch {
       return tp('editStatus.unknown')
     }
   }, [language, tp])

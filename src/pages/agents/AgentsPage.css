@@ -15,12 +15,12 @@
 
 /* 主要操作按钮 - 扁平化 */
 .agents-page__action-btn--primary {
-  color: #1677ff;
+  color: #00b96b;
 }
 
 .agents-page__action-btn--primary:hover {
-  color: #4096ff;
-  background-color: rgba(22, 119, 255, 0.06);
+  color: #3cc884;
+  background-color: rgba(0, 185, 107, 0.06);
 }
 
 /* 编辑按钮 */
@@ -29,8 +29,8 @@
 }
 
 .agents-page__action-btn--edit:hover {
-  color: #1677ff;
-  background-color: rgba(22, 119, 255, 0.06);
+  color: #00b96b;
+  background-color: rgba(0, 185, 107, 0.06);
 }
 
 /* 危险操作按钮 */
@@ -116,8 +116,8 @@
 }
 
 .agents-page__pagination .ant-pagination-item-active {
-  background-color: #1677ff;
-  border-color: #1677ff;
+  background-color: #00b96b;
+  border-color: #00b96b;
 }
 
 .agents-page__pagination .ant-pagination-item-active a {

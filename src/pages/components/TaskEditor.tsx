@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { Form, Card, Space, Button } from 'antd'
 import {
@@ -42,10 +43,10 @@ tp,
 debouncedSaveDraft,
 debouncedSaveEditDraft,
 debouncedAutoSave,
-performAutoSave,
+performAutoSave: _performAutoSave,
 createTask,
 updateTask,
-loadTask,
+loadTask: _loadTask,
 clearDraft,
 clearEditDraft,
 defaultProjectId
@@ -160,7 +161,7 @@ console.error('提交失败:', error)
 return (
 <Card
 title={
-<div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>
+<div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00b96b' }}>
 📝 {tp('form.content.title')}
 </div>
 }
@@ -182,9 +183,9 @@ icon={<EyeOutlined />}
 onClick={handleViewTaskDetail}
 type="default"
 style={{
-backgroundColor: '#e6f7ff',
+backgroundColor: '#f0faf5',
 borderColor: '#91d5ff',
-color: '#1890ff'
+color: '#00b96b'
 }}
 >
 {tp('actions.editMode.taskDetail')}
@@ -238,8 +239,8 @@ icon={<SaveOutlined />}
 loading={loading}
 onClick={handleSubmitAndEdit}
 style={{
-backgroundColor: '#1890ff',
-borderColor: '#1890ff',
+backgroundColor: '#00b96b',
+borderColor: '#00b96b',
 fontWeight: 'bold'
 }}
 >
@@ -322,8 +323,8 @@ icon={<SaveOutlined />}
 loading={loading}
 onClick={handleSubmitAndEdit}
 style={{
-backgroundColor: '#1890ff',
-borderColor: '#1890ff',
+backgroundColor: '#00b96b',
+borderColor: '#00b96b',
 fontWeight: 'bold'
 }}
 >

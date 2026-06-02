@@ -18,7 +18,7 @@
 }
 
 .theme-preview-card.active {
-  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 185, 107, 0.2);
 }
 
 .theme-preview-card.active::before {
@@ -28,7 +28,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(45deg, #1890ff, #52c41a);
+  background: linear-gradient(45deg, #00b96b, #52c41a);
   border-radius: 8px;
   z-index: -1;
 }
@@ -79,7 +79,7 @@
   background: #f8f9fa;
   padding: 12px;
   border-radius: 6px;
-  border-left: 4px solid #1890ff;
+  border-left: 4px solid #00b96b;
 }
 
 .preview-colors {
@@ -173,7 +173,7 @@
 /* 深色模式适配 */
 .dark-theme .preview-info {
   background: #1f1f1f;
-  border-left-color: #4096ff;
+  border-left-color: #3cc884;
 }
 
 .dark-theme .color-swatch {

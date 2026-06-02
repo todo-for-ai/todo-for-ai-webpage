@@ -63,15 +63,15 @@ export function OrganizationsListView({
                   width: 40,
                   height: 40,
                   minWidth: 40,
-                  borderRadius: 8,
-                  background: 'linear-gradient(135deg, #e6f4ff 0%, #f0f5ff 100%)',
+                  borderRadius: 6,
+                  background: '#00b96b',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: 'inset 0 0 0 1px rgba(24, 144, 255, 0.12)',
+                  color: '#fff',
                 }}
               >
-                <TeamOutlined style={{ color: '#1890ff', fontSize: 18 }} />
+                <TeamOutlined style={{ fontSize: 18 }} />
               </div>
               <div style={{ minWidth: 0 }}>
                 <Space size={[8, 8]} wrap style={{ marginBottom: 4 }}>
@@ -156,10 +156,10 @@ export function OrganizationsListView({
                   <div
                     key={item.key}
                     style={{
-                      borderRadius: 8,
+                      borderRadius: 4,
                       padding: '8px 10px',
                       background: item.tint,
-                      border: '1px solid rgba(24, 144, 255, 0.08)',
+                      border: 'none',
                     }}
                   >
                     <Space size={6} align="center">
@@ -186,7 +186,7 @@ export function OrganizationsListView({
             const activityItems = [
               {
                 key: 'lastActivity',
-                icon: <ClockCircleOutlined style={{ color: '#1677ff' }} />,
+                icon: <ClockCircleOutlined style={{ color: '#00b96b' }} />,
                 label: tp('detail.stats.lastActivity'),
                 value: primaryActivityAt,
               },

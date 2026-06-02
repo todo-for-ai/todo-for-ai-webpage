@@ -2,10 +2,8 @@
  * Organization Detail 类型定义
  */
 
-import type { OrganizationMember, OrganizationRoleDefinition } from '../../api/organizations'
+import type { OrganizationMember } from '../../api/organizations'
 import type { OrganizationAgentMember } from '../../api/organizationAgents'
-import type { OrganizationEvent } from '../../api/organizationEvents'
-import type { Project } from '../../api/projects'
 
 /** 合并后的成员行数据 */
 export interface MergedMemberRow {

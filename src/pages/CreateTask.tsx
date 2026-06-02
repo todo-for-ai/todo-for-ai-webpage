@@ -17,7 +17,7 @@ const { Title, Paragraph } = Typography
 const { Option } = Select
 
 const CreateTask: React.FC = () => {
-  const { t, tp } = usePageTranslation('createTask')
+  const { tp } = usePageTranslation('createTask')
   const navigate = useNavigate()
   const hook = useCreateTask(tp)
   const [labelOptions, setLabelOptions] = useState<{ label: string; value: string }[]>([])
@@ -41,13 +41,10 @@ const CreateTask: React.FC = () => {
     handleSubmit,
     handleSubmitAndEdit,
     handleCancel,
-    handleCreateAndContinue,
     debouncedSaveDraft,
     debouncedSaveEditDraft,
     debouncedAutoSave,
     performAutoSave,
-    clearDraft,
-    clearEditDraft,
   } = hook
   const selectedProjectId = Form.useWatch('project_id', form)
 
@@ -209,7 +206,7 @@ const CreateTask: React.FC = () => {
               </Row>
             </Card>
 
-            <Card className="flat-card" title={<div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>📝 {tp('form.content.title')}</div>} style={{ marginBottom: '16px' }}>
+            <Card className="flat-card" title={<div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00b96b' }}>📝 {tp('form.content.title')}</div>} style={{ marginBottom: '16px' }}>
               <Form.Item name="content" rules={[{ required: true, message: tp('form.content.required') }]}>
                 {(!isEditMode || taskLoaded) ? (
                   <MilkdownEditor
@@ -305,6 +302,17 @@ const CreateTask: React.FC = () => {
               <Upload.Dragger
                 multiple
                 beforeUpload={(file) => {
+                  const MAX_SIZE = 20 * 1024 * 1024
+                  const ALLOWED_EXT = ['.txt', '.md', '.json', '.csv', '.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.zip', '.tar', '.gz', '.py', '.js', '.ts', '.tsx', '.jsx', '.java', '.go', '.rs', '.sql', '.yaml', '.yml']
+                  const ext = '.' + (file.name.split('.').pop() || '').toLowerCase()
+                  if (!ALLOWED_EXT.includes(ext)) {
+                    message.error(`${file.name}: 不支持此文件类型`)
+                    return Upload.LIST_IGNORE
+                  }
+                  if (file.size > MAX_SIZE) {
+                    message.error(`${file.name}: 文件超过 20MB 限制`)
+                    return Upload.LIST_IGNORE
+                  }
                   setAttachmentFiles((prev) => [...prev, file])
                   return false
                 }}

@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useMemo, forwardRef, useImperativeHandle, useCallback } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -9,7 +10,6 @@ import {
 } from '@dnd-kit/core'
 import type {
   DragEndEvent,
-  DragOverEvent,
   DragStartEvent,
 } from '@dnd-kit/core'
 import {
@@ -52,7 +52,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
   )
 
   // 独立的任务数据获取逻辑，不受任务列表筛选条件影响
-  const fetchKanbanTasks = async () => {
+  const fetchKanbanTasks = useCallback(async () => {
     if (!projectId) return
 
     setLoading(true)
@@ -78,11 +78,11 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId, tc])
 
   useEffect(() => {
     fetchKanbanTasks()
-  }, [projectId])
+  }, [fetchKanbanTasks])
 
   // WebSocket real-time updates: refresh board when tasks are updated by other users
   useEffect(() => {
@@ -95,7 +95,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
     return () => {
       unsubUpdate()
     }
-  }, [projectId])
+  }, [projectId, fetchKanbanTasks])
 
   // 计算按状态分组的任务
   const tasksByStatus = useMemo(() => {
@@ -139,7 +139,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
     setActiveTask(task || null)
   }
 
-  const handleDragOver = (_event: DragOverEvent) => {
+  const handleDragOver = () => {
     // 可以在这里添加拖拽过程中的视觉反馈
   }
 

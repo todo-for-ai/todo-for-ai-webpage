@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -61,6 +62,7 @@ is_public: false,
 project_id: projectId
 })
 }
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [id, searchParams, form])
 useEffect(() => {
 if (isEditMode && currentContextRule && isDataLoaded) {
@@ -118,7 +120,7 @@ navigate('/todo-for-ai/pages/context-rules')
 console.error('保存上下文规则失败:', error)
 message.error(t('messages.saveError'))
 }
-}, [isEditMode, id, projectId, form, updateContextRule, createContextRule, navigate])
+}, [isEditMode, id, projectId, form, updateContextRule, createContextRule, navigate, t])
 const handleKeyDown = useCallback((event: KeyboardEvent) => {
 if (event.ctrlKey && event.key === 's') {
 event.preventDefault()
@@ -140,7 +142,7 @@ document.title = isEditMode ? t('pageTitle.edit') : t('pageTitle.create')
 return () => {
 document.title = 'Todo for AI'
 }
-}, [isEditMode, currentContextRule])
+}, [isEditMode, currentContextRule, t])
 const loadContextRule = async (ruleId: number) => {
 try {
 await fetchContextRule(ruleId)

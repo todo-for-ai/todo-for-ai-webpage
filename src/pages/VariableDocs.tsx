@@ -5,7 +5,6 @@ import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useNavigate } from 'react-router-dom'
 
 const { Title, Paragraph, Text } = Typography
-const { Link } = Anchor
 
 interface VariableInfo {
   variable: string
@@ -39,7 +38,7 @@ const VariableDocs: React.FC = () => {
     { variable: '${project.description}', description: tp('variables.project.description'), example: tp('sampleData.project.description'), type: 'string' },
     { variable: '${project.github_repo}', description: tp('variables.project.github_repo'), example: 'https://github.com/example/project', type: 'string' },
     { variable: '${project.context}', description: tp('variables.project.context'), example: tp('sampleData.project.context'), type: 'string' },
-    { variable: '${project.color}', description: tp('variables.project.color'), example: '#1890ff', type: 'string' },
+    { variable: '${project.color}', description: tp('variables.project.color'), example: '#00b96b', type: 'string' },
   ]
 
   const taskVariables: VariableInfo[] = [

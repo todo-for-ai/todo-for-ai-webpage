@@ -22,7 +22,7 @@ export const TestingTab: React.FC = () => {
 
   const testCommands = [
     {
-      icon: <FolderOutlined style={{ color: '#1890ff' }} />,
+      icon: <FolderOutlined style={{ color: '#00b96b' }} />,
       key: 'listProjects',
     },
     {
@@ -61,7 +61,7 @@ export const TestingTab: React.FC = () => {
   return (
     <Card>
       <Title level={3}>
-        <ExperimentOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+        <ExperimentOutlined style={{ color: '#00b96b', marginRight: '8px' }} />
         {tp('testing.title')}
       </Title>
       <Paragraph>{tp('testing.description')}</Paragraph>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, Input, Checkbox, Col } from 'antd'
+import { Form, Input, Checkbox } from 'antd'
 import ProjectSelector from '../../components/ProjectSelector'
 
 interface TaskFormBasicInfoProps {

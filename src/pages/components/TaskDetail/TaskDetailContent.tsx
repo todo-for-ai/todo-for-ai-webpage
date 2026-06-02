@@ -1,17 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo } from 'react'
 import { Card, Descriptions, Tag, Typography } from 'antd'
-import TaskIdBadge from '../../../components/TaskIdBadge'
 import { MarkdownEditor } from '../../../components/MarkdownEditor'
 import dayjs from 'dayjs'
 
-const { Paragraph, Text } = Typography
+const { Paragraph } = Typography
 
 interface TaskDetailContentProps {
   task: any
-  customButtons: any[]
-  handleCreateFromTask: () => void
-  handleCreateTask: () => void
-  handleCopyTask: () => void
   tp: (key: string) => string
 }
 
@@ -47,15 +43,12 @@ const parseTaskContent = (content: string): ParsedTaskContent => {
 
 export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
   task,
-  customButtons,
-  handleCreateFromTask,
-  handleCreateTask,
-  handleCopyTask,
   tp
 }) => {
+  const parsedContent = useMemo(() => task ? parseTaskContent(task.content) : { originalContent: '' }, [task])
+
   if (!task) return null
 
-  const parsedContent = useMemo(() => parseTaskContent(task.content), [task.content])
   const hasAgentOutput = !!parsedContent.agent_output
 
   return (
@@ -68,7 +61,7 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
                 <Paragraph><strong>Prompt:</strong> {parsedContent.prompt}</Paragraph>
                 {parsedContent.context && Object.keys(parsedContent.context).length > 0 && (
                   <details>
-                    <summary style={{ cursor: 'pointer', color: '#1890ff' }}>Context</summary>
+                    <summary style={{ cursor: 'pointer', color: '#00b96b' }}>Context</summary>
                     <pre style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
                       <code>{JSON.stringify(parsedContent.context, null, 2)}</code>
                     </pre>
@@ -108,7 +101,7 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
             </div>
             {parsedContent.agent_metadata && Object.keys(parsedContent.agent_metadata).length > 0 && (
               <details style={{ marginTop: '16px' }}>
-                <summary style={{ cursor: 'pointer', color: '#1890ff', fontSize: '12px' }}>Metadata</summary>
+                <summary style={{ cursor: 'pointer', color: '#00b96b', fontSize: '12px' }}>Metadata</summary>
                 <pre style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', marginTop: '8px', fontSize: '12px' }}>
                   <code>{JSON.stringify(parsedContent.agent_metadata, null, 2)}</code>
                 </pre>

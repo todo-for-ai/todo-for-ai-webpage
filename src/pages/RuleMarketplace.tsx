@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react'
 import { Card, Table, Button, Space, Tag, Input, message } from 'antd'
 import { DownloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { useMarketplaceStore } from '../stores'
 import { RuleMarketplaceModal } from '../components/RuleMarketplaceModal'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 
 const marketplaceApi = {
-  install: async (id: number) => Promise.resolve()
+  install: async (_id: number) => Promise.resolve()
 }
 
 const RuleMarketplace: React.FC = () => {
@@ -19,6 +21,7 @@ const RuleMarketplace: React.FC = () => {
 
   useEffect(() => {
     fetchRules()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleInstall = async (rule: any) => {
@@ -26,7 +29,7 @@ const RuleMarketplace: React.FC = () => {
       await marketplaceApi.install(rule.id)
       message.success(tp('messages.installSuccess'))
     } catch (error) {
-      message.error(tp('messages.installFailed'))
+      message.error(getErrorMessage(error, tp('messages.installFailed')))
     }
   }
 

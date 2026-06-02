@@ -122,7 +122,7 @@ export const CommandLinePlayer: React.FC<CommandLinePlayerProps> = ({
       if (onScriptChange) {
         onScriptChange(parsed)
       }
-    } catch (e) {
+    } catch {
       // 解析错误时不更新
     }
   }

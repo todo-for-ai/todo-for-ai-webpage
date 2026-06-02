@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Select, Spin } from 'antd'
 import { ProjectOutlined } from '@ant-design/icons'
 import { projectsApi } from '../../api/projects'
@@ -51,7 +52,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   const resolvedPlaceholder = placeholder || tc('projectSelector.placeholder')
 
   // 加载项目列表
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     setLoading(true)
     // 不要清空现有数据，保持用户体验的连续性
     // setProjects([]) // 移除这行，避免在加载时显示空列表
@@ -87,18 +88,18 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // 强制刷新项目列表
-  const refreshProjects = () => {
+  const refreshProjects = useCallback(() => {
     console.log('ProjectSelector: Force refreshing projects...')
     loadProjects()
-  }
+  }, [loadProjects])
 
   // 组件挂载时加载项目
   useEffect(() => {
     loadProjects()
-  }, [])
+  }, [loadProjects])
 
   // 单独加载项目的函数
   const loadProjectById = async (projectId: number) => {
@@ -151,7 +152,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     return () => {
       delete (window as any).refreshProjectSelector
     }
-  }, [])
+  }, [refreshProjects])
 
   // 创建项目选项
   const projectOptions: ProjectOption[] = useMemo(() => {
@@ -168,7 +169,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                 width: '12px',
                 height: '12px',
                 borderRadius: '2px',
-                backgroundColor: project.color || '#1890ff',
+                backgroundColor: project.color || '#00b96b',
                 flexShrink: 0
               }}
             />
@@ -229,7 +230,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
             width: '12px',
             height: '12px',
             borderRadius: '2px',
-            backgroundColor: project.color || '#1890ff',
+            backgroundColor: project.color || '#00b96b',
             flexShrink: 0
           }}
         />

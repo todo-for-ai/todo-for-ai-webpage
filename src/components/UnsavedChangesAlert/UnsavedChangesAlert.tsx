@@ -41,7 +41,7 @@ const UnsavedChangesAlert: React.FC<UnsavedChangesAlertProps> = ({
           <span
             onClick={onSave}
             style={{
-              color: '#1890ff',
+              color: '#00b96b',
               cursor: 'pointer',
               textDecoration: 'underline',
               fontSize: '13px',

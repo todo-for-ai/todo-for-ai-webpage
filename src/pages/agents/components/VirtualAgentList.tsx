@@ -165,7 +165,7 @@ function AgentCard({ agent, index, onClick }: AgentCardProps) {
       <Avatar
         src={resolveUserAvatarSrc(agent.avatar_url, agent.name)}
         size={48}
-        style={{ backgroundColor: '#1677ff', flexShrink: 0 }}
+        style={{ backgroundColor: '#00b96b', flexShrink: 0 }}
       >
         {agent.display_name?.charAt(0) || agent.name.charAt(0)}
       </Avatar>

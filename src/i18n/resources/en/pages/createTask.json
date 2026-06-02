@@ -35,6 +35,11 @@
       "tooltip": "Optional field, will be auto-generated from content if not provided"
     },
     "assignToAI": "Assign to AI",
+    "attachments": {
+      "title": "Attachments",
+      "hint": "Drag files here or click to select files",
+      "subHint": "Files will be uploaded after task is saved"
+    },
     "content": {
       "title": "Task Content",
       "tooltip": "Supports Markdown format, describe task content, requirements and instructions in detail",

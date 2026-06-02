@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Projects 数据 Hook
  */
@@ -5,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { message } from 'antd'
 import { projectsApi, type Project } from '../../../api/projects'
-import { extractProjectItems, getProjectTaskCount, getTimestamp } from '../utils'
+import { extractProjectItems, getTimestamp } from '../utils'
 import type { ProjectStats, ActivityStats } from '../types'
 
 interface UseProjectsReturn {

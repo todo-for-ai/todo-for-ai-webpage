@@ -18,7 +18,7 @@ export const CursorTab: React.FC = () => {
   return (
     <Card>
       <Title level={3}>
-        <CodeOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+        <CodeOutlined style={{ color: '#00b96b', marginRight: '8px' }} />
         {tp('cursor.title')}
       </Title>
       <Paragraph>{tp('cursor.description')}</Paragraph>

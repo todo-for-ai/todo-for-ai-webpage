@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Card, message } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'

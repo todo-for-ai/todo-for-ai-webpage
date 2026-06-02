@@ -43,7 +43,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         size="small"
         style={{
           backgroundColor: isOver ? '#f0f8ff' : color,
-          border: isOver ? '2px dashed #1890ff' : '1px solid #d9d9d9',
+          border: isOver ? '2px dashed #00b96b' : '1px solid #d9d9d9',
           transition: 'all 0.2s ease',
           height: '100%',
         }}
@@ -123,13 +123,13 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(24, 144, 255, 0.1)',
-              border: '2px dashed #1890ff',
+              backgroundColor: 'rgba(0, 185, 107, 0.1)',
+              border: '2px dashed #00b96b',
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#1890ff',
+              color: '#00b96b',
               fontSize: '14px',
               fontWeight: 500,
               pointerEvents: 'none',

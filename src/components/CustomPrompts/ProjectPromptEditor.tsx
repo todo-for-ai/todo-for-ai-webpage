@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
 import { Card, Modal, Spin, Alert } from 'antd'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
@@ -21,7 +22,6 @@ const ProjectPromptEditor: React.FC<ProjectPromptEditorProps> = ({
     setContent,
     isLoading,
     selectedProjectId,
-    setSelectedProjectId,
     selectedProject,
     projectTasks,
     globalContextRules,

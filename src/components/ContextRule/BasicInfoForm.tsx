@@ -4,11 +4,10 @@ import { Form, Input, Card } from 'antd'
 const { TextArea } = Input
 
 interface BasicInfoFormProps {
-  form: any
   tp: (key: string) => string
 }
 
-export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, tp }) => {
+export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ tp }) => {
   return (
     <Card title={tp('form.sections.basicInfo')}>
       <Form.Item

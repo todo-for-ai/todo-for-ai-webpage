@@ -43,7 +43,7 @@ const MCPInstallation: React.FC = () => {
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '16px' }}>
         <Title level={2}>
-          <ApiOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+          <ApiOutlined style={{ marginRight: '8px', color: '#00b96b' }} />
           {tp('title')}
         </Title>
         <Paragraph type="secondary">{tp('subtitle')}</Paragraph>

@@ -37,7 +37,7 @@
 
 .footer-project-link,
 .footer-author-link {
-  color: #1890ff;
+  color: #00b96b;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
@@ -45,13 +45,13 @@
 
 .footer-project-link:hover,
 .footer-author-link:hover {
-  color: #40a9ff;
+  color: #3cc884;
   text-decoration: underline;
 }
 
 .footer-project-link:focus,
 .footer-author-link:focus {
-  color: #1890ff;
+  color: #00b96b;
   text-decoration: none;
 }
 

@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { message } from 'antd'
 import { dashboardApi, type ActivityHeatmapData } from '../../../api/dashboard'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
-import type { ActivityHeatmapProps } from '../types'
+import { getErrorMessage } from '../../../utils/errorUtils'
 
-export function useActivityHeatmap({ autoRefresh, refreshInterval }: ActivityHeatmapProps) {
+export function useActivityHeatmap() {
   const { tp } = usePageTranslation('dashboard')
   const [heatmapData, setHeatmapData] = useState<ActivityHeatmapData[]>([])
   const [loading, setLoading] = useState(true)
@@ -17,7 +17,7 @@ export function useActivityHeatmap({ autoRefresh, refreshInterval }: ActivityHea
       setHeatmapData(response.heatmap_data)
     } catch (error) {
       console.error('加载活跃度热力图失败:', error)
-      message.error(tp('heatmap.loadError'))
+      message.error(getErrorMessage(error, tp('heatmap.loadError')))
     } finally {
       setLoading(false)
     }
@@ -25,7 +25,7 @@ export function useActivityHeatmap({ autoRefresh, refreshInterval }: ActivityHea
 
   useEffect(() => {
     loadHeatmapData()
-  }, []) // 移除loadHeatmapData依赖，避免无限循环
+  }, [loadHeatmapData])
 
   // 自动刷新功能 - 暂时禁用以调试
   // useEffect(() => {

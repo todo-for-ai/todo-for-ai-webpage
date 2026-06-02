@@ -144,7 +144,7 @@ export class MilkdownEditorCore {
     if (this.editor) {
       try {
         this.editor.destroy()
-      } catch (error) {
+      } catch {
         // 忽略销毁错误
       }
       this.editor = null

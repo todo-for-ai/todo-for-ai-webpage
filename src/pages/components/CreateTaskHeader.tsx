@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Typography, Breadcrumb, Card } from 'antd'
@@ -87,7 +88,7 @@ export const CreateTaskHeader: React.FC<CreateTaskHeaderProps> = ({
             </Title>
             <Paragraph type="secondary" style={{ margin: '4px 0 0 0' }}>
               {isEditMode ? tp('description.edit') : tp('description.create')}
-              <span style={{ color: '#1890ff', marginLeft: '8px' }}>
+              <span style={{ color: '#00b96b', marginLeft: '8px' }}>
                 💡 {tp('shortcuts.save')} {isEditMode ? tp('shortcuts.saveAndStay') : tp('shortcuts.createAndEdit')}
               </span>
             </Paragraph>

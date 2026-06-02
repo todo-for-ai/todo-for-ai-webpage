@@ -19,7 +19,10 @@ createRoot(document.getElementById('root')!).render(
       <ConfigProvider
         theme={{
           token: {
-            colorPrimary: '#1677ff',
+            colorPrimary: '#00b96b',
+            colorInfo: '#00b96b',
+            colorSuccess: '#52c41a',
+            colorLink: '#00b96b',
             borderRadius: 4,
             fontSize: 14,
             boxShadow: 'none',
@@ -36,11 +39,11 @@ createRoot(document.getElementById('root')!).render(
               primaryShadow: 'none',
             },
             Card: {
-              borderRadius: 8,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+              borderRadius: 6,
+              boxShadow: 'none',
             },
             Table: {
-              borderRadius: 8,
+              borderRadius: 6,
             },
             Input: {
               borderRadius: 4,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Card, Tabs, Spin, Button, Space, Tag } from 'antd'
@@ -100,7 +101,7 @@ const ProjectDetail = () => {
               {tc('actions.back')}
             </Button>
             <span style={{ color: '#999' }}>|</span>
-            <HomeOutlined style={{ color: '#1890ff' }} />
+            <HomeOutlined style={{ color: '#00b96b' }} />
             <span style={{ color: '#666' }}>{currentProject.name}</span>
             <Tag color={currentProject.status === 'active' ? 'green' : 'orange'}>
               {tp(`status.${currentProject.status}`)}

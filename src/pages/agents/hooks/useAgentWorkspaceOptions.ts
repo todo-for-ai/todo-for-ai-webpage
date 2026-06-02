@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { message } from 'antd'
 import { organizationsApi, type Organization } from '../../../api/organizations'

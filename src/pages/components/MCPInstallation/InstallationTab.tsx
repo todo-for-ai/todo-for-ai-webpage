@@ -1,7 +1,7 @@
 import React from 'react'
 import { Alert, Card, Typography, Steps } from 'antd'
 
-const { Title, Paragraph, Text } = Typography
+const { Title, Paragraph } = Typography
 import { DownloadOutlined, KeyOutlined, SettingOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { generateMcpConfig, generateMcpConfigWithArgs } from '../../../utils/mcpConfig'
 import CodeBlock from '../common/CodeBlock'
@@ -13,7 +13,7 @@ export const InstallationTab: React.FC = () => {
   return (
     <Card>
       <Title level={3}>
-        <DownloadOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+        <DownloadOutlined style={{ color: '#00b96b', marginRight: '8px' }} />
         {tp('installation.title')}
       </Title>
       <Alert

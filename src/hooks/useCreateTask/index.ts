@@ -7,7 +7,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Form } from 'antd'
 import { useTaskStore } from '../../stores'
 
-import { useTaskDraft, type DraftData } from './useTaskDraft'
+import { useTaskDraft } from './useTaskDraft'
 import { useTaskAutoSave } from './useTaskAutoSave'
 import { useTaskSubmit } from './useTaskSubmit'
 import { useTaskLoader } from './useTaskLoader'
@@ -37,7 +37,6 @@ interface CreateTaskHook {
   clearEditDraft: (taskId: number) => void
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const useCreateTask = (_tp: (key: string) => string): CreateTaskHook => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -54,12 +53,9 @@ export const useCreateTask = (_tp: (key: string) => string): CreateTaskHook => {
 
   // 草稿管理
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     saveDraft: _saveDraft,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     loadDraft: _loadDraft,
     clearDraft,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     saveEditDraft: _saveEditDraft,
     loadEditDraft,
     clearEditDraft,
@@ -95,7 +91,6 @@ export const useCreateTask = (_tp: (key: string) => string): CreateTaskHook => {
   // 任务提交
   const {
     loading: submitLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setLoading: _setSubmitLoading,
     handleSubmit: handleSubmitBase,
   } = useTaskSubmit(

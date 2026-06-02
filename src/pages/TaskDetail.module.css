@@ -73,11 +73,11 @@
 
 /* 信息标题样式 - 对比原则：突出标题 */
 .infoTitle {
-  color: #1890ff !important;
+  color: #00b96b !important;
   font-size: 18px !important;
   font-weight: 600 !important;
   margin-bottom: 16px !important;
-  border-bottom: 2px solid #e6f7ff;
+  border-bottom: 2px solid #f0faf5;
   padding-bottom: 8px;
 }
 
@@ -129,7 +129,7 @@
 
 /* 任务ID徽标样式 - 符合对比原则，突出显示 */
 .taskIdBadge {
-  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  background: linear-gradient(135deg, #00b96b, #3cc884);
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
@@ -137,7 +137,7 @@
   font-weight: 500;
   min-width: auto;
   text-align: center;
-  box-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 185, 107, 0.2);
   flex-shrink: 0; /* 防止压缩 */
   display: inline-block;
   line-height: 1.2;
@@ -207,7 +207,7 @@
 
 .infoTitle {
   margin-bottom: 20px;
-  color: #1890ff;
+  color: #00b96b;
 }
 
 .tagsContainer {
@@ -229,7 +229,7 @@
 
 .contentTitle {
   margin-bottom: 20px;
-  color: #1890ff;
+  color: #00b96b;
 }
 
 .markdownContainer {
@@ -382,8 +382,8 @@
 }
 
 .taskActionButtons .ant-btn:not(.ant-btn-dangerous):hover {
-  border-color: #1890ff;
-  color: #1890ff;
+  border-color: #00b96b;
+  color: #00b96b;
 }
 
 .dividerStyle {

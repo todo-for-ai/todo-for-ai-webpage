@@ -168,7 +168,7 @@ export const ProjectsCardView = ({
                       {project.total_tasks && project.total_tasks > 0 ? (
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                           <span style={{ color: '#595959' }}>
-                            <strong style={{ color: '#1890ff' }}>{project.total_tasks}</strong> {t('stats.total')}
+                            <strong style={{ color: '#00b96b' }}>{project.total_tasks}</strong> {t('stats.total')}
                           </span>
                           <span style={{ color: '#595959' }}>
                             <strong style={{ color: '#52c41a' }}>{project.completed_tasks}</strong> {t('stats.completed')}

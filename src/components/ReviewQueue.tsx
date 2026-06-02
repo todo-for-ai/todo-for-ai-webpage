@@ -84,7 +84,7 @@ const ReviewQueue: React.FC<ReviewQueueProps> = ({ workspaceId }) => {
       dataIndex: 'creator_type',
       key: 'creator',
       width: 120,
-      render: (creatorType: string, record) => {
+      render: (creatorType: string) => {
         const isAI = creatorType === 'ai'
         return (
           <Tag

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from 'react'
 import { Avatar, Button, message, Spin } from 'antd'
 import { CameraOutlined, DeleteOutlined } from '@ant-design/icons'

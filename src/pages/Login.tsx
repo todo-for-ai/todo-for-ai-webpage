@@ -50,7 +50,7 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
       <div className="login-container" style={{ flex: 1 }}>
         {/* 语言切换按钮 */}
         <div className="login-language-switch">

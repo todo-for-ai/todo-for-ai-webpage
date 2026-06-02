@@ -30,7 +30,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  background: linear-gradient(135deg, #00b96b 0%, #36cfc9 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,12 +92,12 @@
 }
 
 .agent-runtime-tab__radio:hover {
-  border-color: #40a9ff;
+  border-color: #3cc884;
 }
 
 .agent-runtime-tab__radio.ant-radio-wrapper-checked {
-  border-color: #1890ff;
-  background: #e6f7ff;
+  border-color: #00b96b;
+  background: #f0faf5;
 }
 
 .agent-runtime-tab__radio-content {

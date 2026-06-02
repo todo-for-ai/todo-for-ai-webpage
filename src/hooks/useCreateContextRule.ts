@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Form, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useContextRuleStore } from '../stores'
+import { getErrorMessage } from '../utils/errorUtils'
 import type { CreateContextRuleData, UpdateContextRuleData } from '../api/contextRules'
 
 interface CreateContextRuleReturn {
@@ -36,6 +38,16 @@ export const useCreateContextRule = (): CreateContextRuleReturn => {
     fetchContextRule
   } = useContextRuleStore()
 
+  const loadContextRule = async (ruleId: number) => {
+    try {
+      await fetchContextRule(ruleId)
+      setIsDataLoaded(true)
+    } catch (error) {
+      console.error('加载上下文规则失败:', error)
+      message.error(getErrorMessage(error, t('messages.loadError')))
+    }
+  }
+
   useEffect(() => {
     const projectIdParam = searchParams.get('project_id')
     if (projectIdParam) {
@@ -55,6 +67,7 @@ export const useCreateContextRule = (): CreateContextRuleReturn => {
         project_id: projectId
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, searchParams, form])
 
   useEffect(() => {
@@ -112,7 +125,7 @@ export const useCreateContextRule = (): CreateContextRuleReturn => {
       }
     } catch (error) {
       console.error('保存上下文规则失败:', error)
-      message.error(t('messages.saveError'))
+      message.error(getErrorMessage(error, t('messages.saveError')))
     }
   }, [isEditMode, id, projectId, form, updateContextRule, createContextRule, navigate, t])
 
@@ -121,16 +134,6 @@ export const useCreateContextRule = (): CreateContextRuleReturn => {
       navigate(`/todo-for-ai/pages/projects/${projectId}?tab=context`)
     } else {
       navigate('/todo-for-ai/pages/context-rules')
-    }
-  }
-
-  const loadContextRule = async (ruleId: number) => {
-    try {
-      await fetchContextRule(ruleId)
-      setIsDataLoaded(true)
-    } catch (error) {
-      console.error('加载上下文规则失败:', error)
-      message.error(t('messages.loadError'))
     }
   }
 

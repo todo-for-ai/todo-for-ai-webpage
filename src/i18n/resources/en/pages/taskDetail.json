@@ -41,6 +41,12 @@
     "mcpExecution": "MCP Tool Execution",
     "mcpPromptButton": "Copy MCP Tool Execution Prompt",
     "mcpPromptDesc": "Use MCP tools to automatically get task information and execute, suitable for AI assistants like Claude that support MCP",
+    "aiExecution": "AI Assistant Execution",
+    "aiPromptButton": "Copy AI Assistant Execution Prompt",
+    "aiPromptDesc": "Copy complete task information, suitable for any AI assistant to execute tasks",
+    "taskCompletion": "Task Completion Confirmation",
+    "completionPromptButton": "Copy Task Completion Confirmation Prompt",
+    "completionPromptDesc": "Check if the task is completed and update status, suitable for AI assistants to confirm task execution results",
     "quickComplete": "Quick Complete Task",
     "quickCompleteButton": "Copy Quick Complete Task Prompt",
     "quickCompleteDesc": "Execute task directly and close immediately after completion, suitable for simple quick tasks"
@@ -120,6 +126,8 @@
     "statusUpdateFailed": "Failed to update task status",
     "mcpPromptCopied": "MCP execution task prompt copied to clipboard",
     "quickCompletePromptCopied": "Quick complete task prompt copied to clipboard",
+    "aiPromptCopied": "AI assistant execution prompt copied to clipboard",
+    "completionPromptCopied": "Task completion confirmation prompt copied to clipboard",
     "copyFailed": "Copy failed",
     "copyFailedManual": "Copy failed, please copy manually",
     "refreshSuccess": "Task data refreshed successfully",
@@ -135,6 +143,8 @@
     "editTask": "Edit current task - Orange indicates neutral modification action",
     "deleteTask": "Delete current task - Red indicates dangerous deletion action",
     "mcpPrompt": "Copy MCP tool execution task prompt, suitable for AI assistants that support MCP protocol",
+    "aiPrompt": "Copy AI assistant execution task prompt, including complete task information",
+    "completionPrompt": "Copy task completion confirmation prompt, to check if task is completed and update status",
     "quickCompletePrompt": "Copy quick complete and close task prompt"
   },
   "confirmations": {

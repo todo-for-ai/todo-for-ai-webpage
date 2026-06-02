@@ -38,7 +38,7 @@ export function HeatmapTooltipContent({ day }: HeatmapTooltipContentProps) {
           ✅ {tp('heatmap.tooltip.taskCompleted')}: <span style={{ fontWeight: 'bold' }}>{day.task_completed_count}</span>
         </div>
         <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #eee' }}>
-          {tp('heatmap.tooltip.totalActivity')}: <span style={{ fontWeight: 'bold', color: '#1890ff' }}>{day.count}</span>
+          {tp('heatmap.tooltip.totalActivity')}: <span style={{ fontWeight: 'bold', color: '#00b96b' }}>{day.count}</span>
         </div>
         {day.first_activity_at && (
           <div style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>

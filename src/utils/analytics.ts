@@ -1,14 +1,14 @@
 export const Analytics = {
-  track: (event: string) => {
+  track: (_event: string) => {
     // TODO: Implement
   },
 
-  page: (path: string) => {
+  page: (_path: string) => {
     // TODO: Implement
   }
 }
 
-export const trackPageView = (path: string, title?: string) => {
+export const trackPageView = (_path: string, _title?: string) => {
   // TODO: Implement
 }
 
@@ -23,24 +23,24 @@ export const analytics = {
   page: () => {},
   identify: () => {},
   task: {
-    create: (projectId: string) => {},
-    update: (taskId: string) => {},
-    delete: (taskId: string) => {},
-    view: (taskId: string) => {}
+    create: (_projectId: string) => {},
+    update: (_taskId: string) => {},
+    delete: (_taskId: string) => {},
+    view: (_taskId: string) => {}
   },
   auth: {
-    login: (method?: string) => {},
+    login: (_method?: string) => {},
     logout: () => {},
     register: () => {}
   },
   project: {
     create: () => {},
-    view: (projectId: string) => {},
-    update: (projectId: string) => {}
+    view: (_projectId: string) => {},
+    update: (_projectId: string) => {}
   },
   settings: {
     enabled: true,
-    changeLanguage: (lang: string) => {}
+    changeLanguage: (_lang: string) => {}
   },
   social: {
     joinTelegramGroup: () => {},

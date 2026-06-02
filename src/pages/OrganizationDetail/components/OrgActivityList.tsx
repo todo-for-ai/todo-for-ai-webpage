@@ -2,9 +2,8 @@
  * 组织活动列表组件
  */
 
-import { Button, Space, Spin, Tag, Tooltip, Typography } from 'antd'
+import { Button, Spin, Tooltip, Typography } from 'antd'
 import { HistoryOutlined } from '@ant-design/icons'
-import { LinkButton } from '../../../components/SmartLink'
 import { formatFullDateTime, formatRelativeTimeI18n } from '../../../utils/dateUtils'
 import { EVENT_LABEL_KEY_MAP } from '../constants'
 import type { OrganizationEvent } from '../../../api/organizationEvents'

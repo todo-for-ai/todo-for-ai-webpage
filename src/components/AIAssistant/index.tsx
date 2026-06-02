@@ -1,9 +1,10 @@
-"""
-AI 功能前端组件
+/**
+ * AI 功能前端组件
+ *
+ * 提供 AI 任务助手、任务拆分的 UI 组件
+ */
 
-提供 AI 任务助手、任务拆分、智能摘要的 UI 组件
-"""
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import {
   Modal,
@@ -21,12 +22,11 @@ import {
 import {
   RobotOutlined,
   SplitCellsOutlined,
-  FileTextOutlined,
   SparklesOutlined
 } from '@ant-design/icons';
 
 const { TextArea } = Input;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // AI 任务助手模态框
 export const AITaskAssistantModal: React.FC<{
@@ -61,7 +61,7 @@ export const AITaskAssistantModal: React.FC<{
       } else {
         message.error(data.message || '生成失败');
       }
-    } catch (error) {
+    } catch {
       message.error('请求失败');
     } finally {
       setLoading(false);
@@ -204,7 +204,7 @@ export const AITaskSplitButton: React.FC<{
       } else {
         message.error(data.message || '拆分失败');
       }
-    } catch (error) {
+    } catch {
       message.error('请求失败');
     } finally {
       setLoading(false);
@@ -292,68 +292,8 @@ export const AITaskSplitButton: React.FC<{
   );
 };
 
-// AI 智能摘要组件
-export const AISummaryCard: React.FC<{
-  type: 'task' | 'project';
-  id: number;
-}> = ({ type, id }) => {
-  const [summary, setSummary] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-
-  const generateSummary = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/todo-for-ai/api/v1/ai/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ type, id })
-      });
-
-      const data = await response.json();
-      if (data.code === 200) {
-        setSummary(data.data.summary);
-      } else {
-        message.error(data.message || '生成失败');
-      }
-    } catch (error) {
-      message.error('请求失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Card
-      title={<><FileTextOutlined /> AI 智能摘要</>}
-      extra={
-        <Button
-          icon={<SparklesOutlined />}
-          loading={loading}
-          onClick={generateSummary}
-          size="small"
-        >
-          生成摘要
-        </Button>
-      }
-    >
-      {loading ? (
-        <Spin tip="AI 正在生成摘要..." />
-      ) : summary ? (
-        <Text>{summary}</Text>
-      ) : (
-        <Text type="secondary">点击"生成摘要"获取 AI 生成的内容摘要</Text>
-      )}
-    </Card>
-  );
-};
-
 // 导出所有组件
 export default {
   AITaskAssistantModal,
-  AITaskSplitButton,
-  AISummaryCard
+  AITaskSplitButton
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Badge,
@@ -341,7 +342,7 @@ export function AgentRuntimeTab({ workspaceId, agent, active }: AgentRuntimeTabP
             >
               <Select
                 className="agent-runtime-tab__select"
-                dropdownRender={menu => (
+                dropdownRender={_menu => (
                   <div className="agent-runtime-tab__select-dropdown">
                     {sandboxProfileOptions.map(option => (
                       <Select.Option key={option.value} value={option.value}>

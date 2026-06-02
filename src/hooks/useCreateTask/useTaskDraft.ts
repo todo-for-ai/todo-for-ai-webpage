@@ -64,7 +64,6 @@ export const useTaskDraft = (): UseTaskDraftReturn => {
       if (saved) {
         const draft = JSON.parse(saved)
         const { savedAt:
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
          _savedAt, ...formData } = draft
         return formData as DraftData
       }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export class CustomPromptsApi {
   async method1() {
     throw new Error('Not implemented')

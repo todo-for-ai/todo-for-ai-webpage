@@ -3,6 +3,7 @@ import { useTaskStore } from '../../../stores/useTaskStore'
 import { useNavigate } from 'react-router-dom'
 import { message } from 'antd'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../../../utils/errorUtils'
 
 export const useTaskDetail = (taskId: string | undefined, projectId: string | undefined) => {
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ export const useTaskDetail = (taskId: string | undefined, projectId: string | un
     }
   }, [taskId, fetchTask])
 
-  // 更新任务
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateTask = useCallback(async (updates: any) => {
     if (!taskId) return
     try {
@@ -33,7 +34,7 @@ export const useTaskDetail = (taskId: string | undefined, projectId: string | un
       await loadTask()
     } catch (error) {
       console.error('Failed to update task:', error)
-      message.error(tp('messages.statusUpdateFailed'))
+      message.error(getErrorMessage(error, tp('messages.statusUpdateFailed')))
     }
   }, [taskId, updateTask, loadTask, tp])
 
@@ -46,7 +47,7 @@ export const useTaskDetail = (taskId: string | undefined, projectId: string | un
       navigate(`/projects/${projectId}/tasks`)
     } catch (error) {
       console.error('Failed to delete task:', error)
-      message.error(tp('messages.deleteFailed'))
+      message.error(getErrorMessage(error, tp('messages.deleteFailed')))
     }
   }, [taskId, projectId, deleteTask, navigate, tp])
 

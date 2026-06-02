@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, Empty, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { Project } from '../../api/projects'

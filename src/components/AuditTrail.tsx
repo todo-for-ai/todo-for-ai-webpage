@@ -70,7 +70,7 @@ const AuditTrail: React.FC<AuditTrailProps> = ({ workspaceId }) => {
   const loadEvents = useCallback(async () => {
     try {
       setLoading(true)
-      const params: Record<string, any> = {
+      const params: Record<string, string | number> = {
         page,
         page_size: pageSize,
       }

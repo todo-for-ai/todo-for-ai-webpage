@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { Select, Tag, Space, Button, Popconfirm } from 'antd'
+import { Select, Space, Button, Popconfirm } from 'antd'
 import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 import type { Task } from '../../../api/tasks'
@@ -60,7 +60,7 @@ export const useTaskTableConfig = () => {
         dataIndex: 'creator_type',
         key: 'creator',
         width: 100,
-        render: (creatorType: string, record: any) => (
+        render: (creatorType: string, record: Task) => (
           <CreatorBadge
             creatorType={creatorType}
             creatorName={record.creator?.nickname || record.creator_agent?.name}

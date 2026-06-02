@@ -15,12 +15,12 @@
 
 /* 主要按钮 - 扁平化 */
 .flat-btn--primary {
-  color: #1677ff;
+  color: #00b96b;
 }
 
 .flat-btn--primary:hover {
-  color: #4096ff;
-  background-color: rgba(22, 119, 255, 0.06);
+  color: #3cc884;
+  background-color: rgba(0, 185, 107, 0.06);
 }
 
 /* 次要/编辑按钮 */
@@ -29,8 +29,8 @@
 }
 
 .flat-btn--secondary:hover {
-  color: #1677ff;
-  background-color: rgba(22, 119, 255, 0.06);
+  color: #00b96b;
+  background-color: rgba(0, 185, 107, 0.06);
 }
 
 /* 危险按钮 */
@@ -79,12 +79,12 @@
 }
 
 .flat-btn-solid--primary {
-  background-color: #1677ff;
+  background-color: #00b96b;
   color: #fff;
 }
 
 .flat-btn-solid--primary:hover {
-  background-color: #4096ff;
+  background-color: #3cc884;
 }
 
 .flat-btn-solid--danger {
@@ -98,14 +98,15 @@
 
 /* ===== 卡片样式 - 扁平化 ===== */
 .flat-card {
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
   transition: all 0.2s ease;
+  box-shadow: none;
 }
 
 .flat-card:hover {
-  border-color: #d9d9d9;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: #d0d0d0;
+  box-shadow: none;
 }
 
 .flat-card--hoverable {
@@ -113,7 +114,7 @@
 }
 
 .flat-card--hoverable:hover {
-  border-color: #1677ff;
+  border-color: #00b96b;
 }
 
 /* ===== 输入框样式 ===== */
@@ -122,8 +123,8 @@
 }
 
 .flat-input:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+  border-color: #00b96b;
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.1);
 }
 
 /* ===== 选择器样式 ===== */
@@ -160,7 +161,7 @@
 }
 
 .flat-table .ant-table-tbody > tr:hover {
-  background-color: #fafafa;
+  background-color: #f0faf5;
 }
 
 /* ===== 分页器样式 ===== */
@@ -169,8 +170,8 @@
 }
 
 .flat-pagination .ant-pagination-item-active {
-  background-color: #1677ff;
-  border-color: #1677ff;
+  background-color: #00b96b;
+  border-color: #00b96b;
 }
 
 .flat-pagination .ant-pagination-item-active a {
@@ -198,8 +199,8 @@
 }
 
 .flat-menu .ant-menu-item-selected {
-  background-color: #e6f7ff;
-  color: #1677ff;
+  background-color: #f0faf5;
+  color: #00b96b;
 }
 
 /* ===== 工具提示样式 ===== */
