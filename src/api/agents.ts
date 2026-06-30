@@ -377,6 +377,21 @@ export interface OrchestrationResult {
   duration_seconds: number
 }
 
+export interface OrchestratorLastRun {
+  summary: string
+  duration_seconds: number
+  stale_agents: number
+  timed_out_steps: number
+  triggers_fired: number
+  conflicts_auto_resolved: number
+  error_count: number
+}
+
+export interface OrchestratorStatus {
+  enabled: boolean
+  last_run: OrchestratorLastRun | null
+}
+
 export interface WorkflowRunConsoleStep {
   step_run: WorkflowStepRunItem
   effective_params: Record<string, unknown>
@@ -1185,6 +1200,10 @@ export class AgentsApi {
 
   async orchestrate(): Promise<OrchestrationResult> {
     return unwrapData<OrchestrationResult>(await apiClient.post('/agents/maintenance/orchestrate', {}))
+  }
+
+  async getOrchestratorStatus(): Promise<OrchestratorStatus> {
+    return unwrapData<OrchestratorStatus>(await apiClient.get('/agents/maintenance/orchestrator/status'))
   }
 }
 

@@ -20,7 +20,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
@@ -68,6 +68,7 @@ const Dashboard = () => {
   // Global orchestrator state
   const [orchestration, setOrchestration] = useState<OrchestrationResult | null>(null)
   const [orchestrationLoading, setOrchestrationLoading] = useState(false)
+  const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -209,12 +210,27 @@ const Dashboard = () => {
       // Refresh security events + conflict data since orchestration may have changed them
       loadSecurityEvents(securityFilter || undefined)
       loadConflictData()
+      // Also refresh scheduler status (last_run updated)
+      agentsApi.getOrchestratorStatus().then(setOrchestratorStatus).catch(() => {})
     } catch {
       message.error('执行编排失败')
     } finally {
       setOrchestrationLoading(false)
     }
   }, [securityFilter, loadSecurityEvents, loadConflictData])
+
+  const loadOrchestratorStatus = useCallback(async () => {
+    try {
+      const status = await agentsApi.getOrchestratorStatus()
+      setOrchestratorStatus(status)
+    } catch {
+      // silent: status is informational
+    }
+  }, [])
+
+  useEffect(() => {
+    loadOrchestratorStatus()
+  }, [loadOrchestratorStatus])
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
@@ -788,7 +804,16 @@ const Dashboard = () => {
 
       {/* Global Collaboration Orchestrator */}
       <Card
-        title={<Space><ThunderboltOutlined /> 全局协作编排</Space>}
+        title={
+          <Space>
+            <ThunderboltOutlined /> 全局协作编排
+            {orchestratorStatus && (
+              <Tooltip title={orchestratorStatus.enabled ? '内置调度器运行中（后台自动编排）' : '内置调度器未启用（需手动编排或外部 cron）'}>
+                <Badge status={orchestratorStatus.enabled ? 'success' : 'default'} text={orchestratorStatus.enabled ? '自动' : '手动'} />
+              </Tooltip>
+            )}
+          </Space>
+        }
         style={{ marginBottom: 24 }}
         extra={
           <Popconfirm
@@ -835,6 +860,25 @@ const Dashboard = () => {
           </>
         ) : (
           <Empty description="尚未执行编排。点击「立即编排」运行完整协作维护周期。" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+
+        {/* Scheduler last-run summary (informational) */}
+        {orchestratorStatus?.last_run && (
+          <Alert
+            style={{ marginTop: 12 }}
+            type="info"
+            showIcon
+            message="调度器上次自动运行"
+            description={
+              <span style={{ fontSize: 12 }}>
+                {orchestratorStatus.last_run.summary}
+                <Text type="secondary"> · 耗时 {orchestratorStatus.last_run.duration_seconds}s</Text>
+                {orchestratorStatus.last_run.error_count > 0 && (
+                  <Text type="danger"> · {orchestratorStatus.last_run.error_count} 个错误</Text>
+                )}
+              </span>
+            }
+          />
         )}
       </Card>
 
