@@ -10,6 +10,7 @@ import {
   CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
   ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
   HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -53,11 +54,17 @@ const Workflows: React.FC = () => {
   const [consoleOpen, setConsoleOpen] = useState(false)
   const [consoleData, setConsoleData] = useState<WorkflowRunConsoleResult | null>(null)
   const [consoleLoading, setConsoleLoading] = useState(false)
+  // Step runtime override (intervention from console)
+  const [stepOverrideOpen, setStepOverrideOpen] = useState(false)
+  const [stepOverrideTarget, setStepOverrideTarget] = useState<{ runId: number; stepKey: string } | null>(null)
+  const [stepOverrideEffective, setStepOverrideEffective] = useState<Record<string, any> | null>(null)
+  const [stepOverrideSubmitting, setStepOverrideSubmitting] = useState(false)
   const [launchOpen, setLaunchOpen] = useState(false)
   const [launchWorkflowId, setLaunchWorkflowId] = useState<number | null>(null)
   const [launching, setLaunching] = useState(false)
   const [form] = Form.useForm()
   const [launchForm] = Form.useForm()
+  const [stepOverrideForm] = Form.useForm()
 
   // Step editor state
   const [steps, setSteps] = useState<CreateWorkflowStepData[]>([])
@@ -217,6 +224,74 @@ const Workflows: React.FC = () => {
     } finally {
       setConsoleLoading(false)
     }
+  }
+
+  // --- Console intervention: runtime override on a step ---
+  const openStepOverride = async (runId: number, stepKey: string) => {
+    setStepOverrideTarget({ runId, stepKey })
+    setStepOverrideOpen(true)
+    setStepOverrideEffective(null)
+    try {
+      const result = await agentsApi.getStepEffectiveParams(runId, stepKey)
+      setStepOverrideEffective(result?.effective_params || {})
+    } catch {
+      // effective params are informational; ignore load failure
+    }
+  }
+
+  const submitStepOverride = async (values: any) => {
+    if (!stepOverrideTarget) return
+    setStepOverrideSubmitting(true)
+    try {
+      // Build overrides only from non-empty fields
+      const overrides: Record<string, any> = {}
+      const raw = values || {}
+      for (const k of ['agent_id', 'required_capabilities', 'timeout_seconds', 'retry_count', 'on_failure', 'condition', 'task_template_id', 'sub_workflow_id']) {
+        if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') {
+          overrides[k] = raw[k]
+        }
+      }
+      if (Object.keys(overrides).length === 0) {
+        message.warning('请至少填写一项覆盖参数')
+        setStepOverrideSubmitting(false)
+        return
+      }
+      await agentsApi.setStepRuntimeOverride(stepOverrideTarget.runId, stepOverrideTarget.stepKey, overrides)
+      message.success('步骤覆盖已应用')
+      setStepOverrideOpen(false)
+      setStepOverrideTarget(null)
+      // Refresh console so the override tag appears
+      if (selectedRun) {
+        agentsApi.getWorkflowRunConsole(selectedRun.id, { log_limit: 8 }).then(setConsoleData).catch(() => {})
+      }
+    } catch {
+      message.error('应用覆盖失败')
+    } finally {
+      setStepOverrideSubmitting(false)
+    }
+  }
+
+  const clearStepOverride = async (runId: number, stepKey: string) => {
+    try {
+      await agentsApi.clearStepRuntimeOverride(runId, stepKey)
+      message.success('已清除步骤覆盖')
+      if (selectedRun) {
+        agentsApi.getWorkflowRunConsole(selectedRun.id, { log_limit: 8 }).then(setConsoleData).catch(() => {})
+      }
+    } catch {
+      message.error('清除覆盖失败')
+    }
+  }
+
+  // --- Console intervention: run-level control (delegates to existing handlers, then refreshes console) ---
+  const consoleRunControl = async (action: 'pause' | 'resume' | 'retry' | 'cancel') => {
+    if (!selectedRun) return
+    if (action === 'pause') await handlePauseRun(selectedRun.id)
+    else if (action === 'resume') await handleResumeRun(selectedRun.id)
+    else if (action === 'retry') await handleRetryRun(selectedRun.id)
+    else if (action === 'cancel') await handleCancelRun(selectedRun.id)
+    // Refresh console to reflect new state (handlers already reload runs)
+    agentsApi.getWorkflowRunConsole(selectedRun.id, { log_limit: 8 }).then(setConsoleData).catch(() => {})
   }
 
   // SSE-driven live refresh: when the console is open, any run-relevant event
@@ -998,6 +1073,26 @@ const Workflows: React.FC = () => {
               </Row>
             </Card>
 
+            {/* Run-level intervention controls */}
+            {selectedRun && (
+              <div style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {selectedRun.status === 'running' && (
+                  <Button size="small" icon={<PauseCircleOutlined />} onClick={() => consoleRunControl('pause')}>暂停运行</Button>
+                )}
+                {selectedRun.status === 'paused' && (
+                  <Button size="small" type="primary" icon={<PlayCircleOutlined />} onClick={() => consoleRunControl('resume')}>恢复运行</Button>
+                )}
+                {selectedRun.status === 'failed' && (
+                  <Button size="small" type="primary" icon={<ReloadOutlined />} onClick={() => consoleRunControl('retry')}>重试运行</Button>
+                )}
+                {['running', 'paused', 'pending'].includes(selectedRun.status) && (
+                  <Popconfirm title="确定取消此工作流运行？" onConfirm={() => consoleRunControl('cancel')}>
+                    <Button size="small" danger icon={<StopOutlined />}>取消运行</Button>
+                  </Popconfirm>
+                )}
+              </div>
+            )}
+
             {/* Conflicts */}
             {consoleData.conflicts.length > 0 && (
               <Alert
@@ -1082,6 +1177,33 @@ const Workflows: React.FC = () => {
                           ))}
                         </div>
                       )}
+
+                      {/* Step-level intervention */}
+                      <div style={{ marginTop: 4 }}>
+                        <Space size={[6, 4]} wrap>
+                          {(sr.status === 'pending' || sr.status === 'waiting' || sr.status === 'running') && (
+                            <Button
+                              size="small"
+                              type="link"
+                              icon={<SettingOutlined />}
+                              style={{ fontSize: 12, padding: 0 }}
+                              onClick={() => openStepOverride(sr.run_id, sr.step_key)}
+                            >
+                              {overrides.length > 0 ? '修改覆盖' : '覆盖参数'}
+                            </Button>
+                          )}
+                          {overrides.length > 0 && (
+                            <Popconfirm
+                              title="清除该步骤的所有运行时覆盖？"
+                              onConfirm={() => clearStepOverride(sr.run_id, sr.step_key)}
+                            >
+                              <Button size="small" type="link" danger icon={<CloseCircleOutlined />} style={{ fontSize: 12, padding: 0 }}>
+                                清除覆盖
+                              </Button>
+                            </Popconfirm>
+                          )}
+                        </Space>
+                      </div>
                     </div>
                   ),
                 }
@@ -1092,6 +1214,57 @@ const Workflows: React.FC = () => {
           <Empty description="无数据" />
         )}
       </Drawer>
+
+      {/* Step runtime override Modal (intervention from console) */}
+      <Modal
+        title={stepOverrideTarget ? `步骤覆盖 — ${stepOverrideTarget.stepKey}` : '步骤覆盖'}
+        open={stepOverrideOpen}
+        onCancel={() => { setStepOverrideOpen(false); setStepOverrideTarget(null); setStepOverrideEffective(null) }}
+        onOk={() => stepOverrideForm.submit()}
+        confirmLoading={stepOverrideSubmitting}
+        width={560}
+      >
+        {stepOverrideEffective && (
+          <Alert
+            style={{ marginBottom: 12 }}
+            type="info"
+            showIcon
+            message="当前有效参数（合并定义与已有覆盖）"
+            description={
+              <div style={{ fontSize: 12 }}>
+                {Object.entries(stepOverrideEffective).filter(([, v]) => v != null).map(([k, v]) => (
+                  <div key={k}><Text type="secondary">{k}:</Text> {String(v)}</div>
+                ))}
+              </div>
+            }
+          />
+        )}
+        <Form form={stepOverrideForm} layout="vertical" onFinish={submitStepOverride}>
+          <Alert style={{ marginBottom: 12 }} type="warning" message="仅填写需覆盖的字段；留空表示不修改。运行中步骤仅可覆盖 timeout_seconds / retry_count。" />
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="agent_id" label="指定 Agent ID"><Input type="number" placeholder="留空不修改" /></Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="timeout_seconds" label="超时秒数"><Input type="number" placeholder="留空不修改" /></Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="retry_count" label="重试次数"><Input type="number" placeholder="留空不修改" /></Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="on_failure" label="失败策略">
+                <Select allowClear placeholder="留空不修改" options={[
+                  { value: 'abort', label: 'abort 中止' },
+                  { value: 'skip', label: 'skip 跳过' },
+                  { value: 'continue', label: 'continue 继续' },
+                ]} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
 
       {/* Version History Modal */}
       <Modal
