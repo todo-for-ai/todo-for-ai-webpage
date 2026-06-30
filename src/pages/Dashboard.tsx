@@ -23,6 +23,7 @@ import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { agentsApi } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -177,6 +178,24 @@ const Dashboard = () => {
   useEffect(() => {
     loadSecurityEvents()
   }, [loadSecurityEvents])
+
+  // SSE-driven live refresh of the security event aggregation card
+  const SECURITY_SSE_EVENTS = new Set([
+    'sandbox_violation', 'sandbox_step_violation', 'sandbox_execution_revoked',
+    'sandbox_bound', 'sandbox_created', 'conflicts_detected', 'conflict_resolved',
+    'conflicts_auto_resolved', 'workflow_step_overridden',
+  ])
+  useCollaborationSSE({
+    enabled: true,
+    onEvent: useCallback((event: any) => {
+      const et = event.event_type || ''
+      if (!SECURITY_SSE_EVENTS.has(et)) return
+      // Best-effort refresh, preserving the current filter
+      agentsApi.getSecurityEvents({ per_page: 50, event_type: securityFilter || undefined })
+        .then((r) => setSecurityEvents(r.items))
+        .catch(() => { /* silent: SSE refresh is best-effort */ })
+    }, [securityFilter]),
+  })
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
