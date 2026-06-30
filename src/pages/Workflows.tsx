@@ -16,6 +16,7 @@ import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-ki
 import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
+import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
 const { Option } = Select
 const { TextArea } = Input
@@ -217,6 +218,30 @@ const Workflows: React.FC = () => {
       setConsoleLoading(false)
     }
   }
+
+  // SSE-driven live refresh: when the console is open, any run-relevant event
+  // for the currently selected run triggers an automatic refresh.
+  const RUN_RELEVANT_EVENTS = new Set([
+    'workflow_step_started', 'workflow_step_finished', 'workflow_step_auto_retry',
+    'workflow_step_overridden', 'sandbox_execution_started', 'sandbox_execution_completed',
+    'sandbox_execution_revoked', 'sandbox_step_violation', 'sandbox_violation',
+    'conflicts_detected', 'conflict_resolved', 'conflicts_auto_resolved',
+  ])
+  useCollaborationSSE({
+    enabled: consoleOpen,
+    onEvent: useCallback((event: any) => {
+      if (!selectedRun) return
+      const et = event.event_type || ''
+      if (!RUN_RELEVANT_EVENTS.has(et)) return
+      const payload = event.payload || {}
+      // Only refresh if the event is scoped to the run we're viewing (when known)
+      if (payload.run_id != null && payload.run_id !== selectedRun.id) return
+      // Best-effort refresh; don't surface loading spinner on SSE-driven refreshes
+      agentsApi.getWorkflowRunConsole(selectedRun.id, { log_limit: 8 })
+        .then(setConsoleData)
+        .catch(() => { /* silent: SSE refresh is best-effort */ })
+    }, [selectedRun]),
+  })
 
   // --- Cancel run ---
   const handleCancelRun = async (runId: number) => {
