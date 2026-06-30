@@ -348,6 +348,19 @@ export interface ConflictItem {
   resolution?: string
 }
 
+export interface SecurityEventItem {
+  event_type: string
+  occurred_at?: string
+  severity: string
+  agent_id?: number
+  title: string
+  detail?: string
+  source: string
+  source_id: number
+  workflow_run_id?: number
+  extra?: Record<string, unknown>
+}
+
 export interface WorkflowRunConsoleStep {
   step_run: WorkflowStepRunItem
   effective_params: Record<string, unknown>
@@ -664,6 +677,11 @@ export class AgentsApi {
   async getAuditLogs(params?: { action?: string; resource_type?: string; resource_id?: number; actor_type?: string; project_id?: number; page?: number; per_page?: number }): Promise<ListResult<any>> {
     const response = await apiClient.get(`/agents/audit-logs${buildQuery(params)}`)
     return unwrapList<any>(response)
+  }
+
+  async getSecurityEvents(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; page?: number; per_page?: number }): Promise<ListResult<SecurityEventItem>> {
+    const response = await apiClient.get(`/agents/security/events${buildQuery(params)}`)
+    return unwrapList<SecurityEventItem>(response)
   }
 
   async healthCheck(): Promise<{ stale_agents: number; stale_agent_ids: number[]; expired_leases: number; escalated_tasks: number; escalated_task_ids: number[] }> {
