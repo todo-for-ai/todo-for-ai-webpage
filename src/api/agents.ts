@@ -361,6 +361,22 @@ export interface SecurityEventItem {
   extra?: Record<string, unknown>
 }
 
+export interface OrchestrationResult {
+  stale_agents: number
+  stale_agent_ids: number[]
+  expired_leases: number
+  escalated_tasks: number
+  escalated_task_ids: number[]
+  timed_out_steps: number
+  triggers_fired: number
+  trigger_run_ids: number[]
+  conflicts_detected: number
+  conflicts_auto_resolved: number
+  conflicts_skipped: number
+  errors: string[]
+  duration_seconds: number
+}
+
 export interface WorkflowRunConsoleStep {
   step_run: WorkflowStepRunItem
   effective_params: Record<string, unknown>
@@ -1165,6 +1181,10 @@ export class AgentsApi {
 
   async autoResolveConflicts(): Promise<any> {
     return unwrapData<any>(await apiClient.post('/agents/maintenance/auto-resolve-conflicts', {}))
+  }
+
+  async orchestrate(): Promise<OrchestrationResult> {
+    return unwrapData<OrchestrationResult>(await apiClient.post('/agents/maintenance/orchestrate', {}))
   }
 }
 

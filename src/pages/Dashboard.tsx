@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -20,7 +20,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi } from '../api/agents'
+import { agentsApi, type OrchestrationResult } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
@@ -65,6 +65,9 @@ const Dashboard = () => {
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityFilter, setSecurityFilter] = useState<string>('')
+  // Global orchestrator state
+  const [orchestration, setOrchestration] = useState<OrchestrationResult | null>(null)
+  const [orchestrationLoading, setOrchestrationLoading] = useState(false)
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -196,6 +199,22 @@ const Dashboard = () => {
         .catch(() => { /* silent: SSE refresh is best-effort */ })
     }, [securityFilter]),
   })
+
+  const runOrchestration = useCallback(async () => {
+    setOrchestrationLoading(true)
+    try {
+      const result = await agentsApi.orchestrate()
+      setOrchestration(result)
+      message.success(`编排完成（${result.duration_seconds}s）`)
+      // Refresh security events + conflict data since orchestration may have changed them
+      loadSecurityEvents(securityFilter || undefined)
+      loadConflictData()
+    } catch {
+      message.error('执行编排失败')
+    } finally {
+      setOrchestrationLoading(false)
+    }
+  }, [securityFilter, loadSecurityEvents, loadConflictData])
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
@@ -765,6 +784,58 @@ const Dashboard = () => {
             <Empty description="暂无安全事件" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
         </Spin>
+      </Card>
+
+      {/* Global Collaboration Orchestrator */}
+      <Card
+        title={<Space><ThunderboltOutlined /> 全局协作编排</Space>}
+        style={{ marginBottom: 24 }}
+        extra={
+          <Popconfirm
+            title="立即执行全局编排？"
+            description="将依次执行：健康检查、工作流超时、触发器触发、冲突自动解决。"
+            onConfirm={runOrchestration}
+          >
+            <Button type="primary" size="small" icon={<ThunderboltOutlined />} loading={orchestrationLoading}>
+              立即编排
+            </Button>
+          </Popconfirm>
+        }
+      >
+        {orchestration ? (
+          <>
+            <Row gutter={16} style={{ marginBottom: 12 }}>
+              <Col span={4}><Statistic title="离线 Agent" value={orchestration.stale_agents} valueStyle={{ fontSize: 16 }} /></Col>
+              <Col span={4}><Statistic title="过期租约" value={orchestration.expired_leases} valueStyle={{ fontSize: 16 }} /></Col>
+              <Col span={4}><Statistic title="升级任务" value={orchestration.escalated_tasks} valueStyle={{ fontSize: 16 }} /></Col>
+              <Col span={4}><Statistic title="超时步骤" value={orchestration.timed_out_steps} valueStyle={{ fontSize: 16 }} /></Col>
+              <Col span={4}><Statistic title="触发器触发" value={orchestration.triggers_fired} valueStyle={{ fontSize: 16, color: '#1890ff' }} /></Col>
+              <Col span={4}><Statistic title="冲突自动解决" value={orchestration.conflicts_auto_resolved} valueStyle={{ fontSize: 16, color: '#52c41a' }} /></Col>
+            </Row>
+            <Space wrap size={[8, 4]}>
+              <Tag>检测冲突 {orchestration.conflicts_detected}</Tag>
+              <Tag>跳过冲突 {orchestration.conflicts_skipped}</Tag>
+              <Tag color="blue">耗时 {orchestration.duration_seconds}s</Tag>
+              {orchestration.trigger_run_ids.length > 0 && (
+                <Tag color="purple">新 Run: {orchestration.trigger_run_ids.join(', ')}</Tag>
+              )}
+              {orchestration.errors.length > 0 && (
+                <Tag color="error">错误 {orchestration.errors.length}</Tag>
+              )}
+            </Space>
+            {orchestration.errors.length > 0 && (
+              <Alert
+                style={{ marginTop: 12 }}
+                type="warning"
+                showIcon
+                message="部分阶段出错"
+                description={<ul style={{ margin: 0, paddingLeft: 18 }}>{orchestration.errors.map((e, i) => <li key={i} style={{ fontSize: 12 }}>{e}</li>)}</ul>}
+              />
+            )}
+          </>
+        ) : (
+          <Empty description="尚未执行编排。点击「立即编排」运行完整协作维护周期。" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
       </Card>
 
       {/* 最近项目和任务 */}
