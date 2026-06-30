@@ -296,6 +296,7 @@ export interface WorkflowStepRunItem {
   finished_at?: string
   error?: string
   attempt: number
+  runtime_overrides?: Record<string, unknown>
 }
 
 export interface WorkflowRunItem {
@@ -312,6 +313,64 @@ export interface WorkflowRunItem {
   step_runs: WorkflowStepRunItem[]
   created_at: string
   updated_at: string
+}
+
+export interface SandboxExecutionItem {
+  id: number
+  sandbox_id: number
+  agent_id?: number
+  step_run_id?: number
+  status: string
+  policy_snapshot?: Record<string, unknown>
+  started_at?: string
+  ended_at?: string
+  violations?: Array<Record<string, unknown>>
+  termination_reason?: string
+  error?: string
+}
+
+export interface RunLogItem {
+  id: number
+  run_id: number
+  level: string
+  message: string
+  created_at: string
+}
+
+export interface ConflictItem {
+  id: number
+  conflict_type: string
+  severity: string
+  status: string
+  title?: string
+  description?: string
+  suggested_strategy?: string
+  resolution?: string
+}
+
+export interface WorkflowRunConsoleStep {
+  step_run: WorkflowStepRunItem
+  effective_params: Record<string, unknown>
+  sandbox_execution?: SandboxExecutionItem | null
+  sandbox_policy?: Record<string, unknown> | null
+  recent_logs: RunLogItem[]
+  duration_seconds?: number | null
+}
+
+export interface WorkflowRunConsoleSummary {
+  total_steps: number
+  status_counts: Record<string, number>
+  progress_percent: number
+  running_count: number
+  failed_count: number
+  pending_count: number
+}
+
+export interface WorkflowRunConsoleResult {
+  workflow_run: WorkflowRunItem
+  steps: WorkflowRunConsoleStep[]
+  conflicts: ConflictItem[]
+  summary: WorkflowRunConsoleSummary
 }
 
 export interface ListResult<T> {
@@ -572,6 +631,10 @@ export class AgentsApi {
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
     return unwrapData<WorkflowRunItem>(await apiClient.get(`/agents/workflow-runs/${runId}`))
+  }
+
+  async getWorkflowRunConsole(runId: number, params?: { log_limit?: number }): Promise<WorkflowRunConsoleResult> {
+    return unwrapData<WorkflowRunConsoleResult>(await apiClient.get(`/agents/workflow-runs/${runId}/console${buildQuery(params)}`))
   }
 
   async cancelWorkflowRun(runId: number): Promise<WorkflowRunItem> {

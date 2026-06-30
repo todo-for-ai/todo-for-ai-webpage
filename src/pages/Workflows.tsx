@@ -2,17 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react'
 import {
   Button, Card, Col, Row, Modal, Form, Input, InputNumber, Select, Space, Tag, Steps, Spin,
   message, Popconfirm, Descriptions, Empty, Tooltip, Badge, Table, List, Typography,
+  Drawer, Progress, Timeline, Alert,
 } from 'antd'
 const { Text } = Typography
 import {
   PlusOutlined, DeleteOutlined, PlayCircleOutlined, StopOutlined,
   CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
   ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
-  HistoryOutlined,
+  HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 
@@ -48,6 +49,9 @@ const Workflows: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false)
   const [runDetailOpen, setRunDetailOpen] = useState(false)
   const [selectedRun, setSelectedRun] = useState<WorkflowRunItem | null>(null)
+  const [consoleOpen, setConsoleOpen] = useState(false)
+  const [consoleData, setConsoleData] = useState<WorkflowRunConsoleResult | null>(null)
+  const [consoleLoading, setConsoleLoading] = useState(false)
   const [launchOpen, setLaunchOpen] = useState(false)
   const [launchWorkflowId, setLaunchWorkflowId] = useState<number | null>(null)
   const [launching, setLaunching] = useState(false)
@@ -184,6 +188,33 @@ const Workflows: React.FC = () => {
       setRunDetailOpen(true)
     } catch {
       message.error('加载运行详情失败')
+    }
+  }
+
+  // --- Real-time step console ---
+  const openConsole = async (runId: number) => {
+    setConsoleOpen(true)
+    setConsoleLoading(true)
+    try {
+      const result = await agentsApi.getWorkflowRunConsole(runId, { log_limit: 8 })
+      setConsoleData(result)
+    } catch {
+      message.error('加载控制台数据失败')
+    } finally {
+      setConsoleLoading(false)
+    }
+  }
+
+  const refreshConsole = async () => {
+    if (!selectedRun) return
+    setConsoleLoading(true)
+    try {
+      const result = await agentsApi.getWorkflowRunConsole(selectedRun.id, { log_limit: 8 })
+      setConsoleData(result)
+    } catch {
+      message.error('刷新控制台失败')
+    } finally {
+      setConsoleLoading(false)
     }
   }
 
@@ -822,6 +853,9 @@ const Workflows: React.FC = () => {
 
             {/* Runtime control buttons */}
             <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
+              <Button size="small" icon={<MonitorOutlined />} onClick={() => openConsole(selectedRun.id)}>
+                实时控制台
+              </Button>
               {selectedRun.status === 'running' && (
                 <Button size="small" icon={<PauseCircleOutlined />} onClick={() => handlePauseRun(selectedRun.id)}>
                   暂停
@@ -898,6 +932,141 @@ const Workflows: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Real-time step console Drawer */}
+      <Drawer
+        title={
+          <Space>
+            <MonitorOutlined />
+            <span>实时控制台 — 工作流运行 #{selectedRun?.id}</span>
+            <Button size="small" icon={<ReloadOutlined />} loading={consoleLoading} onClick={refreshConsole}>刷新</Button>
+          </Space>
+        }
+        open={consoleOpen}
+        onClose={() => { setConsoleOpen(false); setConsoleData(null) }}
+        width={720}
+        styles={{ body: { paddingTop: 12 } }}
+      >
+        {consoleLoading && !consoleData ? (
+          <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>
+        ) : consoleData ? (
+          <div>
+            {/* Summary */}
+            <Card size="small" style={{ marginBottom: 12 }}>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <div style={{ fontSize: 12, color: '#8c8c8c' }}>总体进度</div>
+                  <Progress
+                    percent={consoleData.summary.progress_percent}
+                    status={consoleData.summary.failed_count > 0 ? 'exception' : (consoleData.summary.running_count > 0 ? 'active' : 'success')}
+                    size="small"
+                  />
+                </Col>
+                <Col span={12}>
+                  <Space wrap size={[4, 4]}>
+                    <Tag>步骤 {consoleData.summary.total_steps}</Tag>
+                    <Tag color="processing">运行中 {consoleData.summary.running_count}</Tag>
+                    <Tag color="error">失败 {consoleData.summary.failed_count}</Tag>
+                    <Tag color="default">待处理 {consoleData.summary.pending_count}</Tag>
+                  </Space>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Conflicts */}
+            {consoleData.conflicts.length > 0 && (
+              <Alert
+                style={{ marginBottom: 12 }}
+                type="warning"
+                showIcon
+                icon={<WarningOutlined />}
+                message={`${consoleData.conflicts.length} 个关联冲突`}
+                description={
+                  <Space wrap size={[4, 4]}>
+                    {consoleData.conflicts.map(c => (
+                      <Tag key={c.id} color={c.severity === 'CRITICAL' ? 'error' : 'warning'}>
+                        {c.title || c.conflict_type} · {c.status}
+                      </Tag>
+                    ))}
+                  </Space>
+                }
+              />
+            )}
+
+            {/* Steps timeline */}
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>步骤执行</div>
+            <Timeline
+              items={consoleData.steps.map((s: WorkflowRunConsoleStep) => {
+                const sr = s.step_run
+                const statusInfo = STEP_STATUS_MAP[sr.status] || STEP_STATUS_MAP.pending
+                const overrides = Object.keys(sr.runtime_overrides || {})
+                const sb = s.sandbox_execution
+                const sbViolations = (sb?.violations || []).length
+                const effKeys = Object.entries(s.effective_params || {}).filter(([, v]) => v != null)
+                const logs = s.recent_logs || []
+                return {
+                  dot: statusInfo.icon,
+                  color: statusInfo.color === 'success' ? 'green'
+                    : statusInfo.color === 'error' ? 'red'
+                    : statusInfo.color === 'processing' ? 'blue'
+                    : statusInfo.color === 'warning' ? 'orange' : 'gray',
+                  children: (
+                    <div style={{ paddingBottom: 4 }}>
+                      <Space wrap size={[4, 4]}>
+                        <Text strong>{sr.step_key}</Text>
+                        <Tag color={statusInfo.color} icon={statusInfo.icon} style={{ fontSize: 11 }}>{sr.status}</Tag>
+                        {sr.agent_id && <Tag style={{ fontSize: 11 }}>Agent #{sr.agent_id}</Tag>}
+                        {sr.task_id && <Tag style={{ fontSize: 11 }}>Task #{sr.task_id}</Tag>}
+                        {sr.attempt > 1 && <Tag color="orange" style={{ fontSize: 11 }}>尝试 {sr.attempt}</Tag>}
+                        {s.duration_seconds != null && (
+                          <Tag style={{ fontSize: 11 }}>{s.duration_seconds.toFixed(0)}s</Tag>
+                        )}
+                        {overrides.length > 0 && (
+                          <Tooltip title={`覆盖: ${overrides.join(', ')}`}>
+                            <Tag color="purple" style={{ fontSize: 11 }}>覆盖 {overrides.length}</Tag>
+                          </Tooltip>
+                        )}
+                        {sb && (
+                          <Tooltip title={`沙盒执行 #${sb.id} · 策略快照已冻结${sb.violations?.length ? ` · ${sbViolations} 违规` : ''}`}>
+                            <Tag color={sb.status === 'VIOLATED' || sb.status === 'REVOKED' ? 'error' : 'blue'} style={{ fontSize: 11 }} icon={<SafetyOutlined />}>
+                              沙盒:{sb.status}
+                            </Tag>
+                          </Tooltip>
+                        )}
+                      </Space>
+
+                      {/* Effective params */}
+                      {effKeys.length > 0 && (
+                        <div style={{ fontSize: 11, color: '#8c8c8c', marginTop: 2 }}>
+                          有效参数: {effKeys.map(([k, v]) => `${k}=${String(v)}`).join(' · ')}
+                        </div>
+                      )}
+
+                      {sr.error && (
+                        <div style={{ fontSize: 11, color: '#ff4d4f', marginTop: 2 }}>错误: {sr.error}</div>
+                      )}
+
+                      {/* Recent logs */}
+                      {logs.length > 0 && (
+                        <div style={{ marginTop: 4, background: '#fafafa', borderRadius: 4, padding: '4px 8px', fontFamily: 'monospace', fontSize: 11, maxHeight: 120, overflow: 'auto' }}>
+                          {logs.map(l => (
+                            <div key={l.id}>
+                              <Tag color={l.level === 'ERROR' ? 'error' : l.level === 'WARN' ? 'warning' : 'default'} style={{ fontSize: 10, marginRight: 4 }}>{l.level}</Tag>
+                              {l.message}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ),
+                }
+              })}
+            />
+          </div>
+        ) : (
+          <Empty description="无数据" />
+        )}
+      </Drawer>
 
       {/* Version History Modal */}
       <Modal
