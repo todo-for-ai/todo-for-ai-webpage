@@ -1073,6 +1073,18 @@ export class AgentsApi {
   async getConflictsDashboard(): Promise<any> {
     return unwrapData<any>(await apiClient.get('/agents/conflicts/dashboard'))
   }
+
+  async listSandboxTemplates(): Promise<any> {
+    return unwrapData<any>(await apiClient.get('/agents/sandbox-templates'))
+  }
+
+  async instantiateSandboxTemplate(templateKey: string, data: Record<string, any>): Promise<any> {
+    return unwrapData<any>(await apiClient.post(`/agents/sandbox-templates/${encodeURIComponent(templateKey)}/instantiate`, data))
+  }
+
+  async autoResolveConflicts(): Promise<any> {
+    return unwrapData<any>(await apiClient.post('/agents/maintenance/auto-resolve-conflicts', {}))
+  }
 }
 
 export const agentsApi = new AgentsApi()

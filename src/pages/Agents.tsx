@@ -369,6 +369,9 @@ const Agents: React.FC = () => {
   const [conflictDetailOpen, setConflictDetailOpen] = useState(false)
   const [conflictResolveOpen, setConflictResolveOpen] = useState(false)
   const [conflictResolveForm, setConflictResolveForm] = useState<any>({ conflict_id: 0, strategy: '', description: '' })
+  // Sandbox templates
+  const [sandboxTemplates, setSandboxTemplates] = useState<any[]>([])
+  const [sandboxTemplateOpen, setSandboxTemplateOpen] = useState(false)
   // Reputation
   const [agentReputation, setAgentReputation] = useState<any>(null)
   // Agent-bound sandbox (shown in drawer)
@@ -465,6 +468,13 @@ const Agents: React.FC = () => {
           description: `冲突 #${(event.payload || {}).conflict_id} 已通过 ${(event.payload || {}).strategy || ''} 策略解决`,
           placement: 'topRight',
           duration: 5,
+        })
+      } else if (et === 'conflicts_auto_resolved') {
+        notification.success({
+          message: '冲突自动解决完成',
+          description: `维护扫描自动解决了 ${(event.payload || {}).count || 0} 个低严重度冲突`,
+          placement: 'topRight',
+          duration: 6,
         })
       }
       // Push to live event feed
@@ -1357,6 +1367,32 @@ const Agents: React.FC = () => {
       loadConflicts()
       if (result.actions?.length) message.info(`执行 ${result.actions.length} 项动作`, 4)
     } catch { message.error('解决失败') }
+  }
+
+  const autoResolveConflicts = async () => {
+    try {
+      const result = await agentsApi.autoResolveConflicts()
+      message.success(`自动解决 ${result.auto_resolved || 0} 个, 跳过 ${result.skipped || 0} 个`)
+      loadConflicts()
+    } catch { message.error('自动解决失败') }
+  }
+
+  // ---- Sandbox templates ----
+  const openSandboxTemplates = async () => {
+    try {
+      const result = await agentsApi.listSandboxTemplates()
+      setSandboxTemplates(result.templates || [])
+      setSandboxTemplateOpen(true)
+    } catch { message.error('加载模板失败') }
+  }
+
+  const instantiateTemplate = async (key: string, name: string) => {
+    try {
+      await agentsApi.instantiateSandboxTemplate(key, { name })
+      message.success(`已从模板 "${name}" 创建沙盒`)
+      setSandboxTemplateOpen(false)
+      loadSandboxes()
+    } catch { message.error('创建失败') }
   }
 
   const resolveProtocol = async (protocolId: number, resolution: string) => {
@@ -3216,7 +3252,10 @@ const Agents: React.FC = () => {
         open={sandboxOpen}
         onClose={() => setSandboxOpen(false)}
         width={900}
-        extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreateSandbox}>新建沙盒</Button>}
+        extra={<Space>
+          <Button icon={<AppstoreOutlined />} onClick={openSandboxTemplates}>模板</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateSandbox}>新建沙盒</Button>
+        </Space>}
       >
         <Alert
           message="安全执行环境隔离"
@@ -3257,6 +3296,46 @@ const Agents: React.FC = () => {
           )}
         />
       </Drawer>
+
+      {/* Sandbox Templates Modal */}
+      <Modal
+        title={<Space><AppstoreOutlined /> 沙盒策略模板</Space>}
+        open={sandboxTemplateOpen}
+        onCancel={() => setSandboxTemplateOpen(false)}
+        footer={null}
+        width={720}
+      >
+        <Alert
+          message="从预置模板一键创建沙盒策略"
+          description="模板提供常见安全配置基线，创建后可进一步编辑调整。"
+          type="info"
+          style={{ marginBottom: 16 }}
+          showIcon
+        />
+        <List
+          dataSource={sandboxTemplates}
+          locale={{ emptyText: '暂无模板' }}
+          renderItem={(t: any) => (
+            <List.Item
+              actions={[
+                <Popconfirm key="inst" title={`从模板 "${t.name}" 创建沙盒？`} onConfirm={() => instantiateTemplate(t.key, t.name)}>
+                  <Button type="primary" size="small">从此模板创建</Button>
+                </Popconfirm>,
+              ]}
+            >
+              <List.Item.Meta
+                title={<Space><Text strong>{t.name}</Text><Tag color={t.security_level === 'strict' ? 'red' : t.security_level === 'permissive' ? 'green' : 'orange'}>{t.security_level}</Tag><Tag>{t.key}</Tag></Space>}
+                description={<Space size={[16, 4]} wrap style={{ fontSize: 12 }}>
+                  <span>{t.description}</span>
+                  <span>超时: {t.timeout_seconds}s</span>
+                  <span>内存: {t.max_memory_mb}MB</span>
+                  <span>工具: {(t.allowed_tools || []).length}允许/{(t.blocked_tools || []).length}禁止</span>
+                </Space>}
+              />
+            </List.Item>
+          )}
+        />
+      </Modal>
 
       {/* Sandbox Create/Edit Modal */}
       <Modal
@@ -3576,6 +3655,9 @@ const Agents: React.FC = () => {
         width={820}
         extra={<Space>
           <Button icon={<ReloadOutlined />} onClick={() => loadConflicts()}>刷新</Button>
+          <Popconfirm title="自动解决低严重度冲突？(严重冲突不会自动处理)" onConfirm={autoResolveConflicts}>
+            <Button icon={<ThunderboltOutlined />}>自动解决</Button>
+          </Popconfirm>
           <Button type="primary" icon={<SearchOutlined />} onClick={scanConflicts} loading={false}>扫描冲突</Button>
         </Space>}
       >
