@@ -29,6 +29,22 @@ export const OverviewTab: React.FC = () => {
             <Tag color="purple">get_task_by_id</Tag>
             <Text>根据ID获取任务详细信息</Text>
           </div>
+          <div>
+            <Tag color="cyan">list_agents</Tag>
+            <Text>查看当前用户可用的 Agent 身份</Text>
+          </div>
+          <div>
+            <Tag color="gold">list_review_queue</Tag>
+            <Text>查看等待人工反馈或最终审核的 Agent 派发</Text>
+          </div>
+          <div>
+            <Tag color="geekblue">claim_agent_task</Tag>
+            <Text>让 Agent 领取指定任务或下一个可执行任务</Text>
+          </div>
+          <div>
+            <Tag color="orange">update_agent_assignment</Tag>
+            <Text>更新 Agent 派发状态、进度和执行反馈</Text>
+          </div>
         </Space>
       </div>
       <Divider />

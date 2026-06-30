@@ -48,6 +48,12 @@
     "done": "Completed",
     "ai_executing": "AI Executing"
   },
+  "agentCollaboration": {
+    "activeAgents": "Active Agents",
+    "activeAssignments": "Active Assignments",
+    "waitingHuman": "Waiting Human",
+    "reviewAndExpired": "Review/Expired"
+  },
   "misc": {
     "noDescription": "No description",
     "unknownProject": "Unknown project",

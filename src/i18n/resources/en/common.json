@@ -59,7 +59,8 @@
     "todo": "To Do",
     "in_progress": "In Progress",
     "review": "Review",
-    "done": "Done"
+    "done": "Done",
+    "blocked": "Blocked"
   },
   "time": {
     "now": "Just now",

@@ -59,7 +59,13 @@ export const TaskDetailHeader: React.FC<TaskDetailHeaderProps> = ({
               {task?.title || tp('taskInfo.loading')}
             </Title>
             {task?.status && (
-              <Tag color={task.status === 'done' ? 'green' : task.status === 'in_progress' ? 'blue' : 'default'}>
+              <Tag color={
+                task.status === 'done' ? 'green'
+                  : task.status === 'in_progress' ? 'blue'
+                    : task.status === 'blocked' ? 'red'
+                      : task.status === 'review' ? 'purple'
+                        : 'default'
+              }>
                 {tp(`status.${task.status}`)}
               </Tag>
             )}

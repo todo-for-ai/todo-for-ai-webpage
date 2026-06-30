@@ -19,12 +19,15 @@
   },
   "status": {
     "todo": "To Do",
+    "in_progress": "In Progress",
     "inProgress": "In Progress",
     "review": "Review",
     "done": "Done",
     "cancelled": "Cancelled",
+    "waiting_human": "Waiting Human Feedback",
     "waitingHumanFeedback": "Waiting Human Feedback",
-    "selectStatus": "Select Task Status"
+    "selectStatus": "Select Task Status",
+    "blocked": "blocked"
   },
   "priority": {
     "low": "Low",
@@ -104,6 +107,157 @@
     "instructionsSent": "Instructions sent, AI will continue execution",
     "submitFailed": "Failed to submit feedback, please try again"
   },
+  "collaboration": {
+    "title": "Agent Collaboration",
+    "empty": "No collaboration events",
+    "loadFailed": "Failed to load collaboration events",
+    "updateSuccess": "Assignment updated",
+    "updateFailed": "Failed to update assignment",
+    "noActiveAssignments": "No active Agent assignments",
+    "activeAssignments": "Active Assignments",
+    "eventTimeline": "Collaboration Timeline",
+    "actions": {
+      "resume": "Resume",
+      "review": "Move to Review",
+      "extendLease": "Extend Lease",
+      "cancel": "Cancel",
+      "handoff": "Hand off"
+    },
+    "dispatch": {
+      "open": "Dispatch to Agent",
+      "title": "Dispatch to Agent",
+      "agent": "Agent",
+      "agentPlaceholder": "Select the Agent that should execute this task",
+      "agentRequired": "Select an Agent",
+      "leaseMinutes": "Lease minutes",
+      "leaseRequired": "Enter lease minutes",
+      "notes": "Dispatch notes",
+      "notesPlaceholder": "Optional execution notes or constraints for the Agent",
+      "submit": "Dispatch",
+      "cancel": "Cancel",
+      "success": "Task dispatched to Agent",
+      "noTask": "Task is not dispatchable",
+      "loadAgentsFailed": "Failed to load Agents"
+    },
+    "feedback": {
+      "title": "Submit Human Feedback",
+      "label": "Feedback",
+      "placeholder": "Describe the requested adjustment, missing constraints, or information needed to continue",
+      "required": "Enter feedback or context for the Agent",
+      "submit": "Submit and Resume",
+      "cancel": "Cancel"
+    },
+    "actors": {
+      "agent": "Agent",
+      "human": "User",
+      "system": "System"
+    },
+    "events": {
+      "task_claimed": "Task claimed",
+      "assignment_updated": "Assignment updated",
+      "assignment_expired": "Lease expired",
+      "message": "Message",
+      "note": "Note",
+      "question": "Question",
+      "answer": "Answer",
+      "handoff": "Handoff",
+      "blocker": "Blocker",
+      "decision": "Decision",
+      "info": "Info",
+      "task_dispatched": "Auto-dispatched",
+      "subtask_created": "Subtask created"
+    },
+    "states": {
+      "assigned": "Assigned",
+      "claimed": "Claimed",
+      "running": "Running",
+      "waiting_human": "Waiting Human",
+      "review": "Review",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "matchStrategies": {
+      "capability_match": "Capability match",
+      "priority_fifo": "Priority queue"
+    },
+    "claimModes": {
+      "manual_dispatch": "Manual dispatch",
+      "agent_claim": "Agent claim"
+    },
+    "fields": {
+      "assignment": "Assignment",
+      "agent": "Agent",
+      "run": "Run",
+      "lease": "Lease",
+      "leaseExpires": "Lease expires",
+      "lastHeartbeat": "Last heartbeat",
+      "progress": "Progress",
+      "feedback": "Feedback",
+      "matchStrategy": "Strategy",
+      "matchScore": "Match score",
+      "matchedCapabilities": "Matched capabilities",
+      "matchedTags": "Matched tags",
+      "matchedText": "Matched text",
+      "toAgent": "To agent"
+    },
+    "composer": {
+      "placeholder": "Write a collaboration message for other Agents…",
+      "send": "Send",
+      "success": "Message posted",
+      "failed": "Failed to post message",
+      "types": {
+        "message": "Message",
+        "note": "Note",
+        "question": "Question",
+        "answer": "Answer",
+        "handoff": "Handoff",
+        "blocker": "Blocker",
+        "decision": "Decision",
+        "info": "Info"
+      },
+      "mentionPlaceholder": "💬 @mention Agent (optional, leave empty to broadcast)"
+    },
+    "handoff": {
+      "title": "Hand off task to another Agent",
+      "from": "Currently running:",
+      "toAgent": "Hand off to",
+      "toAgentRequired": "Please choose a receiving Agent",
+      "toAgentPlaceholder": "Select an Agent",
+      "leaseMinutes": "Lease (minutes)",
+      "reason": "Reason",
+      "reasonPlaceholder": "Explain why you are handing off (optional)",
+      "submit": "Hand off",
+      "cancel": "Cancel",
+      "success": "Task handed off"
+    },
+    "live": {
+      "tooltip": "Live refresh (every 8s)",
+      "on": "Live",
+      "off": "Manual"
+    },
+    "lineage": {
+      "title": "Handoff lineage",
+      "unassigned": "Unassigned",
+      "via": {
+        "claim": "claimed",
+        "manual_dispatch": "dispatched",
+        "dispatch": "auto-dispatched",
+        "handoff": "handed off"
+      }
+    },
+    "protocol": {
+      "awaitingAnswer": "Awaiting answer",
+      "answered": "Answered",
+      "answerEvent": "Answer event",
+      "replyTo": "Reply to question"
+    },
+    "runLogs": {
+      "show": "View logs",
+      "hide": "Hide logs"
+    }
+  },
   "messages": {
     "taskNotFound": "Task not found",
     "returnToTaskList": "Return to Task List",
@@ -139,5 +293,23 @@
     "confirmText": "Confirm",
     "cancelText": "Cancel"
   },
-  "dueDateFormat": "Due: {date}"
+  "dueDateFormat": "Due: {date}",
+  "subtask": {
+    "parentLabel": "Parent task",
+    "listTitle": "Subtasks",
+    "createPlaceholder": "Enter subtask title…",
+    "createButton": "Create",
+    "created": "Subtask created",
+    "createFailed": "Failed to create subtask"
+  },
+  "sharedContext": {
+    "title": "Shared Context",
+    "keyPlaceholder": "key (e.g. research_summary)",
+    "valuePlaceholder": "Value (Markdown or JSON)",
+    "save": "Save",
+    "saved": "Saved",
+    "saveFailed": "Failed to save",
+    "confirmDelete": "Delete this entry?",
+    "deleteFailed": "Failed to delete"
+  }
 }

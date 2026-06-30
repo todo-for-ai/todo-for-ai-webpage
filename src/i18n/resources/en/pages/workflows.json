@@ -1,0 +1,53 @@
+{
+  "title": "Workflow Orchestration",
+  "subtitle": "Define, schedule, and monitor multi-step automated workflows",
+  "createWorkflow": "Create Workflow",
+  "workflowDefinitions": "Workflow Definitions",
+  "runHistory": "Run History",
+  "scheduledTriggers": "Scheduled Triggers",
+  "addTrigger": "Add Trigger",
+  "createTrigger": "Create Scheduled Trigger",
+  "stepDefinition": "Step Definition",
+  "addStep": "Add Step",
+  "dagPreview": "DAG Preview",
+  "dagDirection": "Dependency direction: left → right",
+  "stepKey": "Step Key",
+  "stepName": "Step Name",
+  "dependsOn": "Depends On",
+  "requiredCapabilities": "Required Capabilities",
+  "assignAgent": "Assign Agent",
+  "failureStrategy": "Failure Strategy",
+  "launchWorkflow": "Launch Workflow",
+  "cancelRun": "Cancel Run",
+  "viewRunDetail": "Run Details",
+  "triggerName": "Trigger Name",
+  "targetWorkflow": "Target Workflow",
+  "cronExpression": "Cron Expression",
+  "cronHint": "5-field format: min hour dom month dow, e.g. 0 9 * * 1-5 = weekdays 9am",
+  "oneShotAt": "One-shot Trigger Time",
+  "oneShotHint": "ISO datetime. Trigger deactivates after firing.",
+  "projectId": "Project ID",
+  "rootTaskId": "Root Task ID (optional)",
+  "failureStrategyOptions": {
+    "abort": "Abort",
+    "skip": "Skip",
+    "continue": "Continue"
+  },
+  "capabilityPresets": {
+    "code_review": "Code Review",
+    "testing": "Testing",
+    "deployment": "Deployment",
+    "documentation": "Documentation",
+    "research": "Research",
+    "coordination": "Coordination"
+  },
+  "messages": {
+    "createSuccess": "Workflow created successfully",
+    "deleteSuccess": "Deleted",
+    "launchSuccess": "Workflow run #{{id}} launched",
+    "cancelSuccess": "Cancelled",
+    "triggerCreateSuccess": "Trigger created successfully",
+    "triggerDeleteSuccess": "Deleted",
+    "atLeastOneStep": "At least one step is required"
+  }
+}

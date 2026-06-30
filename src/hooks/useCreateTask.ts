@@ -215,7 +215,8 @@ priority: task.priority,
 due_date: task.due_date ? dayjs(task.due_date) : null,
 tags: task.tags,
 is_ai_task: task.is_ai_task,
-id: task.id
+id: task.id,
+required_capabilities: task.required_capabilities || [],
 }
 form.setFieldsValue(formData)
 setOriginalTaskContent(task.content || '')
@@ -231,7 +232,8 @@ priority: editDraft.priority || task.priority,
 due_date: editDraft.due_date ? dayjs(editDraft.due_date) : (task.due_date ? dayjs(task.due_date) : null),
 tags: editDraft.tags || task.tags,
 is_ai_task: editDraft.is_ai_task !== undefined ? editDraft.is_ai_task : task.is_ai_task,
-id: task.id
+id: task.id,
+required_capabilities: editDraft.required_capabilities || task.required_capabilities || [],
 }
 form.setFieldsValue(draftFormData)
 setEditorContent(editDraft.content || '')
@@ -263,6 +265,7 @@ priority: values.priority || 'medium',
 due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
 tags: values.tags || [],
 is_ai_task: values.is_ai_task || false,
+required_capabilities: values.required_capabilities || [],
 }
 let result
 if (isEditMode && id) {
@@ -302,6 +305,7 @@ priority: values.priority || 'medium',
 due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
 tags: values.tags || [],
 is_ai_task: values.is_ai_task || false,
+required_capabilities: values.required_capabilities || [],
 }
 let result
 if (isEditMode && id) {
@@ -343,6 +347,7 @@ priority: values.priority || 'medium',
 due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
 tags: values.tags || [],
 is_ai_task: values.is_ai_task || false,
+required_capabilities: values.required_capabilities || [],
 }
 const result = await createTask(taskData as CreateTaskData)
 if (result) {

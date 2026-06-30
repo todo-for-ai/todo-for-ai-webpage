@@ -48,6 +48,12 @@
     "done": "已完成",
     "ai_executing": "AI执行中"
   },
+  "agentCollaboration": {
+    "activeAgents": "活跃 Agent",
+    "activeAssignments": "执行中派发",
+    "waitingHuman": "等待人工",
+    "reviewAndExpired": "审核/超期"
+  },
   "misc": {
     "noDescription": "无描述",
     "unknownProject": "未知项目",

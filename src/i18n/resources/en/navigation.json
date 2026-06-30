@@ -2,6 +2,8 @@
   "menu": {
     "dashboard": "Dashboard",
     "projects": "Project Management",
+    "agents": "Agent Management",
+    "workflows": "Workflow Orchestration",
     "rules": "Rule Marketplace",
     "profile": "Profile",
     "settings": "Settings",
@@ -15,6 +17,8 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "projects": "Projects",
+    "agents": "Agents",
+    "workflows": "Workflows",
     "projectDetail": "Project Details",
     "createProject": "Create Project",
     "editProject": "Edit Project",

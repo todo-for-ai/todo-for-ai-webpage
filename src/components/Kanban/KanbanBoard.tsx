@@ -88,6 +88,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
       return {
         todo: [],
         in_progress: [],
+        blocked: [],
         review: [],
         done: []
       }
@@ -96,6 +97,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
     return {
       todo: tasks.filter(task => task.status === 'todo'),
       in_progress: tasks.filter(task => task.status === 'in_progress'),
+      blocked: tasks.filter(task => task.status === 'blocked'),
       review: tasks.filter(task => task.status === 'review'),
       done: tasks.filter(task => task.status === 'done')
     }
@@ -112,6 +114,7 @@ const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ projectId, o
   const columns = [
     { id: 'todo', title: t('common:kanban.todo'), color: '#f0f0f0' },
     { id: 'in_progress', title: t('common:kanban.in_progress'), color: '#e6f7ff' },
+    { id: 'blocked', title: t('common:kanban.blocked'), color: '#fff1f0' },
     { id: 'review', title: t('common:kanban.review'), color: '#fff7e6' },
     { id: 'done', title: t('common:kanban.done'), color: '#f6ffed' },
   ]

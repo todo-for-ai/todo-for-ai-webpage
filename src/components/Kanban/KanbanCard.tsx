@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Card, Tag, Avatar, Tooltip, Progress } from 'antd'
-import { UserOutlined, ClockCircleOutlined, FileTextOutlined } from '@ant-design/icons'
+import { UserOutlined, ClockCircleOutlined, FileTextOutlined, ApartmentOutlined } from '@ant-design/icons'
 import TaskIdBadge from '../TaskIdBadge'
 import type { Task } from '../../api/tasks'
 import dayjs from 'dayjs'
@@ -176,14 +176,33 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </div>
 
       {/* 底部信息 */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {/* 任务ID */}
           <TaskIdBadge taskId={task.id} size="small" />
+
+          {/* 子任务统计 */}
+          {(task.subtask_count ?? 0) > 0 && (
+            <Tooltip title={`${task.subtask_done_count}/${task.subtask_count} 子任务已完成`}>
+              <Tag
+                style={{
+                  margin: 0,
+                  fontSize: '11px',
+                  lineHeight: '16px',
+                  padding: '0 4px',
+                  color: (task.subtask_done_count ?? 0) === task.subtask_count ? '#52c41a' : '#8c8c8c',
+                  borderColor: (task.subtask_done_count ?? 0) === task.subtask_count ? '#52c41a' : '#d9d9d9',
+                }}
+                icon={<ApartmentOutlined />}
+              >
+                {task.subtask_done_count}/{task.subtask_count}
+              </Tag>
+            </Tooltip>
+          )}
         </div>
 
         {/* AI任务标识 */}

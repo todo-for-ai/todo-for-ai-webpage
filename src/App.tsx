@@ -10,6 +10,8 @@ import PageTracker from './components/PageTracker'
 import {
   Dashboard,
   Projects,
+  Agents,
+  Workflows,
   ProjectDetail,
   CreateProject,
   TaskDetail,
@@ -86,6 +88,8 @@ function App() {
               </AuthGuard>
             }>
               <Route index element={<Dashboard />} />
+              <Route path="agents" element={<Agents />} />
+              <Route path="workflows" element={<Workflows />} />
               <Route path="projects" element={<Projects />} />
               <Route path="projects/create" element={<CreateProject />} />
               <Route path="projects/:id" element={<ProjectDetail />} />

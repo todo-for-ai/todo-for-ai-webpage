@@ -197,6 +197,27 @@ const CreateTask: React.FC = () => {
                     <Select mode="tags" placeholder={tp('form.settings.tags.placeholder')} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
+                <Col span={6}>
+                  <Form.Item label="Agent 能力要求" name="required_capabilities" tooltip="指定需要哪些能力的 Agent 来处理此任务，系统会优先分配匹配的 Agent">
+                    <Select
+                      mode="multiple"
+                      placeholder="选择所需能力"
+                      style={{ width: '100%' }}
+                      options={[
+                        { value: 'code_review', label: '代码审查' },
+                        { value: 'testing', label: '测试' },
+                        { value: 'deployment', label: '部署' },
+                        { value: 'documentation', label: '文档' },
+                        { value: 'research', label: '研究' },
+                        { value: 'coordination', label: '协调' },
+                        { value: 'frontend', label: '前端' },
+                        { value: 'backend', label: '后端' },
+                        { value: 'devops', label: '运维' },
+                        { value: 'security', label: '安全' },
+                      ]}
+                    />
+                  </Form.Item>
+                </Col>
               </Row>
             </Card>
           </ResizableContainer>

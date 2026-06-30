@@ -59,7 +59,8 @@
     "todo": "待办",
     "in_progress": "进行中",
     "review": "待审核",
-    "done": "已完成"
+    "done": "已完成",
+    "blocked": "已阻塞"
   },
   "time": {
     "now": "刚刚",

@@ -1,0 +1,45 @@
+{
+  "title": "Agent 管理",
+  "subtitle": "管理 AI Agent，分配任务，监控协作状态",
+  "createAgent": "创建 Agent",
+  "editAgent": "编辑 Agent",
+  "agentList": "Agent 列表",
+  "maintenance": "维护操作",
+  "escalateOverdue": "提升逾期任务优先级",
+  "healthCheck": "执行健康检查",
+  "broadcast": "广播",
+  "broadcastTitle": "广播消息",
+  "broadcastDesc": "消息将发送给所有在线（ACTIVE）的 Agent，通过 Notification 系统推送给它们。",
+  "broadcastPlaceholder": "请输入要广播的内容...",
+  "sendBroadcast": "发送广播",
+  "directMessage": "消息",
+  "directMessageTitle": "发送消息",
+  "directMessageDesc": "向指定 Agent 发送直接消息。",
+  "selectRecipient": "选择接收方 Agent",
+  "messagePlaceholder": "请输入消息内容...",
+  "send": "发送",
+  "assignments": "任务分配",
+  "reviewQueue": "审查队列",
+  "inbox": "收件箱",
+  "capabilities": "能力",
+  "kind": {
+    "assistant": "助手",
+    "autonomous": "自主",
+    "coordinator": "协调者",
+    "external": "外部"
+  },
+  "status": {
+    "active": "活跃",
+    "paused": "暂停",
+    "offline": "离线",
+    "disabled": "禁用"
+  },
+  "messages": {
+    "broadcastSuccess": "广播已发送给 {{count}} 个活跃 Agent",
+    "broadcastFailed": "广播发送失败",
+    "dmSuccess": "消息已发送给 {{name}}",
+    "dmFailed": "消息发送失败",
+    "escalateSuccess": "已提升 {{count}} 个逾期任务的优先级",
+    "healthCheckSuccess": "健康检查完成"
+  }
+}

@@ -48,6 +48,20 @@ export interface DashboardStats {
     active_days: number
     period_days: number
   }
+  agent_collaboration?: {
+    agents: {
+      total: number
+      active: number
+      paused: number
+      offline: number
+    }
+    assignments: {
+      active: number
+      waiting_human: number
+      review: number
+      expired_leases: number
+    }
+  }
 }
 
 // 活跃度热力图数据类型
@@ -131,6 +145,14 @@ export class DashboardApi {
    */
   async getActivitySummary(): Promise<ActivitySummary> {
     return await apiClient.get<ActivitySummary>('/dashboard/activity-summary')
+  }
+
+  /**
+   * 获取 Agent 实时监控数据
+   */
+  async getAgentMonitor(params?: Record<string, string>): Promise<any> {
+    const query = params ? '?' + new URLSearchParams(params).toString() : ''
+    return await apiClient.get<any>(`/agents/dashboard/agent-monitor${query}`)
   }
 }
 

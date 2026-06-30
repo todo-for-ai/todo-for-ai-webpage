@@ -19,12 +19,15 @@
   },
   "status": {
     "todo": "待办",
+    "in_progress": "进行中",
     "inProgress": "进行中",
     "review": "待审核",
     "done": "已完成",
     "cancelled": "已取消",
+    "waiting_human": "等待人工反馈",
     "waitingHumanFeedback": "等待人工反馈",
-    "selectStatus": "选择任务状态"
+    "selectStatus": "选择任务状态",
+    "blocked": "已阻塞"
   },
   "priority": {
     "low": "低",
@@ -104,6 +107,157 @@
     "instructionsSent": "指导意见已发送，AI将继续执行",
     "submitFailed": "提交反馈失败，请重试"
   },
+  "collaboration": {
+    "title": "Agent 协作",
+    "empty": "暂无协作事件",
+    "loadFailed": "协作事件加载失败",
+    "updateSuccess": "派发已更新",
+    "updateFailed": "派发更新失败",
+    "noActiveAssignments": "暂无活跃 Agent 派发",
+    "activeAssignments": "活跃派发",
+    "eventTimeline": "协作时间线",
+    "actions": {
+      "resume": "继续执行",
+      "review": "转入审核",
+      "extendLease": "延长租约",
+      "cancel": "取消派发",
+      "handoff": "交接"
+    },
+    "dispatch": {
+      "open": "派发给 Agent",
+      "title": "派发给 Agent",
+      "agent": "Agent",
+      "agentPlaceholder": "选择要执行此任务的 Agent",
+      "agentRequired": "请选择 Agent",
+      "leaseMinutes": "租约分钟数",
+      "leaseRequired": "请输入租约分钟数",
+      "notes": "派发备注",
+      "notesPlaceholder": "可选：给 Agent 的执行说明或约束",
+      "submit": "派发",
+      "cancel": "取消",
+      "success": "任务已派发给 Agent",
+      "noTask": "任务当前不可派发",
+      "loadAgentsFailed": "加载 Agent 失败"
+    },
+    "feedback": {
+      "title": "提交人工反馈",
+      "label": "反馈内容",
+      "placeholder": "说明需要调整的方向、补充约束或继续执行所需的信息",
+      "required": "请输入要交给 Agent 的反馈或补充信息",
+      "submit": "提交并继续",
+      "cancel": "取消"
+    },
+    "actors": {
+      "agent": "Agent",
+      "human": "用户",
+      "system": "系统"
+    },
+    "events": {
+      "task_claimed": "领取任务",
+      "assignment_updated": "派发更新",
+      "assignment_expired": "租约过期",
+      "message": "消息",
+      "note": "备注",
+      "question": "提问",
+      "answer": "回答",
+      "handoff": "交接",
+      "blocker": "阻塞",
+      "decision": "决策",
+      "info": "信息",
+      "task_dispatched": "自动派活",
+      "subtask_created": "创建子任务"
+    },
+    "states": {
+      "assigned": "已派发",
+      "claimed": "已领取",
+      "running": "运行中",
+      "waiting_human": "等待人工",
+      "review": "待审核",
+      "done": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消",
+      "expired": "已过期"
+    },
+    "matchStrategies": {
+      "capability_match": "能力匹配",
+      "priority_fifo": "优先级队列"
+    },
+    "claimModes": {
+      "manual_dispatch": "手动派发",
+      "agent_claim": "Agent 领取"
+    },
+    "fields": {
+      "assignment": "派发",
+      "agent": "Agent",
+      "run": "运行",
+      "lease": "租约",
+      "leaseExpires": "租约到期",
+      "lastHeartbeat": "最近心跳",
+      "progress": "进度",
+      "feedback": "含反馈",
+      "matchStrategy": "策略",
+      "matchScore": "匹配分",
+      "matchedCapabilities": "命中能力",
+      "matchedTags": "命中标签",
+      "matchedText": "命中文本",
+      "toAgent": "派给 Agent"
+    },
+    "composer": {
+      "placeholder": "输入协作消息，与其他 Agent 沟通…",
+      "send": "发送",
+      "success": "消息已发布",
+      "failed": "发布失败",
+      "types": {
+        "message": "消息",
+        "note": "备注",
+        "question": "提问",
+        "answer": "回答",
+        "handoff": "交接",
+        "blocker": "阻塞",
+        "decision": "决策",
+        "info": "信息"
+      },
+      "mentionPlaceholder": "💬 @提及 Agent（可选，留空则广播）"
+    },
+    "handoff": {
+      "title": "交接任务给其他 Agent",
+      "from": "当前执行：",
+      "toAgent": "交接给",
+      "toAgentRequired": "请选择接收的 Agent",
+      "toAgentPlaceholder": "选择一个 Agent",
+      "leaseMinutes": "租约时长（分钟）",
+      "reason": "交接说明",
+      "reasonPlaceholder": "说明为什么要交接（可选）",
+      "submit": "交接",
+      "cancel": "取消",
+      "success": "任务已交接"
+    },
+    "live": {
+      "tooltip": "实时刷新（每 8 秒）",
+      "on": "实时",
+      "off": "手动"
+    },
+    "lineage": {
+      "title": "流转链路",
+      "unassigned": "未分配",
+      "via": {
+        "claim": "领取",
+        "manual_dispatch": "手动派发",
+        "dispatch": "自动派活",
+        "handoff": "交接"
+      }
+    },
+    "protocol": {
+      "awaitingAnswer": "等待回答",
+      "answered": "已回答",
+      "answerEvent": "回答事件",
+      "replyTo": "回复问题"
+    },
+    "runLogs": {
+      "show": "查看日志",
+      "hide": "收起日志"
+    }
+  },
   "messages": {
     "taskNotFound": "任务不存在",
     "returnToTaskList": "返回任务列表",
@@ -139,5 +293,23 @@
     "confirmText": "确定",
     "cancelText": "取消"
   },
-  "dueDateFormat": "截止：{date}"
+  "dueDateFormat": "截止：{date}",
+  "subtask": {
+    "parentLabel": "父任务",
+    "listTitle": "子任务",
+    "createPlaceholder": "输入子任务标题…",
+    "createButton": "创建",
+    "created": "子任务已创建",
+    "createFailed": "创建子任务失败"
+  },
+  "sharedContext": {
+    "title": "共享上下文",
+    "keyPlaceholder": "key（如 research_summary）",
+    "valuePlaceholder": "值（Markdown 或 JSON）",
+    "save": "保存",
+    "saved": "已保存",
+    "saveFailed": "保存失败",
+    "confirmDelete": "确定删除？",
+    "deleteFailed": "删除失败"
+  }
 }

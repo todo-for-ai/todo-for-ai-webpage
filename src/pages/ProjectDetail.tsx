@@ -8,6 +8,7 @@ import { TaskListSection } from '../components/ProjectDetail/TaskListSection'
 import { StatisticsSection } from '../components/ProjectDetail/StatisticsSection'
 import { ProjectInfoSection } from '../components/ProjectDetail/ProjectInfoSection'
 import { ContextRulesTab } from '../components/ProjectDetail/ContextRulesTab'
+import MembersTab from '../components/ProjectDetail/MembersTab'
 import { LinkButton } from '../components/SmartLink'
 import { useProjectPin } from '../hooks/useProjectPin'
 import { useTaskFilters } from '../hooks/useTaskFilters'
@@ -128,6 +129,13 @@ const ProjectDetail = () => {
               label: tp('overview.tabs.contextRules'),
               children: (
                 <ContextRulesTab projectId={parseInt(id || '0')} />
+              )
+            },
+            {
+              key: 'members',
+              label: '成员管理',
+              children: (
+                <MembersTab projectId={parseInt(id || '0')} />
               )
             }
           ]}

@@ -1,0 +1,45 @@
+{
+  "title": "Agent Management",
+  "subtitle": "Manage AI Agents, assign tasks, monitor collaboration status",
+  "createAgent": "Create Agent",
+  "editAgent": "Edit Agent",
+  "agentList": "Agent List",
+  "maintenance": "Maintenance",
+  "escalateOverdue": "Escalate Overdue Tasks",
+  "healthCheck": "Run Health Check",
+  "broadcast": "Broadcast",
+  "broadcastTitle": "Broadcast Message",
+  "broadcastDesc": "Message will be sent to all active Agents via the Notification system.",
+  "broadcastPlaceholder": "Enter broadcast content...",
+  "sendBroadcast": "Send Broadcast",
+  "directMessage": "Message",
+  "directMessageTitle": "Send Message",
+  "directMessageDesc": "Send a direct message to a specific Agent.",
+  "selectRecipient": "Select recipient Agent",
+  "messagePlaceholder": "Enter message content...",
+  "send": "Send",
+  "assignments": "Task Assignments",
+  "reviewQueue": "Review Queue",
+  "inbox": "Inbox",
+  "capabilities": "Capabilities",
+  "kind": {
+    "assistant": "Assistant",
+    "autonomous": "Autonomous",
+    "coordinator": "Coordinator",
+    "external": "External"
+  },
+  "status": {
+    "active": "Active",
+    "paused": "Paused",
+    "offline": "Offline",
+    "disabled": "Disabled"
+  },
+  "messages": {
+    "broadcastSuccess": "Broadcast sent to {{count}} active Agent(s)",
+    "broadcastFailed": "Broadcast failed",
+    "dmSuccess": "Message sent to {{name}}",
+    "dmFailed": "Message delivery failed",
+    "escalateSuccess": "Escalated {{count}} overdue task(s)",
+    "healthCheckSuccess": "Health check completed"
+  }
+}

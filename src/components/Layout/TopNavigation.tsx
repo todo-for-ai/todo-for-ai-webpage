@@ -6,6 +6,7 @@ import {
   ProjectOutlined,
   AppstoreOutlined,
   ApiOutlined,
+  ApartmentOutlined,
   PushpinOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
@@ -119,6 +120,16 @@ const TopNavigation: React.FC = () => {
       key: '/todo-for-ai/pages/projects',
       icon: <ProjectOutlined />,
       label: tn('menu.projects'),
+    },
+    {
+      key: '/todo-for-ai/pages/agents',
+      icon: <ApiOutlined />,
+      label: 'Agents',
+    },
+    {
+      key: '/todo-for-ai/pages/workflows',
+      icon: <ApartmentOutlined />,
+      label: 'Workflows',
     },
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id

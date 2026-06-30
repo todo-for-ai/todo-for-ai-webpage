@@ -25,7 +25,7 @@ export interface Task {
   title: string
   content: string
   description?: string  // 添加缺失的description属性
-  status: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled'
+  status: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled' | 'blocked'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   due_date?: string
   estimated_hours?: number
@@ -44,6 +44,10 @@ export interface Task {
   interaction_session_id?: string  // 交互式任务会话ID
   is_interactive?: boolean  // 是否为交互式任务
   ai_waiting_feedback?: boolean  // AI是否等待人类反馈
+  parent_task_id?: number  // 父任务ID（子任务指向父任务）
+  required_capabilities?: string[]  // Agent 能力要求
+  subtask_count?: number  // 子任务总数
+  subtask_done_count?: number  // 已完成子任务数
   project?: {
     id: number
     name: string
@@ -62,7 +66,7 @@ export interface CreateTaskData {
   title?: string
   content?: string
   description?: string  // 添加description属性
-  status?: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled'
+  status?: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled' | 'blocked'
   priority?: 'low' | 'medium' | 'high' | 'urgent'
   due_date?: string
   tags?: string[]
@@ -70,13 +74,15 @@ export interface CreateTaskData {
   related_files?: string[]  // 添加related_files属性
   creator_type?: string  // 添加creator_type属性
   creator_identifier?: string  // 添加creator_identifier属性
+  parent_task_id?: number  // 父任务ID（创建子任务时传入）
+  required_capabilities?: string[]  // Agent能力要求
 }
 
 export interface UpdateTaskData {
   title?: string
   content?: string
   description?: string  // 添加description属性
-  status?: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled'
+  status?: 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled' | 'blocked'
   priority?: 'low' | 'medium' | 'high' | 'urgent'
   due_date?: string
   completion_rate?: number
@@ -84,6 +90,7 @@ export interface UpdateTaskData {
   is_ai_task?: boolean  // 添加is_ai_task属性
   related_files?: string[]  // 添加related_files属性
   created_by?: string  // 添加created_by属性
+  required_capabilities?: string[]  // Agent能力要求
 }
 
 export interface TaskQueryParams {
@@ -91,6 +98,7 @@ export interface TaskQueryParams {
   per_page?: number
   search?: string
   project_id?: number
+  parent_task_id?: number
   status?: string
   priority?: string
   sort_by?: string
@@ -182,10 +190,15 @@ export class TasksApi {
 
   // 批量更新任务优先级
   async batchUpdateTaskPriority(taskIds: number[], priority: Task['priority']) {
-    return apiClient.post('/tasks/batch/update-priority', { 
-      task_ids: taskIds, 
-      priority 
+    return apiClient.post('/tasks/batch/update-priority', {
+      task_ids: taskIds,
+      priority
     })
+  }
+
+  // 获取子任务列表
+  async getSubtasks(parentTaskId: number) {
+    return apiClient.get<Task[]>(`/tasks/${parentTaskId}/subtasks`)
   }
 }
 

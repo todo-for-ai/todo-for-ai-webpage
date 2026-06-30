@@ -1,0 +1,53 @@
+{
+  "title": "工作流编排",
+  "subtitle": "定义、调度和监控多步骤自动化工作流",
+  "createWorkflow": "创建工作流",
+  "workflowDefinitions": "工作流定义",
+  "runHistory": "运行记录",
+  "scheduledTriggers": "定时触发器",
+  "addTrigger": "添加触发器",
+  "createTrigger": "创建定时触发器",
+  "stepDefinition": "步骤定义",
+  "addStep": "添加步骤",
+  "dagPreview": "DAG 预览",
+  "dagDirection": "依赖方向：左 → 右",
+  "stepKey": "步骤标识",
+  "stepName": "步骤名称",
+  "dependsOn": "依赖步骤",
+  "requiredCapabilities": "所需能力",
+  "assignAgent": "指定 Agent",
+  "failureStrategy": "失败策略",
+  "launchWorkflow": "启动工作流",
+  "cancelRun": "取消运行",
+  "viewRunDetail": "运行详情",
+  "triggerName": "触发器名称",
+  "targetWorkflow": "目标工作流",
+  "cronExpression": "Cron 表达式",
+  "cronHint": "5 字段格式：分 时 日 月 星期，例如 0 9 * * 1-5 = 工作日 9:00",
+  "oneShotAt": "一次性触发时间",
+  "oneShotHint": "ISO 格式，触发后自动停用",
+  "projectId": "项目 ID",
+  "rootTaskId": "根任务 ID（可选）",
+  "failureStrategyOptions": {
+    "abort": "中止",
+    "skip": "跳过",
+    "continue": "继续"
+  },
+  "capabilityPresets": {
+    "code_review": "代码审查",
+    "testing": "测试",
+    "deployment": "部署",
+    "documentation": "文档",
+    "research": "研究",
+    "coordination": "协调"
+  },
+  "messages": {
+    "createSuccess": "工作流创建成功",
+    "deleteSuccess": "已删除",
+    "launchSuccess": "工作流运行 #{{id}} 已启动",
+    "cancelSuccess": "已取消",
+    "triggerCreateSuccess": "触发器创建成功",
+    "triggerDeleteSuccess": "已删除",
+    "atLeastOneStep": "至少需要一个步骤"
+  }
+}
