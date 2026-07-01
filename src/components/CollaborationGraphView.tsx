@@ -1,4 +1,5 @@
 import React from 'react'
+import { useState } from 'react'
 import { Empty, Typography } from 'antd'
 import type { CollaborationGraph as GraphData } from '../api/agents'
 
@@ -26,6 +27,7 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
 }) => {
   const nodes = data?.nodes || []
   const edges = data?.edges || []
+  const [hoveredNode, setHoveredNode] = useState<number | null>(null)
 
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
@@ -45,6 +47,12 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
   })
 
   const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
+  // 边是否与悬停节点相关
+  const edgeIsHighlighted = (e: { source: number; target: number }) =>
+    hoveredNode === null || e.source === hoveredNode || e.target === hoveredNode
+  const nodeIsHighlighted = (id: number) =>
+    hoveredNode === null || id === hoveredNode ||
+    edges.some((e) => (e.source === hoveredNode && e.target === id) || (e.target === hoveredNode && e.source === id))
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -55,7 +63,8 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
           const b = nodePos.get(e.target)
           if (!a || !b) return null
           const w = 0.5 + 3.5 * (e.count / maxCount)
-          const opacity = 0.2 + 0.6 * (e.count / maxCount)
+          const baseOpacity = 0.2 + 0.6 * (e.count / maxCount)
+          const highlighted = edgeIsHighlighted(e)
           return (
             <line
               key={`e${i}`}
@@ -63,9 +72,9 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke="#1890ff"
-              strokeWidth={w}
-              strokeOpacity={opacity}
+              stroke={highlighted ? '#1890ff' : '#bfbfbf'}
+              strokeWidth={highlighted ? w + 1 : w}
+              strokeOpacity={hoveredNode === null ? baseOpacity : (highlighted ? 0.9 : 0.08)}
             >
               <title>{`${e.source} ↔ ${e.target}: ${e.count} 条消息`}</title>
             </line>
@@ -76,21 +85,31 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
         {nodes.map((n) => {
           const pos = nodePos.get(n.id)!
           const r = nodeRadius(n)
+          const highlighted = nodeIsHighlighted(n.id)
           return (
             <g
               key={n.id}
               transform={`translate(${pos.x},${pos.y})`}
               style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
+              onMouseEnter={() => setHoveredNode(n.id)}
+              onMouseLeave={() => setHoveredNode(null)}
               onClick={onNodeClick ? () => onNodeClick(n.id) : undefined}
             >
-              <circle r={r} fill="#1890ff" stroke="#fff" strokeWidth={1.5}>
+              <circle
+                r={r}
+                fill={highlighted ? '#1890ff' : '#bfbfbf'}
+                stroke="#fff"
+                strokeWidth={1.5}
+                fillOpacity={hoveredNode === null ? 1 : (highlighted ? 1 : 0.4)}
+              >
                 <title>{`${n.name} (Agent#${n.id}): ${n.messages} 条消息`}</title>
               </circle>
               <text
                 x={r + 3}
                 y={4}
                 fontSize={10}
-                fill="#595959"
+                fill={highlighted ? '#1890ff' : '#8c8c8c'}
+                fontWeight={highlighted ? 'bold' : 'normal'}
                 textAnchor={pos.x >= cx ? 'start' : 'end'}
                 style={{ pointerEvents: 'none' }}
               >
