@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
+import MiniTrendChart from '../components/MiniTrendChart'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 
@@ -30,6 +31,7 @@ const CommandCenter: React.FC = () => {
   const [monitorData, setMonitorData] = useState<any>(null)
   const [conflictData, setConflictData] = useState<any>(null)
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
+  const [securityTrend, setSecurityTrend] = useState<any>(null)
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
   const [lastRefresh, setLastRefresh] = useState<string>('')
   const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
@@ -37,15 +39,17 @@ const CommandCenter: React.FC = () => {
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [monitor, conflicts, events, status] = await Promise.all([
+      const [monitor, conflicts, events, trend, status] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.getSecurityEvents({ per_page: 10 }).catch(() => ({ items: [] })),
+        agentsApi.getSecurityEventsDailyTrend({}).catch(() => null),
         agentsApi.getOrchestratorStatus().catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
       setSecurityEvents(events?.items || [])
+      setSecurityTrend(trend)
       setOrchestratorStatus(status)
       setLastRefresh(new Date().toLocaleTimeString('zh-CN'))
     } catch {
@@ -290,6 +294,20 @@ const CommandCenter: React.FC = () => {
               variant="borderless"
               extra={criticalEvents > 0 ? <Tag color="error">{criticalEvents} 高危</Tag> : <Tag>正常</Tag>}
             >
+              {/* 按天趋势 */}
+              {securityTrend && securityTrend.days && securityTrend.days.length > 0 && (
+                <div style={{ marginBottom: 10 }}>
+                  <MiniTrendChart
+                    labels={securityTrend.days.map((d: any) => d.date.slice(5))}
+                    series={[
+                      { key: 'sandbox_violation', label: '沙盒违规', color: '#cf1322', values: securityTrend.days.map((d: any) => d.sandbox_violation) },
+                      { key: 'conflict', label: '冲突', color: '#fa8c16', values: securityTrend.days.map((d: any) => d.conflict) },
+                      { key: 'audit', label: '审计', color: '#1890ff', values: securityTrend.days.map((d: any) => d.audit) },
+                    ]}
+                    height={110}
+                  />
+                </div>
+              )}
               {securityEvents.length > 0 ? (
                 <List
                   size="small"
