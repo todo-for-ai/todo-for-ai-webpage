@@ -120,6 +120,17 @@ const Dashboard = () => {
     }
   }, [pageTitle])
 
+  // 全屏协作图尺寸随窗口自适应
+  useEffect(() => {
+    const update = () => {
+      const s = Math.min(window.innerWidth - 80, window.innerHeight - 160, 900)
+      setGraphFullscreenSize(Math.max(360, s))
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   // 加载仪表盘数据
   useEffect(() => {
     loadDashboardStats()
@@ -269,6 +280,7 @@ const Dashboard = () => {
   const [graphResetKey, setGraphResetKey] = useState(0)
   const [graphShowLabels, setGraphShowLabels] = useState(false)
   const [graphFullscreen, setGraphFullscreen] = useState(false)
+  const [graphFullscreenSize, setGraphFullscreenSize] = useState(720)
 
   // 协作图摘要（反映 kind 筛选 + minCount）：节点数/边数/最活跃协作对
   const collabSummary = useMemo(() => {
@@ -1598,7 +1610,7 @@ const Dashboard = () => {
       >
         <CollaborationGraphView
           data={collabGraph}
-          size={720}
+          size={graphFullscreenSize}
           layout={graphLayout}
           filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
           searchTerm={graphSearch || undefined}

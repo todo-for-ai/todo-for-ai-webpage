@@ -60,6 +60,7 @@ const CommandCenter: React.FC = () => {
   const [graphResetKey, setGraphResetKey] = useState(0)
   const [graphShowLabels, setGraphShowLabels] = useState(false)
   const [graphFullscreen, setGraphFullscreen] = useState(false)
+  const [graphFullscreenSize, setGraphFullscreenSize] = useState(720)
 
   // 协作图摘要（反映 kind 筛选 + minCount）
   const collabSummary = useMemo(() => {
@@ -149,6 +150,17 @@ const CommandCenter: React.FC = () => {
     const id = setInterval(() => loadAll(true), 60000)
     return () => clearInterval(id)
   }, [loadAll])
+
+  // 全屏协作图尺寸随窗口自适应
+  useEffect(() => {
+    const update = () => {
+      const s = Math.min(window.innerWidth - 80, window.innerHeight - 160, 900)
+      setGraphFullscreenSize(Math.max(360, s))
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
 
   // Agent 协作关系图（独立加载，避免 loadAll 膨胀）
   const loadCollabGraph = useCallback(async (window: string) => {
@@ -927,7 +939,7 @@ const CommandCenter: React.FC = () => {
       >
         <CollaborationGraphView
           data={collabGraph}
-          size={720}
+          size={graphFullscreenSize}
           layout={graphLayout}
           filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
           searchTerm={graphSearch || undefined}
