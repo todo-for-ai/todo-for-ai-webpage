@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -70,6 +70,7 @@ const Dashboard = () => {
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityFilter, setSecurityFilter] = useState<string>('')
   const [securitySeverity, setSecuritySeverity] = useState<string>('')
+  const [securitySearch, setSecuritySearch] = useState<string>('')
   const [securitySince, setSecuritySince] = useState<string>('')
   const [securityUntil, setSecurityUntil] = useState<string>('')
   const [exporting, setExporting] = useState(false)
@@ -184,9 +185,10 @@ const Dashboard = () => {
     per_page: 50,
     event_type: filter || undefined,
     severity: securitySeverity || undefined,
+    search: securitySearch || undefined,
     since: securitySince || undefined,
     until: securityUntil || undefined,
-  }), [securitySeverity, securitySince, securityUntil])
+  }), [securitySeverity, securitySearch, securitySince, securityUntil])
 
   const loadSecurityEvents = useCallback(async (filter?: string) => {
     setSecurityLoading(true)
@@ -823,6 +825,14 @@ const Dashboard = () => {
                 { value: 'WARNING', label: '警告' },
                 { value: 'INFO', label: '普通' },
               ]}
+            />
+            <Input.Search
+              size="small"
+              allowClear
+              placeholder="搜索标题/详情"
+              style={{ width: 180 }}
+              onSearch={(v) => setSecuritySearch(v || '')}
+              onChange={(e) => { if (!e.target.value) setSecuritySearch('') }}
             />
             <Select
               size="small"
