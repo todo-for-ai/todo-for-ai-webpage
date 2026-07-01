@@ -11,6 +11,8 @@ import {
   ClockCircleOutlined,
   DownloadOutlined,
   CheckCircleOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
@@ -140,6 +142,14 @@ const CommandCenter: React.FC = () => {
 
   const criticalEvents = securityEvents.filter((e: any) => e.severity === 'CRITICAL').length
 
+  // 安全事件最近环比（基于按天趋势的最后两天）
+  const trendDays = securityTrend?.days || []
+  const trendTotal = securityTrend?.totals?.total ?? 0
+  const lastDay = trendDays.length > 0 ? trendDays[trendDays.length - 1].total : 0
+  const prevDay = trendDays.length > 1 ? trendDays[trendDays.length - 2].total : 0
+  const dayDelta = lastDay - prevDay
+  const dayDeltaPct = prevDay > 0 ? Math.round((dayDelta / prevDay) * 100) : (dayDelta > 0 ? 100 : 0)
+
   return (
     <div>
       <Card
@@ -242,6 +252,31 @@ const CommandCenter: React.FC = () => {
             </Card>
           </Col>
         </Row>
+
+        {/* 安全事件环比提示 */}
+        {trendDays.length > 0 && (
+          <Alert
+            style={{ marginBottom: 16 }}
+            type={dayDelta > 0 ? 'warning' : dayDelta < 0 ? 'success' : 'info'}
+            showIcon
+            icon={dayDelta > 0 ? <ArrowUpOutlined /> : dayDelta < 0 ? <ArrowDownOutlined /> : undefined}
+            message={
+              <span style={{ fontSize: 13 }}>
+                近 {trendDays.length} 天累计安全事件 <Text strong>{trendTotal}</Text> 起
+                {trendDays.length > 1 && (
+                  <>，最近一日 <Text strong>{lastDay}</Text> 起
+                    {dayDelta !== 0 && (
+                      <Text type={dayDelta > 0 ? 'danger' : 'success'}>
+                        {' '}{dayDelta > 0 ? '↑' : '↓'} {Math.abs(dayDelta)}（{Math.abs(dayDeltaPct)}%）
+                      </Text>
+                    )}
+                    {dayDelta === 0 && <Text type="secondary"> · 与前日持平</Text>}
+                  </>
+                )}
+              </span>
+            }
+          />
+        )}
 
         <Row gutter={[16, 16]}>
           {/* Agent 监控 */}
