@@ -27,6 +27,8 @@ interface CollaborationGraphViewProps {
   centerNodeId?: number
   /** 仅显示这些 kind 的节点及其互连边（为空/未传则显示全部） */
   filterKinds?: string[]
+  /** 搜索词：匹配 name 的节点保持高亮，其余节点变淡（不改变布局） */
+  searchTerm?: string
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
 }
@@ -44,6 +46,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   layout = 'circular',
   centerNodeId,
   filterKinds,
+  searchTerm,
   onNodeClick,
 }, ref) => {
   const allNodes = data?.nodes || []
@@ -155,6 +158,11 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           const isCenter = centerNodeId !== undefined && n.id === centerNodeId
           const r = nodeRadius(n) + (isCenter ? 3 : 0)
           const highlighted = nodeIsHighlighted(n.id)
+          // 搜索匹配：有搜索词时，name 含词的节点 matched，其余 dimmed
+          const matched = searchTerm
+            ? (n.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+            : true
+          const dimmed = searchTerm ? !matched : false
           return (
             <g
               key={n.id}
@@ -169,7 +177,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                 fill={highlighted ? '#1890ff' : kindColor(n.kind)}
                 stroke={isCenter ? '#faad14' : '#fff'}
                 strokeWidth={isCenter ? 3 : 1.5}
-                fillOpacity={hoveredNode === null ? 1 : (highlighted ? 1 : 0.4)}
+                fillOpacity={dimmed ? 0.2 : (hoveredNode === null ? 1 : (highlighted ? 1 : 0.4))}
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}): ${n.messages} 条消息`}</title>
               </circle>
@@ -177,7 +185,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                 x={r + 3}
                 y={4}
                 fontSize={10}
-                fill={highlighted ? '#1890ff' : (isCenter ? '#faad14' : kindColor(n.kind))}
+                fill={dimmed ? '#d9d9d9' : (highlighted ? '#1890ff' : (isCenter ? '#faad14' : kindColor(n.kind)))}
                 fontWeight={highlighted || isCenter ? 'bold' : 'normal'}
                 textAnchor={pos.x >= cx ? 'start' : 'end'}
                 style={{ pointerEvents: 'none' }}

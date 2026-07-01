@@ -15,6 +15,7 @@ import {
   ArrowDownOutlined,
   LineChartOutlined,
   ShareAltOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
@@ -53,6 +54,7 @@ const CommandCenter: React.FC = () => {
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
   const [graphKinds, setGraphKinds] = useState<string[]>([])
+  const [graphSearch, setGraphSearch] = useState('')
   const [resolveOpen, setResolveOpen] = useState(false)
   const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [eventDetail, setEventDetail] = useState<any>(null)
@@ -727,6 +729,15 @@ const CommandCenter: React.FC = () => {
               }}>
                 <Button size="small" icon={<DownloadOutlined />}>导出</Button>
               </Dropdown>
+              <Input
+                size="small"
+                allowClear
+                style={{ width: 140 }}
+                placeholder="搜索 Agent 名称"
+                prefix={<SearchOutlined />}
+                value={graphSearch}
+                onChange={(e) => setGraphSearch(e.target.value)}
+              />
             </Space>
           }
         >
@@ -736,6 +747,7 @@ const CommandCenter: React.FC = () => {
             size={380}
             layout={graphLayout}
             filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
+            searchTerm={graphSearch || undefined}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)

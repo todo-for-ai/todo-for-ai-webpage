@@ -24,6 +24,7 @@ import {
   DownOutlined,
   LineChartOutlined,
   ShareAltOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
@@ -262,6 +263,7 @@ const Dashboard = () => {
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
   const [graphKinds, setGraphKinds] = useState<string[]>([])
+  const [graphSearch, setGraphSearch] = useState('')
   const loadCollabGraph = useCallback(async (window: string) => {
     setCollabGraphLoading(true)
     try {
@@ -832,6 +834,15 @@ const Dashboard = () => {
             }}>
               <Button size="small" icon={<DownloadOutlined />}>导出</Button>
             </Dropdown>
+            <Input
+              size="small"
+              allowClear
+              style={{ width: 140 }}
+              placeholder="搜索 Agent 名称"
+              prefix={<SearchOutlined />}
+              value={graphSearch}
+              onChange={(e) => setGraphSearch(e.target.value)}
+            />
           </Space>
         }
       >
@@ -842,6 +853,7 @@ const Dashboard = () => {
             size={380}
             layout={graphLayout}
             filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
+            searchTerm={graphSearch || undefined}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
