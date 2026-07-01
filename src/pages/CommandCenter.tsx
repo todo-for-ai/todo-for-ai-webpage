@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -8,6 +8,8 @@ import {
   WarningOutlined,
   ControlOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
@@ -28,6 +30,7 @@ const CommandCenter: React.FC = () => {
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
   const [lastRefresh, setLastRefresh] = useState<string>('')
+  const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
 
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -65,6 +68,57 @@ const CommandCenter: React.FC = () => {
       loadAll(true)
     }, [loadAll]),
   })
+
+  // 快捷操作：立即编排
+  const runOrchestration = useCallback(async () => {
+    setActionLoading('orchestrate')
+    try {
+      const result = await agentsApi.orchestrate()
+      message.success(`编排完成（${result.duration_seconds}s，触发 ${result.triggers_fired}，解决冲突 ${result.conflicts_auto_resolved}）`)
+      await loadAll(true)
+    } catch {
+      message.error('执行编排失败')
+    } finally {
+      setActionLoading('')
+    }
+  }, [loadAll])
+
+  // 快捷操作：自动解决低严重度冲突
+  const autoResolveConflicts = useCallback(async () => {
+    setActionLoading('resolve')
+    try {
+      const result = await agentsApi.autoResolveConflicts()
+      const resolved = result?.resolved || 0
+      message.success(resolved > 0 ? `已自动解决 ${resolved} 个冲突` : '无符合条件的冲突可自动解决')
+      await loadAll(true)
+    } catch {
+      message.error('自动解决冲突失败')
+    } finally {
+      setActionLoading('')
+    }
+  }, [loadAll])
+
+  // 快捷操作：导出安全事件 CSV
+  const exportSecurityEvents = useCallback(async () => {
+    setActionLoading('export')
+    try {
+      const csv = await agentsApi.exportSecurityEvents({})
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `security_events_${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      message.success('安全事件已导出')
+    } catch {
+      message.error('导出安全事件失败')
+    } finally {
+      setActionLoading('')
+    }
+  }, [])
 
   const monitorSummary = monitorData?.summary || {}
   const activeAgents = monitorSummary.active || 0
@@ -105,6 +159,33 @@ const CommandCenter: React.FC = () => {
           message="统一指挥视图"
           description="聚合 Agent 监控、安全审计事件、协作冲突、全局编排状态四大数据源，提供单一指挥入口。数据每 60 秒自动刷新，协作事件实时推送。"
         />
+      </Card>
+
+      {/* 快捷操作 */}
+      <Card variant="borderless" style={{ marginBottom: 16 }}>
+        <Space wrap>
+          <Popconfirm
+            title="立即执行全局编排？"
+            description="健康检查 + 工作流超时 + 触发器 + 冲突自动解决"
+            onConfirm={runOrchestration}
+          >
+            <Button type="primary" icon={<ThunderboltOutlined />} loading={actionLoading === 'orchestrate'}>
+              立即编排
+            </Button>
+          </Popconfirm>
+          <Popconfirm
+            title="自动解决低严重度冲突？"
+            description="仅处理非 CRITICAL 且策略安全的冲突"
+            onConfirm={autoResolveConflicts}
+          >
+            <Button icon={<CheckCircleOutlined />} loading={actionLoading === 'resolve'} disabled={conflictActive === 0}>
+              自动解决冲突
+            </Button>
+          </Popconfirm>
+          <Button icon={<DownloadOutlined />} onClick={exportSecurityEvents} loading={actionLoading === 'export'}>
+            导出安全事件
+          </Button>
+        </Space>
       </Card>
 
       <Spin spinning={loading}>
