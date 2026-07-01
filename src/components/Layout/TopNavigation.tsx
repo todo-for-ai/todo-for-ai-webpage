@@ -7,7 +7,8 @@ import {
   AppstoreOutlined,
   ApiOutlined,
   ApartmentOutlined,
-  PushpinOutlined
+  PushpinOutlined,
+  ControlOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
 import { LinkButton } from '../SmartLink'
@@ -130,6 +131,11 @@ const TopNavigation: React.FC = () => {
       key: '/todo-for-ai/pages/workflows',
       icon: <ApartmentOutlined />,
       label: 'Workflows',
+    },
+    {
+      key: '/todo-for-ai/pages/command-center',
+      icon: <ControlOutlined />,
+      label: '指挥中心',
     },
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id

@@ -9,6 +9,7 @@ import { useAuthStore } from './stores/useAuthStore'
 import PageTracker from './components/PageTracker'
 import {
   Dashboard,
+  CommandCenter,
   Projects,
   Agents,
   Workflows,
@@ -90,6 +91,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="agents" element={<Agents />} />
               <Route path="workflows" element={<Workflows />} />
+              <Route path="command-center" element={<CommandCenter />} />
               <Route path="projects" element={<Projects />} />
               <Route path="projects/create" element={<CreateProject />} />
               <Route path="projects/:id" element={<ProjectDetail />} />

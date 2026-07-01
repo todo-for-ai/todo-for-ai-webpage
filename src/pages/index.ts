@@ -1,4 +1,5 @@
 export { default as Dashboard } from './Dashboard'
+export { default as CommandCenter } from './CommandCenter'
 export { default as Projects } from './Projects'
 export { default as Agents } from './Agents'
 export { default as Workflows } from './Workflows'
