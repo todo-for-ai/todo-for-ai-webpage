@@ -49,12 +49,16 @@ const CommandCenter: React.FC = () => {
   const [lastRefresh, setLastRefresh] = useState<string>('')
   const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
   const [trendWindow, setTrendWindow] = useState<string>('30')
+  const [trendSeverity, setTrendSeverity] = useState<string>('')
+  const [trendEventType, setTrendEventType] = useState<string>('')
 
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
       const trendSince = trendWindow === 'all' ? undefined : dayjs().subtract(Number(trendWindow), 'day').toISOString()
-      const trendParams = trendSince ? { since: trendSince } : {}
+      const trendParams: any = trendSince ? { since: trendSince } : {}
+      if (trendSeverity) trendParams.severity = trendSeverity
+      if (trendEventType) trendParams.event_type = trendEventType
       const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
@@ -79,7 +83,7 @@ const CommandCenter: React.FC = () => {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [trendWindow])
+  }, [trendWindow, trendSeverity, trendEventType])
 
   useEffect(() => {
     loadAll()
@@ -320,16 +324,40 @@ const CommandCenter: React.FC = () => {
           variant="borderless"
           style={{ marginBottom: 16 }}
           extra={
-            <Segmented
-              size="small"
-              value={trendWindow}
-              onChange={(v) => setTrendWindow(v as string)}
-              options={[
-                { value: '7', label: '7天' },
-                { value: '30', label: '30天' },
-                { value: 'all', label: '全部' },
-              ]}
-            />
+            <Space wrap>
+              <Segmented
+                size="small"
+                value={trendEventType || 'all'}
+                onChange={(v) => setTrendEventType(v === 'all' ? '' : v as string)}
+                options={[
+                  { value: 'all', label: '全类型' },
+                  { value: 'sandbox_violation', label: '沙盒' },
+                  { value: 'conflict', label: '冲突' },
+                  { value: 'audit', label: '审计' },
+                ]}
+              />
+              <Segmented
+                size="small"
+                value={trendSeverity || 'all'}
+                onChange={(v) => setTrendSeverity(v === 'all' ? '' : v as string)}
+                options={[
+                  { value: 'all', label: '全部' },
+                  { value: 'CRITICAL', label: '高危' },
+                  { value: 'WARNING', label: '警告' },
+                  { value: 'INFO', label: '普通' },
+                ]}
+              />
+              <Segmented
+                size="small"
+                value={trendWindow}
+                onChange={(v) => setTrendWindow(v as string)}
+                options={[
+                  { value: '7', label: '7天' },
+                  { value: '30', label: '30天' },
+                  { value: 'all', label: '全部' },
+                ]}
+              />
+            </Space>
           }
         >
           <PlatformActivityTrendSection
