@@ -362,6 +362,24 @@ export interface SecurityEventItem {
   extra?: Record<string, unknown>
 }
 
+export interface SecurityDailyTrendDay {
+  date: string
+  sandbox_violation: number
+  conflict: number
+  audit: number
+  total: number
+}
+
+export interface SecurityDailyTrend {
+  days: SecurityDailyTrendDay[]
+  totals: {
+    sandbox_violation: number
+    conflict: number
+    audit: number
+    total: number
+  }
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -762,6 +780,12 @@ export class AgentsApi {
       throw new Error(`Export failed: HTTP ${response.status}`)
     }
     return await response.text()
+  }
+
+  /** Daily aggregation of security events for trend visualization (same filters as list). */
+  async getSecurityEventsDailyTrend(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string; search?: string }): Promise<SecurityDailyTrend> {
+    const response = await apiClient.get(`/agents/security/events/daily-trend${buildQuery(params)}`)
+    return unwrapData<SecurityDailyTrend>(response)
   }
 
   async healthCheck(): Promise<{ stale_agents: number; stale_agent_ids: number[]; expired_leases: number; escalated_tasks: number; escalated_task_ids: number[] }> {

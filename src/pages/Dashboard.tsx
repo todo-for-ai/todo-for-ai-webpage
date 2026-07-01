@@ -23,7 +23,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type SecurityDailyTrend } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
@@ -68,6 +68,7 @@ const Dashboard = () => {
   const [conflictLoading, setConflictLoading] = useState(false)
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityLoading, setSecurityLoading] = useState(false)
+  const [securityTrend, setSecurityTrend] = useState<SecurityDailyTrend | null>(null)
   const [securityFilter, setSecurityFilter] = useState<string>('')
   const [securitySeverity, setSecuritySeverity] = useState<string>('')
   const [securitySearch, setSecuritySearch] = useState<string>('')
@@ -193,8 +194,13 @@ const Dashboard = () => {
   const loadSecurityEvents = useCallback(async (filter?: string) => {
     setSecurityLoading(true)
     try {
-      const result = await agentsApi.getSecurityEvents(buildSecurityParams(filter))
+      const params = buildSecurityParams(filter)
+      const [result, trend] = await Promise.all([
+        agentsApi.getSecurityEvents(params),
+        agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+      ])
       setSecurityEvents(result.items)
+      setSecurityTrend(trend)
     } catch {
       // silent
     } finally {
@@ -220,8 +226,15 @@ const Dashboard = () => {
       const et = event.event_type || ''
       if (!SECURITY_SSE_EVENTS.has(et)) return
       // Best-effort refresh, preserving the current filter and time range
-      agentsApi.getSecurityEvents(buildSecurityParams(securityFilter))
-        .then((r) => setSecurityEvents(r.items))
+      const params = buildSecurityParams(securityFilter)
+      Promise.all([
+        agentsApi.getSecurityEvents(params),
+        agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+      ])
+        .then(([r, t]) => {
+          setSecurityEvents(r.items)
+          if (t) setSecurityTrend(t)
+        })
         .catch(() => { /* silent: SSE refresh is best-effort */ })
     }, [securityFilter, buildSecurityParams]),
   })
@@ -862,6 +875,20 @@ const Dashboard = () => {
         }
       >
         <Spin spinning={securityLoading}>
+          {/* 按天趋势折线图 */}
+          {securityTrend && securityTrend.days && securityTrend.days.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <MiniTrendChart
+                labels={securityTrend.days.map((d) => d.date.slice(5))}  // MM-DD
+                series={[
+                  { key: 'sandbox_violation', label: '沙盒违规', color: '#cf1322', values: securityTrend.days.map((d) => d.sandbox_violation) },
+                  { key: 'conflict', label: '冲突', color: '#fa8c16', values: securityTrend.days.map((d) => d.conflict) },
+                  { key: 'audit', label: '审计', color: '#1890ff', values: securityTrend.days.map((d) => d.audit) },
+                ]}
+                height={120}
+              />
+            </div>
+          )}
           {securityEvents.length > 0 ? (
             <List
               size="small"
