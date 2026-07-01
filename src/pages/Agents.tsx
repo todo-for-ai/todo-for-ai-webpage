@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import {
   Button,
@@ -270,6 +270,7 @@ const Agents: React.FC = () => {
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const pendingAgentId = searchParams.get('agent_id')
   const [autoOpened, setAutoOpened] = useState(false)
   const [autoOpenedConflicts, setAutoOpenedConflicts] = useState(false)
@@ -861,6 +862,8 @@ const Agents: React.FC = () => {
   const [experienceDetail, setExperienceDetail] = useState<any>(null)
   const [sharedExperiencesOpen, setSharedExperiencesOpen] = useState(false)
   const [sharedExperiences, setSharedExperiences] = useState<any[]>([])
+  const [collaborators, setCollaborators] = useState<any[]>([])
+  const [collaboratorsLoading, setCollaboratorsLoading] = useState(false)
   const [sharedExperiencesLoading, setSharedExperiencesLoading] = useState(false)
 
   const loadExperiences = async (agent: Agent) => {
@@ -870,6 +873,18 @@ const Agents: React.FC = () => {
       setExperiences(data?.data?.items || data?.items || (Array.isArray(data?.data) ? data.data : []))
     } catch { message.error('加载经验失败') }
     finally { setExperiencesLoading(false) }
+  }
+
+  const loadCollaborators = async (agent: Agent) => {
+    setCollaboratorsLoading(true)
+    try {
+      const result = await agentsApi.getAgentCollaborators(agent.id, { limit: 10 })
+      setCollaborators(result?.collaborators || [])
+    } catch {
+      // silent: collaborators are supplementary info
+    } finally {
+      setCollaboratorsLoading(false)
+    }
   }
 
   const createExperience = async () => {
@@ -1446,6 +1461,7 @@ const Agents: React.FC = () => {
       loadAgentReputation(agent)
       loadExperiences(agent)
       loadAgentSandbox(agent)
+      loadCollaborators(agent)
     }
     try {
       const result = await agentsApi.getAgentAssignments(agent.id, { per_page: 50 })
@@ -2445,6 +2461,46 @@ const Agents: React.FC = () => {
               {(selectedAgent.capabilities || []).length >= 3 && (
                 <CapabilityRadar capabilities={selectedAgent.capabilities || []} size={140} />
               )}
+            </div>
+            {/* 协作伙伴排行（基于直接消息审计聚合） */}
+            <div style={{ marginBottom: 8 }}>
+              <Text type="secondary">协作伙伴</Text>
+              <Spin spinning={collaboratorsLoading} size="small">
+                {collaborators.length > 0 ? (
+                  <List
+                    size="small"
+                    dataSource={collaborators.slice(0, 5)}
+                    renderItem={(c: any) => (
+                      <List.Item style={{ padding: '4px 0' }}>
+                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                          <Text
+                            ellipsis
+                            style={{ maxWidth: 160, color: '#1890ff', cursor: 'pointer' }}
+                            onClick={() => {
+                              setDrawerOpen(false)
+                              const target = agents.find((a) => a.id === c.agent_id)
+                              if (target) {
+                                setTimeout(() => loadAssignments(target), 100)
+                              } else {
+                                navigate(`/todo-for-ai/pages/agents?agent_id=${c.agent_id}`)
+                              }
+                            }}
+                          >
+                            {c.name}
+                          </Text>
+                          <Space size={4}>
+                            <Tag>发 {c.sent}</Tag>
+                            <Tag>收 {c.received}</Tag>
+                            <Tag color="blue">合计 {c.total}</Tag>
+                          </Space>
+                        </Space>
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Text type="secondary" style={{ fontSize: 12 }}>暂无协作伙伴记录</Text>
+                )}
+              </Spin>
             </div>
             <Space wrap>
               <Text type="secondary">能力</Text>

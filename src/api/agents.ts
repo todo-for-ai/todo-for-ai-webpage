@@ -396,6 +396,19 @@ export interface SecurityByAgent {
   agents: SecurityByAgentItem[]
 }
 
+export interface AgentCollaborator {
+  agent_id: number
+  name: string
+  sent: number
+  received: number
+  total: number
+}
+
+export interface AgentCollaboratorsResult {
+  collaborators: AgentCollaborator[]
+  total_partners: number
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -951,6 +964,10 @@ export class AgentsApi {
 
   async getAgentMessages(agentId: number, params?: { page?: number; per_page?: number }): Promise<ListResult<any>> {
     return unwrapList<any>(await apiClient.get(`/agents/${agentId}/messages${buildQuery(params)}`))
+  }
+
+  async getAgentCollaborators(agentId: number, params?: { limit?: number }): Promise<AgentCollaboratorsResult> {
+    return unwrapData<AgentCollaboratorsResult>(await apiClient.get(`/agents/${agentId}/collaborators${buildQuery(params)}`))
   }
 
   // Workflow Templates
