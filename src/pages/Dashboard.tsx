@@ -221,19 +221,27 @@ const Dashboard = () => {
     loadSecurityEvents()
   }, [loadSecurityEvents])
 
-  // 平台活动统一趋势：编排按天趋势（与安全事件 daily-trend 同时间轴）
-  const loadOrchDailyTrend = useCallback(async () => {
+  // 平台活动统一趋势：编排按天趋势 + 安全事件按天趋势，受 trendWindow 驱动
+  const [trendWindow, setTrendWindow] = useState<string>('30')
+  const [unifiedSecTrend, setUnifiedSecTrend] = useState<SecurityDailyTrend | null>(null)
+  const loadUnifiedTrend = useCallback(async (window: string) => {
+    const since = window === 'all' ? undefined : dayjs().subtract(Number(window), 'day').toISOString()
+    const params = since ? { since } : {}
     try {
-      const trend = await agentsApi.getOrchestratorDailyTrend().catch(() => null)
-      setOrchDailyTrend(trend)
+      const [orch, sec] = await Promise.all([
+        agentsApi.getOrchestratorDailyTrend(since ? { since } : {}).catch(() => null),
+        agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+      ])
+      setOrchDailyTrend(orch)
+      setUnifiedSecTrend(sec)
     } catch {
       // silent
     }
   }, [])
 
   useEffect(() => {
-    loadOrchDailyTrend()
-  }, [loadOrchDailyTrend])
+    loadUnifiedTrend(trendWindow)
+  }, [loadUnifiedTrend, trendWindow])
 
   // 时间范围变化时重新加载（loadSecurityEvents 因依赖 buildSecurityParams 而重建，触发上面的 effect）
 
@@ -263,9 +271,9 @@ const Dashboard = () => {
         .catch(() => { /* silent: SSE refresh is best-effort */ })
       // 编排活动相关事件同步刷新统一趋势的编排序列
       if (et === 'conflicts_detected' || et === 'conflict_resolved' || et === 'conflicts_auto_resolved') {
-        agentsApi.getOrchestratorDailyTrend().then((t) => setOrchDailyTrend(t)).catch(() => {})
+        loadUnifiedTrend(trendWindow)
       }
-    }, [securityFilter, buildSecurityParams]),
+    }, [securityFilter, buildSecurityParams, loadUnifiedTrend, trendWindow]),
   })
 
   const runOrchestration = useCallback(async () => {
@@ -671,11 +679,24 @@ const Dashboard = () => {
       <Card
         title={<Space><LineChartOutlined /> 平台活动统一趋势</Space>}
         style={{ marginBottom: 24 }}
-        extra={<Text type="secondary" style={{ fontSize: 12 }}>按天聚合 · 编排活动与安全事件对比</Text>}
+        extra={
+          <Space>
+            <Segmented
+              size="small"
+              value={trendWindow}
+              onChange={(v) => setTrendWindow(v as string)}
+              options={[
+                { value: '7', label: '7天' },
+                { value: '30', label: '30天' },
+                { value: 'all', label: '全部' },
+              ]}
+            />
+          </Space>
+        }
       >
         <PlatformActivityTrendSection
           orchestratorTrend={orchDailyTrend}
-          securityTrend={securityTrend}
+          securityTrend={unifiedSecTrend}
         />
       </Card>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -17,6 +17,7 @@ import {
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
+import dayjs from 'dayjs'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
@@ -45,19 +46,22 @@ const CommandCenter: React.FC = () => {
   const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [lastRefresh, setLastRefresh] = useState<string>('')
   const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
+  const [trendWindow, setTrendWindow] = useState<string>('30')
 
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
+      const trendSince = trendWindow === 'all' ? undefined : dayjs().subtract(Number(trendWindow), 'day').toISOString()
+      const trendParams = trendSince ? { since: trendSince } : {}
       const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
         agentsApi.getSecurityEvents({ per_page: 10 }).catch(() => ({ items: [] })),
-        agentsApi.getSecurityEventsDailyTrend({}).catch(() => null),
+        agentsApi.getSecurityEventsDailyTrend(trendParams).catch(() => null),
         agentsApi.getSecurityEventsByAgent({}).catch(() => null),
         agentsApi.getOrchestratorStatus().catch(() => null),
-        agentsApi.getOrchestratorDailyTrend().catch(() => null),
+        agentsApi.getOrchestratorDailyTrend(trendParams).catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
@@ -73,7 +77,7 @@ const CommandCenter: React.FC = () => {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [])
+  }, [trendWindow])
 
   useEffect(() => {
     loadAll()
@@ -313,7 +317,18 @@ const CommandCenter: React.FC = () => {
           title={<Space><LineChartOutlined /> 平台活动统一趋势</Space>}
           variant="borderless"
           style={{ marginBottom: 16 }}
-          extra={<Text type="secondary" style={{ fontSize: 12 }}>按天聚合 · 编排活动与安全事件对比</Text>}
+          extra={
+            <Segmented
+              size="small"
+              value={trendWindow}
+              onChange={(v) => setTrendWindow(v as string)}
+              options={[
+                { value: '7', label: '7天' },
+                { value: '30', label: '30天' },
+                { value: 'all', label: '全部' },
+              ]}
+            />
+          }
         >
           <PlatformActivityTrendSection
             orchestratorTrend={orchDailyTrend}
