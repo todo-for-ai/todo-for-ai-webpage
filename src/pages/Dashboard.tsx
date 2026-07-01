@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, Dropdown } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, Dropdown, Descriptions } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -50,6 +51,7 @@ const _KIND_LABELS: Record<string, string> = {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const { tp, tc, pageTitle } = usePageTranslation('dashboard')
@@ -91,6 +93,7 @@ const Dashboard = () => {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyFilter, setHistoryFilter] = useState<string>('')
   const [orchDailyTrend, setOrchDailyTrend] = useState<OrchestratorDailyTrend | null>(null)
+  const [eventDetail, setEventDetail] = useState<any>(null)
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -957,7 +960,13 @@ const Dashboard = () => {
             <List
               size="small"
               dataSource={securityEvents}
-              renderItem={(e: any) => <SecurityEventListItem event={e} />}
+              renderItem={(e: any) => (
+                <SecurityEventListItem
+                  event={e}
+                  onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
+                  onShowDetail={(ev) => setEventDetail(ev)}
+                />
+              )}
             />
           ) : (
             <Empty description="暂无安全事件" image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -1227,6 +1236,42 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* 安全事件详情 Modal */}
+      <Modal
+        title={eventDetail ? `安全事件 · ${eventDetail.severity || 'INFO'}` : '安全事件详情'}
+        open={!!eventDetail}
+        onCancel={() => setEventDetail(null)}
+        footer={[
+          <Button key="close" onClick={() => setEventDetail(null)}>关闭</Button>,
+          ...(eventDetail?.workflow_run_id ? [
+            <Button
+              key="run"
+              type="link"
+              onClick={() => {
+                const runId = eventDetail.workflow_run_id
+                setEventDetail(null)
+                navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)
+              }}
+            >
+              查看运行控制台 →
+            </Button>,
+          ] : []),
+        ]}
+      >
+        {eventDetail && (
+          <Descriptions column={1} size="small" bordered>
+            <Descriptions.Item label="类型">{eventDetail.event_type || '-'}</Descriptions.Item>
+            <Descriptions.Item label="严重度">{eventDetail.severity || '-'}</Descriptions.Item>
+            <Descriptions.Item label="标题">{eventDetail.title || '-'}</Descriptions.Item>
+            <Descriptions.Item label="详情">{eventDetail.detail || '-'}</Descriptions.Item>
+            <Descriptions.Item label="来源">{eventDetail.source ? `${eventDetail.source}#${eventDetail.source_id}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Agent">{eventDetail.agent_id ? `Agent #${eventDetail.agent_id}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="工作流运行">{eventDetail.workflow_run_id ? `Run #${eventDetail.workflow_run_id}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="发生时间">{eventDetail.occurred_at ? new Date(eventDetail.occurred_at).toLocaleString('zh-CN') : '-'}</Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
     </div>
   )
 }

@@ -78,11 +78,12 @@ const SecurityEventListItem: React.FC<SecurityEventListItemProps> = ({
               <Tag
                 color={variant === 'compact' ? 'blue' : undefined}
                 style={{ fontSize: 11, cursor: hasRun ? 'pointer' : undefined }}
+                onClick={hasRun ? (ev) => { ev.stopPropagation(); onRunClick!(e.workflow_run_id) } : undefined}
               >
                 Run #{e.workflow_run_id}{variant === 'compact' ? ' →' : ''}
               </Tag>
             )}
-            {variant === 'compact' && onShowDetail && (
+            {onShowDetail && (
               <Tag
                 style={{ fontSize: 11, cursor: 'pointer' }}
                 onClick={(ev) => { ev.stopPropagation(); onShowDetail(event) }}
