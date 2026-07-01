@@ -24,7 +24,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type SecurityDailyTrend } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type SecurityDailyTrend, type SecurityByAgent } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
@@ -70,6 +70,7 @@ const Dashboard = () => {
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityTrend, setSecurityTrend] = useState<SecurityDailyTrend | null>(null)
+  const [securityByAgent, setSecurityByAgent] = useState<SecurityByAgent | null>(null)
   const [securityFilter, setSecurityFilter] = useState<string>('')
   const [securitySeverity, setSecuritySeverity] = useState<string>('')
   const [securitySearch, setSecuritySearch] = useState<string>('')
@@ -196,12 +197,14 @@ const Dashboard = () => {
     setSecurityLoading(true)
     try {
       const params = buildSecurityParams(filter)
-      const [result, trend] = await Promise.all([
+      const [result, trend, byAgent] = await Promise.all([
         agentsApi.getSecurityEvents(params),
         agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+        agentsApi.getSecurityEventsByAgent(params).catch(() => null),
       ])
       setSecurityEvents(result.items)
       setSecurityTrend(trend)
+      setSecurityByAgent(byAgent)
     } catch {
       // silent
     } finally {
@@ -231,10 +234,12 @@ const Dashboard = () => {
       Promise.all([
         agentsApi.getSecurityEvents(params),
         agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+        agentsApi.getSecurityEventsByAgent(params).catch(() => null),
       ])
-        .then(([r, t]) => {
+        .then(([r, t, ba]) => {
           setSecurityEvents(r.items)
           if (t) setSecurityTrend(t)
+          if (ba) setSecurityByAgent(ba)
         })
         .catch(() => { /* silent: SSE refresh is best-effort */ })
     }, [securityFilter, buildSecurityParams]),
@@ -901,6 +906,30 @@ const Dashboard = () => {
                   { key: 'audit', label: '审计', color: '#1890ff', values: securityTrend.days.map((d) => d.audit) },
                 ]}
                 height={120}
+              />
+            </div>
+          )}
+          {/* 按 Agent 排行 */}
+          {securityByAgent && securityByAgent.agents && securityByAgent.agents.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>按 Agent 事件数排行：</Text>
+              <List
+                size="small"
+                style={{ marginTop: 4 }}
+                dataSource={securityByAgent.agents.slice(0, 5)}
+                renderItem={(a: any) => (
+                  <List.Item style={{ padding: '4px 0' }}>
+                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Text ellipsis style={{ maxWidth: 140 }}>{a.name || (a.agent_id ? `Agent#${a.agent_id}` : '(无 Agent)')}</Text>
+                      <Space size={4} wrap>
+                        <Tag>合计 {a.total}</Tag>
+                        {a.sandbox_violation > 0 && <Tag color="magenta">沙盒 {a.sandbox_violation}</Tag>}
+                        {a.conflict > 0 && <Tag color="volcano">冲突 {a.conflict}</Tag>}
+                        {a.CRITICAL > 0 && <Tag color="red">高危 {a.CRITICAL}</Tag>}
+                      </Space>
+                    </Space>
+                  </List.Item>
+                )}
               />
             </div>
           )}

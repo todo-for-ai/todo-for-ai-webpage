@@ -380,6 +380,22 @@ export interface SecurityDailyTrend {
   }
 }
 
+export interface SecurityByAgentItem {
+  agent_id: number | null
+  name: string
+  total: number
+  sandbox_violation: number
+  conflict: number
+  audit: number
+  CRITICAL: number
+  WARNING: number
+  INFO: number
+}
+
+export interface SecurityByAgent {
+  agents: SecurityByAgentItem[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -786,6 +802,12 @@ export class AgentsApi {
   async getSecurityEventsDailyTrend(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string; search?: string }): Promise<SecurityDailyTrend> {
     const response = await apiClient.get(`/agents/security/events/daily-trend${buildQuery(params)}`)
     return unwrapData<SecurityDailyTrend>(response)
+  }
+
+  /** Per-agent aggregation of security events for ranking (same filters as list). */
+  async getSecurityEventsByAgent(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string; search?: string }): Promise<SecurityByAgent> {
+    const response = await apiClient.get(`/agents/security/events/by-agent${buildQuery(params)}`)
+    return unwrapData<SecurityByAgent>(response)
   }
 
   async healthCheck(): Promise<{ stale_agents: number; stale_agent_ids: number[]; expired_leases: number; escalated_tasks: number; escalated_task_ids: number[] }> {
