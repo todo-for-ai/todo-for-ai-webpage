@@ -2537,6 +2537,7 @@ const Agents: React.FC = () => {
                     data={collabSubgraph}
                     size={300}
                     layout="grid"
+                    centerNodeId={selectedAgent?.id}
                     onNodeClick={(agentId) => {
                       if (agentId === selectedAgent?.id) return
                       setDrawerOpen(false)

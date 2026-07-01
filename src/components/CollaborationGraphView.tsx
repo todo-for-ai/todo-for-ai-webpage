@@ -23,6 +23,8 @@ interface CollaborationGraphViewProps {
   size?: number
   /** 布局：circular 环形（默认）| grid 网格 */
   layout?: 'circular' | 'grid'
+  /** 中心节点 ID：该节点用加粗描边+更大半径突出（用于 Agent 详情子图） */
+  centerNodeId?: number
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
 }
@@ -32,12 +34,13 @@ interface CollaborationGraphViewProps {
  *
  * circular 布局：节点均匀分布在圆周上；grid 布局：节点按行列网格排列。
  * 节点按 messages 缩放半径；边为弦，按 count 缩放粗细与透明度。
- * 节点 hover 高亮其邻居。无第三方依赖。
+ * 节点 hover 高亮其邻居。centerNodeId 指定的节点加粗描边突出。无第三方依赖。
  */
 const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
   data,
   size = 360,
   layout = 'circular',
+  centerNodeId,
   onNodeClick,
 }) => {
   const nodes = data?.nodes || []
@@ -141,7 +144,8 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
         {/* 节点 */}
         {nodes.map((n) => {
           const pos = nodePos.get(n.id)!
-          const r = nodeRadius(n)
+          const isCenter = centerNodeId !== undefined && n.id === centerNodeId
+          const r = nodeRadius(n) + (isCenter ? 3 : 0)
           const highlighted = nodeIsHighlighted(n.id)
           return (
             <g
@@ -155,18 +159,18 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
               <circle
                 r={r}
                 fill={highlighted ? '#1890ff' : kindColor(n.kind)}
-                stroke="#fff"
-                strokeWidth={1.5}
+                stroke={isCenter ? '#faad14' : '#fff'}
+                strokeWidth={isCenter ? 3 : 1.5}
                 fillOpacity={hoveredNode === null ? 1 : (highlighted ? 1 : 0.4)}
               >
-                <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}): ${n.messages} 条消息`}</title>
+                <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}): ${n.messages} 条消息`}</title>
               </circle>
               <text
                 x={r + 3}
                 y={4}
                 fontSize={10}
-                fill={highlighted ? '#1890ff' : kindColor(n.kind)}
-                fontWeight={highlighted ? 'bold' : 'normal'}
+                fill={highlighted ? '#1890ff' : (isCenter ? '#faad14' : kindColor(n.kind))}
+                fontWeight={highlighted || isCenter ? 'bold' : 'normal'}
                 textAnchor={pos.x >= cx ? 'start' : 'end'}
                 style={{ pointerEvents: 'none' }}
               >
