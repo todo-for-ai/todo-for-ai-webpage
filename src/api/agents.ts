@@ -420,6 +420,10 @@ export interface CollaborationGraphEdge {
   source: number
   target: number
   count: number
+  /** source -> target 方向消息数（source 为较小 id 端） */
+  source_to_target?: number
+  /** target -> source 方向消息数 */
+  target_to_source?: number
 }
 
 export interface CollaborationGraph {

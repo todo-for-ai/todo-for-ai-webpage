@@ -82,6 +82,15 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
       <svg width={size} height={size} style={{ maxWidth: '100%' }}>
+        <defs>
+          {/* 边箭头：默认灰、高亮蓝 */}
+          <marker id="cg-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#bfbfbf" />
+          </marker>
+          <marker id="cg-arrow-hl" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#1890ff" />
+          </marker>
+        </defs>
         {/* 边 */}
         {edges.map((e, i) => {
           const a = nodePos.get(e.source)
@@ -90,18 +99,41 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
           const w = 0.5 + 3.5 * (e.count / maxCount)
           const baseOpacity = 0.2 + 0.6 * (e.count / maxCount)
           const highlighted = edgeIsHighlighted(e)
+          const fwd = e.source_to_target ?? 0
+          const rev = e.target_to_source ?? 0
+          // 缩短端点避开节点圆
+          const ra = nodeRadius(nodes.find((n) => n.id === e.source) || { messages: 0 })
+          const rb = nodeRadius(nodes.find((n) => n.id === e.target) || { messages: 0 })
+          const dx = b.x - a.x
+          const dy = b.y - a.y
+          const len = Math.max(1, Math.hypot(dx, dy))
+          const ux = dx / len
+          const uy = dy / len
+          const ax = a.x + ux * ra
+          const ay = a.y + uy * ra
+          const bx = b.x - ux * rb
+          const by = b.y - uy * rb
+          // 单向：画一条带箭头线（指向接收方）；双向：画一条线 + 两端各一个箭头
+          const oneWay = (fwd > 0) !== (rev > 0)
+          const stroke = highlighted ? '#1890ff' : '#bfbfbf'
+          const arrow = highlighted ? 'url(#cg-arrow-hl)' : 'url(#cg-arrow)'
+          const tooltip = fwd || rev
+            ? `${e.source}→${e.target}: ${fwd} 条 · ${e.target}→${e.source}: ${rev} 条 · 共 ${e.count}`
+            : `${e.source} ↔ ${e.target}: ${e.count} 条消息`
           return (
             <line
               key={`e${i}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              stroke={highlighted ? '#1890ff' : '#bfbfbf'}
+              x1={oneWay ? ax : a.x + ux * ra}
+              y1={oneWay ? ay : a.y + uy * ra}
+              x2={oneWay ? bx : b.x - ux * rb}
+              y2={oneWay ? by : b.y - uy * rb}
+              stroke={stroke}
               strokeWidth={highlighted ? w + 1 : w}
               strokeOpacity={hoveredNode === null ? baseOpacity : (highlighted ? 0.9 : 0.08)}
+              markerEnd={oneWay ? arrow : undefined}
+              markerStart={(!oneWay && fwd && rev) ? arrow : undefined}
             >
-              <title>{`${e.source} ↔ ${e.target}: ${e.count} 条消息`}</title>
+              <title>{tooltip}</title>
             </line>
           )
         })}
