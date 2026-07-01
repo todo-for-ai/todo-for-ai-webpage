@@ -265,6 +265,7 @@ const Dashboard = () => {
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
+  const [graphResetKey, setGraphResetKey] = useState(0)
 
   // 协作图摘要（反映 kind 筛选 + minCount）：节点数/边数/最活跃协作对
   const collabSummary = useMemo(() => {
@@ -911,11 +912,13 @@ const Dashboard = () => {
               value={graphMinCount}
               onChange={(v) => setGraphMinCount(v ?? null)}
             />
+            <Button size="small" icon={<ReloadOutlined />} onClick={() => setGraphResetKey((k) => k + 1)}>重置布局</Button>
           </Space>
         }
       >
         <Spin spinning={collabGraphLoading}>
           <CollaborationGraphView
+            key={graphResetKey}
             ref={collabSvgRef}
             data={collabGraph}
             size={380}
