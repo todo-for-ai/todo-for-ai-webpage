@@ -27,6 +27,7 @@ import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type SecurityDailyTrend, type SecurityByAgent } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
+import SecurityTrendSection from '../components/SecurityTrendSection'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
@@ -895,44 +896,8 @@ const Dashboard = () => {
         }
       >
         <Spin spinning={securityLoading}>
-          {/* 按天趋势折线图 */}
-          {securityTrend && securityTrend.days && securityTrend.days.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <MiniTrendChart
-                labels={securityTrend.days.map((d) => d.date.slice(5))}  // MM-DD
-                series={[
-                  { key: 'sandbox_violation', label: '沙盒违规', color: '#cf1322', values: securityTrend.days.map((d) => d.sandbox_violation) },
-                  { key: 'conflict', label: '冲突', color: '#fa8c16', values: securityTrend.days.map((d) => d.conflict) },
-                  { key: 'audit', label: '审计', color: '#1890ff', values: securityTrend.days.map((d) => d.audit) },
-                ]}
-                height={120}
-              />
-            </div>
-          )}
-          {/* 按 Agent 排行 */}
-          {securityByAgent && securityByAgent.agents && securityByAgent.agents.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>按 Agent 事件数排行：</Text>
-              <List
-                size="small"
-                style={{ marginTop: 4 }}
-                dataSource={securityByAgent.agents.slice(0, 5)}
-                renderItem={(a: any) => (
-                  <List.Item style={{ padding: '4px 0' }}>
-                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                      <Text ellipsis style={{ maxWidth: 140 }}>{a.name || (a.agent_id ? `Agent#${a.agent_id}` : '(无 Agent)')}</Text>
-                      <Space size={4} wrap>
-                        <Tag>合计 {a.total}</Tag>
-                        {a.sandbox_violation > 0 && <Tag color="magenta">沙盒 {a.sandbox_violation}</Tag>}
-                        {a.conflict > 0 && <Tag color="volcano">冲突 {a.conflict}</Tag>}
-                        {a.CRITICAL > 0 && <Tag color="red">高危 {a.CRITICAL}</Tag>}
-                      </Space>
-                    </Space>
-                  </List.Item>
-                )}
-              />
-            </div>
-          )}
+          {/* 按天趋势 + Agent 排行（公共组件） */}
+          <SecurityTrendSection trend={securityTrend} byAgent={securityByAgent} />
           {securityEvents.length > 0 ? (
             <List
               size="small"
