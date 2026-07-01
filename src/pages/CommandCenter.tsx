@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -41,6 +41,8 @@ const CommandCenter: React.FC = () => {
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
   const [orchDailyTrend, setOrchDailyTrend] = useState<any>(null)
+  const [resolveOpen, setResolveOpen] = useState(false)
+  const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [lastRefresh, setLastRefresh] = useState<string>('')
   const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
 
@@ -117,6 +119,25 @@ const CommandCenter: React.FC = () => {
       setActionLoading('')
     }
   }, [loadAll])
+
+  // 打开单个冲突解决 Modal
+  const openResolveConflict = (c: any) => {
+    setResolveForm({ conflict_id: c.id, strategy: c.suggested_strategy || 'manual', description: '' })
+    setResolveOpen(true)
+  }
+
+  // 提交解决冲突
+  const submitResolveConflict = async () => {
+    try {
+      const result = await agentsApi.resolveConflict(resolveForm.conflict_id, resolveForm.strategy, resolveForm.description)
+      message.success('冲突已解决')
+      setResolveOpen(false)
+      await loadAll(true)
+      if (result?.actions?.length) message.info(`执行 ${result.actions.length} 项动作`, 4)
+    } catch {
+      message.error('解决失败')
+    }
+  }
 
   // 快捷操作：导出安全事件 CSV
   const exportSecurityEvents = useCallback(async () => {
@@ -411,15 +432,19 @@ const CommandCenter: React.FC = () => {
                         const sev = c.severity || 'INFO'
                         const sevColor = sev === 'CRITICAL' ? 'red' : sev === 'WARNING' ? 'orange' : 'blue'
                         return (
-                          <List.Item>
+                          <List.Item
+                            style={{ cursor: 'pointer', padding: '6px 8px', borderRadius: 4 }}
+                            onClick={() => openResolveConflict(c)}
+                          >
                             <Space align="start" style={{ width: '100%' }}>
                               <Tag color={sevColor} style={{ marginTop: 2 }}>{sev}</Tag>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <Text ellipsis style={{ display: 'block', fontSize: 12 }}>
+                                <Text ellipsis style={{ display: 'block', fontSize: 12, color: '#1890ff' }}>
                                   {c.title || c.conflict_type || `冲突 #${c.id}`}
                                 </Text>
-                                <Text type="secondary" style={{ fontSize: 11 }}>#{c.id} · {c.status}</Text>
+                                <Text type="secondary" style={{ fontSize: 11 }}>#{c.id} · {c.status}{c.suggested_strategy ? ` · 建议 ${c.suggested_strategy}` : ''}</Text>
                               </div>
+                              <Tag style={{ fontSize: 11 }}>解决 →</Tag>
                             </Space>
                           </List.Item>
                         )
@@ -494,6 +519,32 @@ const CommandCenter: React.FC = () => {
           </Col>
         </Row>
       </Spin>
+
+      {/* 解决冲突 Modal */}
+      <Modal
+        title={`解决冲突 #${resolveForm.conflict_id}`}
+        open={resolveOpen}
+        onCancel={() => setResolveOpen(false)}
+        onOk={submitResolveConflict}
+        okText="解决"
+      >
+        <Form layout="vertical">
+          <Form.Item label="解决策略" required>
+            <Select value={resolveForm.strategy} onChange={(v) => setResolveForm({ ...resolveForm, strategy: v })}>
+              <Select.Option value="first_wins">先到先得 (保留最早分配)</Select.Option>
+              <Select.Option value="highest_reputation">最高声誉 (声誉最佳者胜出)</Select.Option>
+              <Select.Option value="least_loaded">最少负载 (活跃任务最少者胜出)</Select.Option>
+              <Select.Option value="auto_retry">自动重试 (取消过期/重新排队)</Select.Option>
+              <Select.Option value="split">拆分 (分配给多方)</Select.Option>
+              <Select.Option value="escalate">升级 (转交协调者)</Select.Option>
+              <Select.Option value="manual">人工 (仅记录)</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="解决说明">
+            <Input.TextArea value={resolveForm.description} onChange={(e) => setResolveForm({ ...resolveForm, description: e.target.value })} placeholder="可选: 解决备注" rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }
