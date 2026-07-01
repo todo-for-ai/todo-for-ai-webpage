@@ -10,6 +10,8 @@ interface SecurityEventListItemProps {
   variant?: 'full' | 'compact'
   /** 点击 Run 标签回调（有 workflow_run_id 时触发） */
   onRunClick?: (runId: number) => void
+  /** 点击「详情」标签回调（compact 变体下渲染详情入口，打开详情 Modal） */
+  onShowDetail?: (event: SecurityEventItem) => void
 }
 
 const SEV_COLOR: Record<string, string> = {
@@ -38,6 +40,7 @@ const SecurityEventListItem: React.FC<SecurityEventListItemProps> = ({
   event,
   variant = 'full',
   onRunClick,
+  onShowDetail,
 }) => {
   const e = event as any
   const sev = e.severity || 'INFO'
@@ -77,6 +80,14 @@ const SecurityEventListItem: React.FC<SecurityEventListItemProps> = ({
                 style={{ fontSize: 11, cursor: hasRun ? 'pointer' : undefined }}
               >
                 Run #{e.workflow_run_id}{variant === 'compact' ? ' →' : ''}
+              </Tag>
+            )}
+            {variant === 'compact' && onShowDetail && (
+              <Tag
+                style={{ fontSize: 11, cursor: 'pointer' }}
+                onClick={(ev) => { ev.stopPropagation(); onShowDetail(event) }}
+              >
+                详情
               </Tag>
             )}
             {variant === 'full' && e.source && (
