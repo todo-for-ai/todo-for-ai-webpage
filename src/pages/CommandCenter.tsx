@@ -16,6 +16,7 @@ import {
   LineChartOutlined,
   ShareAltOutlined,
   SearchOutlined,
+  ExpandOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
@@ -58,6 +59,7 @@ const CommandCenter: React.FC = () => {
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
   const [graphResetKey, setGraphResetKey] = useState(0)
   const [graphShowLabels, setGraphShowLabels] = useState(false)
+  const [graphFullscreen, setGraphFullscreen] = useState(false)
 
   // 协作图摘要（反映 kind 筛选 + minCount）
   const collabSummary = useMemo(() => {
@@ -810,6 +812,7 @@ const CommandCenter: React.FC = () => {
               />
               <Button size="small" icon={<ReloadOutlined />} onClick={() => setGraphResetKey((k) => k + 1)}>重置布局</Button>
               <Checkbox size="small" checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
+              <Button size="small" icon={<ExpandOutlined />} onClick={() => setGraphFullscreen(true)}>全屏</Button>
             </Space>
           }
         >
@@ -910,6 +913,32 @@ const CommandCenter: React.FC = () => {
             <Text type="secondary">暂无协作伙伴记录</Text>
           )}
         </Spin>
+      </Modal>
+
+      {/* 协作关系图全屏 Modal */}
+      <Modal
+        title="Agent 协作关系图（全屏）"
+        open={graphFullscreen}
+        onCancel={() => setGraphFullscreen(false)}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+        destroyOnClose
+      >
+        <CollaborationGraphView
+          data={collabGraph}
+          size={720}
+          layout={graphLayout}
+          filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
+          searchTerm={graphSearch || undefined}
+          minCount={graphMinCount ?? undefined}
+          showEdgeLabels={graphShowLabels}
+          onNodeClick={(agentId) => {
+            const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
+            setGraphFullscreen(false)
+            loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
+          }}
+        />
       </Modal>
     </div>
   )
