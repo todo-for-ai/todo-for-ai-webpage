@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented, Dropdown } from 'antd'
 import {
@@ -55,6 +55,19 @@ const CommandCenter: React.FC = () => {
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
+
+  // 协作图摘要（反映 kind 筛选）
+  const collabSummary = useMemo(() => {
+    if (!collabGraph) return null
+    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
+    const nodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const visibleIds = new Set(nodes.map((n: any) => n.id))
+    const edges = kindSet ? collabGraph.edges.filter((e: any) => visibleIds.has(e.source) && visibleIds.has(e.target)) : collabGraph.edges
+    if (edges.length === 0) return { nodeCount: nodes.length, edgeCount: 0, topPair: null }
+    const top = edges.reduce((m: any, e: any) => (e.count > m.count ? e : m), edges[0])
+    const topPair = { source: nodes.find((n: any) => n.id === top.source)?.name, target: nodes.find((n: any) => n.id === top.target)?.name, count: top.count }
+    return { nodeCount: nodes.length, edgeCount: edges.length, topPair }
+  }, [collabGraph, graphKinds])
   const [resolveOpen, setResolveOpen] = useState(false)
   const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [eventDetail, setEventDetail] = useState<any>(null)
@@ -682,7 +695,17 @@ const CommandCenter: React.FC = () => {
 
         {/* Agent 协作关系图 */}
         <Card
-          title={<Space><ShareAltOutlined /> Agent 协作关系图</Space>}
+          title={
+            <Space>
+              <ShareAltOutlined /> Agent 协作关系图
+              {collabSummary && (
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 'normal' }}>
+                  {collabSummary.nodeCount} 节点 · {collabSummary.edgeCount} 边
+                  {collabSummary.topPair && ` · 最活跃: ${collabSummary.topPair.source} ↔ ${collabSummary.topPair.target} (${collabSummary.topPair.count})`}
+                </Text>
+              )}
+            </Space>
+          }
           variant="borderless"
           style={{ marginTop: 16 }}
           extra={

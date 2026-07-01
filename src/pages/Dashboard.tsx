@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, Dropdown } from 'antd'
 import {
@@ -264,6 +264,19 @@ const Dashboard = () => {
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
+
+  // 协作图摘要（反映 kind 筛选）：节点数/边数/最活跃协作对
+  const collabSummary = useMemo(() => {
+    if (!collabGraph) return null
+    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
+    const nodes = kindSet ? collabGraph.nodes.filter((n) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const visibleIds = new Set(nodes.map((n) => n.id))
+    const edges = kindSet ? collabGraph.edges.filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target)) : collabGraph.edges
+    if (edges.length === 0) return { nodeCount: nodes.length, edgeCount: 0, topPair: null }
+    const top = edges.reduce((m, e) => (e.count > m.count ? e : m), edges[0])
+    const topPair = { source: nodes.find((n) => n.id === top.source)?.name, target: nodes.find((n) => n.id === top.target)?.name, count: top.count }
+    return { nodeCount: nodes.length, edgeCount: edges.length, topPair }
+  }, [collabGraph, graphKinds])
   const loadCollabGraph = useCallback(async (window: string) => {
     setCollabGraphLoading(true)
     try {
@@ -788,7 +801,17 @@ const Dashboard = () => {
 
       {/* Agent 协作关系图 */}
       <Card
-        title={<Space><ShareAltOutlined /> Agent 协作关系图</Space>}
+        title={
+          <Space>
+            <ShareAltOutlined /> Agent 协作关系图
+            {collabSummary && (
+              <Text type="secondary" style={{ fontSize: 12, fontWeight: 'normal' }}>
+                {collabSummary.nodeCount} 节点 · {collabSummary.edgeCount} 边
+                {collabSummary.topPair && ` · 最活跃: ${collabSummary.topPair.source} ↔ ${collabSummary.topPair.target} (${collabSummary.topPair.count})`}
+              </Text>
+            )}
+          </Space>
+        }
         style={{ marginBottom: 24 }}
         extra={
           <Space wrap>
