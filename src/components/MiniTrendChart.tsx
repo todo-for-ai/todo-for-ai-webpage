@@ -94,6 +94,24 @@ const MiniTrendChart: React.FC<MiniTrendChartProps> = ({ series, labels, height 
         {paths.map((p) => (
           <path key={p.key} d={p.d} fill="none" stroke={p.color} strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" />
         ))}
+        {/* 数据点 + 原生 tooltip（hover 显示日期与该序列值） */}
+        {paths.map((p) => {
+          const s = series.find((s) => s.key === p.key)
+          if (!s) return null
+          return s.values.map((v, i) => (
+            <circle
+              key={`${p.key}-${i}`}
+              cx={geometry.xFor(i)}
+              cy={geometry.yFor(v)}
+              r={2.5}
+              fill={p.color}
+              stroke="#fff"
+              strokeWidth={0.8}
+            >
+              <title>{`${labels?.[i] || '#' + i} · ${s.label}: ${v}`}</title>
+            </circle>
+          ))
+        })}
       </svg>
     </div>
   )
