@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented, Descriptions } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -20,6 +20,7 @@ import { agentsApi, type OrchestratorStatus } from '../api/agents'
 import dayjs from 'dayjs'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
+import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
@@ -564,40 +565,11 @@ const CommandCenter: React.FC = () => {
       </Modal>
 
       {/* 安全事件详情 Modal */}
-      <Modal
-        title={eventDetail ? `安全事件 · ${eventDetail.severity || 'INFO'}` : '安全事件详情'}
-        open={!!eventDetail}
-        onCancel={() => setEventDetail(null)}
-        footer={[
-          <Button key="close" onClick={() => setEventDetail(null)}>关闭</Button>,
-          ...(eventDetail?.workflow_run_id ? [
-            <Button
-              key="run"
-              type="link"
-              onClick={() => {
-                const runId = eventDetail.workflow_run_id
-                setEventDetail(null)
-                navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)
-              }}
-            >
-              查看运行控制台 →
-            </Button>,
-          ] : []),
-        ]}
-      >
-        {eventDetail && (
-          <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="类型">{eventDetail.event_type || '-'}</Descriptions.Item>
-            <Descriptions.Item label="严重度">{eventDetail.severity || '-'}</Descriptions.Item>
-            <Descriptions.Item label="标题">{eventDetail.title || '-'}</Descriptions.Item>
-            <Descriptions.Item label="详情">{eventDetail.detail || '-'}</Descriptions.Item>
-            <Descriptions.Item label="来源">{eventDetail.source ? `${eventDetail.source}#${eventDetail.source_id}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Agent">{eventDetail.agent_id ? `Agent #${eventDetail.agent_id}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="工作流运行">{eventDetail.workflow_run_id ? `Run #${eventDetail.workflow_run_id}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="发生时间">{eventDetail.occurred_at ? new Date(eventDetail.occurred_at).toLocaleString('zh-CN') : '-'}</Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
+      <SecurityEventDetailModal
+        event={eventDetail}
+        onClose={() => setEventDetail(null)}
+        onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
+      />
     </div>
   )
 }
