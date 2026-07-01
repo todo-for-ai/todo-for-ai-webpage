@@ -86,6 +86,10 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const draggingRef = useRef<number | null>(null)
   const dragMovedRef = useRef(false)
   const svgWrapRef = useRef<HTMLDivElement | null>(null)
+  // 缩放与平移
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const panningRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
 
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
@@ -190,13 +194,32 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     dragMovedRef.current = false
   }
   const onSvgMouseMove = (e: React.MouseEvent) => {
-    if (draggingRef.current === null) return
-    dragMovedRef.current = true
-    const p = svgPoint(e.clientX, e.clientY)
-    setDragOverride((prev) => ({ ...prev, [draggingRef.current as number]: { x: p.x, y: p.y } }))
+    if (draggingRef.current !== null) {
+      dragMovedRef.current = true
+      const p = svgPoint(e.clientX, e.clientY)
+      setDragOverride((prev) => ({ ...prev, [draggingRef.current as number]: { x: p.x, y: p.y } }))
+      return
+    }
+    if (panningRef.current) {
+      setPan({
+        x: panningRef.current.panX + (e.clientX - panningRef.current.startX),
+        y: panningRef.current.panY + (e.clientY - panningRef.current.startY),
+      })
+    }
   }
   const onSvgMouseUp = () => {
     draggingRef.current = null
+    panningRef.current = null
+  }
+  // 滚轮缩放
+  const onSvgWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const factor = e.deltaY < 0 ? 1.1 : 0.9
+    setZoom((z) => Math.max(0.3, Math.min(3, z * factor)))
+  }
+  // 背景拖拽平移（非节点时）
+  const onBgMouseDown = (e: React.MouseEvent) => {
+    panningRef.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
   }
 
   const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
@@ -229,6 +252,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         onMouseMove={onSvgMouseMove}
         onMouseUp={onSvgMouseUp}
         onMouseLeave={onSvgMouseUp}
+        onWheel={onSvgWheel}
       >
         <defs>
           {/* 边箭头：默认灰、高亮蓝 */}
@@ -239,6 +263,9 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             <path d="M0,0 L6,3 L0,6 Z" fill="#1890ff" />
           </marker>
         </defs>
+        {/* 透明背景：接收平移拖拽 */}
+        <rect x="0" y="0" width={size} height={size} fill="transparent" onMouseDown={onBgMouseDown} style={{ cursor: 'move' }} />
+        <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
         {/* 边 */}
         {edges.map((e, i) => {
           const a = getPos(e.source)
@@ -358,6 +385,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             </g>
           )
         })}
+        </g>
       </svg>
       {/* kind 颜色图例 */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
