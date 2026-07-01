@@ -213,6 +213,41 @@ const CommandCenter: React.FC = () => {
     }
   }, [])
 
+  // 导出协作关系图为 CSV（反映当前 kind 筛选）
+  const exportCollabGraph = useCallback(() => {
+    if (!collabGraph || (!collabGraph.nodes?.length && !collabGraph.edges?.length)) {
+      message.warning('暂无协作关系数据可导出')
+      return
+    }
+    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
+    const nodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const visibleIds = new Set(nodes.map((n: any) => n.id))
+    const edges = kindSet ? collabGraph.edges.filter((e: any) => visibleIds.has(e.source) && visibleIds.has(e.target)) : collabGraph.edges
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const lines: string[] = []
+    lines.push('# 节点')
+    lines.push(['id', 'name', 'kind', 'messages'].map(esc).join(','))
+    nodes.forEach((n: any) => lines.push([n.id, n.name, n.kind ?? '', n.messages].map(esc).join(',')))
+    lines.push('')
+    lines.push('# 边')
+    lines.push(['source', 'target', 'count', 'source_to_target', 'target_to_source'].map(esc).join(','))
+    edges.forEach((e: any) => lines.push([e.source, e.target, e.count, e.source_to_target ?? 0, e.target_to_source ?? 0].map(esc).join(',')))
+    const text = '﻿' + lines.join('\n')
+    const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    message.success('协作关系图已导出为 CSV')
+  }, [collabGraph, graphKinds])
+
   const monitorSummary = monitorData?.summary || {}
   const activeAgents = monitorSummary.active || 0
   const totalAgents = monitorSummary.total || 0
@@ -661,6 +696,7 @@ const CommandCenter: React.FC = () => {
                   { value: 'external', label: '外部' },
                 ]}
               />
+              <Button size="small" icon={<DownloadOutlined />} onClick={exportCollabGraph}>导出</Button>
             </Space>
           }
         >
