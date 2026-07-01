@@ -99,6 +99,8 @@ const Dashboard = () => {
   const [eventDetail, setEventDetail] = useState<any>(null)
   const [collabGraph, setCollabGraph] = useState<CollaborationGraph | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
+  // 节点点击展开的协作明细 Modal
+  const [collabDetail, setCollabDetail] = useState<{ agentId: number; name: string; list: any[]; loading: boolean } | null>(null)
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -268,6 +270,17 @@ const Dashboard = () => {
       // silent
     } finally {
       setCollabGraphLoading(false)
+    }
+  }, [])
+
+  // 点击协作图节点：加载该 Agent 的 top 协作者明细
+  const loadCollabDetail = useCallback(async (agentId: number, name: string) => {
+    setCollabDetail({ agentId, name, list: [], loading: true })
+    try {
+      const result = await agentsApi.getAgentCollaborators(agentId, { limit: 10 })
+      setCollabDetail({ agentId, name, list: result?.collaborators || [], loading: false })
+    } catch {
+      setCollabDetail({ agentId, name, list: [], loading: false })
     }
   }, [])
 
@@ -745,7 +758,10 @@ const Dashboard = () => {
             data={collabGraph}
             size={380}
             layout={graphLayout}
-            onNodeClick={(agentId) => navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)}
+            onNodeClick={(agentId) => {
+              const node = collabGraph?.nodes.find((n) => n.id === agentId)
+              loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
+            }}
           />
         </Spin>
       </Card>
@@ -1347,6 +1363,42 @@ const Dashboard = () => {
         onClose={() => setEventDetail(null)}
         onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
       />
+
+      {/* 协作图节点点击：协作明细 Modal */}
+      <Modal
+        title={`${collabDetail?.name || ''} 的协作伙伴`}
+        open={!!collabDetail}
+        onCancel={() => setCollabDetail(null)}
+        footer={[
+          <Button key="detail" type="link" onClick={() => { if (collabDetail) navigate(`/todo-for-ai/pages/agents?agent_id=${collabDetail.agentId}`) }}>
+            查看 Agent 详情
+          </Button>,
+          <Button key="close" onClick={() => setCollabDetail(null)}>关闭</Button>,
+        ]}
+      >
+        <Spin spinning={collabDetail?.loading}>
+          {collabDetail && collabDetail.list.length > 0 ? (
+            <List
+              size="small"
+              dataSource={collabDetail.list}
+              renderItem={(c: any) => (
+                <List.Item>
+                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <Text style={{ color: '#1890ff' }}>{c.name}</Text>
+                    <Space size={4}>
+                      <Tag>发 {c.sent}</Tag>
+                      <Tag>收 {c.received}</Tag>
+                      <Tag color="blue">合计 {c.total}</Tag>
+                    </Space>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Text type="secondary">暂无协作伙伴记录</Text>
+          )}
+        </Spin>
+      </Modal>
     </div>
   )
 }
