@@ -92,6 +92,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   // 缩放与平移
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
   const panningRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
 
   if (nodes.length === 0) {
@@ -195,6 +196,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const onNodeDragStart = (id: number) => {
     draggingRef.current = id
     dragMovedRef.current = false
+    setIsDragging(true)
   }
   const onSvgMouseMove = (e: React.MouseEvent) => {
     if (draggingRef.current !== null) {
@@ -213,6 +215,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const onSvgMouseUp = () => {
     draggingRef.current = null
     panningRef.current = null
+    setIsDragging(false)
   }
   // 滚轮缩放
   const onSvgWheel = (e: React.WheelEvent) => {
@@ -365,7 +368,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             <g
               key={n.id}
               transform={`translate(${pos.x},${pos.y})`}
-              style={{ cursor: 'grab' }}
+              style={{ cursor: 'grab', transition: isDragging ? 'none' : 'transform 0.5s ease' }}
               onMouseEnter={() => setHoveredNode(n.id)}
               onMouseLeave={() => setHoveredNode(null)}
               onMouseDown={(e) => { e.preventDefault(); onNodeDragStart(n.id) }}
