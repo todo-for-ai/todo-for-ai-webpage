@@ -21,14 +21,16 @@ import {
   HistoryOutlined,
   DownloadOutlined,
   DownOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type SecurityDailyTrend, type SecurityByAgent } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
+import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
@@ -88,6 +90,7 @@ const Dashboard = () => {
   const [historyData, setHistoryData] = useState<OrchestratorHistoryResult | null>(null)
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyFilter, setHistoryFilter] = useState<string>('')
+  const [orchDailyTrend, setOrchDailyTrend] = useState<OrchestratorDailyTrend | null>(null)
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -218,6 +221,20 @@ const Dashboard = () => {
     loadSecurityEvents()
   }, [loadSecurityEvents])
 
+  // 平台活动统一趋势：编排按天趋势（与安全事件 daily-trend 同时间轴）
+  const loadOrchDailyTrend = useCallback(async () => {
+    try {
+      const trend = await agentsApi.getOrchestratorDailyTrend().catch(() => null)
+      setOrchDailyTrend(trend)
+    } catch {
+      // silent
+    }
+  }, [])
+
+  useEffect(() => {
+    loadOrchDailyTrend()
+  }, [loadOrchDailyTrend])
+
   // 时间范围变化时重新加载（loadSecurityEvents 因依赖 buildSecurityParams 而重建，触发上面的 effect）
 
   // SSE-driven live refresh of the security event aggregation card
@@ -244,6 +261,10 @@ const Dashboard = () => {
           if (ba) setSecurityByAgent(ba)
         })
         .catch(() => { /* silent: SSE refresh is best-effort */ })
+      // 编排活动相关事件同步刷新统一趋势的编排序列
+      if (et === 'conflicts_detected' || et === 'conflict_resolved' || et === 'conflicts_auto_resolved') {
+        agentsApi.getOrchestratorDailyTrend().then((t) => setOrchDailyTrend(t)).catch(() => {})
+      }
     }, [securityFilter, buildSecurityParams]),
   })
 
@@ -644,6 +665,18 @@ const Dashboard = () => {
             <Empty description="暂无协作数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
         </Spin>
+      </Card>
+
+      {/* 平台活动统一趋势：编排活动 + 安全事件同时间轴 */}
+      <Card
+        title={<Space><LineChartOutlined /> 平台活动统一趋势</Space>}
+        style={{ marginBottom: 24 }}
+        extra={<Text type="secondary" style={{ fontSize: 12 }}>按天聚合 · 编排活动与安全事件对比</Text>}
+      >
+        <PlatformActivityTrendSection
+          orchestratorTrend={orchDailyTrend}
+          securityTrend={securityTrend}
+        />
       </Card>
 
       {/* Agent Real-time Monitor */}

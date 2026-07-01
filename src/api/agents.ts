@@ -461,6 +461,29 @@ export interface OrchestratorHistoryResult {
   }
 }
 
+export interface OrchestratorDailyTrendDay {
+  date: string
+  runs: number
+  manual_runs: number
+  scheduler_runs: number
+  triggers_fired: number
+  conflicts_resolved: number
+  errors: number
+  avg_duration: number
+}
+
+export interface OrchestratorDailyTrend {
+  days: OrchestratorDailyTrendDay[]
+  totals: {
+    runs: number
+    manual_runs: number
+    scheduler_runs: number
+    triggers_fired: number
+    conflicts_resolved: number
+    errors: number
+  }
+}
+
 export interface WorkflowRunConsoleStep {
   step_run: WorkflowStepRunItem
   effective_params: Record<string, unknown>
@@ -1304,6 +1327,11 @@ export class AgentsApi {
   async listOrchestratorHistory(params?: { limit?: number; triggered_by?: string }): Promise<OrchestratorHistoryResult> {
     const response = await apiClient.get(`/agents/maintenance/orchestrator/history${buildQuery(params)}`)
     return unwrapData<OrchestratorHistoryResult>(response)
+  }
+
+  async getOrchestratorDailyTrend(params?: { triggered_by?: string; since?: string; until?: string }): Promise<OrchestratorDailyTrend> {
+    const response = await apiClient.get(`/agents/maintenance/orchestrator/daily-trend${buildQuery(params)}`)
+    return unwrapData<OrchestratorDailyTrend>(response)
   }
 }
 
