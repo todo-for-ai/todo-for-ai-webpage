@@ -10,19 +10,23 @@ interface CollaborationGraphViewProps {
   data: GraphData | null
   /** 画布宽度/高度（正方形，默认 360） */
   size?: number
+  /** 布局：circular 环形（默认）| grid 网格 */
+  layout?: 'circular' | 'grid'
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
 }
 
 /**
- * Agent 协作关系图（纯 SVG，环形布局）。
+ * Agent 协作关系图（纯 SVG）。
  *
- * 节点均匀分布在圆周上，按 messages 缩放半径；边为弦，按 count 缩放粗细与透明度。
- * 无第三方依赖，与 WorkflowDagViewer / MiniTrendChart 风格一致。
+ * circular 布局：节点均匀分布在圆周上；grid 布局：节点按行列网格排列。
+ * 节点按 messages 缩放半径；边为弦，按 count 缩放粗细与透明度。
+ * 节点 hover 高亮其邻居。无第三方依赖。
  */
 const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
   data,
   size = 360,
+  layout = 'circular',
   onNodeClick,
 }) => {
   const nodes = data?.nodes || []
@@ -35,16 +39,26 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
 
   const cx = size / 2
   const cy = size / 2
-  const radius = size / 2 - 40 // 留出标签空间
   const maxMsg = Math.max(1, ...nodes.map((n) => n.messages))
   const maxCount = Math.max(1, ...edges.map((e) => e.count))
 
-  // 节点位置：均匀分布
+  // 节点位置
   const nodePos = new Map<number, { x: number; y: number }>()
-  nodes.forEach((n, i) => {
-    const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
-    nodePos.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) })
-  })
+  if (layout === 'grid') {
+    const cols = Math.ceil(Math.sqrt(nodes.length))
+    const cell = (size - 40) / Math.max(cols, 1)
+    nodes.forEach((n, i) => {
+      const row = Math.floor(i / cols)
+      const col = i % cols
+      nodePos.set(n.id, { x: 20 + cell * (col + 0.5), y: 20 + cell * (row + 0.5) })
+    })
+  } else {
+    const radius = size / 2 - 40 // 留出标签空间
+    nodes.forEach((n, i) => {
+      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
+      nodePos.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) })
+    })
+  }
 
   const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
   // 边是否与悬停节点相关

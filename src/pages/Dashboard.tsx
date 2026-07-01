@@ -256,10 +256,13 @@ const Dashboard = () => {
   }, [loadUnifiedTrend, trendWindow, trendSeverity, trendEventType])
 
   // Agent 协作关系图
-  const loadCollabGraph = useCallback(async () => {
+  const [graphWindow, setGraphWindow] = useState<string>('30')
+  const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
+  const loadCollabGraph = useCallback(async (window: string) => {
     setCollabGraphLoading(true)
     try {
-      const g = await agentsApi.getCollaborationGraph({ limit: 50 }).catch(() => null)
+      const since = window === 'all' ? undefined : dayjs().subtract(Number(window), 'day').toISOString()
+      const g = await agentsApi.getCollaborationGraph(since ? { limit: 50, since } : { limit: 50 }).catch(() => null)
       setCollabGraph(g)
     } catch {
       // silent
@@ -269,8 +272,8 @@ const Dashboard = () => {
   }, [])
 
   useEffect(() => {
-    loadCollabGraph()
-  }, [loadCollabGraph])
+    loadCollabGraph(graphWindow)
+  }, [loadCollabGraph, graphWindow])
 
   // 时间范围变化时重新加载（loadSecurityEvents 因依赖 buildSecurityParams 而重建，触发上面的 effect）
 
@@ -286,7 +289,7 @@ const Dashboard = () => {
       const et = event.event_type || ''
       // Agent 直接消息事件刷新协作关系图
       if (et === 'agent.direct_message') {
-        loadCollabGraph()
+        loadCollabGraph(graphWindow)
         return
       }
       if (!SECURITY_SSE_EVENTS.has(et)) return
@@ -307,7 +310,7 @@ const Dashboard = () => {
       if (et === 'conflicts_detected' || et === 'conflict_resolved' || et === 'conflicts_auto_resolved') {
         loadUnifiedTrend(trendWindow, trendSeverity, trendEventType)
       }
-    }, [securityFilter, buildSecurityParams, loadUnifiedTrend, trendWindow, trendSeverity, trendEventType, loadCollabGraph]),
+    }, [securityFilter, buildSecurityParams, loadUnifiedTrend, trendWindow, trendSeverity, trendEventType, loadCollabGraph, graphWindow]),
   })
 
   const runOrchestration = useCallback(async () => {
@@ -713,12 +716,35 @@ const Dashboard = () => {
       <Card
         title={<Space><ShareAltOutlined /> Agent 协作关系图</Space>}
         style={{ marginBottom: 24 }}
-        extra={<Text type="secondary" style={{ fontSize: 12 }}>基于直接消息 · 节点=Agent · 边粗细=消息数</Text>}
+        extra={
+          <Space wrap>
+            <Segmented
+              size="small"
+              value={graphLayout}
+              onChange={(v) => setGraphLayout(v as 'circular' | 'grid')}
+              options={[
+                { value: 'circular', label: '环形' },
+                { value: 'grid', label: '网格' },
+              ]}
+            />
+            <Segmented
+              size="small"
+              value={graphWindow}
+              onChange={(v) => setGraphWindow(v as string)}
+              options={[
+                { value: '7', label: '7天' },
+                { value: '30', label: '30天' },
+                { value: 'all', label: '全部' },
+              ]}
+            />
+          </Space>
+        }
       >
         <Spin spinning={collabGraphLoading}>
           <CollaborationGraphView
             data={collabGraph}
             size={380}
+            layout={graphLayout}
             onNodeClick={(agentId) => navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)}
           />
         </Spin>

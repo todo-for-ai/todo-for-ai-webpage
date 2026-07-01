@@ -47,6 +47,8 @@ const CommandCenter: React.FC = () => {
   const [orchDailyTrend, setOrchDailyTrend] = useState<any>(null)
   const [collabGraph, setCollabGraph] = useState<any>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
+  const [graphWindow, setGraphWindow] = useState<string>('30')
+  const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
   const [resolveOpen, setResolveOpen] = useState(false)
   const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [eventDetail, setEventDetail] = useState<any>(null)
@@ -97,10 +99,11 @@ const CommandCenter: React.FC = () => {
   }, [loadAll])
 
   // Agent 协作关系图（独立加载，避免 loadAll 膨胀）
-  const loadCollabGraph = useCallback(async () => {
+  const loadCollabGraph = useCallback(async (window: string) => {
     setCollabGraphLoading(true)
     try {
-      const g = await agentsApi.getCollaborationGraph({ limit: 50 }).catch(() => null)
+      const since = window === 'all' ? undefined : dayjs().subtract(Number(window), 'day').toISOString()
+      const g = await agentsApi.getCollaborationGraph(since ? { limit: 50, since } : { limit: 50 }).catch(() => null)
       setCollabGraph(g)
     } catch {
       // silent
@@ -110,8 +113,8 @@ const CommandCenter: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    loadCollabGraph()
-  }, [loadCollabGraph])
+    loadCollabGraph(graphWindow)
+  }, [loadCollabGraph, graphWindow])
 
   // SSE 实时刷新：任一协作相关事件触发静默刷新
   useCollaborationSSE({
@@ -121,9 +124,9 @@ const CommandCenter: React.FC = () => {
       loadAll(true)
       // Agent 直接消息事件刷新协作关系图
       if ((event?.event_type || '') === 'agent.direct_message') {
-        loadCollabGraph()
+        loadCollabGraph(graphWindow)
       }
-    }, [loadAll, loadCollabGraph]),
+    }, [loadAll, loadCollabGraph, graphWindow]),
   })
 
   // 快捷操作：立即编排
@@ -608,11 +611,34 @@ const CommandCenter: React.FC = () => {
           title={<Space><ShareAltOutlined /> Agent 协作关系图</Space>}
           variant="borderless"
           style={{ marginTop: 16 }}
-          extra={<Text type="secondary" style={{ fontSize: 12 }}>基于直接消息 · 节点=Agent · 边粗细=消息数</Text>}
+          extra={
+            <Space size="small" wrap>
+              <Segmented
+                size="small"
+                value={graphLayout}
+                onChange={(v) => setGraphLayout(v as 'circular' | 'grid')}
+                options={[
+                  { label: '环形', value: 'circular' },
+                  { label: '网格', value: 'grid' },
+                ]}
+              />
+              <Segmented
+                size="small"
+                value={graphWindow}
+                onChange={(v) => setGraphWindow(v as string)}
+                options={[
+                  { label: '7天', value: '7' },
+                  { label: '30天', value: '30' },
+                  { label: '全部', value: 'all' },
+                ]}
+              />
+            </Space>
+          }
         >
           <CollaborationGraphView
             data={collabGraph}
             size={380}
+            layout={graphLayout}
             onNodeClick={(agentId) => navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)}
           />
         </Card>

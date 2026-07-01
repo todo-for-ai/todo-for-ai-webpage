@@ -989,7 +989,7 @@ export class AgentsApi {
     return unwrapData<AgentCollaboratorsResult>(await apiClient.get(`/agents/${agentId}/collaborators${buildQuery(params)}`))
   }
 
-  async getCollaborationGraph(params?: { limit?: number }): Promise<CollaborationGraph> {
+  async getCollaborationGraph(params?: { limit?: number; since?: string; until?: string }): Promise<CollaborationGraph> {
     return unwrapData<CollaborationGraph>(await apiClient.get(`/agents/collaboration-graph${buildQuery(params)}`))
   }
 
