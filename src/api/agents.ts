@@ -768,9 +768,9 @@ export class AgentsApi {
     return unwrapList<SecurityEventItem>(response)
   }
 
-  /** Export unified security events as CSV. Returns the CSV text.
+  /** Export unified security events as CSV or JSON. Returns the raw text.
    *  Uses a raw fetch (not apiClient) because the client forces JSON parsing. */
-  async exportSecurityEvents(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string }): Promise<string> {
+  async exportSecurityEvents(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string; search?: string; format?: 'csv' | 'json' }): Promise<string> {
     const token = localStorage.getItem('access_token')
     const url = `${getApiBaseUrl()}/agents/security/events/export${buildQuery(params)}`
     const response = await fetch(url, {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, Dropdown } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -20,6 +20,7 @@ import {
   WarningOutlined,
   HistoryOutlined,
   DownloadOutlined,
+  DownOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
@@ -258,20 +259,22 @@ const Dashboard = () => {
   }, [securityFilter, loadSecurityEvents, loadConflictData])
 
   // 导出当前筛选条件下的安全事件为 CSV
-  const exportSecurityEvents = useCallback(async () => {
+  const exportSecurityEvents = useCallback(async (format: 'csv' | 'json' = 'csv') => {
     setExporting(true)
     try {
-      const csv = await agentsApi.exportSecurityEvents(buildSecurityParams(securityFilter || undefined))
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const params = buildSecurityParams(securityFilter || undefined)
+      const text = await agentsApi.exportSecurityEvents({ ...params, format })
+      const mime = format === 'json' ? 'application/json;charset=utf-8;' : 'text/csv;charset=utf-8;'
+      const blob = new Blob([text], { type: mime })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `security_events_${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `security_events_${new Date().toISOString().slice(0, 10)}.${format}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      message.success('安全事件已导出为 CSV')
+      message.success(`安全事件已导出为 ${format.toUpperCase()}`)
     } catch {
       message.error('导出安全事件失败')
     } finally {
@@ -869,7 +872,19 @@ const Dashboard = () => {
                 setSecurityUntil(range?.[1]?.toISOString() || '')
               }}
             />
-            <Button size="small" icon={<DownloadOutlined />} onClick={exportSecurityEvents} loading={exporting}>导出</Button>
+            <Dropdown
+              menu={{
+                items: [
+                  { key: 'csv', label: '导出为 CSV' },
+                  { key: 'json', label: '导出为 JSON' },
+                ],
+                onClick: ({ key }) => exportSecurityEvents(key as 'csv' | 'json'),
+              }}
+            >
+              <Button size="small" icon={<DownloadOutlined />} loading={exporting}>
+                导出 <DownOutlined />
+              </Button>
+            </Dropdown>
             <Button size="small" icon={<ReloadOutlined />} onClick={() => loadSecurityEvents(securityFilter || undefined)} loading={securityLoading} />
           </Space>
         }
