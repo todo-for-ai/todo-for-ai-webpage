@@ -16,6 +16,14 @@ const KIND_COLOR_DEFAULT = '#8c8c8c'
 const kindColor = (kind?: string | null) =>
   (kind && KIND_COLORS[kind]) || KIND_COLOR_DEFAULT
 
+// 声誉 0-100 -> 环颜色（红<40 黄40-70 绿>70）
+const reputationColor = (rep?: number | null) => {
+  if (rep === null || rep === undefined) return null
+  if (rep < 40) return '#ff4d4f'
+  if (rep < 70) return '#faad14'
+  return '#52c41a'
+}
+
 interface CollaborationGraphViewProps {
   /** 图数据：nodes + edges */
   data: GraphData | null
@@ -258,6 +266,20 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               onMouseLeave={() => setHoveredNode(null)}
               onClick={onNodeClick ? () => onNodeClick(n.id) : undefined}
             >
+              {/* 声誉环：外圈细环，颜色按 reputation */}
+              {(() => {
+                const rc = reputationColor(n.reputation)
+                if (!rc) return null
+                return (
+                  <circle
+                    r={r + 4}
+                    fill="none"
+                    stroke={rc}
+                    strokeWidth={2}
+                    strokeOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 0.9 : 0.3) : 0.8)}
+                  />
+                )
+              })()}
               <circle
                 r={r}
                 fill={highlighted ? '#1890ff' : kindColor(n.kind)}
@@ -265,7 +287,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                 strokeWidth={isCenter ? 3 : 1.5}
                 fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.4) : 1)}
               >
-                <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}): ${n.messages} 条消息`}</title>
+                <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
               </circle>
               <text
                 x={r + 3}

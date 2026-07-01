@@ -414,6 +414,8 @@ export interface CollaborationGraphNode {
   name: string
   kind?: string | null
   messages: number
+  /** Agent 声誉分（0-100，可能为 null 表示未计算） */
+  reputation?: number | null
 }
 
 export interface CollaborationGraphEdge {
