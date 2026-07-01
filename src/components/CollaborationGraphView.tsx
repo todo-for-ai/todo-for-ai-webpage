@@ -39,6 +39,8 @@ interface CollaborationGraphViewProps {
   searchTerm?: string
   /** 最小消息量阈值：count 低于此值的边隐藏（孤立节点随之隐藏） */
   minCount?: number
+  /** 边中点常显消息数标签（默认仅 hover tooltip） */
+  showEdgeLabels?: boolean
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
 }
@@ -58,6 +60,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   filterKinds,
   searchTerm,
   minCount,
+  showEdgeLabels,
   onNodeClick,
 }, ref) => {
   const allNodes = data?.nodes || []
@@ -310,24 +313,40 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           const tooltip = fwd || rev
             ? `${e.source}→${e.target}: ${fwd} 条 · ${e.target}→${e.source}: ${rev} 条 · 共 ${e.count}`
             : `${e.source} ↔ ${e.target}: ${e.count} 条消息`
+          const mx = (a.x + b.x) / 2
+          const my = (a.y + b.y) / 2
           return (
-            <line
-              key={`e${i}`}
-              x1={oneWay ? ax : a.x + ux * ra}
-              y1={oneWay ? ay : a.y + uy * ra}
-              x2={oneWay ? bx : b.x - ux * rb}
-              y2={oneWay ? by : b.y - uy * rb}
-              stroke={stroke}
-              strokeWidth={highlighted ? w + 1 : w}
-              strokeOpacity={anyHover ? (highlighted ? 0.9 : 0.08) : baseOpacity}
-              markerEnd={oneWay ? arrow : undefined}
-              markerStart={(!oneWay && fwd && rev) ? arrow : undefined}
-              onMouseEnter={() => setHoveredEdge({ source: e.source, target: e.target })}
-              onMouseLeave={() => setHoveredEdge(null)}
-              style={{ cursor: 'pointer' }}
-            >
-              <title>{tooltip}</title>
-            </line>
+            <g key={`e${i}`}>
+              <line
+                x1={oneWay ? ax : a.x + ux * ra}
+                y1={oneWay ? ay : a.y + uy * ra}
+                x2={oneWay ? bx : b.x - ux * rb}
+                y2={oneWay ? by : b.y - uy * rb}
+                stroke={stroke}
+                strokeWidth={highlighted ? w + 1 : w}
+                strokeOpacity={anyHover ? (highlighted ? 0.9 : 0.08) : baseOpacity}
+                markerEnd={oneWay ? arrow : undefined}
+                markerStart={(!oneWay && fwd && rev) ? arrow : undefined}
+                onMouseEnter={() => setHoveredEdge({ source: e.source, target: e.target })}
+                onMouseLeave={() => setHoveredEdge(null)}
+                style={{ cursor: 'pointer' }}
+              >
+                <title>{tooltip}</title>
+              </line>
+              {showEdgeLabels && (
+                <text
+                  x={mx}
+                  y={my}
+                  fontSize={9}
+                  fill={highlighted ? '#1890ff' : '#8c8c8c'}
+                  textAnchor="middle"
+                  dy={-2}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {e.count}
+                </text>
+              )}
+            </g>
           )
         })}
 

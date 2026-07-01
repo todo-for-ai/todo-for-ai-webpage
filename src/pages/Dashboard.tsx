@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown, Checkbox } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -266,6 +266,7 @@ const Dashboard = () => {
   const [graphSearch, setGraphSearch] = useState('')
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
   const [graphResetKey, setGraphResetKey] = useState(0)
+  const [graphShowLabels, setGraphShowLabels] = useState(false)
 
   // 协作图摘要（反映 kind 筛选 + minCount）：节点数/边数/最活跃协作对
   const collabSummary = useMemo(() => {
@@ -913,6 +914,7 @@ const Dashboard = () => {
               onChange={(v) => setGraphMinCount(v ?? null)}
             />
             <Button size="small" icon={<ReloadOutlined />} onClick={() => setGraphResetKey((k) => k + 1)}>重置布局</Button>
+            <Checkbox size="small" checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
           </Space>
         }
       >
@@ -926,6 +928,7 @@ const Dashboard = () => {
             filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
             searchTerm={graphSearch || undefined}
             minCount={graphMinCount ?? undefined}
+            showEdgeLabels={graphShowLabels}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
