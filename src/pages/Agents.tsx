@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import {
@@ -74,8 +74,10 @@ import {
   type TaskAssignmentState,
   type TaskEvent,
   type NotificationItem,
+  type CollaborationGraph,
 } from '../api/agents'
 import CapabilityRadar from '../components/Agent/CapabilityRadar'
+import CollaborationGraphView from '../components/CollaborationGraphView'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 const { Title, Text } = Typography
@@ -886,6 +888,30 @@ const Agents: React.FC = () => {
       setCollaboratorsLoading(false)
     }
   }
+
+  // 以当前 Agent 为中心的协作关系子图（中心节点 + top 协作者邻居）
+  const collabSubgraph: CollaborationGraph | null = useMemo(() => {
+    if (!selectedAgent || collaborators.length === 0) return null
+    const center = selectedAgent
+    const nodes = [
+      { id: center.id, name: center.name, kind: center.kind, messages: 0 },
+      ...collaborators.map((c) => ({ id: c.agent_id, name: c.name, kind: undefined, messages: c.total })),
+    ]
+    // 中心节点 messages = 所有邻居 total 之和
+    const centerTotal = collaborators.reduce((s, c) => s + (c.total || 0), 0)
+    nodes[0].messages = centerTotal
+    const edges = collaborators.map((c) => ({
+      source: Math.min(center.id, c.agent_id),
+      target: Math.max(center.id, c.agent_id),
+      count: c.total,
+      // 中心发送给邻居: c.sent；邻居发送给中心: c.received
+      // source 为较小 id 端，需按 id 大小映射方向
+      ...(center.id < c.agent_id
+        ? { source_to_target: c.sent, target_to_source: c.received }
+        : { source_to_target: c.received, target_to_source: c.sent }),
+    }))
+    return { nodes, edges, total_edges: edges.length }
+  }, [selectedAgent, collaborators])
 
   const createExperience = async () => {
     if (!selectedAgent) return
@@ -2502,6 +2528,29 @@ const Agents: React.FC = () => {
                 )}
               </Spin>
             </div>
+            {/* 协作关系子图：以当前 Agent 为中心 */}
+            {collabSubgraph && (
+              <div style={{ marginBottom: 8 }}>
+                <Text type="secondary">协作关系图</Text>
+                <div style={{ marginTop: 4 }}>
+                  <CollaborationGraphView
+                    data={collabSubgraph}
+                    size={300}
+                    layout="grid"
+                    onNodeClick={(agentId) => {
+                      if (agentId === selectedAgent?.id) return
+                      setDrawerOpen(false)
+                      const target = agents.find((a) => a.id === agentId)
+                      if (target) {
+                        setTimeout(() => loadAssignments(target), 100)
+                      } else {
+                        navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             <Space wrap>
               <Text type="secondary">能力</Text>
               {renderCapabilities(selectedAgent.capabilities, 8)}
