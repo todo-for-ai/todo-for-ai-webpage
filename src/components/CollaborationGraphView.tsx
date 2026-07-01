@@ -129,6 +129,17 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
               >
                 {n.name.length > 10 ? n.name.slice(0, 9) + '…' : n.name}
               </text>
+              {/* 协作次数标签：节点下方浅色小字 */}
+              <text
+                x={0}
+                y={r + 11}
+                fontSize={9}
+                fill={highlighted ? '#1890ff' : '#bfbfbf'}
+                textAnchor="middle"
+                style={{ pointerEvents: 'none' }}
+              >
+                {n.messages}
+              </text>
             </g>
           )
         })}
