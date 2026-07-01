@@ -13,11 +13,13 @@ import {
   CheckCircleOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
+import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 
@@ -38,13 +40,14 @@ const CommandCenter: React.FC = () => {
   const [securityTrend, setSecurityTrend] = useState<any>(null)
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
+  const [orchDailyTrend, setOrchDailyTrend] = useState<any>(null)
   const [lastRefresh, setLastRefresh] = useState<string>('')
   const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
 
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [monitor, conflicts, conflictList, events, trend, byAgent, status] = await Promise.all([
+      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
@@ -52,6 +55,7 @@ const CommandCenter: React.FC = () => {
         agentsApi.getSecurityEventsDailyTrend({}).catch(() => null),
         agentsApi.getSecurityEventsByAgent({}).catch(() => null),
         agentsApi.getOrchestratorStatus().catch(() => null),
+        agentsApi.getOrchestratorDailyTrend().catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
@@ -60,6 +64,7 @@ const CommandCenter: React.FC = () => {
       setSecurityTrend(trend)
       setSecurityByAgent(byAgent)
       setOrchestratorStatus(status)
+      setOrchDailyTrend(orchTrend)
       setLastRefresh(new Date().toLocaleTimeString('zh-CN'))
     } catch {
       if (!silent) message.error('加载指挥中心数据失败')
@@ -281,6 +286,19 @@ const CommandCenter: React.FC = () => {
             }
           />
         )}
+
+        {/* 平台活动统一趋势：编排活动 + 安全事件同时间轴 */}
+        <Card
+          title={<Space><LineChartOutlined /> 平台活动统一趋势</Space>}
+          variant="borderless"
+          style={{ marginBottom: 16 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>按天聚合 · 编排活动与安全事件对比</Text>}
+        >
+          <PlatformActivityTrendSection
+            orchestratorTrend={orchDailyTrend}
+            securityTrend={securityTrend}
+          />
+        </Card>
 
         <Row gutter={[16, 16]}>
           {/* Agent 监控 */}
