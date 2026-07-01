@@ -25,6 +25,8 @@ interface CollaborationGraphViewProps {
   layout?: 'circular' | 'grid'
   /** 中心节点 ID：该节点用加粗描边+更大半径突出（用于 Agent 详情子图） */
   centerNodeId?: number
+  /** 仅显示这些 kind 的节点及其互连边（为空/未传则显示全部） */
+  filterKinds?: string[]
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
 }
@@ -41,10 +43,16 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
   size = 360,
   layout = 'circular',
   centerNodeId,
+  filterKinds,
   onNodeClick,
 }) => {
-  const nodes = data?.nodes || []
-  const edges = data?.edges || []
+  const allNodes = data?.nodes || []
+  const allEdges = data?.edges || []
+  // 按 kind 过滤：仅保留选中 kind 的节点，边两端都必须在过滤集内
+  const kindSet = filterKinds && filterKinds.length > 0 ? new Set(filterKinds) : null
+  const nodes = kindSet ? allNodes.filter((n) => n.kind && kindSet.has(n.kind)) : allNodes
+  const visibleIds = new Set(nodes.map((n) => n.id))
+  const edges = kindSet ? allEdges.filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target)) : allEdges
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
 
   if (nodes.length === 0) {

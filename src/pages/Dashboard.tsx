@@ -260,6 +260,7 @@ const Dashboard = () => {
   // Agent 协作关系图
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
+  const [graphKinds, setGraphKinds] = useState<string[]>([])
   const loadCollabGraph = useCallback(async (window: string) => {
     setCollabGraphLoading(true)
     try {
@@ -750,6 +751,21 @@ const Dashboard = () => {
                 { value: 'all', label: '全部' },
               ]}
             />
+            <Select
+              size="small"
+              mode="multiple"
+              maxTagCount="responsive"
+              style={{ minWidth: 140 }}
+              placeholder="全部类型"
+              value={graphKinds}
+              onChange={setGraphKinds}
+              options={[
+                { value: 'coordinator', label: '协调者' },
+                { value: 'autonomous', label: '自主型' },
+                { value: 'assistant', label: '助手型' },
+                { value: 'external', label: '外部' },
+              ]}
+            />
           </Space>
         }
       >
@@ -758,6 +774,7 @@ const Dashboard = () => {
             data={collabGraph}
             size={380}
             layout={graphLayout}
+            filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)

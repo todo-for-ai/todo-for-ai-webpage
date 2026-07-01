@@ -51,6 +51,7 @@ const CommandCenter: React.FC = () => {
   const [collabDetail, setCollabDetail] = useState<{ agentId: number; name: string; list: any[]; loading: boolean } | null>(null)
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
+  const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [resolveOpen, setResolveOpen] = useState(false)
   const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [eventDetail, setEventDetail] = useState<any>(null)
@@ -645,6 +646,21 @@ const CommandCenter: React.FC = () => {
                   { label: '全部', value: 'all' },
                 ]}
               />
+              <Select
+                size="small"
+                mode="multiple"
+                maxTagCount="responsive"
+                style={{ minWidth: 140 }}
+                placeholder="全部类型"
+                value={graphKinds}
+                onChange={setGraphKinds}
+                options={[
+                  { value: 'coordinator', label: '协调者' },
+                  { value: 'autonomous', label: '自主型' },
+                  { value: 'assistant', label: '助手型' },
+                  { value: 'external', label: '外部' },
+                ]}
+              />
             </Space>
           }
         >
@@ -652,6 +668,7 @@ const CommandCenter: React.FC = () => {
             data={collabGraph}
             size={380}
             layout={graphLayout}
+            filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
