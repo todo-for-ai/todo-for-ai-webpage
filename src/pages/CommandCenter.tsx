@@ -14,6 +14,7 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   LineChartOutlined,
+  ShareAltOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
@@ -21,6 +22,7 @@ import dayjs from 'dayjs'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
 import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
+import CollaborationGraphView from '../components/CollaborationGraphView'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
@@ -43,6 +45,8 @@ const CommandCenter: React.FC = () => {
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
   const [orchDailyTrend, setOrchDailyTrend] = useState<any>(null)
+  const [collabGraph, setCollabGraph] = useState<any>(null)
+  const [collabGraphLoading, setCollabGraphLoading] = useState(false)
   const [resolveOpen, setResolveOpen] = useState(false)
   const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
   const [eventDetail, setEventDetail] = useState<any>(null)
@@ -92,13 +96,34 @@ const CommandCenter: React.FC = () => {
     return () => clearInterval(id)
   }, [loadAll])
 
+  // Agent 协作关系图（独立加载，避免 loadAll 膨胀）
+  const loadCollabGraph = useCallback(async () => {
+    setCollabGraphLoading(true)
+    try {
+      const g = await agentsApi.getCollaborationGraph({ limit: 50 }).catch(() => null)
+      setCollabGraph(g)
+    } catch {
+      // silent
+    } finally {
+      setCollabGraphLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadCollabGraph()
+  }, [loadCollabGraph])
+
   // SSE 实时刷新：任一协作相关事件触发静默刷新
   useCollaborationSSE({
     enabled: true,
-    onEvent: useCallback(() => {
+    onEvent: useCallback((event: any) => {
       // 任一协作事件可能影响四块数据，静默全量刷新
       loadAll(true)
-    }, [loadAll]),
+      // Agent 直接消息事件刷新协作关系图
+      if ((event?.event_type || '') === 'agent.direct_message') {
+        loadCollabGraph()
+      }
+    }, [loadAll, loadCollabGraph]),
   })
 
   // 快捷操作：立即编排
@@ -577,6 +602,20 @@ const CommandCenter: React.FC = () => {
             </Card>
           </Col>
         </Row>
+
+        {/* Agent 协作关系图 */}
+        <Card
+          title={<Space><ShareAltOutlined /> Agent 协作关系图</Space>}
+          variant="borderless"
+          style={{ marginTop: 16 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>基于直接消息 · 节点=Agent · 边粗细=消息数</Text>}
+        >
+          <CollaborationGraphView
+            data={collabGraph}
+            size={380}
+            onNodeClick={(agentId) => navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)}
+          />
+        </Card>
       </Spin>
 
       {/* 解决冲突 Modal */}
