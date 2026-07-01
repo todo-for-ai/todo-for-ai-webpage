@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented, Dropdown } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -550,6 +550,19 @@ const CommandCenter: React.FC = () => {
                           <Text type="secondary"> · 耗时 {orchestratorStatus.last_run.duration_seconds}s</Text>
                           {orchestratorStatus.last_run.error_count > 0 && (
                             <Text type="danger"> · {orchestratorStatus.last_run.error_count} 错误</Text>
+                          )}
+                          {orchestratorStatus.last_run.trigger_run_ids && orchestratorStatus.last_run.trigger_run_ids.length > 0 && (
+                            <>
+                              <Text type="secondary"> · </Text>
+                              <Dropdown
+                                menu={{
+                                  items: orchestratorStatus.last_run.trigger_run_ids.map((rid: number) => ({ key: String(rid), label: `Run #${rid}` })),
+                                  onClick: ({ key }) => navigate(`/todo-for-ai/pages/workflows?run_id=${key}`),
+                                }}
+                              >
+                                <Tag color="purple" style={{ cursor: 'pointer' }}>查看运行 →</Tag>
+                              </Dropdown>
+                            </>
                           )}
                         </span>
                       }

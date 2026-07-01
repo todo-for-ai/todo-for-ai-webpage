@@ -418,6 +418,7 @@ export interface OrchestratorLastRun {
   stale_agents: number
   timed_out_steps: number
   triggers_fired: number
+  trigger_run_ids?: number[]
   conflicts_auto_resolved: number
   error_count: number
 }
