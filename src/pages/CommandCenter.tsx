@@ -299,14 +299,23 @@ const CommandCenter: React.FC = () => {
                     const sevColor = sev === 'CRITICAL' ? 'red' : sev === 'WARNING' ? 'orange' : 'blue'
                     const typeLabel = e.event_type === 'sandbox_violation' ? '沙盒违规'
                       : e.event_type === 'conflict' ? '冲突' : '审计'
+                    const hasRun = !!e.workflow_run_id
                     return (
-                      <List.Item>
+                      <List.Item
+                        style={{
+                          cursor: hasRun ? 'pointer' : 'default',
+                          padding: '6px 8px',
+                          borderRadius: 4,
+                        }}
+                        onClick={hasRun ? () => navigate(`/todo-for-ai/pages/workflows?run_id=${e.workflow_run_id}`) : undefined}
+                      >
                         <Space align="start" style={{ width: '100%' }}>
                           <Tag color={sevColor} style={{ marginTop: 2 }}>{sev}</Tag>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <Space size={[6, 4]} wrap>
                               <Tag>{typeLabel}</Tag>
                               {e.agent_id && <Tag>Agent#{e.agent_id}</Tag>}
+                              {hasRun && <Tag color="blue" style={{ cursor: 'pointer' }}>Run#{e.workflow_run_id} →</Tag>}
                             </Space>
                             <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
                               <Tooltip title={e.detail}>

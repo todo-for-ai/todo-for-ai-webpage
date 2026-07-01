@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Button, Card, Col, Row, Modal, Form, Input, InputNumber, Select, Space, Tag, Steps, Spin,
   message, Popconfirm, Descriptions, Empty, Tooltip, Badge, Table, List, Typography,
@@ -51,6 +52,8 @@ const Workflows: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false)
   const [runDetailOpen, setRunDetailOpen] = useState(false)
   const [selectedRun, setSelectedRun] = useState<WorkflowRunItem | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [autoOpenedRun, setAutoOpenedRun] = useState(false)
   const [consoleOpen, setConsoleOpen] = useState(false)
   const [consoleData, setConsoleData] = useState<WorkflowRunConsoleResult | null>(null)
   const [consoleLoading, setConsoleLoading] = useState(false)
@@ -124,6 +127,20 @@ const Workflows: React.FC = () => {
     loadData()
     loadRuns()
   }, [loadData, loadRuns])
+
+  // 从 URL ?run_id= 自动打开运行控制台（指挥中心安全事件/冲突跳转入口）
+  useEffect(() => {
+    const runId = searchParams.get('run_id')
+    if (!runId || autoOpenedRun) return
+    // 等 runs 首次加载完成后再触发，避免与初始加载竞态
+    if (runsLoading) return
+    setAutoOpenedRun(true)
+    openConsole(Number(runId))
+    const next = new URLSearchParams(searchParams)
+    next.delete('run_id')
+    setSearchParams(next, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, runsLoading, autoOpenedRun])
 
   // --- Create workflow ---
   const handleCreate = async () => {
