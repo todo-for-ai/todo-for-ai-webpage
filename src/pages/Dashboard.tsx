@@ -1176,6 +1176,16 @@ const Dashboard = () => {
                           <Tag color="blue">触发 {run.triggers_fired}</Tag>
                           <Tag color="green">解决 {run.conflicts_auto_resolved}</Tag>
                           <Tag>耗时 {run.duration_seconds}s</Tag>
+                          {run.trigger_run_ids && run.trigger_run_ids.length > 0 && (
+                            <Dropdown
+                              menu={{
+                                items: run.trigger_run_ids.map((rid: number) => ({ key: String(rid), label: `Run #${rid}` })),
+                                onClick: ({ key }) => navigate(`/todo-for-ai/pages/workflows?run_id=${key}`),
+                              }}
+                            >
+                              <Tag color="purple" style={{ cursor: 'pointer' }}>查看运行 →</Tag>
+                            </Dropdown>
+                          )}
                         </Space>
                       </div>
                     }
