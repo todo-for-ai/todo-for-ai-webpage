@@ -38,14 +38,14 @@ interface CollaborationGraphViewProps {
  * 节点按 messages 缩放半径；边为弦，按 count 缩放粗细与透明度。
  * 节点 hover 高亮其邻居。centerNodeId 指定的节点加粗描边突出。无第三方依赖。
  */
-const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
+const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGraphViewProps>(({
   data,
   size = 360,
   layout = 'circular',
   centerNodeId,
   filterKinds,
   onNodeClick,
-}) => {
+}, ref) => {
   const allNodes = data?.nodes || []
   const allEdges = data?.edges || []
   // 按 kind 过滤：仅保留选中 kind 的节点，边两端都必须在过滤集内
@@ -92,7 +92,7 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <svg width={size} height={size} style={{ maxWidth: '100%' }}>
+      <svg ref={ref} width={size} height={size} style={{ maxWidth: '100%' }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           {/* 边箭头：默认灰、高亮蓝 */}
           <marker id="cg-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
@@ -210,6 +210,8 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
       </div>
     </div>
   )
-}
+})
+
+CollaborationGraphView.displayName = 'CollaborationGraphView'
 
 export default CollaborationGraphView

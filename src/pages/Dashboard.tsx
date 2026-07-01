@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, Dropdown } from 'antd'
 import {
@@ -99,6 +99,7 @@ const Dashboard = () => {
   const [eventDetail, setEventDetail] = useState<any>(null)
   const [collabGraph, setCollabGraph] = useState<CollaborationGraph | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
+  const collabSvgRef = useRef<SVGSVGElement>(null)
   // 节点点击展开的协作明细 Modal
   const [collabDetail, setCollabDetail] = useState<{ agentId: number; name: string; list: any[]; loading: boolean } | null>(null)
 
@@ -403,6 +404,28 @@ const Dashboard = () => {
     URL.revokeObjectURL(url)
     message.success('协作关系图已导出为 CSV')
   }, [collabGraph, graphKinds])
+
+  // 导出协作关系图为 SVG 图片（保留可视化形态）
+  const exportCollabGraphSvg = useCallback(() => {
+    const svg = collabSvgRef.current
+    if (!svg) {
+      message.warning('暂无可导出的图形')
+      return
+    }
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    const text = new XMLSerializer().serializeToString(clone)
+    const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + text], { type: 'image/svg+xml;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.svg`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    message.success('协作关系图已导出为 SVG')
+  }, [])
 
   const loadOrchestratorStatus = useCallback(async () => {
     try {
@@ -801,12 +824,20 @@ const Dashboard = () => {
                 { value: 'external', label: '外部' },
               ]}
             />
-            <Button size="small" icon={<DownloadOutlined />} onClick={exportCollabGraph}>导出</Button>
+            <Dropdown menu={{
+              items: [
+                { key: 'csv', label: '导出 CSV', onClick: exportCollabGraph },
+                { key: 'svg', label: '导出 SVG', onClick: exportCollabGraphSvg },
+              ],
+            }}>
+              <Button size="small" icon={<DownloadOutlined />}>导出</Button>
+            </Dropdown>
           </Space>
         }
       >
         <Spin spinning={collabGraphLoading}>
           <CollaborationGraphView
+            ref={collabSvgRef}
             data={collabGraph}
             size={380}
             layout={graphLayout}
