@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm } from 'antd'
 import {
   ReloadOutlined,
@@ -24,6 +25,7 @@ const { Title, Text, Paragraph } = Typography
  */
 const CommandCenter: React.FC = () => {
   const { tn } = useTranslation()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [monitorData, setMonitorData] = useState<any>(null)
   const [conflictData, setConflictData] = useState<any>(null)
@@ -255,9 +257,12 @@ const CommandCenter: React.FC = () => {
                       style={{ marginTop: 12 }}
                       dataSource={monitorData.agents.slice(0, 6)}
                       renderItem={(a: any) => (
-                        <List.Item>
+                        <List.Item
+                          style={{ cursor: 'pointer', padding: '6px 8px', borderRadius: 4 }}
+                          onClick={() => navigate(`/todo-for-ai/pages/agents?agent_id=${a.id}`)}
+                        >
                           <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                            <Text ellipsis style={{ maxWidth: 160 }}>{a.name || `Agent#${a.id}`}</Text>
+                            <Text ellipsis style={{ maxWidth: 160, color: '#1890ff' }}>{a.name || `Agent#${a.id}`}</Text>
                             <Space size={4}>
                               <Tag color={a.status === 'active' ? 'green' : a.status === 'busy' ? 'orange' : 'default'}>
                                 {a.status || 'unknown'}

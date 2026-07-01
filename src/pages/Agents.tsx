@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import {
   Button,
@@ -268,6 +269,9 @@ const Agents: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const pendingAgentId = searchParams.get('agent_id')
+  const [autoOpened, setAutoOpened] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState<AgentStatus | 'all'>('all')
   const [reviewActionFilter, setReviewActionFilter] = useState<ReviewQueueAction>('all')
@@ -389,6 +393,21 @@ const Agents: React.FC = () => {
     loadNotifications()
     loadDashboardStats()
   }, [statusFilter])
+
+  // 从 URL ?agent_id= 自动打开对应 Agent 的 Drawer（指挥中心等外部跳转入口）
+  useEffect(() => {
+    if (!pendingAgentId || autoOpened || agents.length === 0) return
+    const target = agents.find((a) => String(a.id) === String(pendingAgentId))
+    if (target) {
+      setAutoOpened(true)
+      loadAssignments(target)
+      // 清除 URL 参数，避免刷新或返回时重复打开
+      const next = new URLSearchParams(searchParams)
+      next.delete('agent_id')
+      setSearchParams(next, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAgentId, agents, autoOpened])
 
   useEffect(() => {
     loadReviewQueue()
