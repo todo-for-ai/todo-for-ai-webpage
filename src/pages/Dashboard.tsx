@@ -25,6 +25,7 @@ import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
+import MiniTrendChart from '../components/MiniTrendChart'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
@@ -998,6 +999,29 @@ const Dashboard = () => {
                 <Tag color="green">累计解决冲突 {historyData.trend?.total_conflicts_resolved ?? 0}</Tag>
                 <Tag color={historyData.trend?.total_errors ? 'error' : 'default'}>累计错误 {historyData.trend?.total_errors ?? 0}</Tag>
               </Space>
+            </div>
+          )}
+          {/* 趋势折线图：按时间正序展示触发数/冲突解决/耗时 */}
+          {historyData && historyData.items && historyData.items.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              {(() => {
+                const chrono = [...historyData.items].reverse() // 后端按时间倒序，反转回正序绘制
+                const labels = chrono.map((r) => {
+                  const d = new Date(r.created_at)
+                  return isNaN(d.getTime()) ? '' : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+                })
+                return (
+                  <MiniTrendChart
+                    labels={labels}
+                    series={[
+                      { key: 'triggers', label: '触发数', color: '#1890ff', values: chrono.map((r) => r.triggers_fired || 0) },
+                      { key: 'resolved', label: '冲突解决', color: '#52c41a', values: chrono.map((r) => r.conflicts_auto_resolved || 0) },
+                      { key: 'duration', label: '耗时(s)', color: '#faad14', values: chrono.map((r) => Math.round(r.duration_seconds || 0)) },
+                    ]}
+                    height={140}
+                  />
+                )
+              })()}
             </div>
           )}
           {historyData && historyData.items && historyData.items.length > 0 ? (
