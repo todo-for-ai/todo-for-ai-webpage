@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Empty, Typography } from 'antd'
 import type { CollaborationGraph as GraphData } from '../api/agents'
 
@@ -81,6 +81,11 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const edges = filteredEdges
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
   const [hoveredEdge, setHoveredEdge] = useState<{ source: number; target: number } | null>(null)
+  // 拖拽：节点位置覆盖（用户手动调整）
+  const [dragOverride, setDragOverride] = useState<Record<number, { x: number; y: number }>>({})
+  const draggingRef = useRef<number | null>(null)
+  const dragMovedRef = useRef(false)
+  const svgWrapRef = useRef<HTMLDivElement | null>(null)
 
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
@@ -165,6 +170,35 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     return pos
   }, [nodes, edges, layout, size, cx, cy])
 
+  // 取节点位置：优先拖拽覆盖
+  const getPos = (id: number) => dragOverride[id] || nodePos.get(id) || { x: 0, y: 0 }
+
+  // 拖拽：将鼠标客户端坐标转为 svg 内坐标
+  const svgPoint = (clientX: number, clientY: number) => {
+    const svg = svgWrapRef.current?.querySelector('svg')
+    if (!svg) return { x: 0, y: 0 }
+    const pt = svg.createSVGPoint()
+    pt.x = clientX
+    pt.y = clientY
+    const ctm = svg.getScreenCTM()
+    if (!ctm) return { x: 0, y: 0 }
+    const p = pt.matrixTransform(ctm.inverse())
+    return { x: p.x, y: p.y }
+  }
+  const onNodeDragStart = (id: number) => {
+    draggingRef.current = id
+    dragMovedRef.current = false
+  }
+  const onSvgMouseMove = (e: React.MouseEvent) => {
+    if (draggingRef.current === null) return
+    dragMovedRef.current = true
+    const p = svgPoint(e.clientX, e.clientY)
+    setDragOverride((prev) => ({ ...prev, [draggingRef.current as number]: { x: p.x, y: p.y } }))
+  }
+  const onSvgMouseUp = () => {
+    draggingRef.current = null
+  }
+
   const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
   // 是否有任意悬停（节点或边）
   const anyHover = hoveredNode !== null || hoveredEdge !== null
@@ -185,8 +219,17 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <svg ref={ref} width={size} height={size} style={{ maxWidth: '100%' }} xmlns="http://www.w3.org/2000/svg">
+    <div ref={svgWrapRef} style={{ display: 'flex', justifyContent: 'center' }}>
+      <svg
+        ref={ref}
+        width={size}
+        height={size}
+        style={{ maxWidth: '100%' }}
+        xmlns="http://www.w3.org/2000/svg"
+        onMouseMove={onSvgMouseMove}
+        onMouseUp={onSvgMouseUp}
+        onMouseLeave={onSvgMouseUp}
+      >
         <defs>
           {/* 边箭头：默认灰、高亮蓝 */}
           <marker id="cg-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
@@ -198,8 +241,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         </defs>
         {/* 边 */}
         {edges.map((e, i) => {
-          const a = nodePos.get(e.source)
-          const b = nodePos.get(e.target)
+          const a = getPos(e.source)
+          const b = getPos(e.target)
           if (!a || !b) return null
           const w = 0.5 + 3.5 * (e.count / maxCount)
           const baseOpacity = 0.2 + 0.6 * (e.count / maxCount)
@@ -248,7 +291,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
 
         {/* 节点 */}
         {nodes.map((n) => {
-          const pos = nodePos.get(n.id)!
+          const pos = getPos(n.id)
           const isCenter = centerNodeId !== undefined && n.id === centerNodeId
           const r = nodeRadius(n) + (isCenter ? 3 : 0)
           const highlighted = nodeIsHighlighted(n.id)
@@ -261,10 +304,11 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             <g
               key={n.id}
               transform={`translate(${pos.x},${pos.y})`}
-              style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
+              style={{ cursor: 'grab' }}
               onMouseEnter={() => setHoveredNode(n.id)}
               onMouseLeave={() => setHoveredNode(null)}
-              onClick={onNodeClick ? () => onNodeClick(n.id) : undefined}
+              onMouseDown={(e) => { e.preventDefault(); onNodeDragStart(n.id) }}
+              onClick={onNodeClick ? () => { if (dragMovedRef.current) { dragMovedRef.current = false; return }; onNodeClick(n.id) } : undefined}
             >
               {/* 声誉环：外圈细环，颜色按 reputation */}
               {(() => {
