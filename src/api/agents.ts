@@ -1,4 +1,5 @@
 import { apiClient } from './client/index.js'
+import { getApiBaseUrl } from '../utils/apiConfig'
 import type { Task } from './tasks'
 
 export type AgentStatus = 'active' | 'paused' | 'offline' | 'disabled'
@@ -744,9 +745,23 @@ export class AgentsApi {
     return unwrapList<any>(response)
   }
 
-  async getSecurityEvents(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; page?: number; per_page?: number }): Promise<ListResult<SecurityEventItem>> {
+  async getSecurityEvents(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string; page?: number; per_page?: number }): Promise<ListResult<SecurityEventItem>> {
     const response = await apiClient.get(`/agents/security/events${buildQuery(params)}`)
     return unwrapList<SecurityEventItem>(response)
+  }
+
+  /** Export unified security events as CSV. Returns the CSV text.
+   *  Uses a raw fetch (not apiClient) because the client forces JSON parsing. */
+  async exportSecurityEvents(params?: { agent_id?: number; workflow_run_id?: number; event_type?: string; severity?: string; since?: string; until?: string }): Promise<string> {
+    const token = localStorage.getItem('access_token')
+    const url = `${getApiBaseUrl()}/agents/security/events/export${buildQuery(params)}`
+    const response = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!response.ok) {
+      throw new Error(`Export failed: HTTP ${response.status}`)
+    }
+    return await response.text()
   }
 
   async healthCheck(): Promise<{ stale_agents: number; stale_agent_ids: number[]; expired_leases: number; escalated_tasks: number; escalated_task_ids: number[] }> {

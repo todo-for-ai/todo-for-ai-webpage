@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -19,7 +19,9 @@ import {
   SafetyOutlined,
   WarningOutlined,
   HistoryOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons'
+import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
@@ -66,6 +68,9 @@ const Dashboard = () => {
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityFilter, setSecurityFilter] = useState<string>('')
+  const [securitySince, setSecuritySince] = useState<string>('')
+  const [securityUntil, setSecurityUntil] = useState<string>('')
+  const [exporting, setExporting] = useState(false)
   // Global orchestrator state
   const [orchestration, setOrchestration] = useState<OrchestrationResult | null>(null)
   const [orchestrationLoading, setOrchestrationLoading] = useState(false)
@@ -173,21 +178,30 @@ const Dashboard = () => {
     loadConflictData()
   }, [loadConflictData])
 
+  const buildSecurityParams = useCallback((filter?: string) => ({
+    per_page: 50,
+    event_type: filter || undefined,
+    since: securitySince || undefined,
+    until: securityUntil || undefined,
+  }), [securitySince, securityUntil])
+
   const loadSecurityEvents = useCallback(async (filter?: string) => {
     setSecurityLoading(true)
     try {
-      const result = await agentsApi.getSecurityEvents({ per_page: 50, event_type: filter || undefined })
+      const result = await agentsApi.getSecurityEvents(buildSecurityParams(filter))
       setSecurityEvents(result.items)
     } catch {
       // silent
     } finally {
       setSecurityLoading(false)
     }
-  }, [])
+  }, [buildSecurityParams])
 
   useEffect(() => {
     loadSecurityEvents()
   }, [loadSecurityEvents])
+
+  // 时间范围变化时重新加载（loadSecurityEvents 因依赖 buildSecurityParams 而重建，触发上面的 effect）
 
   // SSE-driven live refresh of the security event aggregation card
   const SECURITY_SSE_EVENTS = new Set([
@@ -200,11 +214,11 @@ const Dashboard = () => {
     onEvent: useCallback((event: any) => {
       const et = event.event_type || ''
       if (!SECURITY_SSE_EVENTS.has(et)) return
-      // Best-effort refresh, preserving the current filter
-      agentsApi.getSecurityEvents({ per_page: 50, event_type: securityFilter || undefined })
+      // Best-effort refresh, preserving the current filter and time range
+      agentsApi.getSecurityEvents(buildSecurityParams(securityFilter))
         .then((r) => setSecurityEvents(r.items))
         .catch(() => { /* silent: SSE refresh is best-effort */ })
-    }, [securityFilter]),
+    }, [securityFilter, buildSecurityParams]),
   })
 
   const runOrchestration = useCallback(async () => {
@@ -224,6 +238,28 @@ const Dashboard = () => {
       setOrchestrationLoading(false)
     }
   }, [securityFilter, loadSecurityEvents, loadConflictData])
+
+  // 导出当前筛选条件下的安全事件为 CSV
+  const exportSecurityEvents = useCallback(async () => {
+    setExporting(true)
+    try {
+      const csv = await agentsApi.exportSecurityEvents(buildSecurityParams(securityFilter || undefined))
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `security_events_${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      message.success('安全事件已导出为 CSV')
+    } catch {
+      message.error('导出安全事件失败')
+    } finally {
+      setExporting(false)
+    }
+  }, [buildSecurityParams, securityFilter])
 
   const loadOrchestratorStatus = useCallback(async () => {
     try {
@@ -769,10 +805,10 @@ const Dashboard = () => {
         title={<Space><SafetyOutlined /> 安全审计事件聚合</Space>}
         style={{ marginBottom: 24 }}
         extra={
-          <Space>
+          <Space wrap size={[8, 4]}>
             <Select
               size="small"
-              style={{ width: 150 }}
+              style={{ width: 130 }}
               allowClear
               placeholder="事件类型"
               value={securityFilter || undefined}
@@ -783,6 +819,16 @@ const Dashboard = () => {
                 { value: 'audit', label: '审计日志' },
               ]}
             />
+            <DatePicker.RangePicker
+              size="small"
+              showTime
+              style={{ width: 340 }}
+              onChange={(range) => {
+                setSecuritySince(range?.[0]?.toISOString() || '')
+                setSecurityUntil(range?.[1]?.toISOString() || '')
+              }}
+            />
+            <Button size="small" icon={<DownloadOutlined />} onClick={exportSecurityEvents} loading={exporting}>导出</Button>
             <Button size="small" icon={<ReloadOutlined />} onClick={() => loadSecurityEvents(securityFilter || undefined)} loading={securityLoading} />
           </Space>
         }
