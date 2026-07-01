@@ -277,6 +277,26 @@ const Dashboard = () => {
     const topPair = { source: nodes.find((n) => n.id === top.source)?.name, target: nodes.find((n) => n.id === top.target)?.name, count: top.count }
     return { nodeCount: nodes.length, edgeCount: edges.length, topPair }
   }, [collabGraph, graphKinds])
+
+  // 协作明细 Modal 内嵌迷你子图：以选中 Agent 为中心
+  const collabDetailGraph = useMemo<CollaborationGraph | null>(() => {
+    if (!collabDetail || collabDetail.list.length === 0) return null
+    const center = collabDetail
+    const nodes = [
+      { id: center.agentId, name: center.name, kind: undefined, messages: 0 },
+      ...collabDetail.list.map((c: any) => ({ id: c.agent_id, name: c.name, kind: undefined, messages: c.total })),
+    ]
+    nodes[0].messages = collabDetail.list.reduce((s: number, c: any) => s + (c.total || 0), 0)
+    const edges = collabDetail.list.map((c: any) => ({
+      source: Math.min(center.agentId, c.agent_id),
+      target: Math.max(center.agentId, c.agent_id),
+      count: c.total,
+      ...(center.agentId < c.agent_id
+        ? { source_to_target: c.sent, target_to_source: c.received }
+        : { source_to_target: c.received, target_to_source: c.sent }),
+    }))
+    return { nodes, edges, total_edges: edges.length }
+  }, [collabDetail])
   const loadCollabGraph = useCallback(async (window: string) => {
     setCollabGraphLoading(true)
     try {
@@ -1497,22 +1517,34 @@ const Dashboard = () => {
       >
         <Spin spinning={collabDetail?.loading}>
           {collabDetail && collabDetail.list.length > 0 ? (
-            <List
-              size="small"
-              dataSource={collabDetail.list}
-              renderItem={(c: any) => (
-                <List.Item>
-                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                    <Text style={{ color: '#1890ff' }}>{c.name}</Text>
-                    <Space size={4}>
-                      <Tag>发 {c.sent}</Tag>
-                      <Tag>收 {c.received}</Tag>
-                      <Tag color="blue">合计 {c.total}</Tag>
-                    </Space>
-                  </Space>
-                </List.Item>
+            <>
+              {collabDetailGraph && (
+                <div style={{ marginBottom: 12 }}>
+                  <CollaborationGraphView
+                    data={collabDetailGraph}
+                    size={260}
+                    layout="grid"
+                    centerNodeId={collabDetail.agentId}
+                  />
+                </div>
               )}
-            />
+              <List
+                size="small"
+                dataSource={collabDetail.list}
+                renderItem={(c: any) => (
+                  <List.Item>
+                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#1890ff' }}>{c.name}</Text>
+                      <Space size={4}>
+                        <Tag>发 {c.sent}</Tag>
+                        <Tag>收 {c.received}</Tag>
+                        <Tag color="blue">合计 {c.total}</Tag>
+                      </Space>
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </>
           ) : (
             <Text type="secondary">暂无协作伙伴记录</Text>
           )}
