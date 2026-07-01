@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -69,6 +69,7 @@ const Dashboard = () => {
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityFilter, setSecurityFilter] = useState<string>('')
+  const [securitySeverity, setSecuritySeverity] = useState<string>('')
   const [securitySince, setSecuritySince] = useState<string>('')
   const [securityUntil, setSecurityUntil] = useState<string>('')
   const [exporting, setExporting] = useState(false)
@@ -182,9 +183,10 @@ const Dashboard = () => {
   const buildSecurityParams = useCallback((filter?: string) => ({
     per_page: 50,
     event_type: filter || undefined,
+    severity: securitySeverity || undefined,
     since: securitySince || undefined,
     until: securityUntil || undefined,
-  }), [securitySince, securityUntil])
+  }), [securitySeverity, securitySince, securityUntil])
 
   const loadSecurityEvents = useCallback(async (filter?: string) => {
     setSecurityLoading(true)
@@ -807,6 +809,21 @@ const Dashboard = () => {
         style={{ marginBottom: 24 }}
         extra={
           <Space wrap size={[8, 4]}>
+            <Segmented
+              size="small"
+              value={securitySeverity || 'all'}
+              onChange={(v) => {
+                const val = v === 'all' ? '' : String(v)
+                setSecuritySeverity(val)
+                // loadSecurityEvents 因依赖 buildSecurityParams(severity) 变化而重建，触发 effect 自动加载
+              }}
+              options={[
+                { value: 'all', label: '全部' },
+                { value: 'CRITICAL', label: '高危' },
+                { value: 'WARNING', label: '警告' },
+                { value: 'INFO', label: '普通' },
+              ]}
+            />
             <Select
               size="small"
               style={{ width: 130 }}
