@@ -72,6 +72,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const nodes = (kindSet ? kindNodes : allNodes).filter((n) => usedIds.has(n.id))
   const edges = filteredEdges
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
+  const [hoveredEdge, setHoveredEdge] = useState<{ source: number; target: number } | null>(null)
 
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
@@ -101,12 +102,23 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   }
 
   const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
-  // 边是否与悬停节点相关
+  // 是否有任意悬停（节点或边）
+  const anyHover = hoveredNode !== null || hoveredEdge !== null
+  // 边是否高亮：悬停节点相关，或该边自身被悬停
   const edgeIsHighlighted = (e: { source: number; target: number }) =>
-    hoveredNode === null || e.source === hoveredNode || e.target === hoveredNode
-  const nodeIsHighlighted = (id: number) =>
-    hoveredNode === null || id === hoveredNode ||
-    edges.some((e) => (e.source === hoveredNode && e.target === id) || (e.target === hoveredNode && e.source === id))
+    (hoveredNode === null || e.source === hoveredNode || e.target === hoveredNode) &&
+    (hoveredEdge === null || (hoveredEdge.source === e.source && hoveredEdge.target === e.target))
+  // 节点是否高亮：悬停节点自身/邻居，或悬停边的端点
+  const nodeIsHighlighted = (id: number) => {
+    if (hoveredNode !== null) {
+      return id === hoveredNode ||
+        edges.some((e) => (e.source === hoveredNode && e.target === id) || (e.target === hoveredNode && e.source === id))
+    }
+    if (hoveredEdge !== null) {
+      return id === hoveredEdge.source || id === hoveredEdge.target
+    }
+    return true
+  }
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -158,9 +170,12 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               y2={oneWay ? by : b.y - uy * rb}
               stroke={stroke}
               strokeWidth={highlighted ? w + 1 : w}
-              strokeOpacity={hoveredNode === null ? baseOpacity : (highlighted ? 0.9 : 0.08)}
+              strokeOpacity={anyHover ? (highlighted ? 0.9 : 0.08) : baseOpacity}
               markerEnd={oneWay ? arrow : undefined}
               markerStart={(!oneWay && fwd && rev) ? arrow : undefined}
+              onMouseEnter={() => setHoveredEdge({ source: e.source, target: e.target })}
+              onMouseLeave={() => setHoveredEdge(null)}
+              style={{ cursor: 'pointer' }}
             >
               <title>{tooltip}</title>
             </line>
@@ -192,7 +207,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                 fill={highlighted ? '#1890ff' : kindColor(n.kind)}
                 stroke={isCenter ? '#faad14' : '#fff'}
                 strokeWidth={isCenter ? 3 : 1.5}
-                fillOpacity={dimmed ? 0.2 : (hoveredNode === null ? 1 : (highlighted ? 1 : 0.4))}
+                fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.4) : 1)}
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}): ${n.messages} 条消息`}</title>
               </circle>
