@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Empty, Typography } from 'antd'
 import type { CollaborationGraph as GraphData } from '../api/agents'
 
@@ -21,8 +21,8 @@ interface CollaborationGraphViewProps {
   data: GraphData | null
   /** 画布宽度/高度（正方形，默认 360） */
   size?: number
-  /** 布局：circular 环形（默认）| grid 网格 */
-  layout?: 'circular' | 'grid'
+  /** 布局：circular 环形（默认）| grid 网格 | force 力导向 */
+  layout?: 'circular' | 'grid' | 'force'
   /** 中心节点 ID：该节点用加粗描边+更大半径突出（用于 Agent 详情子图） */
   centerNodeId?: number
   /** 仅显示这些 kind 的节点及其互连边（为空/未传则显示全部） */
@@ -84,22 +84,78 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const maxCount = Math.max(1, ...edges.map((e) => e.count))
 
   // 节点位置
-  const nodePos = new Map<number, { x: number; y: number }>()
-  if (layout === 'grid') {
-    const cols = Math.ceil(Math.sqrt(nodes.length))
-    const cell = (size - 40) / Math.max(cols, 1)
-    nodes.forEach((n, i) => {
-      const row = Math.floor(i / cols)
-      const col = i % cols
-      nodePos.set(n.id, { x: 20 + cell * (col + 0.5), y: 20 + cell * (row + 0.5) })
-    })
-  } else {
-    const radius = size / 2 - 40 // 留出标签空间
-    nodes.forEach((n, i) => {
-      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
-      nodePos.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) })
-    })
-  }
+  const nodePos = useMemo(() => {
+    const pos = new Map<number, { x: number; y: number }>()
+    if (layout === 'grid') {
+      const cols = Math.ceil(Math.sqrt(nodes.length))
+      const cell = (size - 40) / Math.max(cols, 1)
+      nodes.forEach((n, i) => {
+        const row = Math.floor(i / cols)
+        const col = i % cols
+        pos.set(n.id, { x: 20 + cell * (col + 0.5), y: 20 + cell * (row + 0.5) })
+      })
+    } else if (layout === 'force') {
+      // 简化力导向：初始圆周，迭代斥力（节点间）+ 吸引力（边），阻尼衰减
+      const radius = size / 2 - 40
+      const coords = nodes.map((n, i) => {
+        const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1) - Math.PI / 2
+        return { id: n.id, x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), vx: 0, vy: 0 }
+      })
+      const idxMap = new Map(coords.map((c, i) => [c.id, i]))
+      const iterations = 120
+      const k = size / 10 // 理想距离尺度
+      for (let it = 0; it < iterations; it++) {
+        // 斥力
+        for (let i = 0; i < coords.length; i++) {
+          for (let j = i + 1; j < coords.length; j++) {
+            let dx = coords[i].x - coords[j].x
+            let dy = coords[i].y - coords[j].y
+            let d = Math.hypot(dx, dy)
+            if (d < 1) { d = 1; dx = Math.random() - 0.5; dy = Math.random() - 0.5 }
+            const f = (k * k) / (d * d)
+            const ux = dx / d
+            const uy = dy / d
+            coords[i].vx += ux * f
+            coords[i].vy += uy * f
+            coords[j].vx -= ux * f
+            coords[j].vy -= uy * f
+          }
+        }
+        // 吸引力（边）
+        edges.forEach((e) => {
+          const ai = idxMap.get(e.source)
+          const bi = idxMap.get(e.target)
+          if (ai === undefined || bi === undefined) return
+          const dx = coords[bi].x - coords[ai].x
+          const dy = coords[bi].y - coords[ai].y
+          const d = Math.max(1, Math.hypot(dx, dy))
+          const f = (d * d) / k
+          const ux = dx / d
+          const uy = dy / d
+          coords[ai].vx += ux * f
+          coords[ai].vy += uy * f
+          coords[bi].vx -= ux * f
+          coords[bi].vy -= uy * f
+        })
+        // 应用速度 + 中心引力 + 阻尼
+        const damping = 0.85
+        coords.forEach((c) => {
+          c.vx = (c.vx + (cx - c.x) * 0.01) * damping
+          c.vy = (c.vy + (cy - c.y) * 0.01) * damping
+          c.x += Math.max(-12, Math.min(12, c.vx))
+          c.y += Math.max(-12, Math.min(12, c.vy))
+        })
+      }
+      coords.forEach((c) => pos.set(c.id, { x: c.x, y: c.y }))
+    } else {
+      const radius = size / 2 - 40 // 留出标签空间
+      nodes.forEach((n, i) => {
+        const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
+        pos.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) })
+      })
+    }
+    return pos
+  }, [nodes, edges, layout, size, cx, cy])
 
   const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
   // 是否有任意悬停（节点或边）

@@ -261,7 +261,7 @@ const Dashboard = () => {
 
   // Agent 协作关系图
   const [graphWindow, setGraphWindow] = useState<string>('30')
-  const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
+  const [graphLayout, setGraphLayout] = useState<'circular' | 'grid' | 'force'>('circular')
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
@@ -855,10 +855,11 @@ const Dashboard = () => {
             <Segmented
               size="small"
               value={graphLayout}
-              onChange={(v) => setGraphLayout(v as 'circular' | 'grid')}
+              onChange={(v) => setGraphLayout(v as 'circular' | 'grid' | 'force')}
               options={[
                 { value: 'circular', label: '环形' },
                 { value: 'grid', label: '网格' },
+                { value: 'force', label: '力导向' },
               ]}
             />
             <Segmented
