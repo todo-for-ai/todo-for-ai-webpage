@@ -272,6 +272,7 @@ const Agents: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const pendingAgentId = searchParams.get('agent_id')
   const [autoOpened, setAutoOpened] = useState(false)
+  const [autoOpenedConflicts, setAutoOpenedConflicts] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState<AgentStatus | 'all'>('all')
   const [reviewActionFilter, setReviewActionFilter] = useState<ReviewQueueAction>('all')
@@ -408,6 +409,17 @@ const Agents: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAgentId, agents, autoOpened])
+
+  // 从 URL ?conflicts=1 自动打开冲突管理 Drawer（指挥中心冲突跳转入口）
+  useEffect(() => {
+    if (searchParams.get('conflicts') !== '1' || autoOpenedConflicts) return
+    setAutoOpenedConflicts(true)
+    openConflicts()
+    const next = new URLSearchParams(searchParams)
+    next.delete('conflicts')
+    setSearchParams(next, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, autoOpenedConflicts])
 
   useEffect(() => {
     loadReviewQueue()

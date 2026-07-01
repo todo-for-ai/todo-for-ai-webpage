@@ -32,6 +32,7 @@ const CommandCenter: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [monitorData, setMonitorData] = useState<any>(null)
   const [conflictData, setConflictData] = useState<any>(null)
+  const [conflictList, setConflictList] = useState<any[]>([])
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityTrend, setSecurityTrend] = useState<any>(null)
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
@@ -42,9 +43,10 @@ const CommandCenter: React.FC = () => {
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [monitor, conflicts, events, trend, byAgent, status] = await Promise.all([
+      const [monitor, conflicts, conflictList, events, trend, byAgent, status] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
+        agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
         agentsApi.getSecurityEvents({ per_page: 10 }).catch(() => ({ items: [] })),
         agentsApi.getSecurityEventsDailyTrend({}).catch(() => null),
         agentsApi.getSecurityEventsByAgent({}).catch(() => null),
@@ -52,6 +54,7 @@ const CommandCenter: React.FC = () => {
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
+      setConflictList(conflictList?.items || [])
       setSecurityEvents(events?.items || [])
       setSecurityTrend(trend)
       setSecurityByAgent(byAgent)
@@ -442,6 +445,43 @@ const CommandCenter: React.FC = () => {
                       ) : null)}
                       {Object.keys(conflictData.by_severity || {}).length === 0 && <Text type="secondary">无</Text>}
                     </Space>
+                  </div>
+                  {/* 活跃冲突列表 */}
+                  {conflictList.length > 0 ? (
+                    <List
+                      size="small"
+                      style={{ marginTop: 12 }}
+                      dataSource={conflictList.slice(0, 5)}
+                      renderItem={(c: any) => {
+                        const sev = c.severity || 'INFO'
+                        const sevColor = sev === 'CRITICAL' ? 'red' : sev === 'WARNING' ? 'orange' : 'blue'
+                        return (
+                          <List.Item>
+                            <Space align="start" style={{ width: '100%' }}>
+                              <Tag color={sevColor} style={{ marginTop: 2 }}>{sev}</Tag>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <Text ellipsis style={{ display: 'block', fontSize: 12 }}>
+                                  {c.title || c.conflict_type || `冲突 #${c.id}`}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 11 }}>#{c.id} · {c.status}</Text>
+                              </div>
+                            </Space>
+                          </List.Item>
+                        )
+                      }}
+                    />
+                  ) : (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无活跃冲突" style={{ marginTop: 12 }} />
+                  )}
+                  <div style={{ marginTop: 8 }}>
+                    <Button
+                      size="small"
+                      type="link"
+                      style={{ padding: 0 }}
+                      onClick={() => navigate('/todo-for-ai/pages/agents?conflicts=1')}
+                    >
+                      查看全部 / 管理 →
+                    </Button>
                   </div>
                 </>
               ) : (
