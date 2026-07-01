@@ -32,6 +32,7 @@ const CommandCenter: React.FC = () => {
   const [conflictData, setConflictData] = useState<any>(null)
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityTrend, setSecurityTrend] = useState<any>(null)
+  const [securityByAgent, setSecurityByAgent] = useState<any>(null)
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
   const [lastRefresh, setLastRefresh] = useState<string>('')
   const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
@@ -39,17 +40,19 @@ const CommandCenter: React.FC = () => {
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [monitor, conflicts, events, trend, status] = await Promise.all([
+      const [monitor, conflicts, events, trend, byAgent, status] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.getSecurityEvents({ per_page: 10 }).catch(() => ({ items: [] })),
         agentsApi.getSecurityEventsDailyTrend({}).catch(() => null),
+        agentsApi.getSecurityEventsByAgent({}).catch(() => null),
         agentsApi.getOrchestratorStatus().catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
       setSecurityEvents(events?.items || [])
       setSecurityTrend(trend)
+      setSecurityByAgent(byAgent)
       setOrchestratorStatus(status)
       setLastRefresh(new Date().toLocaleTimeString('zh-CN'))
     } catch {
@@ -305,6 +308,34 @@ const CommandCenter: React.FC = () => {
                       { key: 'audit', label: '审计', color: '#1890ff', values: securityTrend.days.map((d: any) => d.audit) },
                     ]}
                     height={110}
+                  />
+                </div>
+              )}
+              {/* 按 Agent 排行 */}
+              {securityByAgent && securityByAgent.agents && securityByAgent.agents.length > 0 && (
+                <div style={{ marginBottom: 10 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>按 Agent 事件数排行：</Text>
+                  <List
+                    size="small"
+                    style={{ marginTop: 4 }}
+                    dataSource={securityByAgent.agents.slice(0, 5)}
+                    renderItem={(a: any) => (
+                      <List.Item style={{ padding: '4px 0' }}>
+                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                          <Text
+                            ellipsis
+                            style={{ maxWidth: 130, color: a.agent_id ? '#1890ff' : undefined, cursor: a.agent_id ? 'pointer' : 'default' }}
+                            onClick={a.agent_id ? () => navigate(`/todo-for-ai/pages/agents?agent_id=${a.agent_id}`) : undefined}
+                          >
+                            {a.name || (a.agent_id ? `Agent#${a.agent_id}` : '(无 Agent)')}
+                          </Text>
+                          <Space size={4} wrap>
+                            <Tag>合计 {a.total}</Tag>
+                            {a.CRITICAL > 0 && <Tag color="red">高危 {a.CRITICAL}</Tag>}
+                          </Space>
+                        </Space>
+                      </List.Item>
+                    )}
                   />
                 </div>
               )}
