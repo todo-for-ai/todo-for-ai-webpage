@@ -409,6 +409,25 @@ export interface AgentCollaboratorsResult {
   total_partners: number
 }
 
+export interface CollaborationGraphNode {
+  id: number
+  name: string
+  kind?: string | null
+  messages: number
+}
+
+export interface CollaborationGraphEdge {
+  source: number
+  target: number
+  count: number
+}
+
+export interface CollaborationGraph {
+  nodes: CollaborationGraphNode[]
+  edges: CollaborationGraphEdge[]
+  total_edges: number
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -968,6 +987,10 @@ export class AgentsApi {
 
   async getAgentCollaborators(agentId: number, params?: { limit?: number }): Promise<AgentCollaboratorsResult> {
     return unwrapData<AgentCollaboratorsResult>(await apiClient.get(`/agents/${agentId}/collaborators${buildQuery(params)}`))
+  }
+
+  async getCollaborationGraph(params?: { limit?: number }): Promise<CollaborationGraph> {
+    return unwrapData<CollaborationGraph>(await apiClient.get(`/agents/collaboration-graph${buildQuery(params)}`))
   }
 
   // Workflow Templates

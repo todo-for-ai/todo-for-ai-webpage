@@ -23,15 +23,17 @@ import {
   DownloadOutlined,
   DownOutlined,
   LineChartOutlined,
+  ShareAltOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
 import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
+import CollaborationGraphView from '../components/CollaborationGraphView'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
@@ -95,6 +97,8 @@ const Dashboard = () => {
   const [historyFilter, setHistoryFilter] = useState<string>('')
   const [orchDailyTrend, setOrchDailyTrend] = useState<OrchestratorDailyTrend | null>(null)
   const [eventDetail, setEventDetail] = useState<any>(null)
+  const [collabGraph, setCollabGraph] = useState<CollaborationGraph | null>(null)
+  const [collabGraphLoading, setCollabGraphLoading] = useState(false)
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -251,6 +255,23 @@ const Dashboard = () => {
     loadUnifiedTrend(trendWindow, trendSeverity, trendEventType)
   }, [loadUnifiedTrend, trendWindow, trendSeverity, trendEventType])
 
+  // Agent 协作关系图
+  const loadCollabGraph = useCallback(async () => {
+    setCollabGraphLoading(true)
+    try {
+      const g = await agentsApi.getCollaborationGraph({ limit: 50 }).catch(() => null)
+      setCollabGraph(g)
+    } catch {
+      // silent
+    } finally {
+      setCollabGraphLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadCollabGraph()
+  }, [loadCollabGraph])
+
   // 时间范围变化时重新加载（loadSecurityEvents 因依赖 buildSecurityParams 而重建，触发上面的 effect）
 
   // SSE-driven live refresh of the security event aggregation card
@@ -263,6 +284,11 @@ const Dashboard = () => {
     enabled: true,
     onEvent: useCallback((event: any) => {
       const et = event.event_type || ''
+      // Agent 直接消息事件刷新协作关系图
+      if (et === 'agent.direct_message') {
+        loadCollabGraph()
+        return
+      }
       if (!SECURITY_SSE_EVENTS.has(et)) return
       // Best-effort refresh, preserving the current filter and time range
       const params = buildSecurityParams(securityFilter)
@@ -281,7 +307,7 @@ const Dashboard = () => {
       if (et === 'conflicts_detected' || et === 'conflict_resolved' || et === 'conflicts_auto_resolved') {
         loadUnifiedTrend(trendWindow, trendSeverity, trendEventType)
       }
-    }, [securityFilter, buildSecurityParams, loadUnifiedTrend, trendWindow, trendSeverity, trendEventType]),
+    }, [securityFilter, buildSecurityParams, loadUnifiedTrend, trendWindow, trendSeverity, trendEventType, loadCollabGraph]),
   })
 
   const runOrchestration = useCallback(async () => {
@@ -680,6 +706,21 @@ const Dashboard = () => {
           ) : (
             <Empty description="暂无协作数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
+        </Spin>
+      </Card>
+
+      {/* Agent 协作关系图 */}
+      <Card
+        title={<Space><ShareAltOutlined /> Agent 协作关系图</Space>}
+        style={{ marginBottom: 24 }}
+        extra={<Text type="secondary" style={{ fontSize: 12 }}>基于直接消息 · 节点=Agent · 边粗细=消息数</Text>}
+      >
+        <Spin spinning={collabGraphLoading}>
+          <CollaborationGraphView
+            data={collabGraph}
+            size={380}
+            onNodeClick={(agentId) => navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)}
+          />
         </Spin>
       </Card>
 
