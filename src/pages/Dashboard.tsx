@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -18,9 +18,10 @@ import {
   CheckCircleOutlined,
   SafetyOutlined,
   WarningOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
@@ -69,6 +70,11 @@ const Dashboard = () => {
   const [orchestration, setOrchestration] = useState<OrchestrationResult | null>(null)
   const [orchestrationLoading, setOrchestrationLoading] = useState(false)
   const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
+  // Orchestrator history
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [historyData, setHistoryData] = useState<OrchestratorHistoryResult | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyFilter, setHistoryFilter] = useState<string>('')
 
   const agentCollaboration = stats?.agent_collaboration
   const reviewOrExpiredAssignments =
@@ -231,6 +237,27 @@ const Dashboard = () => {
   useEffect(() => {
     loadOrchestratorStatus()
   }, [loadOrchestratorStatus])
+
+  // 加载编排历史
+  const loadOrchestratorHistory = useCallback(async (filter?: string) => {
+    setHistoryLoading(true)
+    try {
+      const result = await agentsApi.listOrchestratorHistory({
+        limit: 30,
+        ...(filter ? { triggered_by: filter } : {}),
+      })
+      setHistoryData(result)
+    } catch {
+      message.error('加载编排历史失败')
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
+
+  const openHistory = useCallback(() => {
+    setHistoryOpen(true)
+    loadOrchestratorHistory(historyFilter)
+  }, [loadOrchestratorHistory, historyFilter])
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
@@ -816,15 +843,20 @@ const Dashboard = () => {
         }
         style={{ marginBottom: 24 }}
         extra={
-          <Popconfirm
-            title="立即执行全局编排？"
-            description="将依次执行：健康检查、工作流超时、触发器触发、冲突自动解决。"
-            onConfirm={runOrchestration}
-          >
-            <Button type="primary" size="small" icon={<ThunderboltOutlined />} loading={orchestrationLoading}>
-              立即编排
+          <Space>
+            <Button size="small" icon={<HistoryOutlined />} onClick={openHistory}>
+              历史
             </Button>
-          </Popconfirm>
+            <Popconfirm
+              title="立即执行全局编排？"
+              description="将依次执行：健康检查、工作流超时、触发器触发、冲突自动解决。"
+              onConfirm={runOrchestration}
+            >
+              <Button type="primary" size="small" icon={<ThunderboltOutlined />} loading={orchestrationLoading}>
+                立即编排
+              </Button>
+            </Popconfirm>
+          </Space>
         }
       >
         {orchestration ? (
@@ -881,6 +913,86 @@ const Dashboard = () => {
           />
         )}
       </Card>
+
+      {/* 编排运行历史 */}
+      <Modal
+        title="编排运行历史"
+        open={historyOpen}
+        onCancel={() => setHistoryOpen(false)}
+        footer={null}
+        width={760}
+      >
+        <Spin spinning={historyLoading}>
+          <div style={{ marginBottom: 12 }}>
+            <Space wrap size={[8, 8]}>
+              <Select
+                size="small"
+                style={{ width: 140 }}
+                placeholder="按触发来源筛选"
+                value={historyFilter || undefined}
+                allowClear
+                onChange={(v) => {
+                  setHistoryFilter(v || '')
+                  loadOrchestratorHistory(v || '')
+                }}
+                options={[
+                  { value: 'manual', label: '手动' },
+                  { value: 'scheduler', label: '调度器' },
+                ]}
+              />
+              <Button size="small" onClick={() => loadOrchestratorHistory(historyFilter)}>刷新</Button>
+            </Space>
+          </div>
+          {historyData && (
+            <div style={{ marginBottom: 12 }}>
+              <Space wrap size={[8, 4]}>
+                <Tag color="blue">共 {historyData.trend?.total_runs ?? 0} 次</Tag>
+                <Tag>均耗时 {historyData.trend?.avg_duration ?? 0}s</Tag>
+                <Tag color="purple">累计触发 {historyData.trend?.total_triggers_fired ?? 0}</Tag>
+                <Tag color="green">累计解决冲突 {historyData.trend?.total_conflicts_resolved ?? 0}</Tag>
+                <Tag color={historyData.trend?.total_errors ? 'error' : 'default'}>累计错误 {historyData.trend?.total_errors ?? 0}</Tag>
+              </Space>
+            </div>
+          )}
+          {historyData && historyData.items && historyData.items.length > 0 ? (
+            <List
+              size="small"
+              dataSource={historyData.items}
+              renderItem={(run) => (
+                <List.Item>
+                  <List.Item.Meta
+                    title={
+                      <Space size={[6, 4]}>
+                        <Tag color={run.triggered_by === 'scheduler' ? 'processing' : 'blue'}>
+                          {run.triggered_by === 'scheduler' ? '调度器' : '手动'}
+                        </Tag>
+                        <Text style={{ fontSize: 12 }}>{run.created_at}</Text>
+                        {run.error_count > 0 && <Tag color="error">⚠ {run.error_count} 错误</Tag>}
+                      </Space>
+                    }
+                    description={
+                      <div style={{ fontSize: 12 }}>
+                        <div>{run.summary}</div>
+                        <Space size={[4, 4]} style={{ marginTop: 4 }}>
+                          <Tag>离线 {run.stale_agents}</Tag>
+                          <Tag>过期 {run.expired_leases}</Tag>
+                          <Tag>升级 {run.escalated_tasks}</Tag>
+                          <Tag>超时 {run.timed_out_steps}</Tag>
+                          <Tag color="blue">触发 {run.triggers_fired}</Tag>
+                          <Tag color="green">解决 {run.conflicts_auto_resolved}</Tag>
+                          <Tag>耗时 {run.duration_seconds}s</Tag>
+                        </Space>
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Empty description="暂无编排历史记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
+        </Spin>
+      </Modal>
 
       {/* 最近项目和任务 */}
       <Row gutter={[16, 16]}>

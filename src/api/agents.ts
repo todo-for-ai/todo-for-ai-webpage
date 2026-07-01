@@ -392,6 +392,40 @@ export interface OrchestratorStatus {
   last_run: OrchestratorLastRun | null
 }
 
+export interface OrchestrationRunItem {
+  id: number
+  owner_id: number
+  triggered_by: string
+  stale_agents: number
+  expired_leases: number
+  escalated_tasks: number
+  timed_out_steps: number
+  triggers_fired: number
+  trigger_run_ids: number[]
+  conflicts_detected: number
+  conflicts_auto_resolved: number
+  conflicts_skipped: number
+  error_count: number
+  error_details: string[]
+  duration_seconds: number
+  summary: string
+  created_at: string
+}
+
+export interface OrchestratorHistoryResult {
+  items: OrchestrationRunItem[]
+  count: number
+  trend: {
+    total_runs: number
+    manual_runs: number
+    scheduler_runs: number
+    avg_duration: number
+    total_errors: number
+    total_conflicts_resolved: number
+    total_triggers_fired: number
+  }
+}
+
 export interface WorkflowRunConsoleStep {
   step_run: WorkflowStepRunItem
   effective_params: Record<string, unknown>
@@ -1204,6 +1238,11 @@ export class AgentsApi {
 
   async getOrchestratorStatus(): Promise<OrchestratorStatus> {
     return unwrapData<OrchestratorStatus>(await apiClient.get('/agents/maintenance/orchestrator/status'))
+  }
+
+  async listOrchestratorHistory(params?: { limit?: number; triggered_by?: string }): Promise<OrchestratorHistoryResult> {
+    const response = await apiClient.get(`/agents/maintenance/orchestrator/history${buildQuery(params)}`)
+    return unwrapData<OrchestratorHistoryResult>(response)
   }
 }
 
