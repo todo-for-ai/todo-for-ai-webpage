@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, Segmented, Dropdown } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, InputNumber, Segmented, Dropdown } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -55,19 +55,28 @@ const CommandCenter: React.FC = () => {
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid'>('circular')
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
+  const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
 
-  // 协作图摘要（反映 kind 筛选）
+  // 协作图摘要（反映 kind 筛选 + minCount）
   const collabSummary = useMemo(() => {
     if (!collabGraph) return null
     const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
-    const nodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
-    const visibleIds = new Set(nodes.map((n: any) => n.id))
-    const edges = kindSet ? collabGraph.edges.filter((e: any) => visibleIds.has(e.source) && visibleIds.has(e.target)) : collabGraph.edges
+    const kindNodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const kindIds = new Set(kindNodes.map((n: any) => n.id))
+    const minC = graphMinCount && graphMinCount > 0 ? graphMinCount : 0
+    const edges = collabGraph.edges.filter((e: any) => {
+      if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
+      if (minC && e.count < minC) return false
+      return true
+    })
+    const usedIds = new Set<number>()
+    edges.forEach((e: any) => { usedIds.add(e.source); usedIds.add(e.target) })
+    const nodes = kindNodes.filter((n: any) => usedIds.has(n.id))
     if (edges.length === 0) return { nodeCount: nodes.length, edgeCount: 0, topPair: null }
     const top = edges.reduce((m: any, e: any) => (e.count > m.count ? e : m), edges[0])
     const topPair = { source: nodes.find((n: any) => n.id === top.source)?.name, target: nodes.find((n: any) => n.id === top.target)?.name, count: top.count }
     return { nodeCount: nodes.length, edgeCount: edges.length, topPair }
-  }, [collabGraph, graphKinds])
+  }, [collabGraph, graphKinds, graphMinCount])
 
   // 协作明细 Modal 内嵌迷你子图：以选中 Agent 为中心
   const collabDetailGraph = useMemo(() => {
@@ -256,9 +265,17 @@ const CommandCenter: React.FC = () => {
       return
     }
     const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
-    const nodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
-    const visibleIds = new Set(nodes.map((n: any) => n.id))
-    const edges = kindSet ? collabGraph.edges.filter((e: any) => visibleIds.has(e.source) && visibleIds.has(e.target)) : collabGraph.edges
+    const kindNodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const kindIds = new Set(kindNodes.map((n: any) => n.id))
+    const minC = graphMinCount && graphMinCount > 0 ? graphMinCount : 0
+    const edges = collabGraph.edges.filter((e: any) => {
+      if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
+      if (minC && e.count < minC) return false
+      return true
+    })
+    const usedIds = new Set<number>()
+    edges.forEach((e: any) => { usedIds.add(e.source); usedIds.add(e.target) })
+    const nodes = kindNodes.filter((n: any) => usedIds.has(n.id))
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v)
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
@@ -282,7 +299,7 @@ const CommandCenter: React.FC = () => {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     message.success('协作关系图已导出为 CSV')
-  }, [collabGraph, graphKinds])
+  }, [collabGraph, graphKinds, graphMinCount])
 
   // 导出协作关系图为 SVG 图片
   const exportCollabGraphSvg = useCallback(() => {
@@ -781,6 +798,13 @@ const CommandCenter: React.FC = () => {
                 value={graphSearch}
                 onChange={(e) => setGraphSearch(e.target.value)}
               />
+              <InputNumber
+                size="small"
+                min={1}
+                placeholder="最低消息量"
+                value={graphMinCount}
+                onChange={(v) => setGraphMinCount(v ?? null)}
+              />
             </Space>
           }
         >
@@ -791,6 +815,7 @@ const CommandCenter: React.FC = () => {
             layout={graphLayout}
             filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
             searchTerm={graphSearch || undefined}
+            minCount={graphMinCount ?? undefined}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)

@@ -29,6 +29,8 @@ interface CollaborationGraphViewProps {
   filterKinds?: string[]
   /** 搜索词：匹配 name 的节点保持高亮，其余节点变淡（不改变布局） */
   searchTerm?: string
+  /** 最小消息量阈值：count 低于此值的边隐藏（孤立节点随之隐藏） */
+  minCount?: number
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
 }
@@ -47,15 +49,28 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   centerNodeId,
   filterKinds,
   searchTerm,
+  minCount,
   onNodeClick,
 }, ref) => {
   const allNodes = data?.nodes || []
   const allEdges = data?.edges || []
   // 按 kind 过滤：仅保留选中 kind 的节点，边两端都必须在过滤集内
   const kindSet = filterKinds && filterKinds.length > 0 ? new Set(filterKinds) : null
-  const nodes = kindSet ? allNodes.filter((n) => n.kind && kindSet.has(n.kind)) : allNodes
-  const visibleIds = new Set(nodes.map((n) => n.id))
-  const edges = kindSet ? allEdges.filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target)) : allEdges
+  const kindNodes = kindSet ? allNodes.filter((n) => n.kind && kindSet.has(n.kind)) : allNodes
+  const kindIds = new Set(kindNodes.map((n) => n.id))
+  // 按最小消息量过滤边：count 低于 minCount 的边剔除
+  const minC = minCount && minCount > 0 ? minCount : 0
+  const filteredEdges = allEdges.filter((e) => {
+    if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
+    if (minC && e.count < minC) return false
+    return true
+  })
+  // 仅保留出现在过滤后边中的节点（剔除因边过滤而孤立的节点），中心节点始终保留
+  const usedIds = new Set<number>()
+  filteredEdges.forEach((e) => { usedIds.add(e.source); usedIds.add(e.target) })
+  if (centerNodeId !== undefined) usedIds.add(centerNodeId)
+  const nodes = (kindSet ? kindNodes : allNodes).filter((n) => usedIds.has(n.id))
+  const edges = filteredEdges
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
 
   if (nodes.length === 0) {
