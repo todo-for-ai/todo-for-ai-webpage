@@ -242,7 +242,22 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   }
 
   return (
-    <div ref={svgWrapRef} style={{ display: 'flex', justifyContent: 'center' }}>
+    <div ref={svgWrapRef} style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+      {/* 缩放百分比 + 重置视图 */}
+      {(zoom !== 1 || pan.x !== 0 || pan.y !== 0) && (
+        <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 11, color: '#8c8c8c', background: 'rgba(255,255,255,0.8)', padding: '1px 6px', borderRadius: 4 }}>
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }) }}
+            style={{ fontSize: 11, cursor: 'pointer', border: '1px solid #d9d9d9', background: '#fff', borderRadius: 4, padding: '1px 6px', color: '#595959' }}
+          >
+            重置视图
+          </button>
+        </div>
+      )}
       <svg
         ref={ref}
         width={size}
