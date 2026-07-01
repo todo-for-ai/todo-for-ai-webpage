@@ -17,6 +17,7 @@ import {
 import { dashboardApi } from '../api/dashboard'
 import { agentsApi, type OrchestratorStatus } from '../api/agents'
 import SecurityTrendSection from '../components/SecurityTrendSection'
+import SecurityEventListItem from '../components/SecurityEventListItem'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 
@@ -345,41 +346,13 @@ const CommandCenter: React.FC = () => {
                 <List
                   size="small"
                   dataSource={securityEvents.slice(0, 8)}
-                  renderItem={(e: any) => {
-                    const sev = e.severity || 'INFO'
-                    const sevColor = sev === 'CRITICAL' ? 'red' : sev === 'WARNING' ? 'orange' : 'blue'
-                    const typeLabel = e.event_type === 'sandbox_violation' ? '沙盒违规'
-                      : e.event_type === 'conflict' ? '冲突' : '审计'
-                    const hasRun = !!e.workflow_run_id
-                    return (
-                      <List.Item
-                        style={{
-                          cursor: hasRun ? 'pointer' : 'default',
-                          padding: '6px 8px',
-                          borderRadius: 4,
-                        }}
-                        onClick={hasRun ? () => navigate(`/todo-for-ai/pages/workflows?run_id=${e.workflow_run_id}`) : undefined}
-                      >
-                        <Space align="start" style={{ width: '100%' }}>
-                          <Tag color={sevColor} style={{ marginTop: 2 }}>{sev}</Tag>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <Space size={[6, 4]} wrap>
-                              <Tag>{typeLabel}</Tag>
-                              {e.agent_id && <Tag>Agent#{e.agent_id}</Tag>}
-                              {hasRun && <Tag color="blue" style={{ cursor: 'pointer' }}>Run#{e.workflow_run_id} →</Tag>}
-                            </Space>
-                            <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
-                              <Tooltip title={e.detail}>
-                                <Text ellipsis style={{ maxWidth: '100%', display: 'block' }}>
-                                  {e.title}
-                                </Text>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        </Space>
-                      </List.Item>
-                    )
-                  }}
+                  renderItem={(e: any) => (
+                    <SecurityEventListItem
+                      event={e}
+                      variant="compact"
+                      onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
+                    />
+                  )}
                 />
               ) : (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无安全事件" />

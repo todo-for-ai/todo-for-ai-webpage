@@ -28,6 +28,7 @@ import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type Orch
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
+import SecurityEventListItem from '../components/SecurityEventListItem'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
@@ -902,36 +903,7 @@ const Dashboard = () => {
             <List
               size="small"
               dataSource={securityEvents}
-              renderItem={(e: any) => {
-                const sev = e.severity || 'INFO'
-                const sevColor = sev === 'CRITICAL' ? 'red' : sev === 'WARNING' ? 'orange' : 'blue'
-                const typeColor = e.event_type === 'sandbox_violation' ? 'magenta'
-                  : e.event_type === 'conflict' ? 'volcano' : 'geekblue'
-                const typeLabel = e.event_type === 'sandbox_violation' ? '沙盒违规'
-                  : e.event_type === 'conflict' ? '冲突' : '审计'
-                return (
-                  <List.Item>
-                    <Space align="start" style={{ width: '100%' }}>
-                      <Tag color={sevColor} style={{ marginTop: 2 }}>{sev}</Tag>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Space size={[6, 4]} wrap>
-                          <Tag color={typeColor}>{typeLabel}</Tag>
-                          <Text strong style={{ fontSize: 13 }}>{e.title}</Text>
-                          {e.agent_id && <Tag style={{ fontSize: 11 }}>Agent #{e.agent_id}</Tag>}
-                          {e.workflow_run_id && <Tag style={{ fontSize: 11 }}>Run #{e.workflow_run_id}</Tag>}
-                          {e.source && <Text type="secondary" style={{ fontSize: 11 }}>{e.source}#{e.source_id}</Text>}
-                        </Space>
-                        {e.detail && (
-                          <div style={{ fontSize: 12, color: '#595959', marginTop: 2, wordBreak: 'break-word' }}>{e.detail}</div>
-                        )}
-                        {e.occurred_at && (
-                          <Text type="secondary" style={{ fontSize: 11 }}>{new Date(e.occurred_at).toLocaleString('zh-CN')}</Text>
-                        )}
-                      </div>
-                    </Space>
-                  </List.Item>
-                )
-              }}
+              renderItem={(e: any) => <SecurityEventListItem event={e} />}
             />
           ) : (
             <Empty description="暂无安全事件" image={Empty.PRESENTED_IMAGE_SIMPLE} />
