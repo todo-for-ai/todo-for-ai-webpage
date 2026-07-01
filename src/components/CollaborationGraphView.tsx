@@ -5,6 +5,17 @@ import type { CollaborationGraph as GraphData } from '../api/agents'
 
 const { Text } = Typography
 
+// Agent kind -> 颜色映射，用于按类型着色分组
+const KIND_COLORS: Record<string, string> = {
+  coordinator: '#722ed1', // 紫：协调者
+  autonomous: '#13c2c2',  // 青：自主型
+  assistant: '#1890ff',   // 蓝：助手型
+  external: '#fa8c16',    // 橙：外部
+}
+const KIND_COLOR_DEFAULT = '#8c8c8c'
+const kindColor = (kind?: string | null) =>
+  (kind && KIND_COLORS[kind]) || KIND_COLOR_DEFAULT
+
 interface CollaborationGraphViewProps {
   /** 图数据：nodes + edges */
   data: GraphData | null
@@ -111,18 +122,18 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
             >
               <circle
                 r={r}
-                fill={highlighted ? '#1890ff' : '#bfbfbf'}
+                fill={highlighted ? '#1890ff' : kindColor(n.kind)}
                 stroke="#fff"
                 strokeWidth={1.5}
                 fillOpacity={hoveredNode === null ? 1 : (highlighted ? 1 : 0.4)}
               >
-                <title>{`${n.name} (Agent#${n.id}): ${n.messages} 条消息`}</title>
+                <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}): ${n.messages} 条消息`}</title>
               </circle>
               <text
                 x={r + 3}
                 y={4}
                 fontSize={10}
-                fill={highlighted ? '#1890ff' : '#8c8c8c'}
+                fill={highlighted ? '#1890ff' : kindColor(n.kind)}
                 fontWeight={highlighted ? 'bold' : 'normal'}
                 textAnchor={pos.x >= cx ? 'start' : 'end'}
                 style={{ pointerEvents: 'none' }}
@@ -144,6 +155,15 @@ const CollaborationGraphView: React.FC<CollaborationGraphViewProps> = ({
           )
         })}
       </svg>
+      {/* kind 颜色图例 */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
+        {Object.entries(KIND_COLORS).map(([kind, color]) => (
+          <span key={kind} style={{ fontSize: 11, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color }} />
+            {kind}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
