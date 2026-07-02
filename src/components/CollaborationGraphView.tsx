@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Empty, Typography } from 'antd'
 import type { CollaborationGraph as GraphData } from '../api/agents'
 
@@ -121,6 +121,76 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const [isDragging, setIsDragging] = useState(false)
   const panningRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
 
+  // 力导向布局实时坐标（rAF 逐步收敛，让用户看到布局过程）
+  const initialForceCoords = (): Map<number, { x: number; y: number; vx: number; vy: number }> => {
+    const m = new Map<number, { x: number; y: number; vx: number; vy: number }>()
+    const radius = size / 2 - 40
+    nodes.forEach((n, i) => {
+      const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1) - Math.PI / 2
+      m.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), vx: 0, vy: 0 })
+    })
+    return m
+  }
+  const [forceCoords, setForceCoords] = useState<Map<number, { x: number; y: number; vx: number; vy: number }>>(initialForceCoords)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (layout !== 'force') return
+    // 重置为圆周起点，重新收敛
+    let coords = initialForceCoords()
+    setForceCoords(new Map(coords))
+    const k = size / 10
+    const idxList = nodes.map((n) => n.id)
+    const edgeList = edges.map((e) => ({ source: e.source, target: e.target }))
+    const maxFrames = 180
+    let frame = 0
+    const tick = () => {
+      frame++
+      // 斥力
+      for (let i = 0; i < idxList.length; i++) {
+        for (let j = i + 1; j < idxList.length; j++) {
+          const a = coords.get(idxList[i])!
+          const b = coords.get(idxList[j])!
+          let dx = a.x - b.x
+          let dy = a.y - b.y
+          let d = Math.hypot(dx, dy)
+          if (d < 1) { d = 1; dx = (i % 3) - 1; dy = (j % 3) - 1 }
+          const f = (k * k) / (d * d)
+          const ux = dx / d
+          const uy = dy / d
+          a.vx += ux * f; a.vy += uy * f
+          b.vx -= ux * f; b.vy -= uy * f
+        }
+      }
+      // 吸引力（边）
+      edgeList.forEach((e) => {
+        const a = coords.get(e.source); const b = coords.get(e.target)
+        if (!a || !b) return
+        const dx = b.x - a.x; const dy = b.y - a.y
+        const d = Math.max(1, Math.hypot(dx, dy))
+        const f = (d * d) / k
+        const ux = dx / d; const uy = dy / d
+        a.vx += ux * f; a.vy += uy * f
+        b.vx -= ux * f; b.vy -= uy * f
+      })
+      // 应用速度 + 中心引力 + 阻尼
+      const damping = 0.85
+      coords.forEach((c) => {
+        c.vx = (c.vx + (cx - c.x) * 0.01) * damping
+        c.vy = (c.vy + (cy - c.y) * 0.01) * damping
+        c.x += Math.max(-12, Math.min(12, c.vx))
+        c.y += Math.max(-12, Math.min(12, c.vy))
+      })
+      setForceCoords(new Map(coords))
+      if (frame < maxFrames) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout, size, cx, cy, nodes.map((n) => n.id).join(','), edges.map((e) => `${e.source}-${e.target}-${e.count}`).join(',')])
+
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
   }
@@ -142,58 +212,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         pos.set(n.id, { x: 20 + cell * (col + 0.5), y: 20 + cell * (row + 0.5) })
       })
     } else if (layout === 'force') {
-      // 简化力导向：初始圆周，迭代斥力（节点间）+ 吸引力（边），阻尼衰减
-      const radius = size / 2 - 40
-      const coords = nodes.map((n, i) => {
-        const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1) - Math.PI / 2
-        return { id: n.id, x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), vx: 0, vy: 0 }
-      })
-      const idxMap = new Map(coords.map((c, i) => [c.id, i]))
-      const iterations = 120
-      const k = size / 10 // 理想距离尺度
-      for (let it = 0; it < iterations; it++) {
-        // 斥力
-        for (let i = 0; i < coords.length; i++) {
-          for (let j = i + 1; j < coords.length; j++) {
-            let dx = coords[i].x - coords[j].x
-            let dy = coords[i].y - coords[j].y
-            let d = Math.hypot(dx, dy)
-            if (d < 1) { d = 1; dx = Math.random() - 0.5; dy = Math.random() - 0.5 }
-            const f = (k * k) / (d * d)
-            const ux = dx / d
-            const uy = dy / d
-            coords[i].vx += ux * f
-            coords[i].vy += uy * f
-            coords[j].vx -= ux * f
-            coords[j].vy -= uy * f
-          }
-        }
-        // 吸引力（边）
-        edges.forEach((e) => {
-          const ai = idxMap.get(e.source)
-          const bi = idxMap.get(e.target)
-          if (ai === undefined || bi === undefined) return
-          const dx = coords[bi].x - coords[ai].x
-          const dy = coords[bi].y - coords[ai].y
-          const d = Math.max(1, Math.hypot(dx, dy))
-          const f = (d * d) / k
-          const ux = dx / d
-          const uy = dy / d
-          coords[ai].vx += ux * f
-          coords[ai].vy += uy * f
-          coords[bi].vx -= ux * f
-          coords[bi].vy -= uy * f
-        })
-        // 应用速度 + 中心引力 + 阻尼
-        const damping = 0.85
-        coords.forEach((c) => {
-          c.vx = (c.vx + (cx - c.x) * 0.01) * damping
-          c.vy = (c.vy + (cy - c.y) * 0.01) * damping
-          c.x += Math.max(-12, Math.min(12, c.vx))
-          c.y += Math.max(-12, Math.min(12, c.vy))
-        })
-      }
-      coords.forEach((c) => pos.set(c.id, { x: c.x, y: c.y }))
+      // 力导向位置由 rAF 效果实时更新到 forceCoords，这里直接读取当前帧
+      forceCoords.forEach((c, id) => pos.set(id, { x: c.x, y: c.y }))
     } else {
       const radius = size / 2 - 40 // 留出标签空间
       nodes.forEach((n, i) => {
@@ -202,7 +222,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
       })
     }
     return pos
-  }, [nodes, edges, layout, size, cx, cy])
+  }, [nodes, edges, layout, size, cx, cy, forceCoords])
 
   // 取节点位置：优先拖拽覆盖
   const getPos = (id: number) => dragOverride[id] || nodePos.get(id) || { x: 0, y: 0 }
@@ -402,7 +422,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             <g
               key={n.id}
               transform={`translate(${pos.x},${pos.y})`}
-              style={{ cursor: 'grab', transition: isDragging ? 'none' : 'transform 0.5s ease' }}
+              style={{ cursor: 'grab', transition: (isDragging || layout === 'force') ? 'none' : 'transform 0.5s ease' }}
               onMouseEnter={() => setHoveredNode(n.id)}
               onMouseLeave={() => setHoveredNode(null)}
               onMouseDown={(e) => { e.preventDefault(); onNodeDragStart(n.id) }}
