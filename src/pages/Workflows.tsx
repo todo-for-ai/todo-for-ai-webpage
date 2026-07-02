@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -50,6 +50,7 @@ const Workflows: React.FC = () => {
   const [stepStats, setStepStats] = useState<WorkflowStepStats | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
+  const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [runsLoading, setRunsLoading] = useState(false)
@@ -123,6 +124,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowStepStats(30).then(setStepStats).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
+      agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
     } catch {
       message.error('加载工作流运行记录失败')
     } finally {
@@ -728,6 +730,21 @@ const Workflows: React.FC = () => {
                       <Tag color={a.with_violation > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>违规 {a.with_violation}</Tag>
                     </div>
                   ))}
+                </div>
+              )}
+              {failureCorrelationByStep && failureCorrelationByStep.items.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>按步骤的失败伴随率:</Text>
+                  <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {failureCorrelationByStep.items.slice(0, 10).map((s) => (
+                      <div key={s.step_key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                        <span style={{ width: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={s.step_key}>{s.step_key}</span>
+                        <Tag style={{ fontSize: 10 }}>失败 {s.failed}</Tag>
+                        <Tag color={s.conflict_rate > 0 ? 'orange' : 'default'} style={{ fontSize: 10 }}>冲突 {s.conflict_rate}%</Tag>
+                        <Tag color={s.violation_rate > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>违规 {s.violation_rate}%</Tag>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
