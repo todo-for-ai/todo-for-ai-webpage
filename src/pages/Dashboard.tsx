@@ -27,11 +27,12 @@ import {
   SearchOutlined,
   ExpandOutlined,
   BookOutlined,
+  FundOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation, type AgentHealth } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -87,6 +88,7 @@ const Dashboard = () => {
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
+  const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -224,6 +226,7 @@ const Dashboard = () => {
       const result = await agentsApi.getConflictsDashboard()
       setConflictData(result)
       agentsApi.getConflictsSandboxCorrelation(30, 2).then(setConflictsSandboxCorrelation).catch(() => {})
+      agentsApi.getAgentHealth(30).then(setAgentHealth).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1415,6 +1418,40 @@ const Dashboard = () => {
           })() : <Empty description="暂无任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Agent Composite Health */}
+      <Card
+        title={<Space><FundOutlined /> Agent 综合健康度</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {agentHealth && agentHealth.items.length > 0 ? (() => {
+          const items = agentHealth.items
+          const healthColor = (s: number) => s >= 80 ? '#52c41a' : s >= 60 ? '#faad14' : s >= 40 ? '#fa8c16' : '#ff4d4f'
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>近 {agentHealth.days} 天（声誉 0.4 + 完成 0.3 + 冲突 0.15 + 违规 0.15，按健康分降序）</Text>
+              {items.map((a) => (
+                <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, flexWrap: 'wrap' }}>
+                  <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
+                  <div style={{ flex: '0 1 120px', background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ width: `${a.health_score}%`, height: '100%', background: healthColor(a.health_score), borderRadius: 3 }} />
+                  </div>
+                  <span style={{ color: healthColor(a.health_score), minWidth: 44, textAlign: 'right', fontWeight: 500 }}>{a.health_score}</span>
+                  <Tooltip title={`声誉 ${a.sub_scores.reputation} · 完成 ${a.sub_scores.completion} · 冲突 ${a.sub_scores.conflict} · 违规 ${a.sub_scores.violation}`}>
+                    <Tag style={{ fontSize: 10, cursor: 'default' }}>声誉 {a.sub_scores.reputation}</Tag>
+                  </Tooltip>
+                  <Tag color={a.sub_scores.completion >= 80 ? 'green' : a.sub_scores.completion >= 50 ? 'orange' : 'red'} style={{ fontSize: 10 }}>完成 {a.completion_rate != null ? `${a.completion_rate}%` : '—'}</Tag>
+                  <Tag color={a.conflicts > 0 ? 'orange' : 'default'} style={{ fontSize: 10 }}>冲突 {a.conflicts}</Tag>
+                  <Tag color={a.sandbox_violations > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>违规 {a.sandbox_violations}</Tag>
+                </div>
+              ))}
+              <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>健康分色阶 ≥80 绿 / ≥60 橙 / ≥40 浅橙 / &lt;40 红</Text>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无 Agent" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 

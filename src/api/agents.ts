@@ -823,6 +823,32 @@ export interface ConflictsSandboxCorrelation {
   top_agents: ConflictsSandboxCorrelationAgent[]
 }
 
+export interface AgentHealthSubScores {
+  reputation: number
+  completion: number
+  conflict: number
+  violation: number
+}
+
+export interface AgentHealthItem {
+  agent_id: number
+  name: string
+  status: string | null
+  health_score: number
+  reputation_score: number
+  completion_rate: number | null
+  total_assignments: number
+  done_assignments: number
+  conflicts: number
+  sandbox_violations: number
+  sub_scores: AgentHealthSubScores
+}
+
+export interface AgentHealth {
+  days: number
+  items: AgentHealthItem[]
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -1135,6 +1161,10 @@ export class AgentsApi {
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
     return unwrapData<ConflictsSandboxCorrelation>(await apiClient.get(`/agents/conflicts/sandbox-correlation${buildQuery({ days, window_hours: windowHours })}`))
+  }
+
+  async getAgentHealth(days = 30): Promise<AgentHealth> {
+    return unwrapData<AgentHealth>(await apiClient.get(`/agents/health${buildQuery({ days })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
