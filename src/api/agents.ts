@@ -500,6 +500,19 @@ export interface ConflictsTrend {
   trend: ConflictsTrendBucket[]
 }
 
+/** 冲突按 Agent 分布单项 */
+export interface ConflictByAgentItem {
+  agent_id: number
+  name: string | null
+  kind: string | null
+  total: number
+  active: number
+}
+
+export interface ConflictsByAgent {
+  items: ConflictByAgentItem[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1428,6 +1441,10 @@ export class AgentsApi {
 
   async getConflictsTrend(days = 30): Promise<ConflictsTrend> {
     return unwrapData<ConflictsTrend>(await apiClient.get('/agents/conflicts/trend', { params: { days } }))
+  }
+
+  async getConflictsByAgent(limit = 10): Promise<ConflictsByAgent> {
+    return unwrapData<ConflictsByAgent>(await apiClient.get('/agents/conflicts/by-agent', { params: { limit } }))
   }
 
   async listSandboxTemplates(): Promise<any> {

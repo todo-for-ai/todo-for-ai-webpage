@@ -19,7 +19,7 @@ import {
   ExpandOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
-import { agentsApi, type OrchestratorStatus, type ConflictsTrend } from '../api/agents'
+import { agentsApi, type OrchestratorStatus, type ConflictsTrend, type ConflictsByAgent } from '../api/agents'
 import dayjs from 'dayjs'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
@@ -44,6 +44,7 @@ const CommandCenter: React.FC = () => {
   const [conflictData, setConflictData] = useState<any>(null)
   const [conflictList, setConflictList] = useState<any[]>([])
   const [conflictTrend, setConflictTrend] = useState<ConflictsTrend | null>(null)
+  const [conflictsByAgent, setConflictsByAgent] = useState<ConflictsByAgent | null>(null)
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityTrend, setSecurityTrend] = useState<any>(null)
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
@@ -120,7 +121,7 @@ const CommandCenter: React.FC = () => {
       const trendParams: any = trendSince ? { since: trendSince } : {}
       if (trendSeverity) trendParams.severity = trendSeverity
       if (trendEventType) trendParams.event_type = trendEventType
-      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend, confTrend] = await Promise.all([
+      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend, confTrend, confByAgent] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
@@ -130,11 +131,13 @@ const CommandCenter: React.FC = () => {
         agentsApi.getOrchestratorStatus().catch(() => null),
         agentsApi.getOrchestratorDailyTrend(trendParams).catch(() => null),
         agentsApi.getConflictsTrend(30).catch(() => null),
+        agentsApi.getConflictsByAgent(10).catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
       setConflictList(conflictList?.items || [])
       setConflictTrend(confTrend)
+      setConflictsByAgent(confByAgent)
       setSecurityEvents(events?.items || [])
       setSecurityTrend(trend)
       setSecurityByAgent(byAgent)
@@ -671,6 +674,29 @@ const CommandCenter: React.FC = () => {
                           <Tag style={{ fontSize: 11 }} color="orange">1-7d: {b['1d_to_7d']}</Tag>
                           <Tag style={{ fontSize: 11 }} color="red">&gt;7d: {b.over_7d}</Tag>
                         </Space>
+                      </div>
+                    )
+                  })() : null}
+                  {/* 冲突按 Agent 分布 */}
+                  {conflictsByAgent && conflictsByAgent.items.length > 0 ? (() => {
+                    const items = conflictsByAgent.items
+                    const maxTotal = Math.max(1, ...items.map((it) => it.total))
+                    return (
+                      <div style={{ marginTop: 12 }}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>冲突最多的 Agent（共/活跃）</Text>
+                        <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {items.slice(0, 6).map((it) => (
+                            <div key={it.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                              <span style={{ width: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${it.name} #${it.agent_id}`}>
+                                {it.name || `#${it.agent_id}`}
+                              </span>
+                              <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ width: `${(it.total / maxTotal) * 100}%`, height: '100%', background: it.active > 0 ? '#ff4d4f' : '#faad14', borderRadius: 3 }} />
+                              </div>
+                              <span style={{ color: '#8c8c8c', minWidth: 56, textAlign: 'right' }}>{it.total}{it.active > 0 ? ` (${it.active}活跃)` : ''}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )
                   })() : null}
