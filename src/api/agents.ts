@@ -849,6 +849,20 @@ export interface AgentHealth {
   items: AgentHealthItem[]
 }
 
+export interface AgentHealthTrendBucket {
+  date: string
+  avg_reputation: number | null
+  positive: number
+  negative: number
+}
+
+export interface AgentHealthTrend {
+  days: number
+  trend: AgentHealthTrendBucket[]
+  total_positive: number
+  total_negative: number
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -1165,6 +1179,10 @@ export class AgentsApi {
 
   async getAgentHealth(days = 30): Promise<AgentHealth> {
     return unwrapData<AgentHealth>(await apiClient.get(`/agents/health${buildQuery({ days })}`))
+  }
+
+  async getAgentHealthTrend(days = 30): Promise<AgentHealthTrend> {
+    return unwrapData<AgentHealthTrend>(await apiClient.get(`/agents/health/trend${buildQuery({ days })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {

@@ -32,7 +32,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation, type AgentHealth } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -89,6 +89,7 @@ const Dashboard = () => {
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
+  const [agentHealthTrend, setAgentHealthTrend] = useState<AgentHealthTrend | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -227,6 +228,7 @@ const Dashboard = () => {
       setConflictData(result)
       agentsApi.getConflictsSandboxCorrelation(30, 2).then(setConflictsSandboxCorrelation).catch(() => {})
       agentsApi.getAgentHealth(30).then(setAgentHealth).catch(() => {})
+      agentsApi.getAgentHealthTrend(30).then(setAgentHealthTrend).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1453,6 +1455,26 @@ const Dashboard = () => {
         })() : (
           <Empty description="暂无 Agent" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
+        {agentHealthTrend && agentHealthTrend.trend.length > 0 && (() => {
+          const valid = agentHealthTrend.trend.filter((b) => b.avg_reputation != null)
+          return (
+            <div style={{ marginTop: 12 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                近 {agentHealthTrend.days} 天声誉趋势（累计正向 {agentHealthTrend.total_positive} / 负向 {agentHealthTrend.total_negative}）
+              </Text>
+              {valid.length > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  <MiniTrendChart
+                    series={[{ key: 'avg_reputation', label: '平均声誉', color: '#722ed1', values: valid.map((b) => b.avg_reputation as number) }]}
+                    labels={valid.map((b) => b.date)}
+                    width={520}
+                    height={84}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })()}
       </Card>
 
       {/* Agent Productivity */}
