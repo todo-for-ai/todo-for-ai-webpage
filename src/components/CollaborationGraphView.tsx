@@ -373,7 +373,15 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           const by = b.y - uy * rb
           // 单向：画一条带箭头线（指向接收方）；双向：画一条线 + 两端各一个箭头
           const oneWay = (fwd > 0) !== (rev > 0)
-          const stroke = highlighted ? '#1890ff' : '#bfbfbf'
+          // 边按消息量比例渐变着色：低频灰 → 中频蓝 → 高频紫红
+          const ratio = e.count / maxCount
+          const edgeColorByCount = highlighted
+            ? '#1890ff'
+            : ratio >= 0.75 ? '#722ed1'
+            : ratio >= 0.5 ? '#1890ff'
+            : ratio >= 0.25 ? '#69b1ff'
+            : '#bfbfbf'
+          const stroke = edgeColorByCount
           const arrow = highlighted ? 'url(#cg-arrow-hl)' : 'url(#cg-arrow)'
           const tooltip = fwd || rev
             ? `${e.source}→${e.target}: ${fwd} 条 · ${e.target}→${e.source}: ${rev} 条 · 共 ${e.count}`
@@ -492,6 +500,21 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           <span key={kind} style={{ fontSize: 11, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color }} />
             {kind}
+          </span>
+        ))}
+      </div>
+      {/* 边色阶图例（按消息量） */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: '#8c8c8c' }}>边色阶(消息量):</span>
+        {[
+          { c: '#bfbfbf', l: '低' },
+          { c: '#69b1ff', l: '中低' },
+          { c: '#1890ff', l: '中' },
+          { c: '#722ed1', l: '高' },
+        ].map(({ c, l }) => (
+          <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ display: 'inline-block', width: 14, height: 3, background: c, borderRadius: 2 }} />
+            {l}
           </span>
         ))}
       </div>
