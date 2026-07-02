@@ -709,6 +709,28 @@ export interface WorkflowRunTrend {
   total_failed: number
 }
 
+/** 失败步骤与冲突/沙盒违规的跨维度关联 */
+export interface WorkflowFailureCorrelationAgent {
+  agent_id: number
+  name: string
+  failed_steps: number
+  with_conflict: number
+  with_violation: number
+}
+
+export interface WorkflowFailureCorrelation {
+  days: number
+  window_hours: number
+  total_failed_steps: number
+  with_conflict: number
+  with_violation: number
+  with_both: number
+  conflict_rate: number
+  violation_rate: number
+  both_rate: number
+  top_agents: WorkflowFailureCorrelationAgent[]
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -985,6 +1007,10 @@ export class AgentsApi {
 
   async getExperiencesStats(): Promise<ExperiencesStats> {
     return unwrapData<ExperiencesStats>(await apiClient.get('/agents/experiences/stats'))
+  }
+
+  async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
+    return unwrapData<WorkflowFailureCorrelation>(await apiClient.get(`/agents/workflows/failure-correlation${buildQuery({ days, window_hours: windowHours })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {

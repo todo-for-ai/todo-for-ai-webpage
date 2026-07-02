@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -49,6 +49,7 @@ const Workflows: React.FC = () => {
   const [runs, setRuns] = useState<WorkflowRunItem[]>([])
   const [stepStats, setStepStats] = useState<WorkflowStepStats | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
+  const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [runsLoading, setRunsLoading] = useState(false)
@@ -121,6 +122,7 @@ const Workflows: React.FC = () => {
       setRuns(result.items)
       agentsApi.getWorkflowStepStats(30).then(setStepStats).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
+      agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
     } catch {
       message.error('加载工作流运行记录失败')
     } finally {
@@ -697,6 +699,37 @@ const Workflows: React.FC = () => {
                 <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>●</span> 成功</Text>
                 <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
               </div>
+            </div>
+          )}
+          {failureCorrelation && failureCorrelation.total_failed_steps > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                失败步骤跨维度关联（近 {failureCorrelation.days} 天，±{failureCorrelation.window_hours}h 窗口，共 {failureCorrelation.total_failed_steps} 个失败步骤）
+              </Text>
+              <div style={{ display: 'flex', gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
+                <Tag color={failureCorrelation.conflict_rate > 0 ? 'orange' : 'default'} style={{ fontSize: 11 }}>
+                  伴随冲突 {failureCorrelation.with_conflict} ({failureCorrelation.conflict_rate}%)
+                </Tag>
+                <Tag color={failureCorrelation.violation_rate > 0 ? 'red' : 'default'} style={{ fontSize: 11 }}>
+                  伴随沙盒违规 {failureCorrelation.with_violation} ({failureCorrelation.violation_rate}%)
+                </Tag>
+                <Tag color={failureCorrelation.both_rate > 0 ? 'volcano' : 'default'} style={{ fontSize: 11 }}>
+                  同时伴随两者 {failureCorrelation.with_both} ({failureCorrelation.both_rate}%)
+                </Tag>
+              </div>
+              {failureCorrelation.top_agents.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>关联最多的 Agent:</Text>
+                  {failureCorrelation.top_agents.map((a) => (
+                    <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                      <span style={{ width: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name} #{a.agent_id}</span>
+                      <Tag style={{ fontSize: 10 }}>失败 {a.failed_steps}</Tag>
+                      <Tag color={a.with_conflict > 0 ? 'orange' : 'default'} style={{ fontSize: 10 }}>冲突 {a.with_conflict}</Tag>
+                      <Tag color={a.with_violation > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>违规 {a.with_violation}</Tag>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </Card>
