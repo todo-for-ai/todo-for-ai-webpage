@@ -68,11 +68,25 @@ const ReputationSparkline: React.FC<ReputationSparklineProps> = ({
       {/* 数据点 */}
       {series.map((d, i) => {
         const isEnd = i === series.length - 1
-        const label = d.p
-          ? `${d.p.at ? String(d.p.at).slice(0, 19).replace('T', ' ') : ''} · ${d.p.success ? '成功' : '失败'}${
-              typeof d.p.score_delta === 'number' ? ` (${d.p.score_delta >= 0 ? '+' : ''}${d.p.score_delta})` : ''
-            } → ${d.score.toFixed(1)}`
-          : `当前 → ${d.score.toFixed(1)}`
+        const p = d.p
+        const parts: string[] = []
+        if (p) {
+          if (p.at) parts.push(String(p.at).slice(0, 19).replace('T', ' '))
+          parts.push(p.success ? '成功' : '失败')
+          if (typeof p.score_delta === 'number') {
+            parts.push(`(${p.score_delta >= 0 ? '+' : ''}${p.score_delta})`)
+          }
+          parts.push(`→ ${d.score.toFixed(1)}`)
+          if (typeof p.duration_sec === 'number') parts.push(`耗时 ${p.duration_sec}s`)
+          if (p.step_key) parts.push(`步骤 ${p.step_key}`)
+          if (p.task_id) parts.push(`任务 #${p.task_id}`)
+          if (p.workflow_run_id) parts.push(`工作流运行 #${p.workflow_run_id}`)
+          else if (p.parent_workflow_run_id) parts.push(`父工作流 #${p.parent_workflow_run_id}`)
+        } else {
+          parts.push('当前')
+          parts.push(`→ ${d.score.toFixed(1)}`)
+        }
+        const label = parts.join(' · ')
         return (
           <Tooltip key={i} title={label}>
             <circle

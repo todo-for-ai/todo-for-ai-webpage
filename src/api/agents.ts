@@ -438,6 +438,8 @@ export interface CollaborationGraph {
 export interface ReputationHistoryPoint {
   /** ISO 时间戳 */
   at: string | null
+  /** 审计记录 ID */
+  audit_id?: number
   /** 变化后的声誉分 */
   new_score?: number | null
   /** 本次分值增量 */
@@ -448,6 +450,18 @@ export interface ReputationHistoryPoint {
   success?: boolean | null
   /** 累计任务数 */
   total_tasks?: number | null
+  /** 触发该次结果的来源任务 ID（若可回溯） */
+  task_id?: number | null
+  /** 工作流步骤键 */
+  step_key?: string | null
+  /** 工作流运行 ID */
+  workflow_run_id?: number | null
+  /** 父工作流运行 ID（子工作流场景） */
+  parent_workflow_run_id?: number | null
+  /** 子工作流运行 ID */
+  sub_workflow_run_id?: number | null
+  /** 任务耗时秒 */
+  duration_sec?: number | null
 }
 
 export interface ReputationHistory {
