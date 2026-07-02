@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
@@ -46,6 +46,7 @@ const WORKFLOW_STATUS_COLORS: Record<string, string> = {
 const Workflows: React.FC = () => {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [runs, setRuns] = useState<WorkflowRunItem[]>([])
+  const [stepStats, setStepStats] = useState<WorkflowStepStats | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [runsLoading, setRunsLoading] = useState(false)
@@ -116,6 +117,7 @@ const Workflows: React.FC = () => {
     try {
       const result = await agentsApi.getWorkflowRuns({ per_page: 50 })
       setRuns(result.items)
+      agentsApi.getWorkflowStepStats(30).then(setStepStats).catch(() => {})
     } catch {
       message.error('加载工作流运行记录失败')
     } finally {
@@ -658,6 +660,29 @@ const Workflows: React.FC = () => {
           )}
         </Spin>
       </Card>
+
+      {/* Step execution stats */}
+      {stepStats && stepStats.items.length > 0 && (
+        <Card title="步骤执行统计" size="small" style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {stepStats.items.slice(0, 10).map((s) => {
+              const rate = Math.round((s.success_rate || 0) * 100)
+              const rateColor = rate >= 80 ? '#52c41a' : rate >= 50 ? '#faad14' : '#ff4d4f'
+              const dur = s.avg_duration_seconds != null ? `${s.avg_duration_seconds}s` : '-'
+              return (
+                <div key={s.step_key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <span style={{ width: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={s.step_key}>{s.step_key}</span>
+                  <Tag color="blue" style={{ fontSize: 10 }}>{s.total}次</Tag>
+                  <span style={{ color: rateColor, minWidth: 80 }}>成功率 {rate}%</span>
+                  <Tag color={s.failed > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>失败 {s.failed}</Tag>
+                  {s.skipped > 0 && <Tag style={{ fontSize: 10 }}>跳过 {s.skipped}</Tag>}
+                  <span style={{ color: '#8c8c8c' }}>均耗时 {dur}</span>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Workflow runs */}
       <Card title="运行记录" style={{ marginBottom: 24 }} extra={<Button size="small" onClick={loadRuns}>刷新</Button>}>

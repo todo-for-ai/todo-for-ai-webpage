@@ -677,6 +677,22 @@ export interface WorkflowRunConsoleResult {
   summary: WorkflowRunConsoleSummary
 }
 
+/** 工作流步骤执行统计单项（按 step_key 聚合） */
+export interface WorkflowStepStat {
+  step_key: string
+  total: number
+  succeeded: number
+  failed: number
+  skipped: number
+  success_rate: number
+  avg_duration_seconds: number | null
+  sample_size_duration: number
+}
+
+export interface WorkflowStepStats {
+  items: WorkflowStepStat[]
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -931,6 +947,10 @@ export class AgentsApi {
   async getWorkflowRuns(params?: { workflow_id?: number; status?: string; page?: number; per_page?: number }): Promise<ListResult<WorkflowRunItem>> {
     const response = await apiClient.get(`/agents/workflow-runs${buildQuery(params)}`)
     return unwrapList<WorkflowRunItem>(response)
+  }
+
+  async getWorkflowStepStats(limit = 30): Promise<WorkflowStepStats> {
+    return unwrapData<WorkflowStepStats>(await apiClient.get(`/agents/workflows/step-stats${buildQuery({ limit })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
