@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -51,6 +51,7 @@ const Workflows: React.FC = () => {
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
+  const [failedStepsByDuration, setFailedStepsByDuration] = useState<WorkflowFailedStepsByDuration | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [runsLoading, setRunsLoading] = useState(false)
@@ -125,6 +126,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
+      agentsApi.getWorkflowFailedStepsByDuration(30, 20).then(setFailedStepsByDuration).catch(() => {})
     } catch {
       message.error('加载工作流运行记录失败')
     } finally {
@@ -801,6 +803,29 @@ const Workflows: React.FC = () => {
                   })()}
                 </div>
               )}
+              {failedStepsByDuration && failedStepsByDuration.items.length > 0 && (() => {
+                const maxAvg = Math.max(1, ...failedStepsByDuration.items.map((s) => s.avg_duration_seconds))
+                return (
+                  <div style={{ marginTop: 10 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>
+                      失败步骤耗时排行（近 {failedStepsByDuration.days} 天，共 {failedStepsByDuration.total_failed_steps} 次失败，按平均耗时降序）:
+                    </Text>
+                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {failedStepsByDuration.items.slice(0, 10).map((s) => (
+                        <div key={s.step_key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                          <span style={{ width: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={s.step_key}>{s.step_key}</span>
+                          <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ width: `${(s.avg_duration_seconds / maxAvg) * 100}%`, height: '100%', background: '#fa541c', borderRadius: 3 }} />
+                          </div>
+                          <Tooltip title={`中位 ${s.median_duration_seconds}s · 最长 ${s.max_duration_seconds}s`}>
+                            <span style={{ color: '#8c8c8c', minWidth: 110, textAlign: 'right' }}>{s.failures}次 / 均{s.avg_duration_seconds}s</span>
+                          </Tooltip>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
         </Card>

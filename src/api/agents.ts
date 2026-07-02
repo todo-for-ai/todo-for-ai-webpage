@@ -695,6 +695,21 @@ export interface WorkflowStepStats {
   items: WorkflowStepStat[]
 }
 
+/** 失败步骤按耗时排行单项 */
+export interface WorkflowFailedStepByDuration {
+  step_key: string
+  failures: number
+  avg_duration_seconds: number
+  median_duration_seconds: number
+  max_duration_seconds: number
+}
+
+export interface WorkflowFailedStepsByDuration {
+  days: number
+  total_failed_steps: number
+  items: WorkflowFailedStepByDuration[]
+}
+
 /** 工作流运行结果趋势单日桶 */
 export interface WorkflowRunTrendBucket {
   date: string
@@ -1212,6 +1227,10 @@ export class AgentsApi {
 
   async getWorkflowStepStats(limit = 30): Promise<WorkflowStepStats> {
     return unwrapData<WorkflowStepStats>(await apiClient.get(`/agents/workflows/step-stats${buildQuery({ limit })}`))
+  }
+
+  async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
+    return unwrapData<WorkflowFailedStepsByDuration>(await apiClient.get(`/agents/workflows/failed-steps/by-duration${buildQuery({ days, limit })}`))
   }
 
   async getWorkflowRunTrend(days = 30): Promise<WorkflowRunTrend> {
