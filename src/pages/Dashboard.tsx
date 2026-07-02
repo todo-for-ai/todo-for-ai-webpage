@@ -1840,6 +1840,61 @@ const Dashboard = () => {
               <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>●</span> 完成</Text>
               <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
             </div>
+            {(() => {
+              const kindTotals = productivityTrend.by_kind_totals || {}
+              const kinds = Object.keys(kindTotals).slice(0, 6)
+              if (kinds.length === 0) return null
+              const kindColor: Record<string, string> = { assistant: '#1677ff', worker: '#52c41a', orchestrator: '#722ed1', reviewer: '#13c2c2', planner: '#fa8c16', observer: '#8c8c8c' }
+              const W = 520, H = 70, padL = 4, padR = 4, padT = 6, padB = 14
+              const trend = productivityTrend.trend
+              const n = trend.length
+              if (n < 2) return null
+              const allDone = trend.flatMap((b) => Object.entries(b.by_kind || {}).map(([, v]) => (v as { done: number }).done))
+              const maxDone = Math.max(1, ...allDone)
+              const xStep = (W - padL - padR) / Math.max(1, n - 1)
+              const palette = ['#1677ff', '#52c41a', '#722ed1', '#13c2c2', '#fa8c16', '#8c8c8c']
+              const lineFor = (kind: string) => {
+                const pts = trend.map((b, i) => {
+                  const v = (b.by_kind?.[kind]?.done) ?? 0
+                  const x = padL + i * xStep
+                  const y = H - padB - (v / maxDone) * (H - padT - padB)
+                  return `${x.toFixed(1)},${y.toFixed(1)}`
+                })
+                return pts.join(' ')
+              }
+              return (
+                <div style={{ marginTop: 8 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>按 kind 分层完成趋势:</Text>
+                  <svg width={W} height={H} style={{ display: 'block' }}>
+                    {kinds.map((k, idx) => {
+                      const c = kindColor[k] || palette[idx % palette.length]
+                      return (
+                        <g key={k}>
+                          <polyline
+                            points={lineFor(k)}
+                            fill="none"
+                            stroke={c}
+                            strokeWidth={1.6}
+                            opacity={0.85}
+                          />
+                        </g>
+                      )
+                    })}
+                  </svg>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
+                    {kinds.map((k, idx) => {
+                      const c = kindColor[k] || palette[idx % palette.length]
+                      const t = kindTotals[k] as { done: number; failed: number }
+                      return (
+                        <Text key={k} type="secondary" style={{ fontSize: 10 }}>
+                          <span style={{ color: c }}>●</span> {k} ({t.done})
+                        </Text>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )}
       </Card>

@@ -772,6 +772,7 @@ export interface AgentProductivityTrendBucket {
   date: string
   done: number
   failed: number
+  by_kind?: Record<string, { done: number; failed: number }>
 }
 
 export interface AgentProductivityTrend {
@@ -779,6 +780,7 @@ export interface AgentProductivityTrend {
   trend: AgentProductivityTrendBucket[]
   total_done: number
   total_failed: number
+  by_kind_totals?: Record<string, { done: number; failed: number }>
 }
 
 export interface AgentProductivityAlertItem {
