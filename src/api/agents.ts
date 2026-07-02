@@ -513,6 +513,19 @@ export interface ConflictsByAgent {
   items: ConflictByAgentItem[]
 }
 
+/** 冲突解决策略效果单项 */
+export interface ConflictStrategyStat {
+  strategy: string
+  uses: number
+  with_task: number
+  recurrences: number
+  recurrence_rate: number
+}
+
+export interface ConflictsStrategyStats {
+  items: ConflictStrategyStat[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1445,6 +1458,10 @@ export class AgentsApi {
 
   async getConflictsByAgent(limit = 10): Promise<ConflictsByAgent> {
     return unwrapData<ConflictsByAgent>(await apiClient.get('/agents/conflicts/by-agent', { params: { limit } }))
+  }
+
+  async getConflictsStrategyStats(): Promise<ConflictsStrategyStats> {
+    return unwrapData<ConflictsStrategyStats>(await apiClient.get('/agents/conflicts/strategy-stats'))
   }
 
   async listSandboxTemplates(): Promise<any> {

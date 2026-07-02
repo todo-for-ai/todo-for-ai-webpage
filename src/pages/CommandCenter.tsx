@@ -19,7 +19,7 @@ import {
   ExpandOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
-import { agentsApi, type OrchestratorStatus, type ConflictsTrend, type ConflictsByAgent } from '../api/agents'
+import { agentsApi, type OrchestratorStatus, type ConflictsTrend, type ConflictsByAgent, type ConflictsStrategyStats } from '../api/agents'
 import dayjs from 'dayjs'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
@@ -45,6 +45,7 @@ const CommandCenter: React.FC = () => {
   const [conflictList, setConflictList] = useState<any[]>([])
   const [conflictTrend, setConflictTrend] = useState<ConflictsTrend | null>(null)
   const [conflictsByAgent, setConflictsByAgent] = useState<ConflictsByAgent | null>(null)
+  const [conflictStrategyStats, setConflictStrategyStats] = useState<ConflictsStrategyStats | null>(null)
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityTrend, setSecurityTrend] = useState<any>(null)
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
@@ -121,7 +122,7 @@ const CommandCenter: React.FC = () => {
       const trendParams: any = trendSince ? { since: trendSince } : {}
       if (trendSeverity) trendParams.severity = trendSeverity
       if (trendEventType) trendParams.event_type = trendEventType
-      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend, confTrend, confByAgent] = await Promise.all([
+      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend, confTrend, confByAgent, confStrat] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
@@ -132,12 +133,14 @@ const CommandCenter: React.FC = () => {
         agentsApi.getOrchestratorDailyTrend(trendParams).catch(() => null),
         agentsApi.getConflictsTrend(30).catch(() => null),
         agentsApi.getConflictsByAgent(10).catch(() => null),
+        agentsApi.getConflictsStrategyStats().catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
       setConflictList(conflictList?.items || [])
       setConflictTrend(confTrend)
       setConflictsByAgent(confByAgent)
+      setConflictStrategyStats(confStrat)
       setSecurityEvents(events?.items || [])
       setSecurityTrend(trend)
       setSecurityByAgent(byAgent)
@@ -696,6 +699,31 @@ const CommandCenter: React.FC = () => {
                               <span style={{ color: '#8c8c8c', minWidth: 56, textAlign: 'right' }}>{it.total}{it.active > 0 ? ` (${it.active}活跃)` : ''}</span>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )
+                  })() : null}
+                  {/* 解决策略效果 */}
+                  {conflictStrategyStats && conflictStrategyStats.items.length > 0 ? (() => {
+                    const items = conflictStrategyStats.items
+                    const maxUses = Math.max(1, ...items.map((it) => it.uses))
+                    return (
+                      <div style={{ marginTop: 12 }}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>解决策略效果（用次/复发率）</Text>
+                        <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {items.slice(0, 6).map((it) => {
+                            const rate = Math.round(it.recurrence_rate * 100)
+                            const rateColor = rate >= 50 ? '#ff4d4f' : rate >= 20 ? '#faad14' : '#52c41a'
+                            return (
+                              <div key={it.strategy} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                                <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={it.strategy}>{it.strategy}</span>
+                                <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                                  <div style={{ width: `${(it.uses / maxUses) * 100}%`, height: '100%', background: '#1890ff', borderRadius: 3 }} />
+                                </div>
+                                <span style={{ color: rateColor, minWidth: 70, textAlign: 'right' }}>{it.uses}次 · 复发{rate}%</span>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )
