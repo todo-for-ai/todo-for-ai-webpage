@@ -925,6 +925,7 @@ export interface ExperiencesStats {
   by_domain_tasktype: Record<string, Record<string, number>>
   by_domain_reuses: Record<string, number>
   by_task_type_reuses: Record<string, number>
+  by_experience_type_reuses: Record<string, number>
 }
 
 export interface ExperiencesTopReusedItem {

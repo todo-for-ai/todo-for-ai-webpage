@@ -1514,6 +1514,27 @@ const Dashboard = () => {
                     </div>
                   )
                 })()}
+                {(() => {
+                  const expTypeReuses = Object.entries(experiencesStats.by_experience_type_reuses || {}).filter(([, v]) => v > 0)
+                  if (expTypeReuses.length === 0) return null
+                  const maxReuse = Math.max(1, ...expTypeReuses.map(([, v]) => v))
+                  return (
+                    <div style={{ marginTop: 12 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>经验类型复用排行（累计复用次数）:</Text>
+                      <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {expTypeReuses.slice(0, 8).map(([t, v]) => (
+                          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                            <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={t}>{t}</span>
+                            <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                              <div style={{ width: `${(v / maxReuse) * 100}%`, height: '100%', background: '#722ed1', borderRadius: 3 }} />
+                            </div>
+                            <span style={{ color: '#8c8c8c', minWidth: 50, textAlign: 'right' }}>{v}次</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </>
             )
           })() : <Empty description="暂无有效经验" image={Empty.PRESENTED_IMAGE_SIMPLE} />
