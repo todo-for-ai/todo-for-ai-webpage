@@ -968,7 +968,7 @@ const Dashboard = () => {
               value={graphMinCount}
               onChange={(v) => setGraphMinCount(v ?? null)}
             />
-            <Button size="small" icon={<ReloadOutlined />} onClick={() => setGraphResetKey((k) => k + 1)}>重置布局</Button>
+            <Button size="small" icon={<ReloadOutlined />} onClick={() => { try { localStorage.removeItem('collabGraphPositions') } catch { /* ignore */ } setGraphResetKey((k) => k + 1) }}>重置布局</Button>
             <Checkbox size="small" checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
             <Button size="small" icon={<ExpandOutlined />} onClick={() => setGraphFullscreen(true)}>全屏</Button>
           </Space>
@@ -985,6 +985,7 @@ const Dashboard = () => {
             searchTerm={graphSearch || undefined}
             minCount={graphMinCount ?? undefined}
             showEdgeLabels={graphShowLabels}
+            storageKey="collabGraphPositions"
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
@@ -2196,6 +2197,7 @@ const Dashboard = () => {
                     size={260}
                     layout="grid"
                     centerNodeId={collabDetail.agentId}
+                    storageKey={`collabGraphDetail_${collabDetail.agentId}`}
                   />
                 </div>
               )}
@@ -2240,6 +2242,7 @@ const Dashboard = () => {
           searchTerm={graphSearch || undefined}
           minCount={graphMinCount ?? undefined}
           showEdgeLabels={graphShowLabels}
+          storageKey="collabGraphPositions"
           onNodeClick={(agentId) => {
             const node = collabGraph?.nodes.find((n) => n.id === agentId)
             setGraphFullscreen(false)

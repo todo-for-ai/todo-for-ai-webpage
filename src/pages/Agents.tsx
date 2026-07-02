@@ -2567,6 +2567,7 @@ const Agents: React.FC = () => {
                     size={300}
                     layout="grid"
                     centerNodeId={selectedAgent?.id}
+                    storageKey={selectedAgent ? `agentsCollabGraphDetail_${selectedAgent.id}` : undefined}
                     onNodeClick={(agentId) => {
                       if (agentId === selectedAgent?.id) return
                       setDrawerOpen(false)

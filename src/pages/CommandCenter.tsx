@@ -914,7 +914,7 @@ const CommandCenter: React.FC = () => {
                 value={graphMinCount}
                 onChange={(v) => setGraphMinCount(v ?? null)}
               />
-              <Button size="small" icon={<ReloadOutlined />} onClick={() => setGraphResetKey((k) => k + 1)}>重置布局</Button>
+              <Button size="small" icon={<ReloadOutlined />} onClick={() => { try { localStorage.removeItem('ccCollabGraphPositions') } catch { /* ignore */ } setGraphResetKey((k) => k + 1) }}>重置布局</Button>
               <Checkbox size="small" checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
               <Button size="small" icon={<ExpandOutlined />} onClick={() => setGraphFullscreen(true)}>全屏</Button>
             </Space>
@@ -930,6 +930,7 @@ const CommandCenter: React.FC = () => {
             searchTerm={graphSearch || undefined}
             minCount={graphMinCount ?? undefined}
             showEdgeLabels={graphShowLabels}
+            storageKey="ccCollabGraphPositions"
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
@@ -993,6 +994,7 @@ const CommandCenter: React.FC = () => {
                     size={260}
                     layout="grid"
                     centerNodeId={collabDetail.agentId}
+                    storageKey={`ccCollabGraphDetail_${collabDetail.agentId}`}
                   />
                 </div>
               )}
@@ -1037,6 +1039,7 @@ const CommandCenter: React.FC = () => {
           searchTerm={graphSearch || undefined}
           minCount={graphMinCount ?? undefined}
           showEdgeLabels={graphShowLabels}
+          storageKey="ccCollabGraphPositions"
           onNodeClick={(agentId) => {
             const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
             setGraphFullscreen(false)

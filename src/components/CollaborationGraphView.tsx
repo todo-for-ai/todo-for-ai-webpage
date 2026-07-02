@@ -43,6 +43,8 @@ interface CollaborationGraphViewProps {
   showEdgeLabels?: boolean
   /** 点击节点回调 */
   onNodeClick?: (agentId: number) => void
+  /** localStorage 持久化键：传入则节点拖拽位置按此键记忆，跨会话恢复 */
+  storageKey?: string
 }
 
 /**
@@ -62,6 +64,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   minCount,
   showEdgeLabels,
   onNodeClick,
+  storageKey,
 }, ref) => {
   const allNodes = data?.nodes || []
   const allEdges = data?.edges || []
@@ -84,8 +87,31 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const edges = filteredEdges
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
   const [hoveredEdge, setHoveredEdge] = useState<{ source: number; target: number } | null>(null)
-  // 拖拽：节点位置覆盖（用户手动调整）
-  const [dragOverride, setDragOverride] = useState<Record<number, { x: number; y: number }>>({})
+  // 拖拽：节点位置覆盖（用户手动调整），可选从 localStorage 恢复
+  const loadPersisted = (): Record<number, { x: number; y: number }> => {
+    if (!storageKey) return {}
+    try {
+      const raw = localStorage.getItem(storageKey)
+      if (!raw) return {}
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object') {
+        const out: Record<number, { x: number; y: number }> = {}
+        for (const k of Object.keys(parsed)) {
+          const v = parsed[k]
+          if (v && typeof v.x === 'number' && typeof v.y === 'number') {
+            out[Number(k)] = { x: v.x, y: v.y }
+          }
+        }
+        return out
+      }
+    } catch {
+      // ignore malformed storage
+    }
+    return {}
+  }
+  const [dragOverride, setDragOverride] = useState<Record<number, { x: number; y: number }>>(loadPersisted)
+  const storageKeyRef = useRef(storageKey)
+  storageKeyRef.current = storageKey
   const draggingRef = useRef<number | null>(null)
   const dragMovedRef = useRef(false)
   const svgWrapRef = useRef<HTMLDivElement | null>(null)
@@ -213,9 +239,17 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     }
   }
   const onSvgMouseUp = () => {
+    const wasNodeDrag = dragMovedRef.current && draggingRef.current !== null
     draggingRef.current = null
     panningRef.current = null
     setIsDragging(false)
+    if (wasNodeDrag && storageKeyRef.current) {
+      try {
+        localStorage.setItem(storageKeyRef.current, JSON.stringify(dragOverride))
+      } catch {
+        // storage may be unavailable (private mode / quota)
+      }
+    }
   }
   // 滚轮缩放
   const onSvgWheel = (e: React.WheelEvent) => {
