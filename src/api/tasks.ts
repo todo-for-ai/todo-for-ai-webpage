@@ -61,6 +61,12 @@ export interface Task {
   }
 }
 
+export interface TaskProjectCount {
+  project_id: number
+  name: string
+  count: number
+}
+
 export interface TaskStats {
   total: number
   by_status: Record<string, number>
@@ -72,6 +78,10 @@ export interface TaskStats {
   avg_lifecycle_hours: number | null
   lifecycle_buckets: Record<string, number>
   avg_completion_rate: number
+  by_project: TaskProjectCount[]
+  overdue_count: number
+  with_due_date: number
+  overdue_rate: number
 }
 
 export interface CreateTaskData {

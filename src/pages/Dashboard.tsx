@@ -1332,6 +1332,8 @@ const Dashboard = () => {
             const statusColor = (k: string) => k === 'done' ? 'green' : k === 'cancelled' ? 'red' : k === 'in_progress' ? 'blue' : k === 'review' ? 'orange' : k === 'blocked' ? 'volcano' : 'default'
             const priorityColor = (k: string) => k === 'urgent' ? 'red' : k === 'high' ? 'orange' : k === 'medium' ? 'blue' : 'default'
             const avgLife = taskStats.avg_lifecycle_hours
+            const byProject = taskStats.by_project || []
+            const maxProject = Math.max(1, ...byProject.map((p) => p.count))
             return (
               <>
                 <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -1370,6 +1372,33 @@ const Dashboard = () => {
                         ))}
                       </div>
                     ) : <Empty description="暂无已完成任务" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
+                  </Col>
+                </Row>
+                <Row gutter={16} style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <Statistic
+                      title="逾期任务"
+                      value={taskStats.overdue_count}
+                      suffix={taskStats.with_due_date > 0 ? `/ ${taskStats.with_due_date} 有截止日` : ''}
+                      valueStyle={{ fontSize: 16, color: taskStats.overdue_count > 0 ? '#ff4d4f' : '#52c41a' }}
+                    />
+                    <Text type="secondary" style={{ fontSize: 11 }}>逾期率 {taskStats.overdue_rate}%</Text>
+                  </Col>
+                  <Col span={16}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>按项目分布:</Text>
+                    {byProject.length > 0 ? (
+                      <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {byProject.slice(0, 6).map((p) => (
+                          <div key={p.project_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                            <span style={{ width: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={p.name}>{p.name}</span>
+                            <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                              <div style={{ width: `${(p.count / maxProject) * 100}%`, height: '100%', background: '#1890ff', borderRadius: 3 }} />
+                            </div>
+                            <span style={{ color: '#8c8c8c', minWidth: 30, textAlign: 'right' }}>{p.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <Empty description="无" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
                   </Col>
                 </Row>
               </>
