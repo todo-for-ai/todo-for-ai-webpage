@@ -290,7 +290,15 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     panningRef.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
   }
 
-  const nodeRadius = (n: { messages: number }) => 6 + 10 * (n.messages / maxMsg)
+  // 节点半径按消息量分四档梯度（低/中低/中/高），比纯线性对比更强
+  const nodeTier = (n: { messages: number }) => {
+    const ratio = n.messages / maxMsg
+    if (ratio >= 0.75) return 3
+    if (ratio >= 0.5) return 2
+    if (ratio >= 0.25) return 1
+    return 0
+  }
+  const nodeRadius = (n: { messages: number }) => [7, 10, 14, 18][nodeTier(n)]
   // 是否有任意悬停（节点或边）
   const anyHover = hoveredNode !== null || hoveredEdge !== null
   // 边是否高亮：悬停节点相关，或该边自身被悬停
@@ -467,6 +475,20 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
               </circle>
+              {/* 消息量梯度内点：tier 越高内点越大，强化节点尺寸层次 */}
+              {(() => {
+                const tier = nodeTier(n)
+                if (tier === 0) return null
+                const innerR = [0, 2, 3.5, 5][tier]
+                return (
+                  <circle
+                    r={innerR}
+                    fill="#fff"
+                    fillOpacity={dimmed ? 0.15 : (anyHover ? (highlighted ? 0.9 : 0.35) : 0.75)}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                )
+              })()}
               <text
                 x={r + 3}
                 y={4}
@@ -514,6 +536,21 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         ].map(({ c, l }) => (
           <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
             <span style={{ display: 'inline-block', width: 14, height: 3, background: c, borderRadius: 2 }} />
+            {l}
+          </span>
+        ))}
+      </div>
+      {/* 节点尺寸图例（按消息量梯度） */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: '#8c8c8c' }}>节点尺寸(消息量):</span>
+        {[
+          { r: 7, l: '低' },
+          { r: 10, l: '中低' },
+          { r: 14, l: '中' },
+          { r: 18, l: '高' },
+        ].map(({ r, l }) => (
+          <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ display: 'inline-block', width: r, height: r, borderRadius: '50%', background: '#bfbfbf' }} />
             {l}
           </span>
         ))}
