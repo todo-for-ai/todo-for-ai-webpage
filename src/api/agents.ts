@@ -709,6 +709,16 @@ export interface WorkflowRunTrend {
   total_failed: number
 }
 
+export interface ExperiencesStats {
+  total: number
+  by_domain: Record<string, number>
+  by_task_type: Record<string, number>
+  by_experience_type: Record<string, number>
+  shared: number
+  total_reuses: number
+  avg_confidence: number | null
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -971,6 +981,10 @@ export class AgentsApi {
 
   async getWorkflowRunTrend(days = 30): Promise<WorkflowRunTrend> {
     return unwrapData<WorkflowRunTrend>(await apiClient.get(`/agents/workflows/run-trend${buildQuery({ days })}`))
+  }
+
+  async getExperiencesStats(): Promise<ExperiencesStats> {
+    return unwrapData<ExperiencesStats>(await apiClient.get('/agents/experiences/stats'))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {

@@ -26,10 +26,11 @@ import {
   ShareAltOutlined,
   SearchOutlined,
   ExpandOutlined,
+  BookOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -78,6 +79,7 @@ const Dashboard = () => {
   const [sandboxViolationTrend, setSandboxViolationTrend] = useState<SandboxViolationTrend | null>(null)
   const [sandboxViolationsByAgent, setSandboxViolationsByAgent] = useState<SandboxViolationsByAgent | null>(null)
   const [sandboxTemplateUsage, setSandboxTemplateUsage] = useState<SandboxTemplateUsage | null>(null)
+  const [experiencesStats, setExperiencesStats] = useState<ExperiencesStats | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -193,6 +195,7 @@ const Dashboard = () => {
       agentsApi.getSandboxViolationTrend(30).then(setSandboxViolationTrend).catch(() => {})
       agentsApi.getSandboxViolationsByAgent(30, 8).then(setSandboxViolationsByAgent).catch(() => {})
       agentsApi.getSandboxTemplateUsage().then(setSandboxTemplateUsage).catch(() => {})
+      agentsApi.getExperiencesStats().then(setExperiencesStats).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1207,6 +1210,67 @@ const Dashboard = () => {
             <Empty description="暂无沙盒数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
         </Spin>
+      </Card>
+
+      {/* Experience Library Stats */}
+      <Card
+        title={<Space><BookOutlined /> 经验库统计</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {experiencesStats ? (
+          experiencesStats.total > 0 ? (() => {
+            const domains = Object.entries(experiencesStats.by_domain)
+            const tasks = Object.entries(experiencesStats.by_task_type)
+            const types = Object.entries(experiencesStats.by_experience_type)
+            const maxDomain = Math.max(1, ...domains.map(([, v]) => v))
+            const avgConf = experiencesStats.avg_confidence
+            const confColor = avgConf == null ? undefined : avgConf >= 0.8 ? '#52c41a' : avgConf >= 0.5 ? '#faad14' : '#ff4d4f'
+            return (
+              <>
+                <Row gutter={16} style={{ marginBottom: 16 }}>
+                  <Col span={6}><Statistic title="有效经验" value={experiencesStats.total} valueStyle={{ fontSize: 16 }} /></Col>
+                  <Col span={6}><Statistic title="已共享" value={experiencesStats.shared} valueStyle={{ fontSize: 16, color: '#722ed1' }} prefix={<ShareAltOutlined />} /></Col>
+                  <Col span={6}><Statistic title="累计复用" value={experiencesStats.total_reuses} valueStyle={{ fontSize: 16 }} suffix="次" /></Col>
+                  <Col span={6}><Statistic title="平均置信度" value={avgConf ?? '—'} valueStyle={{ fontSize: 16, color: confColor }} /></Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>按域分布:</Text>
+                    {domains.length > 0 ? (
+                      <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {domains.slice(0, 8).map(([k, v]: any) => (
+                          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                            <span style={{ width: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={k}>{k}</span>
+                            <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                              <div style={{ width: `${(v / maxDomain) * 100}%`, height: '100%', background: '#722ed1', borderRadius: 3 }} />
+                            </div>
+                            <span style={{ color: '#8c8c8c', minWidth: 30, textAlign: 'right' }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <Empty description="无" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
+                  </Col>
+                  <Col span={12}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>按经验类型:</Text>
+                    <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
+                      {types.map(([k, v]: any) => (
+                        <Tag key={k} color="purple" style={{ fontSize: 11 }}>{k}: {v}</Tag>
+                      ))}
+                    </Space>
+                    <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 12 }}>按任务类型:</Text>
+                    <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
+                      {tasks.length > 0 ? tasks.slice(0, 10).map(([k, v]: any) => (
+                        <Tag key={k} color="blue" style={{ fontSize: 11 }}>{k}: {v}</Tag>
+                      )) : <Text type="secondary" style={{ fontSize: 12 }}>无</Text>}
+                    </Space>
+                  </Col>
+                </Row>
+              </>
+            )
+          })() : <Empty description="暂无有效经验" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : (
+          <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
       </Card>
 
       {/* Conflict Monitor */}
