@@ -700,6 +700,7 @@ export interface WorkflowRunTrendBucket {
   date: string
   succeeded: number
   failed: number
+  failed_steps: number
 }
 
 export interface WorkflowRunTrend {
@@ -707,6 +708,7 @@ export interface WorkflowRunTrend {
   trend: WorkflowRunTrendBucket[]
   total_succeeded: number
   total_failed: number
+  total_failed_steps: number
 }
 
 /** 失败步骤与冲突/沙盒违规的跨维度关联 */

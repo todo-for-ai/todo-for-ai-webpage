@@ -692,7 +692,7 @@ const Workflows: React.FC = () => {
           {runTrend && runTrend.trend.length > 0 && (
             <div style={{ marginTop: 12 }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                近 {runTrend.days} 天运行趋势（累计成功 {runTrend.total_succeeded} / 失败 {runTrend.total_failed}）
+                近 {runTrend.days} 天运行趋势（累计成功 {runTrend.total_succeeded} / 失败 {runTrend.total_failed} / 失败步骤 {runTrend.total_failed_steps ?? 0}）
               </Text>
               <div style={{ marginTop: 4 }}>
                 <WorkflowRunTrendChart buckets={runTrend.trend} width={520} height={84} />
@@ -700,6 +700,7 @@ const Workflows: React.FC = () => {
               <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
                 <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>●</span> 成功</Text>
                 <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
+                <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#fa8c16' }}>┄</span> 失败步骤</Text>
               </div>
             </div>
           )}
