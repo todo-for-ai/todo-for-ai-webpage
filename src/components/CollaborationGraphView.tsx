@@ -482,9 +482,25 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
               </circle>
-              {/* 消息量梯度内点：tier 越高内点越大，强化节点尺寸层次 */}
+              {/* 节点中心：tier≥2 且有声誉时显示声誉数值，否则显示消息量梯度内点 */}
               {(() => {
                 const tier = nodeTier(n)
+                if (n.reputation !== null && n.reputation !== undefined && tier >= 2) {
+                  return (
+                    <text
+                      x={0}
+                      y={3}
+                      fontSize={tier >= 3 ? 9 : 8}
+                      fill="#fff"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.5) : 0.95)}
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {Math.round(n.reputation)}
+                    </text>
+                  )
+                }
                 if (tier === 0) return null
                 const innerR = [0, 2, 3.5, 5][tier]
                 return (
@@ -549,7 +565,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
       </div>
       {/* 节点尺寸图例（按消息量梯度） */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, color: '#8c8c8c' }}>节点尺寸(消息量):</span>
+        <span style={{ fontSize: 10, color: '#8c8c8c' }}>节点尺寸(消息量, 中/高显示声誉值):</span>
         {[
           { r: 7, l: '低' },
           { r: 10, l: '中低' },
