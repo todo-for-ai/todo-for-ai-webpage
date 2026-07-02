@@ -2493,12 +2493,19 @@ const Agents: React.FC = () => {
                 </Space>
                 {reputationHistory && reputationHistory.points.length > 0 && (
                   <div style={{ marginTop: 4 }}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>声誉趋势（{reputationHistory.points.length} 次变化）</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>声誉趋势（{reputationHistory.points.length} 次变化，点击点跳转任务）</Text>
                     <ReputationSparkline
                       points={reputationHistory.points}
                       currentScore={agentReputation?.score}
                       width={240}
                       height={56}
+                      onPointClick={(p) => {
+                        if (p.task_id) {
+                          navigate(`/todo-for-ai/pages/tasks/${p.task_id}`)
+                        } else if (p.workflow_run_id) {
+                          message.info(`工作流运行 #${p.workflow_run_id}（暂无独立详情页）`)
+                        }
+                      }}
                     />
                   </div>
                 )}

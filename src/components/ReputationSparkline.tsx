@@ -9,6 +9,8 @@ interface ReputationSparklineProps {
   currentScore?: number
   width?: number
   height?: number
+  /** 点击数据点回调（仅对有 origin point 的点触发，末端参考点不触发） */
+  onPointClick?: (point: ReputationHistoryPoint) => void
 }
 
 // 按声誉分取颜色（红<40 黄40-70 绿>70），与 CollaborationGraphView 保持一致
@@ -26,6 +28,7 @@ const ReputationSparkline: React.FC<ReputationSparklineProps> = ({
   currentScore,
   width = 240,
   height = 56,
+  onPointClick,
 }) => {
   // 收集有效分值点（new_score 非空）
   const series: { score: number; p?: ReputationHistoryPoint }[] = []
@@ -87,6 +90,7 @@ const ReputationSparkline: React.FC<ReputationSparklineProps> = ({
           parts.push(`→ ${d.score.toFixed(1)}`)
         }
         const label = parts.join(' · ')
+        const clickable = !!onPointClick && !!p
         return (
           <Tooltip key={i} title={label}>
             <circle
@@ -96,7 +100,8 @@ const ReputationSparkline: React.FC<ReputationSparklineProps> = ({
               fill={scoreColor(d.score)}
               stroke="#fff"
               strokeWidth={1}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: clickable ? 'pointer' : 'default' }}
+              onClick={clickable && p ? () => onPointClick!(p) : undefined}
             />
           </Tooltip>
         )
