@@ -23,6 +23,13 @@ const reputationColor = (rep?: number | null) => {
   if (rep < 70) return '#faad14'
   return '#52c41a'
 }
+// 声誉 -> 环描边粗细梯度（高声誉更粗，强化视觉权重）
+const reputationStrokeWidth = (rep?: number | null) => {
+  if (rep === null || rep === undefined) return 1.5
+  if (rep >= 80) return 3.5
+  if (rep >= 50) return 2.5
+  return 1.5
+}
 
 interface CollaborationGraphViewProps {
   /** 图数据：nodes + edges */
@@ -452,7 +459,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               onMouseDown={(e) => { e.preventDefault(); onNodeDragStart(n.id) }}
               onClick={onNodeClick ? () => { if (dragMovedRef.current) { dragMovedRef.current = false; return }; onNodeClick(n.id) } : undefined}
             >
-              {/* 声誉环：外圈细环，颜色按 reputation */}
+              {/* 声誉环：外圈环，颜色按 reputation，粗细按声誉梯度 */}
               {(() => {
                 const rc = reputationColor(n.reputation)
                 if (!rc) return null
@@ -461,7 +468,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                     r={r + 4}
                     fill="none"
                     stroke={rc}
-                    strokeWidth={2}
+                    strokeWidth={reputationStrokeWidth(n.reputation)}
                     strokeOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 0.9 : 0.3) : 0.8)}
                   />
                 )
@@ -551,6 +558,20 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         ].map(({ r, l }) => (
           <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <span style={{ display: 'inline-block', width: r, height: r, borderRadius: '50%', background: '#bfbfbf' }} />
+            {l}
+          </span>
+        ))}
+      </div>
+      {/* 声誉环图例（颜色+粗细） */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: '#8c8c8c' }}>声誉环:</span>
+        {[
+          { c: '#ff4d4f', w: 1.5, l: '低(<40)' },
+          { c: '#faad14', w: 2.5, l: '中(≥50)' },
+          { c: '#52c41a', w: 3.5, l: '高(≥80)' },
+        ].map(({ c, w, l }) => (
+          <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ display: 'inline-block', width: 16, height: w, background: c, borderRadius: 2 }} />
             {l}
           </span>
         ))}
