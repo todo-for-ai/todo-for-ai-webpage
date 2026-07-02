@@ -693,6 +693,20 @@ export interface WorkflowStepStats {
   items: WorkflowStepStat[]
 }
 
+/** 工作流运行结果趋势单日桶 */
+export interface WorkflowRunTrendBucket {
+  date: string
+  succeeded: number
+  failed: number
+}
+
+export interface WorkflowRunTrend {
+  days: number
+  trend: WorkflowRunTrendBucket[]
+  total_succeeded: number
+  total_failed: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -951,6 +965,10 @@ export class AgentsApi {
 
   async getWorkflowStepStats(limit = 30): Promise<WorkflowStepStats> {
     return unwrapData<WorkflowStepStats>(await apiClient.get(`/agents/workflows/step-stats${buildQuery({ limit })}`))
+  }
+
+  async getWorkflowRunTrend(days = 30): Promise<WorkflowRunTrend> {
+    return unwrapData<WorkflowRunTrend>(await apiClient.get(`/agents/workflows/run-trend${buildQuery({ days })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {

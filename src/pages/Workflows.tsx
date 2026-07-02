@@ -15,9 +15,10 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
+import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
 const { Option } = Select
@@ -47,6 +48,7 @@ const Workflows: React.FC = () => {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [runs, setRuns] = useState<WorkflowRunItem[]>([])
   const [stepStats, setStepStats] = useState<WorkflowStepStats | null>(null)
+  const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [runsLoading, setRunsLoading] = useState(false)
@@ -118,6 +120,7 @@ const Workflows: React.FC = () => {
       const result = await agentsApi.getWorkflowRuns({ per_page: 50 })
       setRuns(result.items)
       agentsApi.getWorkflowStepStats(30).then(setStepStats).catch(() => {})
+      agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
     } catch {
       message.error('加载工作流运行记录失败')
     } finally {
@@ -681,6 +684,20 @@ const Workflows: React.FC = () => {
               )
             })}
           </div>
+          {runTrend && runTrend.trend.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                近 {runTrend.days} 天运行趋势（累计成功 {runTrend.total_succeeded} / 失败 {runTrend.total_failed}）
+              </Text>
+              <div style={{ marginTop: 4 }}>
+                <WorkflowRunTrendChart buckets={runTrend.trend} width={520} height={84} />
+              </div>
+              <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
+                <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>●</span> 成功</Text>
+                <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
