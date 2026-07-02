@@ -552,6 +552,17 @@ export interface SandboxViolationsByAgent {
   items: SandboxViolationByAgentItem[]
 }
 
+/** 沙盒模板使用统计单项 */
+export interface SandboxTemplateUsageItem {
+  template_key: string
+  uses: number
+  bound_to_agent: number
+}
+
+export interface SandboxTemplateUsage {
+  items: SandboxTemplateUsageItem[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1433,6 +1444,10 @@ export class AgentsApi {
 
   async getSandboxViolationsByAgent(days = 30, limit = 10): Promise<SandboxViolationsByAgent> {
     return unwrapData<SandboxViolationsByAgent>(await apiClient.get('/agents/sandboxes/violations-by-agent', { params: { days, limit } }))
+  }
+
+  async getSandboxTemplateUsage(): Promise<SandboxTemplateUsage> {
+    return unwrapData<SandboxTemplateUsage>(await apiClient.get('/agents/sandboxes/template-usage'))
   }
 
   async getStepSandboxExecution(runId: number, stepKey: string): Promise<any> {

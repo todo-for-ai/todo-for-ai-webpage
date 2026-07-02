@@ -29,7 +29,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -77,6 +77,7 @@ const Dashboard = () => {
   const [sandboxLoading, setSandboxLoading] = useState(false)
   const [sandboxViolationTrend, setSandboxViolationTrend] = useState<SandboxViolationTrend | null>(null)
   const [sandboxViolationsByAgent, setSandboxViolationsByAgent] = useState<SandboxViolationsByAgent | null>(null)
+  const [sandboxTemplateUsage, setSandboxTemplateUsage] = useState<SandboxTemplateUsage | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -191,6 +192,7 @@ const Dashboard = () => {
       setSandboxData(result)
       agentsApi.getSandboxViolationTrend(30).then(setSandboxViolationTrend).catch(() => {})
       agentsApi.getSandboxViolationsByAgent(30, 8).then(setSandboxViolationsByAgent).catch(() => {})
+      agentsApi.getSandboxTemplateUsage().then(setSandboxTemplateUsage).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1174,6 +1176,26 @@ const Dashboard = () => {
                             <div style={{ width: `${(it.total / maxTotal) * 100}%`, height: '100%', background: '#ff4d4f', borderRadius: 3 }} />
                           </div>
                           <span style={{ color: '#8c8c8c', minWidth: 40, textAlign: 'right' }}>{it.total}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })() : null}
+              {sandboxTemplateUsage && sandboxTemplateUsage.items.length > 0 ? (() => {
+                const items = sandboxTemplateUsage.items
+                const maxUses = Math.max(1, ...items.map((it) => it.uses))
+                return (
+                  <div style={{ marginTop: 12 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>沙盒模板使用（实例化/绑定 Agent）</Text>
+                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {items.slice(0, 6).map((it) => (
+                        <div key={it.template_key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                          <span style={{ width: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={it.template_key}>{it.template_key}</span>
+                          <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ width: `${(it.uses / maxUses) * 100}%`, height: '100%', background: '#722ed1', borderRadius: 3 }} />
+                          </div>
+                          <span style={{ color: '#8c8c8c', minWidth: 70, textAlign: 'right' }}>{it.uses}次 · 绑{it.bound_to_agent}</span>
                         </div>
                       ))}
                     </div>
