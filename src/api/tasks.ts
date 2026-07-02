@@ -82,6 +82,7 @@ export interface TaskStats {
   overdue_count: number
   with_due_date: number
   overdue_rate: number
+  by_priority_status: Record<string, Record<string, number>>
 }
 
 export interface CreateTaskData {

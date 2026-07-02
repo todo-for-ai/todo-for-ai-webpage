@@ -1566,6 +1566,60 @@ const Dashboard = () => {
                     ) : <Empty description="无" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
                   </Col>
                 </Row>
+                {(() => {
+                  const matrix = taskStats.by_priority_status || {}
+                  const priKeys = Object.keys(matrix)
+                  if (priKeys.length === 0) return null
+                  // 收集所有出现过的状态作为列
+                  const statusSet = new Set<string>()
+                  priKeys.forEach((p) => Object.keys(matrix[p]).forEach((s) => statusSet.add(s)))
+                  const statusCols = Array.from(statusSet)
+                  // 计算最大单元格计数用于色阶
+                  let cellMax = 1
+                  priKeys.forEach((p) => statusCols.forEach((s) => { cellMax = Math.max(cellMax, matrix[p][s] || 0) }))
+                  const cellColor = (v: number) => {
+                    if (!v) return '#fafafa'
+                    const r = v / cellMax
+                    if (r >= 0.75) return '#722ed1'
+                    if (r >= 0.5) return '#9254de'
+                    if (r >= 0.25) return '#b37feb'
+                    return '#d3adf7'
+                  }
+                  return (
+                    <div style={{ marginTop: 12 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>优先级 × 状态分布热力:</Text>
+                      <table style={{ borderCollapse: 'collapse', fontSize: 10, marginTop: 4 }}>
+                        <thead>
+                          <tr>
+                            <th style={{ padding: '2px 6px', borderBottom: '1px solid #f0f0f0', textAlign: 'left' }}>优先级</th>
+                            {statusCols.map((s) => (
+                              <th key={s} style={{ padding: '2px 6px', borderBottom: '1px solid #f0f0f0', color: '#595959' }}>{s}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {priKeys.map((p) => (
+                            <tr key={p}>
+                              <td style={{ padding: '2px 6px', color: '#595959', whiteSpace: 'nowrap' }}>{p}</td>
+                              {statusCols.map((s) => {
+                                const v = matrix[p][s] || 0
+                                return (
+                                  <td key={s} style={{ padding: 0 }}>
+                                    <Tooltip title={`${p} / ${s}: ${v}`}>
+                                      <div style={{ width: 44, height: 22, background: cellColor(v), color: v >= cellMax * 0.5 ? '#fff' : '#595959', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, margin: 1 }}>
+                                        {v || ''}
+                                      </div>
+                                    </Tooltip>
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                })()}
               </>
             )
           })() : <Empty description="暂无任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
