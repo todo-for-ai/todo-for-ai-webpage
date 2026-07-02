@@ -434,6 +434,30 @@ export interface CollaborationGraph {
   total_edges: number
 }
 
+/** 声誉历史单个变化点 */
+export interface ReputationHistoryPoint {
+  /** ISO 时间戳 */
+  at: string | null
+  /** 变化后的声誉分 */
+  new_score?: number | null
+  /** 本次分值增量 */
+  score_delta?: number | null
+  /** 质量反馈增量 */
+  quality_delta?: number | null
+  /** 该次任务是否成功 */
+  success?: boolean | null
+  /** 累计任务数 */
+  total_tasks?: number | null
+}
+
+export interface ReputationHistory {
+  agent_id: number
+  /** 当前最新声誉分 */
+  current_score: number
+  /** 时间升序的变化点列表 */
+  points: ReputationHistoryPoint[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1111,6 +1135,15 @@ export class AgentsApi {
 
   async recalculateReputation(agentId: number): Promise<any> {
     return unwrapData<any>(await apiClient.post(`/agents/${agentId}/reputation/recalculate`, {}))
+  }
+
+  async getAgentReputationHistory(
+    agentId: number,
+    params?: { limit?: number; since?: string; until?: string }
+  ): Promise<ReputationHistory> {
+    return unwrapData<ReputationHistory>(
+      await apiClient.get(`/agents/${agentId}/reputation/history`, { params })
+    )
   }
 
   // ---- Agent Experience (Collective Intelligence) ----

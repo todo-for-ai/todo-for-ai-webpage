@@ -75,9 +75,11 @@ import {
   type TaskEvent,
   type NotificationItem,
   type CollaborationGraph,
+  type ReputationHistory,
 } from '../api/agents'
 import CapabilityRadar from '../components/Agent/CapabilityRadar'
 import CollaborationGraphView from '../components/CollaborationGraphView'
+import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 const { Title, Text } = Typography
@@ -382,6 +384,7 @@ const Agents: React.FC = () => {
   const [sandboxTemplateOpen, setSandboxTemplateOpen] = useState(false)
   // Reputation
   const [agentReputation, setAgentReputation] = useState<any>(null)
+  const [reputationHistory, setReputationHistory] = useState<ReputationHistory | null>(null)
   // Agent-bound sandbox (shown in drawer)
   const [agentSandbox, setAgentSandbox] = useState<any>(null)
 
@@ -831,6 +834,12 @@ const Agents: React.FC = () => {
     } catch {
       setAgentReputation(null)
     }
+    try {
+      const hist = await agentsApi.getAgentReputationHistory(agent.id, { limit: 200 })
+      setReputationHistory(hist)
+    } catch {
+      setReputationHistory(null)
+    }
   }
 
   const loadAgentSandbox = async (agent: Agent) => {
@@ -847,6 +856,8 @@ const Agents: React.FC = () => {
     try {
       const data = await agentsApi.recalculateReputation(selectedAgent.id)
       setAgentReputation(data)
+      const hist = await agentsApi.getAgentReputationHistory(selectedAgent.id, { limit: 200 })
+      setReputationHistory(hist)
       message.success('声誉已重新计算')
     } catch { message.error('重新计算失败') }
   }
@@ -2480,6 +2491,17 @@ const Agents: React.FC = () => {
                     <Tag onClick={openSandboxes} style={{ cursor: 'pointer' }}>未绑定沙盒</Tag>
                   )}
                 </Space>
+                {reputationHistory && reputationHistory.points.length > 0 && (
+                  <div style={{ marginTop: 4 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>声誉趋势（{reputationHistory.points.length} 次变化）</Text>
+                    <ReputationSparkline
+                      points={reputationHistory.points}
+                      currentScore={agentReputation?.score}
+                      width={240}
+                      height={56}
+                    />
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {renderCapabilities(selectedAgent.capabilities, 12)}
                 </div>
