@@ -29,7 +29,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -75,6 +75,7 @@ const Dashboard = () => {
   // Sandbox monitor state
   const [sandboxData, setSandboxData] = useState<any>(null)
   const [sandboxLoading, setSandboxLoading] = useState(false)
+  const [sandboxViolationTrend, setSandboxViolationTrend] = useState<SandboxViolationTrend | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -187,6 +188,7 @@ const Dashboard = () => {
     try {
       const result = await agentsApi.getSandboxDashboard()
       setSandboxData(result)
+      agentsApi.getSandboxViolationTrend(30).then(setSandboxViolationTrend).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1135,6 +1137,25 @@ const Dashboard = () => {
                   </Space>
                 </Col>
               </Row>
+              {sandboxViolationTrend && sandboxViolationTrend.trend.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    近 {sandboxViolationTrend.days} 天违规趋势（累计 {sandboxViolationTrend.trend.reduce((s, t) => s + t.count, 0)}）
+                  </Text>
+                  <div style={{ marginTop: 8 }}>
+                    <MiniTrendChart
+                      height={100}
+                      labels={sandboxViolationTrend.trend.map((t) => t.date)}
+                      series={[{ key: 'violations', label: '违规', color: '#ff4d4f', values: sandboxViolationTrend.trend.map((t) => t.count) }]}
+                    />
+                  </div>
+                  <Space size={[4, 4]} wrap style={{ marginTop: 4 }}>
+                    {Object.entries(sandboxViolationTrend.by_type || {}).filter(([, v]) => (v as number) > 0).map(([k, v]: any) => (
+                      <Tag key={k} style={{ fontSize: 10 }}>{k}: {v}</Tag>
+                    ))}
+                  </Space>
+                </div>
+              )}
             </>
           ) : (
             <Empty description="暂无沙盒数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />

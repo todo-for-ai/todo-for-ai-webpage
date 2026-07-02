@@ -526,6 +526,18 @@ export interface ConflictsStrategyStats {
   items: ConflictStrategyStat[]
 }
 
+/** 沙盒违规时间趋势单日桶 */
+export interface SandboxViolationTrendBucket {
+  date: string
+  count: number
+}
+
+export interface SandboxViolationTrend {
+  days: number
+  trend: SandboxViolationTrendBucket[]
+  by_type: Record<string, number>
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1399,6 +1411,10 @@ export class AgentsApi {
 
   async getSandboxDashboard(): Promise<any> {
     return unwrapData<any>(await apiClient.get('/agents/sandboxes/dashboard'))
+  }
+
+  async getSandboxViolationTrend(days = 30): Promise<SandboxViolationTrend> {
+    return unwrapData<SandboxViolationTrend>(await apiClient.get('/agents/sandboxes/violation-trend', { params: { days } }))
   }
 
   async getStepSandboxExecution(runId: number, stepKey: string): Promise<any> {
