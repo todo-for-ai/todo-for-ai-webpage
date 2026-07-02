@@ -31,7 +31,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -85,6 +85,8 @@ const Dashboard = () => {
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
+  const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
+  const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -204,6 +206,7 @@ const Dashboard = () => {
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
+      agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -220,6 +223,7 @@ const Dashboard = () => {
     try {
       const result = await agentsApi.getConflictsDashboard()
       setConflictData(result)
+      agentsApi.getConflictsSandboxCorrelation(30, 2).then(setConflictsSandboxCorrelation).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1469,6 +1473,33 @@ const Dashboard = () => {
         )}
       </Card>
 
+      {/* Low-efficiency Agent Alerts */}
+      {productivityAlerts && productivityAlerts.items.length > 0 && (
+        <Card
+          title={<Space><WarningOutlined /> 低效率 Agent 预警</Space>}
+          style={{ marginBottom: 24 }}
+        >
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            近 {productivityAlerts.days} 天，完成率 &lt;{productivityAlerts.min_completion_rate}% 或失败率 &gt;{productivityAlerts.max_failure_rate}%（最少 {productivityAlerts.min_assignments} 次分配），共 {productivityAlerts.items.length} 个
+          </Text>
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {productivityAlerts.items.map((a) => (
+              <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, flexWrap: 'wrap' }}>
+                <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
+                <Tag style={{ fontSize: 10 }}>分配 {a.total}</Tag>
+                <Tag color="green" style={{ fontSize: 10 }}>完成 {a.done}</Tag>
+                <Tag color="red" style={{ fontSize: 10 }}>失败 {a.failed}</Tag>
+                <span style={{ color: '#ff4d4f', minWidth: 70 }}>完成率 {a.completion_rate}%</span>
+                <span style={{ color: '#fa8c16', minWidth: 60 }}>失败率 {a.failure_rate}%</span>
+                {a.reasons.map((r) => (
+                  <Tag key={r} color="volcano" style={{ fontSize: 10 }}>{r}</Tag>
+                ))}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Conflict Monitor */}
       <Card
         title={<Space><WarningOutlined /> 协作冲突监控</Space>}
@@ -1508,6 +1539,33 @@ const Dashboard = () => {
                   </Space>
                 </Col>
               </Row>
+              {conflictsSandboxCorrelation && conflictsSandboxCorrelation.total_conflicts > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    冲突↔沙盒违规关联（近 {conflictsSandboxCorrelation.days} 天，±{conflictsSandboxCorrelation.window_hours}h，{conflictsSandboxCorrelation.total_conflicts} 个冲突中 {conflictsSandboxCorrelation.with_violation} 个伴随违规，{conflictsSandboxCorrelation.violation_rate}%）
+                  </Text>
+                  <div style={{ marginTop: 6 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>按冲突类型:</Text>
+                    <Space size={[8, 8]} wrap style={{ marginTop: 4 }}>
+                      {Object.entries(conflictsSandboxCorrelation.by_conflict_type).map(([k, v]: any) => (
+                        <Tag key={k} color={v.with_violation > 0 ? 'volcano' : 'default'} style={{ fontSize: 11 }}>{k}: {v.with_violation}/{v.total} ({v.rate}%)</Tag>
+                      ))}
+                    </Space>
+                  </div>
+                  {conflictsSandboxCorrelation.top_agents.length > 0 && (
+                    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>伴随违规最多的 Agent:</Text>
+                      {conflictsSandboxCorrelation.top_agents.map((a) => (
+                        <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                          <span style={{ width: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name} #{a.agent_id}</span>
+                          <Tag style={{ fontSize: 10 }}>冲突 {a.conflicts}</Tag>
+                          <Tag color={a.with_violation > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>伴随违规 {a.with_violation}</Tag>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <Empty description="暂无冲突数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />

@@ -777,6 +777,52 @@ export interface AgentProductivityTrend {
   total_failed: number
 }
 
+export interface AgentProductivityAlertItem {
+  agent_id: number
+  name: string
+  total: number
+  done: number
+  failed: number
+  cancelled: number
+  expired: number
+  in_progress: number
+  completion_rate: number
+  failure_rate: number
+  avg_completion_hours: number | null
+  reasons: string[]
+}
+
+export interface AgentProductivityAlerts {
+  days: number
+  min_completion_rate: number
+  max_failure_rate: number
+  min_assignments: number
+  items: AgentProductivityAlertItem[]
+}
+
+export interface ConflictsSandboxCorrelationTypeItem {
+  total: number
+  with_violation: number
+  rate: number
+}
+
+export interface ConflictsSandboxCorrelationAgent {
+  agent_id: number
+  name: string
+  conflicts: number
+  with_violation: number
+}
+
+export interface ConflictsSandboxCorrelation {
+  days: number
+  window_hours: number
+  total_conflicts: number
+  with_violation: number
+  violation_rate: number
+  by_conflict_type: Record<string, ConflictsSandboxCorrelationTypeItem>
+  top_agents: ConflictsSandboxCorrelationAgent[]
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -1081,6 +1127,14 @@ export class AgentsApi {
 
   async getAgentProductivityTrend(days = 30): Promise<AgentProductivityTrend> {
     return unwrapData<AgentProductivityTrend>(await apiClient.get(`/agents/productivity/trend${buildQuery({ days })}`))
+  }
+
+  async getAgentProductivityAlerts(): Promise<AgentProductivityAlerts> {
+    return unwrapData<AgentProductivityAlerts>(await apiClient.get('/agents/productivity/alerts'))
+  }
+
+  async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
+    return unwrapData<ConflictsSandboxCorrelation>(await apiClient.get(`/agents/conflicts/sandbox-correlation${buildQuery({ days, window_hours: windowHours })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
