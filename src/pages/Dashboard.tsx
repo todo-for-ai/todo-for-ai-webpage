@@ -93,6 +93,13 @@ const Dashboard = () => {
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
   const [agentHealthTrend, setAgentHealthTrend] = useState<AgentHealthTrend | null>(null)
+  const [healthTrendAgentId, setHealthTrendAgentId] = useState<number | undefined>(undefined)
+  const [healthTrendLoading, setHealthTrendLoading] = useState(false)
+
+  const reloadHealthTrend = (agentId?: number) => {
+    setHealthTrendLoading(true)
+    agentsApi.getAgentHealthTrend(30, agentId).then(setAgentHealthTrend).catch(() => {}).finally(() => setHealthTrendLoading(false))
+  }
   const [agentHealthAlerts, setAgentHealthAlerts] = useState<AgentHealthAlerts | null>(null)
   const [healthWeights, setHealthWeights] = useState<HealthWeights>({ w_reputation: 0.4, w_completion: 0.3, w_conflict: 0.15, w_violation: 0.15 })
   const [healthAlertsLoading, setHealthAlertsLoading] = useState(false)
@@ -1692,6 +1699,23 @@ const Dashboard = () => {
           )
         })() : (
           <Empty description="暂无 Agent" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+        {/* 健康度趋势 Agent 维度筛选 */}
+        {agentHealth && agentHealth.items.length > 0 && (
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>趋势下钻:</Text>
+            <Select
+              size="small"
+              style={{ width: 200 }}
+              allowClear
+              placeholder="全舰队"
+              value={healthTrendAgentId}
+              onChange={(v) => { setHealthTrendAgentId(v); reloadHealthTrend(v) }}
+              options={agentHealth.items.map((a) => ({ value: a.agent_id, label: `${a.name} #${a.agent_id}` }))}
+              loading={healthTrendLoading}
+            />
+            {agentHealthTrend?.agent_name && <Tag color="purple" style={{ fontSize: 10 }}>{agentHealthTrend.agent_name}</Tag>}
+          </div>
         )}
         {agentHealthTrend && agentHealthTrend.trend.length > 0 && (() => {
           const valid = agentHealthTrend.trend.filter((b) => b.avg_reputation != null)

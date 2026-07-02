@@ -888,6 +888,8 @@ export interface AgentHealthTrend {
   total_negative: number
   total_conflicts: number
   total_violations: number
+  agent_id: number | null
+  agent_name: string | null
 }
 
 export interface AgentHealthAlertItem extends AgentHealthItem {
@@ -1251,8 +1253,8 @@ export class AgentsApi {
     return unwrapData<AgentHealth>(await apiClient.get(`/agents/health${buildQuery({ days })}`))
   }
 
-  async getAgentHealthTrend(days = 30): Promise<AgentHealthTrend> {
-    return unwrapData<AgentHealthTrend>(await apiClient.get(`/agents/health/trend${buildQuery({ days })}`))
+  async getAgentHealthTrend(days = 30, agentId?: number): Promise<AgentHealthTrend> {
+    return unwrapData<AgentHealthTrend>(await apiClient.get(`/agents/health/trend${buildQuery({ days, agent_id: agentId })}`))
   }
 
   async getAgentHealthAlerts(weights: HealthWeights = {}): Promise<AgentHealthAlerts> {
