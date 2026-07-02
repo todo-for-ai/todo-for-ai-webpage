@@ -45,6 +45,10 @@ interface CollaborationGraphViewProps {
   onNodeClick?: (agentId: number) => void
   /** localStorage 持久化键：传入则节点拖拽位置按此键记忆，跨会话恢复 */
   storageKey?: string
+  /** 力导向斥力强度倍数（默认 1，越大节点越分散），仅 force 布局生效 */
+  forceRepulsion?: number
+  /** 力导向理想链接距离倍数（默认 1，越大边越长），仅 force 布局生效 */
+  forceLinkDistance?: number
 }
 
 /**
@@ -65,6 +69,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   showEdgeLabels,
   onNodeClick,
   storageKey,
+  forceRepulsion = 1,
+  forceLinkDistance = 1,
 }, ref) => {
   const allNodes = data?.nodes || []
   const allEdges = data?.edges || []
@@ -140,6 +146,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     let coords = initialForceCoords()
     setForceCoords(new Map(coords))
     const k = size / 10
+    const repulsion = Math.max(0, forceRepulsion)
+    const linkK = Math.max(1, k * Math.max(0, forceLinkDistance))
     const idxList = nodes.map((n) => n.id)
     const edgeList = edges.map((e) => ({ source: e.source, target: e.target }))
     const maxFrames = 180
@@ -155,7 +163,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           let dy = a.y - b.y
           let d = Math.hypot(dx, dy)
           if (d < 1) { d = 1; dx = (i % 3) - 1; dy = (j % 3) - 1 }
-          const f = (k * k) / (d * d)
+          const f = ((k * k) / (d * d)) * repulsion
           const ux = dx / d
           const uy = dy / d
           a.vx += ux * f; a.vy += uy * f
@@ -168,7 +176,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         if (!a || !b) return
         const dx = b.x - a.x; const dy = b.y - a.y
         const d = Math.max(1, Math.hypot(dx, dy))
-        const f = (d * d) / k
+        const f = (d * d) / linkK
         const ux = dx / d; const uy = dy / d
         a.vx += ux * f; a.vy += uy * f
         b.vx -= ux * f; b.vy -= uy * f
@@ -189,7 +197,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     rafRef.current = requestAnimationFrame(tick)
     return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout, size, cx, cy, nodes.map((n) => n.id).join(','), edges.map((e) => `${e.source}-${e.target}-${e.count}`).join(',')])
+  }, [layout, size, cx, cy, forceRepulsion, forceLinkDistance, nodes.map((n) => n.id).join(','), edges.map((e) => `${e.source}-${e.target}-${e.count}`).join(',')])
 
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />

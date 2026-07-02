@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown, Checkbox } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown, Checkbox, Slider } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -315,6 +315,8 @@ const Dashboard = () => {
   // Agent 协作关系图
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid' | 'force'>('circular')
+  const [forceRepulsion, setForceRepulsion] = useState(1)
+  const [forceLinkDistance, setForceLinkDistance] = useState(1)
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
@@ -964,6 +966,16 @@ const Dashboard = () => {
                 { value: 'force', label: '力导向' },
               ]}
             />
+            {graphLayout === 'force' && (
+              <Space size={8}>
+                <Tooltip title="斥力强度（越大越分散）">
+                  <Space size={4}><Text type="secondary" style={{ fontSize: 11 }}>斥力</Text><Slider min={0.2} max={3} step={0.1} value={forceRepulsion} onChange={setForceRepulsion} style={{ width: 80, margin: 0 }} /></Space>
+                </Tooltip>
+                <Tooltip title="链接距离（越大边越长）">
+                  <Space size={4}><Text type="secondary" style={{ fontSize: 11 }}>距离</Text><Slider min={0.2} max={3} step={0.1} value={forceLinkDistance} onChange={setForceLinkDistance} style={{ width: 80, margin: 0 }} /></Space>
+                </Tooltip>
+              </Space>
+            )}
             <Segmented
               size="small"
               value={graphWindow}
@@ -1032,6 +1044,8 @@ const Dashboard = () => {
             minCount={graphMinCount ?? undefined}
             showEdgeLabels={graphShowLabels}
             storageKey="collabGraphPositions"
+            forceRepulsion={forceRepulsion}
+            forceLinkDistance={forceLinkDistance}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
@@ -2373,6 +2387,8 @@ const Dashboard = () => {
           minCount={graphMinCount ?? undefined}
           showEdgeLabels={graphShowLabels}
           storageKey="collabGraphPositions"
+          forceRepulsion={forceRepulsion}
+          forceLinkDistance={forceLinkDistance}
           onNodeClick={(agentId) => {
             const node = collabGraph?.nodes.find((n) => n.id === agentId)
             setGraphFullscreen(false)
