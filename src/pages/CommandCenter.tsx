@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, InputNumber, Segmented, Dropdown, Checkbox } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Space, Button, Tooltip, Empty, Badge, Alert, Popconfirm, Modal, Form, Select, Input, InputNumber, Segmented, Dropdown, Checkbox, Slider } from 'antd'
 import {
   ReloadOutlined,
   ApiOutlined,
@@ -58,6 +58,27 @@ const CommandCenter: React.FC = () => {
   const [collabDetail, setCollabDetail] = useState<{ agentId: number; name: string; list: any[]; loading: boolean } | null>(null)
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid' | 'force'>('circular')
+  // 力导向参数：从 localStorage 恢复，变更时持久化（与 Dashboard 共享同一 key）
+  const FORCE_PARAMS_KEY = 'collabGraphForceParams'
+  const loadForceParams = (): { repulsion: number; linkDistance: number } => {
+    try {
+      const raw = localStorage.getItem(FORCE_PARAMS_KEY)
+      if (raw) {
+        const p = JSON.parse(raw)
+        return {
+          repulsion: typeof p.repulsion === 'number' ? p.repulsion : 1,
+          linkDistance: typeof p.linkDistance === 'number' ? p.linkDistance : 1,
+        }
+      }
+    } catch { /* ignore */ }
+    return { repulsion: 1, linkDistance: 1 }
+  }
+  const [initialForceParams] = useState(loadForceParams)
+  const [forceRepulsion, setForceRepulsion] = useState(initialForceParams.repulsion)
+  const [forceLinkDistance, setForceLinkDistance] = useState(initialForceParams.linkDistance)
+  useEffect(() => {
+    try { localStorage.setItem(FORCE_PARAMS_KEY, JSON.stringify({ repulsion: forceRepulsion, linkDistance: forceLinkDistance })) } catch { /* ignore */ }
+  }, [forceRepulsion, forceLinkDistance])
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
@@ -910,6 +931,16 @@ const CommandCenter: React.FC = () => {
                   { label: '力导向', value: 'force' },
                 ]}
               />
+              {graphLayout === 'force' && (
+                <Space size={8}>
+                  <Tooltip title="斥力强度（越大越分散）">
+                    <Space size={4}><Text type="secondary" style={{ fontSize: 11 }}>斥力</Text><Slider min={0.2} max={3} step={0.1} value={forceRepulsion} onChange={setForceRepulsion} style={{ width: 80, margin: 0 }} /></Space>
+                  </Tooltip>
+                  <Tooltip title="链接距离（越大边越长）">
+                    <Space size={4}><Text type="secondary" style={{ fontSize: 11 }}>距离</Text><Slider min={0.2} max={3} step={0.1} value={forceLinkDistance} onChange={setForceLinkDistance} style={{ width: 80, margin: 0 }} /></Space>
+                  </Tooltip>
+                </Space>
+              )}
               <Segmented
                 size="small"
                 value={graphWindow}
@@ -977,6 +1008,8 @@ const CommandCenter: React.FC = () => {
             minCount={graphMinCount ?? undefined}
             showEdgeLabels={graphShowLabels}
             storageKey="ccCollabGraphPositions"
+            forceRepulsion={forceRepulsion}
+            forceLinkDistance={forceLinkDistance}
             onNodeClick={(agentId) => {
               const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
               loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
@@ -1086,6 +1119,8 @@ const CommandCenter: React.FC = () => {
           minCount={graphMinCount ?? undefined}
           showEdgeLabels={graphShowLabels}
           storageKey="ccCollabGraphPositions"
+          forceRepulsion={forceRepulsion}
+          forceLinkDistance={forceLinkDistance}
           onNodeClick={(agentId) => {
             const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
             setGraphFullscreen(false)

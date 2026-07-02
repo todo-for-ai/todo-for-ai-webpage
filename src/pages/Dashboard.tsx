@@ -315,8 +315,27 @@ const Dashboard = () => {
   // Agent 协作关系图
   const [graphWindow, setGraphWindow] = useState<string>('30')
   const [graphLayout, setGraphLayout] = useState<'circular' | 'grid' | 'force'>('circular')
-  const [forceRepulsion, setForceRepulsion] = useState(1)
-  const [forceLinkDistance, setForceLinkDistance] = useState(1)
+  // 力导向参数：从 localStorage 恢复，变更时持久化
+  const FORCE_PARAMS_KEY = 'collabGraphForceParams'
+  const loadForceParams = (): { repulsion: number; linkDistance: number } => {
+    try {
+      const raw = localStorage.getItem(FORCE_PARAMS_KEY)
+      if (raw) {
+        const p = JSON.parse(raw)
+        return {
+          repulsion: typeof p.repulsion === 'number' ? p.repulsion : 1,
+          linkDistance: typeof p.linkDistance === 'number' ? p.linkDistance : 1,
+        }
+      }
+    } catch { /* ignore */ }
+    return { repulsion: 1, linkDistance: 1 }
+  }
+  const [initialForceParams] = useState(loadForceParams)
+  const [forceRepulsion, setForceRepulsion] = useState(initialForceParams.repulsion)
+  const [forceLinkDistance, setForceLinkDistance] = useState(initialForceParams.linkDistance)
+  useEffect(() => {
+    try { localStorage.setItem(FORCE_PARAMS_KEY, JSON.stringify({ repulsion: forceRepulsion, linkDistance: forceLinkDistance })) } catch { /* ignore */ }
+  }, [forceRepulsion, forceLinkDistance])
   const [graphKinds, setGraphKinds] = useState<string[]>([])
   const [graphSearch, setGraphSearch] = useState('')
   const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
