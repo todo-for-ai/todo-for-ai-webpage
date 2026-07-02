@@ -1721,6 +1721,7 @@ const Dashboard = () => {
           productivityByKind.items.length > 0 ? (() => {
             const kindColor: Record<string, string> = { assistant: '#1677ff', worker: '#52c41a', orchestrator: '#722ed1', reviewer: '#13c2c2' }
             const maxTotal = Math.max(1, ...productivityByKind.items.map((k) => k.total))
+            const maxHours = Math.max(1, ...productivityByKind.items.map((k) => k.avg_completion_hours ?? 0))
             const columns = [
               { title: '类别', dataIndex: 'kind', key: 'kind', render: (k: string) => <Tag color={kindColor[k] || 'default'}>{k}</Tag> },
               { title: 'Agent数', dataIndex: 'agent_count', key: 'agent_count', width: 80 },
@@ -1728,7 +1729,7 @@ const Dashboard = () => {
               { title: '完成', dataIndex: 'done', key: 'done', width: 70 },
               { title: '完成率', dataIndex: 'completion_rate', key: 'completion_rate', width: 90, render: (v: number) => <Tag color={v >= 80 ? 'green' : v >= 50 ? 'orange' : 'red'}>{v}%</Tag> },
               { title: '失败率', dataIndex: 'failure_rate', key: 'failure_rate', width: 90, render: (v: number) => <Tag color={v <= 10 ? 'green' : v <= 30 ? 'orange' : 'red'}>{v}%</Tag> },
-              { title: '平均完成(h)', dataIndex: 'avg_completion_hours', key: 'avg_completion_hours', width: 110, render: (v: number | null) => v ?? '-' },
+              { title: '平均完成(h)', dataIndex: 'avg_completion_hours', key: 'avg_completion_hours', width: 140, render: (v: number | null) => v == null ? '-' : <Space size={4}><span style={{ minWidth: 36, textAlign: 'right' }}>{v}</span><div style={{ width: 70, height: 8, background: '#f0f0f0', borderRadius: 4 }}><div style={{ width: `${(v / maxHours) * 100}%`, height: '100%', background: '#fa8c16', borderRadius: 4 }} /></div></Space> },
             ]
             return <Table size="small" pagination={false} columns={columns} dataSource={productivityByKind.items} rowKey="kind" />
           })() : <Empty description="暂无数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
