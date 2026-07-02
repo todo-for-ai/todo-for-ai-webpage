@@ -32,7 +32,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -90,6 +90,7 @@ const Dashboard = () => {
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
   const [agentHealthTrend, setAgentHealthTrend] = useState<AgentHealthTrend | null>(null)
+  const [agentHealthAlerts, setAgentHealthAlerts] = useState<AgentHealthAlerts | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -229,6 +230,7 @@ const Dashboard = () => {
       agentsApi.getConflictsSandboxCorrelation(30, 2).then(setConflictsSandboxCorrelation).catch(() => {})
       agentsApi.getAgentHealth(30).then(setAgentHealth).catch(() => {})
       agentsApi.getAgentHealthTrend(30).then(setAgentHealthTrend).catch(() => {})
+      agentsApi.getAgentHealthAlerts().then(setAgentHealthAlerts).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1247,6 +1249,18 @@ const Dashboard = () => {
             const bucketColor = (k: string) => k === '0.85-1.0' ? '#52c41a' : k === '0.7-0.85' ? '#73d13d' : k === '0.5-0.7' ? '#faad14' : k === '0.3-0.5' ? '#fa8c16' : '#ff4d4f'
             const topReused = experiencesStats.top_reused || []
             const maxReuse = Math.max(1, ...topReused.map((t) => t.times_reused))
+            const matrix = experiencesStats.by_domain_tasktype || {}
+            const matrixDomains = Object.entries(matrix).sort((a, b) => Object.values(b[1]).reduce((s: number, n: any) => s + n, 0) - Object.values(a[1]).reduce((s: number, n: any) => s + n, 0)).slice(0, 6).map(([d]) => d)
+            const allTaskTypes = Array.from(new Set(matrixDomains.flatMap((d) => Object.keys(matrix[d] || {})))).slice(0, 8)
+            const matrixMax = Math.max(1, ...matrixDomains.flatMap((d) => Object.values(matrix[d] || {})))
+            const heatColor = (v: number) => {
+              const r = v / matrixMax
+              if (r >= 0.75) return '#722ed1'
+              if (r >= 0.5) return '#9254de'
+              if (r >= 0.25) return '#b37feb'
+              if (r > 0) return '#d3adf7'
+              return '#f5f5f5'
+            }
             return (
               <>
                 <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -1323,6 +1337,42 @@ const Dashboard = () => {
                     ) : <Empty description="暂无复用" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
                   </Col>
                 </Row>
+                {matrixDomains.length > 0 && allTaskTypes.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>域×任务类型覆盖热力（top6 域 × top8 任务类型）:</Text>
+                    <div style={{ marginTop: 6, overflowX: 'auto' }}>
+                      <table style={{ borderCollapse: 'collapse', fontSize: 10 }}>
+                        <thead>
+                          <tr>
+                            <th style={{ padding: '2px 6px', textAlign: 'left', color: '#8c8c8c' }}>域 \ 任务</th>
+                            {allTaskTypes.map((t) => (
+                              <th key={t} style={{ padding: '2px 6px', color: '#8c8c8c', fontWeight: 400, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t}>{t}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {matrixDomains.map((d) => (
+                            <tr key={d}>
+                              <td style={{ padding: '2px 6px', color: '#595959', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d}>{d}</td>
+                              {allTaskTypes.map((t) => {
+                                const v = (matrix[d] || {})[t] || 0
+                                return (
+                                  <td key={t} style={{ padding: 0 }}>
+                                    <Tooltip title={`${d} × ${t}: ${v}`}>
+                                      <div style={{ width: 34, height: 18, background: heatColor(v), borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: v > 0 ? (v / matrixMax >= 0.5 ? '#fff' : '#595959') : '#bfbfbf' }}>
+                                        {v > 0 ? v : ''}
+                                      </div>
+                                    </Tooltip>
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </>
             )
           })() : <Empty description="暂无有效经验" image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -1550,6 +1600,29 @@ const Dashboard = () => {
                 <Tag color="red" style={{ fontSize: 10 }}>失败 {a.failed}</Tag>
                 <span style={{ color: '#ff4d4f', minWidth: 70 }}>完成率 {a.completion_rate}%</span>
                 <span style={{ color: '#fa8c16', minWidth: 60 }}>失败率 {a.failure_rate}%</span>
+                {a.reasons.map((r) => (
+                  <Tag key={r} color="volcano" style={{ fontSize: 10 }}>{r}</Tag>
+                ))}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Low-health Agent Alerts */}
+      {agentHealthAlerts && agentHealthAlerts.items.length > 0 && (
+        <Card
+          title={<Space><WarningOutlined /> 低健康 Agent 预警</Space>}
+          style={{ marginBottom: 24 }}
+        >
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            健康分 &lt;{agentHealthAlerts.min_health_score} 的 Agent（近 {agentHealthAlerts.days} 天），共 {agentHealthAlerts.items.length} 个
+          </Text>
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {agentHealthAlerts.items.map((a) => (
+              <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, flexWrap: 'wrap' }}>
+                <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
+                <span style={{ color: '#ff4d4f', minWidth: 44, fontWeight: 500 }}>{a.health_score}</span>
                 {a.reasons.map((r) => (
                   <Tag key={r} color="volcano" style={{ fontSize: 10 }}>{r}</Tag>
                 ))}

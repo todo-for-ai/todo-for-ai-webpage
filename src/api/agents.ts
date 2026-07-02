@@ -863,6 +863,16 @@ export interface AgentHealthTrend {
   total_negative: number
 }
 
+export interface AgentHealthAlertItem extends AgentHealthItem {
+  reasons: string[]
+}
+
+export interface AgentHealthAlerts {
+  days: number
+  min_health_score: number
+  items: AgentHealthAlertItem[]
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -873,6 +883,7 @@ export interface ExperiencesStats {
   avg_confidence: number | null
   by_confidence_bucket: Record<string, number>
   top_reused: ExperiencesTopReusedItem[]
+  by_domain_tasktype: Record<string, Record<string, number>>
 }
 
 export interface ExperiencesTopReusedItem {
@@ -1183,6 +1194,10 @@ export class AgentsApi {
 
   async getAgentHealthTrend(days = 30): Promise<AgentHealthTrend> {
     return unwrapData<AgentHealthTrend>(await apiClient.get(`/agents/health/trend${buildQuery({ days })}`))
+  }
+
+  async getAgentHealthAlerts(): Promise<AgentHealthAlerts> {
+    return unwrapData<AgentHealthAlerts>(await apiClient.get('/agents/health/alerts'))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
