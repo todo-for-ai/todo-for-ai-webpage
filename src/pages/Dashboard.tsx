@@ -31,7 +31,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -82,6 +82,7 @@ const Dashboard = () => {
   const [sandboxTemplateUsage, setSandboxTemplateUsage] = useState<SandboxTemplateUsage | null>(null)
   const [experiencesStats, setExperiencesStats] = useState<ExperiencesStats | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
+  const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -199,6 +200,7 @@ const Dashboard = () => {
       agentsApi.getSandboxTemplateUsage().then(setSandboxTemplateUsage).catch(() => {})
       agentsApi.getExperiencesStats().then(setExperiencesStats).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
+      agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1406,6 +1408,43 @@ const Dashboard = () => {
           })() : <Empty description="暂无任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Agent Productivity */}
+      <Card
+        title={<Space><ThunderboltOutlined /> Agent 产出效率</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {agentProductivity && agentProductivity.items.length > 0 ? (() => {
+          const items = agentProductivity.items
+          const maxDone = Math.max(1, ...items.map((a) => a.done))
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>近 {agentProductivity.days} 天（按完成数降序）</Text>
+              {items.map((a) => {
+                const rate = a.completion_rate
+                const rateColor = rate >= 80 ? '#52c41a' : rate >= 50 ? '#faad14' : '#ff4d4f'
+                return (
+                  <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                    <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
+                    <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ width: `${(a.done / maxDone) * 100}%`, height: '100%', background: rateColor, borderRadius: 3 }} />
+                    </div>
+                    <Tag style={{ fontSize: 10 }}>分配 {a.total}</Tag>
+                    <Tag color="green" style={{ fontSize: 10 }}>完成 {a.done}</Tag>
+                    {a.failed > 0 && <Tag color="red" style={{ fontSize: 10 }}>失败 {a.failed}</Tag>}
+                    {a.in_progress > 0 && <Tag color="blue" style={{ fontSize: 10 }}>进行 {a.in_progress}</Tag>}
+                    <span style={{ color: rateColor, minWidth: 56, textAlign: 'right' }}>率 {rate}%</span>
+                    <span style={{ color: '#8c8c8c', minWidth: 60, textAlign: 'right' }}>{a.avg_completion_hours != null ? `${a.avg_completion_hours}h` : '—'}</span>
+                  </div>
+                )
+              })}
+              <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>完成率色阶 ≥80% 绿 / ≥50% 橙 / &lt;50% 红；右侧为平均完成时长</Text>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无分配数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 

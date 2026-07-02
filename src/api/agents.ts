@@ -746,6 +746,24 @@ export interface WorkflowFailureCorrelationByStep {
   items: WorkflowFailureCorrelationByStepItem[]
 }
 
+export interface AgentProductivityItem {
+  agent_id: number
+  name: string
+  total: number
+  done: number
+  failed: number
+  cancelled: number
+  expired: number
+  in_progress: number
+  completion_rate: number
+  avg_completion_hours: number | null
+}
+
+export interface AgentProductivity {
+  days: number
+  items: AgentProductivityItem[]
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -1042,6 +1060,10 @@ export class AgentsApi {
 
   async getWorkflowFailureCorrelationByStep(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelationByStep> {
     return unwrapData<WorkflowFailureCorrelationByStep>(await apiClient.get(`/agents/workflows/failure-correlation-by-step${buildQuery({ days, window_hours: windowHours })}`))
+  }
+
+  async getAgentProductivity(days = 30, limit = 20): Promise<AgentProductivity> {
+    return unwrapData<AgentProductivity>(await apiClient.get(`/agents/productivity${buildQuery({ days, limit })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
