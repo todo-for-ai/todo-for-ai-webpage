@@ -873,6 +873,8 @@ export interface AgentHealthTrendBucket {
   avg_reputation: number | null
   positive: number
   negative: number
+  conflicts: number
+  sandbox_violations: number
 }
 
 export interface AgentHealthTrend {
@@ -880,6 +882,8 @@ export interface AgentHealthTrend {
   trend: AgentHealthTrendBucket[]
   total_positive: number
   total_negative: number
+  total_conflicts: number
+  total_violations: number
 }
 
 export interface AgentHealthAlertItem extends AgentHealthItem {

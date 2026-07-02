@@ -1562,19 +1562,48 @@ const Dashboard = () => {
         )}
         {agentHealthTrend && agentHealthTrend.trend.length > 0 && (() => {
           const valid = agentHealthTrend.trend.filter((b) => b.avg_reputation != null)
+          // 事件标记：仅含有冲突或违规的天
+          const eventDays = agentHealthTrend.trend.filter((b) => (b.conflicts || 0) > 0 || (b.sandbox_violations || 0) > 0)
+          const maxEvents = Math.max(1, ...agentHealthTrend.trend.map((b) => (b.conflicts || 0) + (b.sandbox_violations || 0)))
+          const trendW = 520
+          const daySpan = agentHealthTrend.trend.length
           return (
             <div style={{ marginTop: 12 }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                近 {agentHealthTrend.days} 天声誉趋势（累计正向 {agentHealthTrend.total_positive} / 负向 {agentHealthTrend.total_negative}）
+                近 {agentHealthTrend.days} 天声誉趋势（累计正向 {agentHealthTrend.total_positive} / 负向 {agentHealthTrend.total_negative} / 冲突 {agentHealthTrend.total_conflicts || 0} / 违规 {agentHealthTrend.total_violations || 0}）
               </Text>
               {valid.length > 0 && (
                 <div style={{ marginTop: 4 }}>
                   <MiniTrendChart
                     series={[{ key: 'avg_reputation', label: '平均声誉', color: '#722ed1', values: valid.map((b) => b.avg_reputation as number) }]}
                     labels={valid.map((b) => b.date)}
-                    width={520}
+                    width={trendW}
                     height={84}
                   />
+                </div>
+              )}
+              {eventDays.length > 0 && daySpan > 1 && (
+                <div style={{ marginTop: 6 }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>事件标记（与上方趋势同 x 轴）</Text>
+                  <svg width={trendW} height={28} style={{ display: 'block' }}>
+                    {agentHealthTrend.trend.map((b, i) => {
+                      const x = (i / (daySpan - 1)) * (trendW - 8) + 4
+                      const c = b.conflicts || 0
+                      const v = b.sandbox_violations || 0
+                      const r = 3 + 4 * ((c + v) / maxEvents)
+                      return (
+                        <g key={b.date}>
+                          {c > 0 && <circle cx={x} cy={10} r={r} fill="#ff4d4f" opacity={0.85} />}
+                          {v > 0 && <circle cx={x} cy={22} r={r} fill="#fa8c16" opacity={0.85} />}
+                          <title>{b.date}: 冲突 {c} / 违规 {v}</title>
+                        </g>
+                      )
+                    })}
+                  </svg>
+                  <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 冲突</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#fa8c16' }}>●</span> 沙盒违规</Text>
+                  </div>
                 </div>
               )}
             </div>
