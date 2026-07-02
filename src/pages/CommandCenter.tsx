@@ -649,6 +649,31 @@ const CommandCenter: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  {/* 解决耗时统计 */}
+                  {conflictData?.resolution_latency?.count ? (() => {
+                    const lat = conflictData.resolution_latency
+                    const fmt = (s: number | null) => {
+                      if (s == null) return '-'
+                      if (s < 60) return `${Math.round(s)}s`
+                      if (s < 3600) return `${(s / 60).toFixed(1)}m`
+                      if (s < 86400) return `${(s / 3600).toFixed(1)}h`
+                      return `${(s / 86400).toFixed(1)}d`
+                    }
+                    const b = lat.by_bucket
+                    return (
+                      <div style={{ marginTop: 12 }}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          解决耗时（{lat.count}个）：均 {fmt(lat.avg_seconds)} · 中位 {fmt(lat.median_seconds)} · 最长 {fmt(lat.max_seconds)}
+                        </Text>
+                        <Space wrap size={[4, 4]} style={{ marginTop: 4 }}>
+                          <Tag style={{ fontSize: 11 }} color="green">&lt;1h: {b.under_1h}</Tag>
+                          <Tag style={{ fontSize: 11 }} color="blue">1-24h: {b['1h_to_24h']}</Tag>
+                          <Tag style={{ fontSize: 11 }} color="orange">1-7d: {b['1d_to_7d']}</Tag>
+                          <Tag style={{ fontSize: 11 }} color="red">&gt;7d: {b.over_7d}</Tag>
+                        </Space>
+                      </div>
+                    )
+                  })() : null}
                   {/* 活跃冲突列表 */}
                   {conflictList.length > 0 ? (
                     <List

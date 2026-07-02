@@ -479,6 +479,13 @@ export interface ConflictsDashboard {
   by_type: Record<string, number>
   by_status: Record<string, number>
   by_severity: Record<string, number>
+  resolution_latency?: {
+    count: number
+    avg_seconds: number | null
+    median_seconds: number | null
+    max_seconds: number | null
+    by_bucket: { under_1h: number; '1h_to_24h': number; '1d_to_7d': number; over_7d: number }
+  }
 }
 
 /** 冲突时间趋势单日桶 */
