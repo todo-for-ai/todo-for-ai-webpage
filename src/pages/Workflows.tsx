@@ -746,6 +746,59 @@ const Workflows: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                  {(() => {
+                    const matrix = failureCorrelationByStep.step_conflict_type_matrix || {}
+                    const stepKeys = Object.keys(matrix)
+                    if (stepKeys.length === 0) return null
+                    const typeSet = new Set<string>()
+                    stepKeys.forEach((sk) => Object.keys(matrix[sk]).forEach((t) => typeSet.add(t)))
+                    const typeCols = Array.from(typeSet)
+                    if (typeCols.length === 0) return null
+                    let cellMax = 1
+                    stepKeys.forEach((sk) => typeCols.forEach((t) => { cellMax = Math.max(cellMax, matrix[sk][t] || 0) }))
+                    const cellColor = (v: number) => {
+                      if (!v) return '#fafafa'
+                      const r = v / cellMax
+                      if (r >= 0.75) return '#fa541c'
+                      if (r >= 0.5) return '#fa8c16'
+                      if (r >= 0.25) return '#ffc069'
+                      return '#ffe7ba'
+                    }
+                    return (
+                      <div style={{ marginTop: 8 }}>
+                        <Text type="secondary" style={{ fontSize: 11 }}>步骤 × 冲突类型热力:</Text>
+                        <table style={{ borderCollapse: 'collapse', fontSize: 10, marginTop: 4 }}>
+                          <thead>
+                            <tr>
+                              <th style={{ padding: '2px 6px', borderBottom: '1px solid #f0f0f0', textAlign: 'left' }}>步骤</th>
+                              {typeCols.map((t) => (
+                                <th key={t} style={{ padding: '2px 6px', borderBottom: '1px solid #f0f0f0', color: '#595959', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis' }} title={t}>{t}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {stepKeys.map((sk) => (
+                              <tr key={sk}>
+                                <td style={{ padding: '2px 6px', color: '#595959', whiteSpace: 'nowrap', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis' }} title={sk}>{sk}</td>
+                                {typeCols.map((t) => {
+                                  const v = matrix[sk][t] || 0
+                                  return (
+                                    <td key={t} style={{ padding: 0 }}>
+                                      <Tooltip title={`${sk} / ${t}: ${v}`}>
+                                        <div style={{ width: 50, height: 20, background: cellColor(v), color: v >= cellMax * 0.5 ? '#fff' : '#595959', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, margin: 1 }}>
+                                          {v || ''}
+                                        </div>
+                                      </Tooltip>
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
             </div>

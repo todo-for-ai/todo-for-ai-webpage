@@ -740,12 +740,14 @@ export interface WorkflowFailureCorrelationByStepItem {
   with_violation: number
   conflict_rate: number
   violation_rate: number
+  conflict_types: Record<string, number>
 }
 
 export interface WorkflowFailureCorrelationByStep {
   days: number
   window_hours: number
   items: WorkflowFailureCorrelationByStepItem[]
+  step_conflict_type_matrix: Record<string, Record<string, number>>
 }
 
 export interface AgentProductivityItem {
