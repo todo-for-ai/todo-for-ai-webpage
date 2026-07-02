@@ -32,7 +32,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -88,6 +88,7 @@ const Dashboard = () => {
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
+  const [productivityByKind, setProductivityByKind] = useState<AgentProductivityByKind | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
   const [agentHealthTrend, setAgentHealthTrend] = useState<AgentHealthTrend | null>(null)
@@ -213,6 +214,7 @@ const Dashboard = () => {
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
       agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
+      agentsApi.getAgentProductivityByKind(30).then(setProductivityByKind).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1623,6 +1625,31 @@ const Dashboard = () => {
               <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
             </div>
           </div>
+        )}
+      </Card>
+
+      {/* Productivity by Kind Comparison */}
+      <Card
+        title={<Space><ThunderboltOutlined /> 按 Agent 类别 产出对比</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {productivityByKind ? (
+          productivityByKind.items.length > 0 ? (() => {
+            const kindColor: Record<string, string> = { assistant: '#1677ff', worker: '#52c41a', orchestrator: '#722ed1', reviewer: '#13c2c2' }
+            const maxTotal = Math.max(1, ...productivityByKind.items.map((k) => k.total))
+            const columns = [
+              { title: '类别', dataIndex: 'kind', key: 'kind', render: (k: string) => <Tag color={kindColor[k] || 'default'}>{k}</Tag> },
+              { title: 'Agent数', dataIndex: 'agent_count', key: 'agent_count', width: 80 },
+              { title: '分配', dataIndex: 'total', key: 'total', width: 80, render: (v: number) => <Space size={4}>{v}<div style={{ width: 60, height: 6, background: '#f0f0f0', borderRadius: 3 }}><div style={{ width: `${(v / maxTotal) * 100}%`, height: '100%', background: '#1677ff', borderRadius: 3 }} /></div></Space> },
+              { title: '完成', dataIndex: 'done', key: 'done', width: 70 },
+              { title: '完成率', dataIndex: 'completion_rate', key: 'completion_rate', width: 90, render: (v: number) => <Tag color={v >= 80 ? 'green' : v >= 50 ? 'orange' : 'red'}>{v}%</Tag> },
+              { title: '失败率', dataIndex: 'failure_rate', key: 'failure_rate', width: 90, render: (v: number) => <Tag color={v <= 10 ? 'green' : v <= 30 ? 'orange' : 'red'}>{v}%</Tag> },
+              { title: '平均完成(h)', dataIndex: 'avg_completion_hours', key: 'avg_completion_hours', width: 110, render: (v: number | null) => v ?? '-' },
+            ]
+            return <Table size="small" pagination={false} columns={columns} dataSource={productivityByKind.items} rowKey="kind" />
+          })() : <Empty description="暂无数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : (
+          <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 

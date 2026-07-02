@@ -800,6 +800,25 @@ export interface AgentProductivityAlerts {
   items: AgentProductivityAlertItem[]
 }
 
+export interface AgentProductivityByKindItem {
+  kind: string
+  agent_count: number
+  total: number
+  done: number
+  failed: number
+  cancelled: number
+  expired: number
+  in_progress: number
+  completion_rate: number
+  failure_rate: number
+  avg_completion_hours: number | null
+}
+
+export interface AgentProductivityByKind {
+  days: number
+  items: AgentProductivityByKindItem[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1202,6 +1221,10 @@ export class AgentsApi {
 
   async getAgentProductivityAlerts(): Promise<AgentProductivityAlerts> {
     return unwrapData<AgentProductivityAlerts>(await apiClient.get('/agents/productivity/alerts'))
+  }
+
+  async getAgentProductivityByKind(days = 30): Promise<AgentProductivityByKind> {
+    return unwrapData<AgentProductivityByKind>(await apiClient.get(`/agents/productivity/by-kind${buildQuery({ days })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
