@@ -29,7 +29,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -76,6 +76,7 @@ const Dashboard = () => {
   const [sandboxData, setSandboxData] = useState<any>(null)
   const [sandboxLoading, setSandboxLoading] = useState(false)
   const [sandboxViolationTrend, setSandboxViolationTrend] = useState<SandboxViolationTrend | null>(null)
+  const [sandboxViolationsByAgent, setSandboxViolationsByAgent] = useState<SandboxViolationsByAgent | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -189,6 +190,7 @@ const Dashboard = () => {
       const result = await agentsApi.getSandboxDashboard()
       setSandboxData(result)
       agentsApi.getSandboxViolationTrend(30).then(setSandboxViolationTrend).catch(() => {})
+      agentsApi.getSandboxViolationsByAgent(30, 8).then(setSandboxViolationsByAgent).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1156,6 +1158,28 @@ const Dashboard = () => {
                   </Space>
                 </div>
               )}
+              {sandboxViolationsByAgent && sandboxViolationsByAgent.items.length > 0 ? (() => {
+                const items = sandboxViolationsByAgent.items
+                const maxTotal = Math.max(1, ...items.map((it) => it.total))
+                return (
+                  <div style={{ marginTop: 12 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>违规最多的 Agent（近 {sandboxViolationsByAgent.days} 天）</Text>
+                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {items.slice(0, 6).map((it) => (
+                        <div key={it.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                          <span style={{ width: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${it.name} #${it.agent_id}`}>
+                            {it.name || `#${it.agent_id}`}
+                          </span>
+                          <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ width: `${(it.total / maxTotal) * 100}%`, height: '100%', background: '#ff4d4f', borderRadius: 3 }} />
+                          </div>
+                          <span style={{ color: '#8c8c8c', minWidth: 40, textAlign: 'right' }}>{it.total}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })() : null}
             </>
           ) : (
             <Empty description="暂无沙盒数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />

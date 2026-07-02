@@ -538,6 +538,20 @@ export interface SandboxViolationTrend {
   by_type: Record<string, number>
 }
 
+/** 沙盒违规按 Agent 分布单项 */
+export interface SandboxViolationByAgentItem {
+  agent_id: number
+  name: string | null
+  kind: string | null
+  total: number
+  by_type: Record<string, number>
+}
+
+export interface SandboxViolationsByAgent {
+  days: number
+  items: SandboxViolationByAgentItem[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1415,6 +1429,10 @@ export class AgentsApi {
 
   async getSandboxViolationTrend(days = 30): Promise<SandboxViolationTrend> {
     return unwrapData<SandboxViolationTrend>(await apiClient.get('/agents/sandboxes/violation-trend', { params: { days } }))
+  }
+
+  async getSandboxViolationsByAgent(days = 30, limit = 10): Promise<SandboxViolationsByAgent> {
+    return unwrapData<SandboxViolationsByAgent>(await apiClient.get('/agents/sandboxes/violations-by-agent', { params: { days, limit } }))
   }
 
   async getStepSandboxExecution(runId: number, stepKey: string): Promise<any> {
