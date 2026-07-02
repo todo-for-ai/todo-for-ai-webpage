@@ -31,13 +31,14 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type AgentProductivity, type AgentProductivityTrend } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
 import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
 import CollaborationGraphView from '../components/CollaborationGraphView'
+import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
 import ReputationTrendPopover from '../components/ReputationTrendPopover'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
@@ -83,6 +84,7 @@ const Dashboard = () => {
   const [experiencesStats, setExperiencesStats] = useState<ExperiencesStats | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
+  const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -201,6 +203,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesStats().then(setExperiencesStats).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
+      agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1445,6 +1448,24 @@ const Dashboard = () => {
           )
         })() : (
           <Empty description="暂无分配数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+        {productivityTrend && productivityTrend.trend.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              近 {productivityTrend.days} 天产出趋势（累计完成 {productivityTrend.total_done} / 失败 {productivityTrend.total_failed}）
+            </Text>
+            <div style={{ marginTop: 4 }}>
+              <WorkflowRunTrendChart
+                buckets={productivityTrend.trend.map((b) => ({ date: b.date, succeeded: b.done, failed: b.failed }))}
+                width={520}
+                height={84}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
+              <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>●</span> 完成</Text>
+              <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
+            </div>
+          </div>
         )}
       </Card>
 

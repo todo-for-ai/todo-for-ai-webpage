@@ -764,6 +764,19 @@ export interface AgentProductivity {
   items: AgentProductivityItem[]
 }
 
+export interface AgentProductivityTrendBucket {
+  date: string
+  done: number
+  failed: number
+}
+
+export interface AgentProductivityTrend {
+  days: number
+  trend: AgentProductivityTrendBucket[]
+  total_done: number
+  total_failed: number
+}
+
 export interface ExperiencesStats {
   total: number
   by_domain: Record<string, number>
@@ -1064,6 +1077,10 @@ export class AgentsApi {
 
   async getAgentProductivity(days = 30, limit = 20): Promise<AgentProductivity> {
     return unwrapData<AgentProductivity>(await apiClient.get(`/agents/productivity${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentProductivityTrend(days = 30): Promise<AgentProductivityTrend> {
+    return unwrapData<AgentProductivityTrend>(await apiClient.get(`/agents/productivity/trend${buildQuery({ days })}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {
