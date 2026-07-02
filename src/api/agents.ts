@@ -884,12 +884,20 @@ export interface AgentHealthTrend {
 
 export interface AgentHealthAlertItem extends AgentHealthItem {
   reasons: string[]
+  recommendations: string[]
 }
 
 export interface AgentHealthAlerts {
   days: number
   min_health_score: number
   items: AgentHealthAlertItem[]
+}
+
+export interface HealthWeights {
+  w_reputation?: number
+  w_completion?: number
+  w_conflict?: number
+  w_violation?: number
 }
 
 export interface ExperiencesStats {
@@ -1239,8 +1247,8 @@ export class AgentsApi {
     return unwrapData<AgentHealthTrend>(await apiClient.get(`/agents/health/trend${buildQuery({ days })}`))
   }
 
-  async getAgentHealthAlerts(): Promise<AgentHealthAlerts> {
-    return unwrapData<AgentHealthAlerts>(await apiClient.get('/agents/health/alerts'))
+  async getAgentHealthAlerts(weights: HealthWeights = {}): Promise<AgentHealthAlerts> {
+    return unwrapData<AgentHealthAlerts>(await apiClient.get(`/agents/health/alerts${buildQuery(weights)}`))
   }
 
   async getWorkflowRun(runId: number): Promise<WorkflowRunItem> {

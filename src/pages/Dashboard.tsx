@@ -19,6 +19,7 @@ import {
   CheckCircleOutlined,
   SafetyOutlined,
   WarningOutlined,
+  BulbOutlined,
   HistoryOutlined,
   DownloadOutlined,
   DownOutlined,
@@ -32,7 +33,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -93,6 +94,13 @@ const Dashboard = () => {
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
   const [agentHealthTrend, setAgentHealthTrend] = useState<AgentHealthTrend | null>(null)
   const [agentHealthAlerts, setAgentHealthAlerts] = useState<AgentHealthAlerts | null>(null)
+  const [healthWeights, setHealthWeights] = useState<HealthWeights>({ w_reputation: 0.4, w_completion: 0.3, w_conflict: 0.15, w_violation: 0.15 })
+  const [healthAlertsLoading, setHealthAlertsLoading] = useState(false)
+
+  const reloadHealthAlerts = (weights: HealthWeights) => {
+    setHealthAlertsLoading(true)
+    agentsApi.getAgentHealthAlerts(weights).then(setAgentHealthAlerts).catch(() => {}).finally(() => setHealthAlertsLoading(false))
+  }
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -234,7 +242,7 @@ const Dashboard = () => {
       agentsApi.getConflictsSandboxCorrelation(30, 2).then(setConflictsSandboxCorrelation).catch(() => {})
       agentsApi.getAgentHealth(30).then(setAgentHealth).catch(() => {})
       agentsApi.getAgentHealthTrend(30).then(setAgentHealthTrend).catch(() => {})
-      agentsApi.getAgentHealthAlerts().then(setAgentHealthAlerts).catch(() => {})
+      agentsApi.getAgentHealthAlerts(healthWeights).then(setAgentHealthAlerts).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1681,25 +1689,46 @@ const Dashboard = () => {
       )}
 
       {/* Low-health Agent Alerts */}
-      {agentHealthAlerts && agentHealthAlerts.items.length > 0 && (
+      {agentHealthAlerts && (
         <Card
           title={<Space><WarningOutlined /> 低健康 Agent 预警</Space>}
           style={{ marginBottom: 24 }}
+          extra={
+            <Space size={4} wrap>
+              <Tooltip title="声誉权重"><InputNumber size="small" min={0} max={1} step={0.05} style={{ width: 56 }} value={healthWeights.w_reputation} onChange={(v) => setHealthWeights((w) => ({ ...w, w_reputation: v ?? 0 }))} /></Tooltip>
+              <Tooltip title="完成率权重"><InputNumber size="small" min={0} max={1} step={0.05} style={{ width: 56 }} value={healthWeights.w_completion} onChange={(v) => setHealthWeights((w) => ({ ...w, w_completion: v ?? 0 }))} /></Tooltip>
+              <Tooltip title="冲突权重"><InputNumber size="small" min={0} max={1} step={0.05} style={{ width: 56 }} value={healthWeights.w_conflict} onChange={(v) => setHealthWeights((w) => ({ ...w, w_conflict: v ?? 0 }))} /></Tooltip>
+              <Tooltip title="违规权重"><InputNumber size="small" min={0} max={1} step={0.05} style={{ width: 56 }} value={healthWeights.w_violation} onChange={(v) => setHealthWeights((w) => ({ ...w, w_violation: v ?? 0 }))} /></Tooltip>
+              <Button size="small" type="primary" loading={healthAlertsLoading} onClick={() => reloadHealthAlerts(healthWeights)}>应用权重</Button>
+            </Space>
+          }
         >
+          <Spin spinning={healthAlertsLoading}>
           <Text type="secondary" style={{ fontSize: 12 }}>
             健康分 &lt;{agentHealthAlerts.min_health_score} 的 Agent（近 {agentHealthAlerts.days} 天），共 {agentHealthAlerts.items.length} 个
           </Text>
-          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {agentHealthAlerts.items.map((a) => (
-              <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, flexWrap: 'wrap' }}>
-                <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
-                <span style={{ color: '#ff4d4f', minWidth: 44, fontWeight: 500 }}>{a.health_score}</span>
-                {a.reasons.map((r) => (
-                  <Tag key={r} color="volcano" style={{ fontSize: 10 }}>{r}</Tag>
-                ))}
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {agentHealthAlerts.items.length === 0 ? (
+              <Empty description="暂无低健康 Agent" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : agentHealthAlerts.items.map((a) => (
+              <div key={a.agent_id} style={{ padding: '6px 8px', background: '#fff1f0', borderRadius: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, flexWrap: 'wrap' }}>
+                  <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
+                  <span style={{ color: '#ff4d4f', minWidth: 44, fontWeight: 500 }}>{a.health_score}</span>
+                  {a.reasons.map((r) => (
+                    <Tag key={r} color="volcano" style={{ fontSize: 10 }}>{r}</Tag>
+                  ))}
+                </div>
+                {a.recommendations && a.recommendations.length > 0 && (
+                  <div style={{ marginTop: 4, fontSize: 11, color: '#8c8c8c' }}>
+                    <BulbOutlined style={{ color: '#faad14', marginRight: 4 }} />
+                    {a.recommendations.join('；')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
+          </Spin>
         </Card>
       )}
 
