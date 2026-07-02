@@ -1805,6 +1805,42 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
+              {(() => {
+                // 双轴对比：声誉（紫，左轴）× 产出完成数（绿，右轴），按 date 对齐
+                if (!productivityTrend || productivityTrend.trend.length < 2 || daySpan < 2) return null
+                const prodByDate: Record<string, number> = {}
+                productivityTrend.trend.forEach((b) => { prodByDate[b.date] = (prodByDate[b.date] || 0) + b.done })
+                const maxRep = 100
+                const maxDone = Math.max(1, ...Object.values(prodByDate))
+                const W = trendW, H = 70, padL = 4, padR = 4, padT = 6, padB = 14
+                const xStep = (W - padL - padR) / Math.max(1, daySpan - 1)
+                const repPts: string[] = []
+                const donePts: string[] = []
+                agentHealthTrend.trend.forEach((b, i) => {
+                  const x = padL + i * xStep
+                  if (b.avg_reputation != null) {
+                    const y = H - padB - (b.avg_reputation / maxRep) * (H - padT - padB)
+                    repPts.push(`${x.toFixed(1)},${y.toFixed(1)}`)
+                  }
+                  const d = prodByDate[b.date] || 0
+                  const dy = H - padB - (d / maxDone) * (H - padT - padB)
+                  donePts.push(`${x.toFixed(1)},${dy.toFixed(1)}`)
+                })
+                if (repPts.length < 2 && donePts.length < 2) return null
+                return (
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>声誉 × 产出完成数 双轴对比:</Text>
+                    <svg width={W} height={H} style={{ display: 'block' }}>
+                      {repPts.length >= 2 && <polyline points={repPts.join(' ')} fill="none" stroke="#722ed1" strokeWidth={1.6} opacity={0.85} />}
+                      {donePts.length >= 2 && <polyline points={donePts.join(' ')} fill="none" stroke="#52c41a" strokeWidth={1.6} strokeDasharray="4 3" opacity={0.85} />}
+                    </svg>
+                    <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
+                      <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#722ed1' }}>━</span> 平均声誉(0-100)</Text>
+                      <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>┄</span> 完成数(max {maxDone})</Text>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )
         })()}
