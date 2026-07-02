@@ -921,6 +921,7 @@ export interface ExperiencesStats {
   by_confidence_bucket: Record<string, number>
   top_reused: ExperiencesTopReusedItem[]
   by_domain_tasktype: Record<string, Record<string, number>>
+  by_domain_reuses: Record<string, number>
 }
 
 export interface ExperiencesTopReusedItem {
