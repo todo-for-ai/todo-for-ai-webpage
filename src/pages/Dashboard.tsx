@@ -36,6 +36,7 @@ import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
 import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
 import CollaborationGraphView from '../components/CollaborationGraphView'
+import ReputationTrendPopover from '../components/ReputationTrendPopover'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
@@ -1042,7 +1043,13 @@ const Dashboard = () => {
                   {
                     title: '声誉',
                     width: 80,
-                    render: (_: any, r: any) => r.reputation ? <span style={{ color: r.reputation.score >= 70 ? '#52c41a' : r.reputation.score >= 40 ? '#faad14' : '#ff4d4f' }}>{r.reputation.score?.toFixed(0)}</span> : '-',
+                    render: (_: any, r: any) => r.reputation ? (
+                      <ReputationTrendPopover agentId={r.agent_id} score={r.reputation.score}>
+                        <span style={{ color: r.reputation.score >= 70 ? '#52c41a' : r.reputation.score >= 40 ? '#faad14' : '#ff4d4f', cursor: 'help', textDecoration: 'underline dotted' }}>
+                          {r.reputation.score?.toFixed(0)}
+                        </span>
+                      </ReputationTrendPopover>
+                    ) : '-',
                   },
                   {
                     title: '经验',
