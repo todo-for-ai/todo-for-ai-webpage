@@ -61,6 +61,19 @@ export interface Task {
   }
 }
 
+export interface TaskStats {
+  total: number
+  by_status: Record<string, number>
+  by_priority: Record<string, number>
+  completion_rate: number
+  cancellation_rate: number
+  done_count: number
+  cancelled_count: number
+  avg_lifecycle_hours: number | null
+  lifecycle_buckets: Record<string, number>
+  avg_completion_rate: number
+}
+
 export interface CreateTaskData {
   project_id: number
   title?: string
@@ -199,6 +212,11 @@ export class TasksApi {
   // 获取子任务列表
   async getSubtasks(parentTaskId: number) {
     return apiClient.get<Task[]>(`/tasks/${parentTaskId}/subtasks`)
+  }
+
+  // 获取任务生命周期统计
+  async getStats() {
+    return apiClient.get<TaskStats>('/tasks/stats')
   }
 }
 

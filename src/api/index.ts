@@ -10,7 +10,7 @@ export type { ApiClientConfig, PerformanceStats } from './client/types'
 
 // API服务
 export { projectsApi, type Project } from './projects'
-export { tasksApi, type Task } from './tasks'
+export { tasksApi, type Task, type TaskStats } from './tasks'
 export { agentsApi, type Agent, type TaskAssignment } from './agents'
 export { contextRulesApi, type ContextRule } from './contextRules'
 export { AuthAPI } from './auth'

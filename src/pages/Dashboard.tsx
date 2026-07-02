@@ -30,6 +30,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
+import { tasksApi, type TaskStats } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -80,6 +81,7 @@ const Dashboard = () => {
   const [sandboxViolationsByAgent, setSandboxViolationsByAgent] = useState<SandboxViolationsByAgent | null>(null)
   const [sandboxTemplateUsage, setSandboxTemplateUsage] = useState<SandboxTemplateUsage | null>(null)
   const [experiencesStats, setExperiencesStats] = useState<ExperiencesStats | null>(null)
+  const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
 
   // Conflict monitor state
   const [conflictData, setConflictData] = useState<any>(null)
@@ -196,6 +198,7 @@ const Dashboard = () => {
       agentsApi.getSandboxViolationsByAgent(30, 8).then(setSandboxViolationsByAgent).catch(() => {})
       agentsApi.getSandboxTemplateUsage().then(setSandboxTemplateUsage).catch(() => {})
       agentsApi.getExperiencesStats().then(setExperiencesStats).catch(() => {})
+      tasksApi.getStats().then(setTaskStats).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -1268,6 +1271,69 @@ const Dashboard = () => {
               </>
             )
           })() : <Empty description="暂无有效经验" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : (
+          <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Task Lifecycle Stats */}
+      <Card
+        title={<Space><FieldTimeOutlined /> 任务生命周期</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {taskStats ? (
+          taskStats.total > 0 ? (() => {
+            const statusEntries = Object.entries(taskStats.by_status)
+            const priorityEntries = Object.entries(taskStats.by_priority)
+            const buckets = taskStats.lifecycle_buckets || {}
+            const bucketEntries = Object.entries(buckets)
+            const maxBucket = Math.max(1, ...bucketEntries.map(([, v]) => v))
+            const statusColor = (k: string) => k === 'done' ? 'green' : k === 'cancelled' ? 'red' : k === 'in_progress' ? 'blue' : k === 'review' ? 'orange' : k === 'blocked' ? 'volcano' : 'default'
+            const priorityColor = (k: string) => k === 'urgent' ? 'red' : k === 'high' ? 'orange' : k === 'medium' ? 'blue' : 'default'
+            const avgLife = taskStats.avg_lifecycle_hours
+            return (
+              <>
+                <Row gutter={16} style={{ marginBottom: 16 }}>
+                  <Col span={6}><Statistic title="任务总数" value={taskStats.total} valueStyle={{ fontSize: 16 }} /></Col>
+                  <Col span={6}><Statistic title="完成率" value={taskStats.completion_rate} suffix="%" valueStyle={{ fontSize: 16, color: '#52c41a' }} /></Col>
+                  <Col span={6}><Statistic title="取消率" value={taskStats.cancellation_rate} suffix="%" valueStyle={{ fontSize: 16, color: taskStats.cancellation_rate > 0 ? '#ff4d4f' : undefined }} /></Col>
+                  <Col span={6}><Statistic title="平均完成度" value={taskStats.avg_completion_rate} suffix="%" valueStyle={{ fontSize: 16 }} /></Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>按状态:</Text>
+                    <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
+                      {statusEntries.map(([k, v]: any) => (
+                        <Tag key={k} color={statusColor(k)} style={{ fontSize: 11 }}>{k}: {v}</Tag>
+                      ))}
+                    </Space>
+                    <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 12 }}>按优先级:</Text>
+                    <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
+                      {priorityEntries.map(([k, v]: any) => (
+                        <Tag key={k} color={priorityColor(k)} style={{ fontSize: 11 }}>{k}: {v}</Tag>
+                      ))}
+                    </Space>
+                  </Col>
+                  <Col span={12}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>已完成任务生命周期分布{avgLife != null ? `（平均 ${avgLife}h）` : ''}:</Text>
+                    {bucketEntries.length > 0 ? (
+                      <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {bucketEntries.map(([k, v]: any) => (
+                          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                            <span style={{ width: 60, color: '#595959' }}>{k}</span>
+                            <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                              <div style={{ width: `${(v / maxBucket) * 100}%`, height: '100%', background: '#1890ff', borderRadius: 3 }} />
+                            </div>
+                            <span style={{ color: '#8c8c8c', minWidth: 30, textAlign: 'right' }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <Empty description="暂无已完成任务" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
+                  </Col>
+                </Row>
+              </>
+            )
+          })() : <Empty description="暂无任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
