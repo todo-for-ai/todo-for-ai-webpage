@@ -19,13 +19,14 @@ import {
   ExpandOutlined,
 } from '@ant-design/icons'
 import { dashboardApi } from '../api/dashboard'
-import { agentsApi, type OrchestratorStatus } from '../api/agents'
+import { agentsApi, type OrchestratorStatus, type ConflictsTrend } from '../api/agents'
 import dayjs from 'dayjs'
 import SecurityTrendSection from '../components/SecurityTrendSection'
 import SecurityEventListItem from '../components/SecurityEventListItem'
 import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
 import CollaborationGraphView from '../components/CollaborationGraphView'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
+import ConflictsTrendChart from '../components/ConflictsTrendChart'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 
@@ -42,6 +43,7 @@ const CommandCenter: React.FC = () => {
   const [monitorData, setMonitorData] = useState<any>(null)
   const [conflictData, setConflictData] = useState<any>(null)
   const [conflictList, setConflictList] = useState<any[]>([])
+  const [conflictTrend, setConflictTrend] = useState<ConflictsTrend | null>(null)
   const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [securityTrend, setSecurityTrend] = useState<any>(null)
   const [securityByAgent, setSecurityByAgent] = useState<any>(null)
@@ -118,7 +120,7 @@ const CommandCenter: React.FC = () => {
       const trendParams: any = trendSince ? { since: trendSince } : {}
       if (trendSeverity) trendParams.severity = trendSeverity
       if (trendEventType) trendParams.event_type = trendEventType
-      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend] = await Promise.all([
+      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend, confTrend] = await Promise.all([
         dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
         agentsApi.getConflictsDashboard().catch(() => null),
         agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
@@ -127,10 +129,12 @@ const CommandCenter: React.FC = () => {
         agentsApi.getSecurityEventsByAgent({}).catch(() => null),
         agentsApi.getOrchestratorStatus().catch(() => null),
         agentsApi.getOrchestratorDailyTrend(trendParams).catch(() => null),
+        agentsApi.getConflictsTrend(30).catch(() => null),
       ])
       setMonitorData(monitor)
       setConflictData(conflicts)
       setConflictList(conflictList?.items || [])
+      setConflictTrend(confTrend)
       setSecurityEvents(events?.items || [])
       setSecurityTrend(trend)
       setSecurityByAgent(byAgent)
@@ -636,6 +640,15 @@ const CommandCenter: React.FC = () => {
                       {Object.keys(conflictData.by_severity || {}).length === 0 && <Text type="secondary">无</Text>}
                     </Space>
                   </div>
+                  {/* 检测 vs 解决趋势 */}
+                  {conflictTrend && conflictTrend.trend.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>近 {conflictTrend.days} 天检测/解决趋势</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <ConflictsTrendChart buckets={conflictTrend.trend} width={300} height={84} />
+                      </div>
+                    </div>
+                  )}
                   {/* 活跃冲突列表 */}
                   {conflictList.length > 0 ? (
                     <List

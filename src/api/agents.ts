@@ -472,6 +472,27 @@ export interface ReputationHistory {
   points: ReputationHistoryPoint[]
 }
 
+/** 冲突仪表盘聚合统计 */
+export interface ConflictsDashboard {
+  total: number
+  active: number
+  by_type: Record<string, number>
+  by_status: Record<string, number>
+  by_severity: Record<string, number>
+}
+
+/** 冲突时间趋势单日桶 */
+export interface ConflictsTrendBucket {
+  date: string
+  detected: number
+  resolved: number
+}
+
+export interface ConflictsTrend {
+  days: number
+  trend: ConflictsTrendBucket[]
+}
+
 export interface OrchestrationResult {
   stale_agents: number
   stale_agent_ids: number[]
@@ -1394,8 +1415,12 @@ export class AgentsApi {
     return unwrapData<any>(await apiClient.post(`/agents/conflicts/${conflictId}/ignore`, {}))
   }
 
-  async getConflictsDashboard(): Promise<any> {
-    return unwrapData<any>(await apiClient.get('/agents/conflicts/dashboard'))
+  async getConflictsDashboard(): Promise<ConflictsDashboard> {
+    return unwrapData<ConflictsDashboard>(await apiClient.get('/agents/conflicts/dashboard'))
+  }
+
+  async getConflictsTrend(days = 30): Promise<ConflictsTrend> {
+    return unwrapData<ConflictsTrend>(await apiClient.get('/agents/conflicts/trend', { params: { days } }))
   }
 
   async listSandboxTemplates(): Promise<any> {
