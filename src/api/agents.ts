@@ -687,6 +687,8 @@ export interface WorkflowStepStat {
   success_rate: number
   avg_duration_seconds: number | null
   sample_size_duration: number
+  retries: number
+  avg_retries: number
 }
 
 export interface WorkflowStepStats {

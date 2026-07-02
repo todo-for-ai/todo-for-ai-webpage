@@ -679,6 +679,7 @@ const Workflows: React.FC = () => {
                   <span style={{ color: rateColor, minWidth: 80 }}>成功率 {rate}%</span>
                   <Tag color={s.failed > 0 ? 'red' : 'default'} style={{ fontSize: 10 }}>失败 {s.failed}</Tag>
                   {s.skipped > 0 && <Tag style={{ fontSize: 10 }}>跳过 {s.skipped}</Tag>}
+                  {s.retries > 0 && <Tag color="orange" style={{ fontSize: 10 }}>重试 {s.retries}</Tag>}
                   <span style={{ color: '#8c8c8c' }}>均耗时 {dur}</span>
                 </div>
               )
