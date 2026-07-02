@@ -536,6 +536,51 @@ const Dashboard = () => {
     message.success('协作关系图已导出为 SVG')
   }, [])
 
+  // 导出协作关系图为 PNG（SVG → Canvas → PNG）
+  const exportCollabGraphPng = useCallback(() => {
+    const svg = collabSvgRef.current
+    if (!svg) {
+      message.warning('暂无可导出的图形')
+      return
+    }
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    clone.setAttribute('width', String(svg.viewBox.baseVal.width || svg.clientWidth || 380))
+    clone.setAttribute('height', String(svg.viewBox.baseVal.height || svg.clientHeight || 380))
+    const text = new XMLSerializer().serializeToString(clone)
+    const svgBlob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + text], { type: 'image/svg+xml;charset=utf-8;' })
+    const url = URL.createObjectURL(svgBlob)
+    const img = new Image()
+    img.onload = () => {
+      const w = Number(clone.getAttribute('width')) || 380
+      const h = Number(clone.getAttribute('height')) || 380
+      const scale = 2 // 2x 提升清晰度
+      const canvas = document.createElement('canvas')
+      canvas.width = w * scale
+      canvas.height = h * scale
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { URL.revokeObjectURL(url); message.error('PNG 导出失败'); return }
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      canvas.toBlob((pngBlob) => {
+        if (!pngBlob) { message.error('PNG 导出失败'); return }
+        const pngUrl = URL.createObjectURL(pngBlob)
+        const a = document.createElement('a')
+        a.href = pngUrl
+        a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.png`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(pngUrl)
+        message.success('协作关系图已导出为 PNG')
+      }, 'image/png')
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); message.error('PNG 导出失败：SVG 渲染失败') }
+    img.src = url
+  }, [])
+
   const loadOrchestratorStatus = useCallback(async () => {
     try {
       const status = await agentsApi.getOrchestratorStatus()
@@ -948,6 +993,7 @@ const Dashboard = () => {
               items: [
                 { key: 'csv', label: '导出 CSV', onClick: exportCollabGraph },
                 { key: 'svg', label: '导出 SVG', onClick: exportCollabGraphSvg },
+                { key: 'png', label: '导出 PNG', onClick: exportCollabGraphPng },
               ],
             }}>
               <Button size="small" icon={<DownloadOutlined />}>导出</Button>
