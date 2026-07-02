@@ -1228,6 +1228,11 @@ const Dashboard = () => {
             const maxDomain = Math.max(1, ...domains.map(([, v]) => v))
             const avgConf = experiencesStats.avg_confidence
             const confColor = avgConf == null ? undefined : avgConf >= 0.8 ? '#52c41a' : avgConf >= 0.5 ? '#faad14' : '#ff4d4f'
+            const confBuckets = Object.entries(experiencesStats.by_confidence_bucket || {})
+            const maxBucket = Math.max(1, ...confBuckets.map(([, v]) => v))
+            const bucketColor = (k: string) => k === '0.85-1.0' ? '#52c41a' : k === '0.7-0.85' ? '#73d13d' : k === '0.5-0.7' ? '#faad14' : k === '0.3-0.5' ? '#fa8c16' : '#ff4d4f'
+            const topReused = experiencesStats.top_reused || []
+            const maxReuse = Math.max(1, ...topReused.map((t) => t.times_reused))
             return (
               <>
                 <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -1266,6 +1271,42 @@ const Dashboard = () => {
                         <Tag key={k} color="blue" style={{ fontSize: 11 }}>{k}: {v}</Tag>
                       )) : <Text type="secondary" style={{ fontSize: 12 }}>无</Text>}
                     </Space>
+                  </Col>
+                </Row>
+                <Row gutter={16} style={{ marginTop: 12 }}>
+                  <Col span={12}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>按置信度区间:</Text>
+                    {confBuckets.length > 0 ? (
+                      <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {confBuckets.map(([k, v]: any) => (
+                          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                            <span style={{ width: 70, color: '#595959' }}>{k}</span>
+                            <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                              <div style={{ width: `${(v / maxBucket) * 100}%`, height: '100%', background: bucketColor(k), borderRadius: 3 }} />
+                            </div>
+                            <span style={{ color: '#8c8c8c', minWidth: 30, textAlign: 'right' }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <Empty description="无" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
+                  </Col>
+                  <Col span={12}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>复用最多(top5):</Text>
+                    {topReused.length > 0 ? (
+                      <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {topReused.slice(0, 5).map((t) => (
+                          <Tooltip key={t.id} title={t.key_learnings || '无摘要'}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                              <span style={{ width: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${t.domain} / ${t.experience_type}`}>{t.domain} / {t.experience_type}</span>
+                              <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ width: `${(t.times_reused / maxReuse) * 100}%`, height: '100%', background: '#13c2c2', borderRadius: 3 }} />
+                              </div>
+                              <span style={{ color: '#8c8c8c', minWidth: 50, textAlign: 'right' }}>{t.times_reused}次</span>
+                            </div>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    ) : <Empty description="暂无复用" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: '8px 0' }} />}
                   </Col>
                 </Row>
               </>

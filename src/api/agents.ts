@@ -739,6 +739,18 @@ export interface ExperiencesStats {
   shared: number
   total_reuses: number
   avg_confidence: number | null
+  by_confidence_bucket: Record<string, number>
+  top_reused: ExperiencesTopReusedItem[]
+}
+
+export interface ExperiencesTopReusedItem {
+  id: number
+  domain: string
+  task_type: string | null
+  experience_type: string
+  times_reused: number
+  confidence: number | null
+  key_learnings: string
 }
 
 export interface ListResult<T> {
