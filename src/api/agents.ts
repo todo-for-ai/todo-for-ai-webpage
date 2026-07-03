@@ -840,6 +840,21 @@ export interface AgentProductivityByKind {
   items: AgentProductivityByKindItem[]
 }
 
+export interface AgentProductivityHourlyHeatmapAgent {
+  agent_id: number
+  name: string
+  done: number
+}
+
+export interface AgentProductivityHourlyHeatmap {
+  days: number
+  agents: AgentProductivityHourlyHeatmapAgent[]
+  matrix: Record<string, Record<string, number>>
+  hour_totals: number[]
+  max_cell: number
+  peak_hour: number | null
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1285,6 +1300,10 @@ export class AgentsApi {
 
   async getAgentProductivityByKind(days = 30): Promise<AgentProductivityByKind> {
     return unwrapData<AgentProductivityByKind>(await apiClient.get(`/agents/productivity/by-kind${buildQuery({ days })}`))
+  }
+
+  async getAgentProductivityHourlyHeatmap(days = 30, limit = 15): Promise<AgentProductivityHourlyHeatmap> {
+    return unwrapData<AgentProductivityHourlyHeatmap>(await apiClient.get(`/agents/productivity/hourly-heatmap${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
