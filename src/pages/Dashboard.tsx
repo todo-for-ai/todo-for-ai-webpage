@@ -1834,6 +1834,82 @@ const Dashboard = () => {
                 </div>
               ))}
               <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>健康分色阶 ≥80 绿 / ≥60 橙 / ≥40 浅橙 / &lt;40 红</Text>
+              {(() => {
+                // Top3 Agent 四子分数雷达对比
+                const top = items.slice(0, 3)
+                if (top.length === 0) return null
+                const axes = [
+                  { key: 'reputation', label: '声誉' },
+                  { key: 'completion', label: '完成' },
+                  { key: 'conflict', label: '冲突' },
+                  { key: 'violation', label: '违规' },
+                ] as const
+                const cx = 130, cy = 110, R = 80
+                const ringColors = ['#52c41a', '#1677ff', '#722ed1']
+                const angleFor = (i: number) => -Math.PI / 2 + (i / axes.length) * Math.PI * 2
+                // 4 轴雷达：每个轴均匀分布在圆周上
+                const pointFor = (vals: Record<string, number>, i: number) => {
+                  const v = vals[axes[i].key] ?? 0
+                  const ratio = Math.max(0, Math.min(1, v / 100))
+                  return { x: cx + R * ratio * Math.cos(angleFor(i)), y: cy + R * ratio * Math.sin(angleFor(i)) }
+                }
+                const polyFor = (vals: Record<string, number>) =>
+                  axes.map((_, i) => { const p = pointFor(vals, i); return `${p.x.toFixed(1)},${p.y.toFixed(1)}` }).join(' ')
+                return (
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>Top{top.length} Agent 子分数雷达对比:</Text>
+                    <svg width={260} height={220} style={{ display: 'block', marginTop: 4 }}>
+                      {/* 同心圆网格 */}
+                      {[0.25, 0.5, 0.75, 1].map((g) => (
+                        <polygon
+                          key={g}
+                          points={axes.map((_, i) => {
+                            const x = cx + R * g * Math.cos(angleFor(i))
+                            const y = cy + R * g * Math.sin(angleFor(i))
+                            return `${x.toFixed(1)},${y.toFixed(1)}`
+                          }).join(' ')}
+                          fill="none"
+                          stroke="#f0f0f0"
+                          strokeWidth={1}
+                        />
+                      ))}
+                      {/* 轴线 + 标签 */}
+                      {axes.map((ax, i) => {
+                        const x = cx + R * Math.cos(angleFor(i))
+                        const y = cy + R * Math.sin(angleFor(i))
+                        const lx = cx + (R + 14) * Math.cos(angleFor(i))
+                        const ly = cy + (R + 14) * Math.sin(angleFor(i))
+                        return (
+                          <g key={ax.key}>
+                            <line x1={cx} y1={cy} x2={x} y2={y} stroke="#e8e8e8" strokeWidth={1} />
+                            <text x={lx} y={ly} fontSize={10} fill="#8c8c8c" textAnchor="middle" dominantBaseline="middle">{ax.label}</text>
+                          </g>
+                        )
+                      })}
+                      {/* 每个 Agent 的雷达多边形 */}
+                      {top.map((a, idx) => (
+                        <g key={a.agent_id}>
+                          <polygon
+                            points={polyFor(a.sub_scores)}
+                            fill={ringColors[idx % ringColors.length]}
+                            fillOpacity={0.12}
+                            stroke={ringColors[idx % ringColors.length]}
+                            strokeWidth={1.5}
+                          />
+                          <title>{`${a.name}: 声誉${a.sub_scores.reputation} 完成${a.sub_scores.completion} 冲突${a.sub_scores.conflict} 违规${a.sub_scores.violation}`}</title>
+                        </g>
+                      ))}
+                    </svg>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
+                      {top.map((a, idx) => (
+                        <Text key={a.agent_id} type="secondary" style={{ fontSize: 10 }}>
+                          <span style={{ color: ringColors[idx % ringColors.length] }}>●</span> {a.name} ({a.health_score})
+                        </Text>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )
         })() : (
