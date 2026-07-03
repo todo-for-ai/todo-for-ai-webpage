@@ -29,11 +29,12 @@ import {
   ExpandOutlined,
   BookOutlined,
   FundOutlined,
+  DotChartOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -85,6 +86,7 @@ const Dashboard = () => {
   const [sandboxTemplateUsage, setSandboxTemplateUsage] = useState<SandboxTemplateUsage | null>(null)
   const [experiencesStats, setExperiencesStats] = useState<ExperiencesStats | null>(null)
   const [experiencesLowConfidence, setExperiencesLowConfidence] = useState<ExperiencesLowConfidence | null>(null)
+  const [experiencesScatter, setExperiencesScatter] = useState<ExperiencesScatter | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
@@ -225,6 +227,7 @@ const Dashboard = () => {
       agentsApi.getSandboxTemplateUsage().then(setSandboxTemplateUsage).catch(() => {})
       agentsApi.getExperiencesStats().then(setExperiencesStats).catch(() => {})
       agentsApi.getExperiencesLowConfidence().then(setExperiencesLowConfidence).catch(() => {})
+      agentsApi.getExperiencesScatter(200).then(setExperiencesScatter).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
@@ -1582,6 +1585,79 @@ const Dashboard = () => {
           ) : <Empty description="暂无低置信度经验" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Experiences Confidence × Reuse Scatter */}
+      <Card
+        title={<Space><DotChartOutlined /> 经验置信度 × 复用次数 散点</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {experiencesScatter && experiencesScatter.points.length > 0 ? (() => {
+          const pts = experiencesScatter.points
+          const maxReuses = Math.max(1, experiencesScatter.max_reuses)
+          const W = 560, H = 220, padL = 36, padR = 12, padT = 12, padB = 28
+          const xOf = (c: number) => padL + (c / 1) * (W - padL - padR)
+          const yOf = (r: number) => H - padB - (r / maxReuses) * (H - padT - padB)
+          // 点颜色按 domain 哈希
+          const palette = ['#1677ff', '#52c41a', '#722ed1', '#13c2c2', '#fa8c16', '#eb2f96', '#fa541c', '#08979c']
+          const domainIdx: Record<string, number> = {}
+          let di = 0
+          const colorFor = (d: string) => {
+            if (!(d in domainIdx)) { domainIdx[d] = di++; }
+            return palette[domainIdx[d] % palette.length]
+          }
+          // 聚类：同位置点叠加计数
+          const cell: Record<string, { x: number; y: number; n: number; c: string; conf: number; reuse: number }> = {}
+          pts.forEach((p) => {
+            const c = p.confidence ?? 0
+            const key = `${c.toFixed(2)}|${p.times_reused}`
+            if (!cell[key]) cell[key] = { x: xOf(c), y: yOf(p.times_reused), n: 0, c: colorFor(p.domain), conf: c, reuse: p.times_reused }
+            cell[key].n += 1
+          })
+          const cells = Object.values(cell)
+          const domains = Object.keys(domainIdx).slice(0, 8)
+          return (
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                共 {pts.length} 条经验（X=置信度 0-1，Y=复用次数，点大小=同位置叠加数，颜色=域）
+              </Text>
+              <svg width={W} height={H} style={{ display: 'block', marginTop: 4 }}>
+                {/* 网格线 */}
+                {[0, 0.25, 0.5, 0.75, 1].map((g) => (
+                  <g key={g}>
+                    <line x1={xOf(g)} y1={padT} x2={xOf(g)} y2={H - padB} stroke="#f0f0f0" strokeWidth={1} />
+                    <text x={xOf(g)} y={H - padB + 14} fontSize={9} fill="#8c8c8c" textAnchor="middle">{g.toFixed(2)}</text>
+                  </g>
+                ))}
+                <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="#d9d9d9" strokeWidth={1} />
+                <line x1={padL} y1={H - padB} x2={W - padR} y2={H - padB} stroke="#d9d9d9" strokeWidth={1} />
+                <text x={6} y={H / 2} fontSize={9} fill="#8c8c8c" transform={`rotate(-90 6 ${H / 2})`} textAnchor="middle">复用次数</text>
+                {/* 散点 */}
+                {cells.map((cell, i) => (
+                  <circle
+                    key={i}
+                    cx={cell.x}
+                    cy={cell.y}
+                    r={3 + Math.min(6, cell.n)}
+                    fill={cell.c}
+                    fillOpacity={0.6}
+                  >
+                    <title>{`置信度=${cell.conf.toFixed(2)} 复用=${cell.reuse} 叠加=${cell.n}`}</title>
+                  </circle>
+                ))}
+              </svg>
+              <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
+                {domains.map((d) => (
+                  <Text key={d} type="secondary" style={{ fontSize: 10 }}>
+                    <span style={{ color: colorFor(d) }}>●</span> {d}
+                  </Text>
+                ))}
+              </div>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无经验散点数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 

@@ -969,6 +969,20 @@ export interface ExperiencesLowConfidence {
   items: ExperiencesLowConfidenceItem[]
 }
 
+export interface ExperiencesScatterPoint {
+  id: number
+  domain: string
+  task_type: string
+  experience_type: string
+  times_reused: number
+  confidence: number | null
+}
+
+export interface ExperiencesScatter {
+  points: ExperiencesScatterPoint[]
+  max_reuses: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1243,6 +1257,10 @@ export class AgentsApi {
 
   async getExperiencesLowConfidence(maxConfidence = 0.5, limit = 20): Promise<ExperiencesLowConfidence> {
     return unwrapData<ExperiencesLowConfidence>(await apiClient.get(`/agents/experiences/low-confidence${buildQuery({ max_confidence: maxConfidence, limit })}`))
+  }
+
+  async getExperiencesScatter(limit = 200): Promise<ExperiencesScatter> {
+    return unwrapData<ExperiencesScatter>(await apiClient.get(`/agents/experiences/scatter${buildQuery({ limit })}`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
