@@ -855,6 +855,19 @@ export interface AgentProductivityHourlyHeatmap {
   peak_hour: number | null
 }
 
+export interface AgentFailureReasonItem {
+  reason: string
+  count: number
+  affected_agents: number[]
+  affected_agent_names: string[]
+}
+
+export interface AgentFailureReasons {
+  days: number
+  total_failed_runs: number
+  items: AgentFailureReasonItem[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1306,6 +1319,10 @@ export class AgentsApi {
 
   async getAgentProductivityHourlyHeatmap(days = 30, limit = 15): Promise<AgentProductivityHourlyHeatmap> {
     return unwrapData<AgentProductivityHourlyHeatmap>(await apiClient.get(`/agents/productivity/hourly-heatmap${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentFailureReasons(days = 30, limit = 15): Promise<AgentFailureReasons> {
+    return unwrapData<AgentFailureReasons>(await apiClient.get(`/agents/failure-reasons${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
