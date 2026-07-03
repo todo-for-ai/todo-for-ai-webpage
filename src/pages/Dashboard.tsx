@@ -31,6 +31,7 @@ import {
   FundOutlined,
   DotChartOutlined,
   HeatMapOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
@@ -1663,6 +1664,83 @@ const Dashboard = () => {
           )
         })() : (
           <Empty description="暂无经验散点数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Experiences Confidence Box Plot by Domain */}
+      <Card
+        title={<Space><BarChartOutlined /> 经验置信度 按域箱线图</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {experiencesScatter && experiencesScatter.points.length > 0 ? (() => {
+          // 按 domain 分组计算置信度五数
+          const byDomain: Record<string, number[]> = {}
+          experiencesScatter.points.forEach((p) => {
+            if (p.confidence == null) return
+            const d = p.domain
+            byDomain[d] = byDomain[d] || []
+            byDomain[d].push(p.confidence)
+          })
+          const domains = Object.entries(byDomain)
+            .map(([d, cs]) => ({ d, n: cs.length, sorted: cs.slice().sort((a, b) => a - b) }))
+            .filter((x) => x.n >= 2) // 至少 2 个才有箱线意义
+            .sort((a, b) => b.n - a.n)
+            .slice(0, 8)
+          if (domains.length === 0) return <Empty description="样本不足" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          const quint = (sorted: number[]) => {
+            const n = sorted.length
+            const q = (p: number) => {
+              const idx = (p / 100) * (n - 1)
+              const lo = Math.floor(idx), hi = Math.ceil(idx)
+              return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo)
+            }
+            return { min: sorted[0], q1: q(25), median: q(50), q3: q(75), max: sorted[n - 1] }
+          }
+          const W = 560, H = 30 * domains.length + 30, padL = 110, padR = 16, padT = 14
+          const xOf = (v: number) => padL + v * (W - padL - padR)
+          return (
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                按域的置信度分布（min / Q1 / 中位 / Q3 / max，仅显示样本≥2 的 top8 域）
+              </Text>
+              <svg width={W} height={H} style={{ display: 'block', marginTop: 4 }}>
+                {/* X 轴刻度 */}
+                {[0, 0.25, 0.5, 0.75, 1].map((g) => (
+                  <g key={g}>
+                    <line x1={xOf(g)} y1={padT - 6} x2={xOf(g)} y2={H - 4} stroke="#f0f0f0" strokeWidth={1} />
+                    <text x={xOf(g)} y={H - 2} fontSize={8} fill="#8c8c8c" textAnchor="middle">{g.toFixed(2)}</text>
+                  </g>
+                ))}
+                {domains.map((dom, i) => {
+                  const q = quint(dom.sorted)
+                  const y = padT + i * 30 + 12
+                  const xMin = xOf(q.min), xMax = xOf(q.max), xQ1 = xOf(q.q1), xQ3 = xOf(q.q3), xMed = xOf(q.median)
+                  return (
+                    <g key={dom.d}>
+                      <text x={padL - 6} y={y + 3} fontSize={10} fill="#595959" textAnchor="end">{dom.d.length > 12 ? dom.d.slice(0, 11) + '…' : dom.d}</text>
+                      {/* 须线 */}
+                      <line x1={xMin} y1={y} x2={xMax} y2={y} stroke="#8c8c8c" strokeWidth={1} />
+                      <line x1={xMin} y1={y - 5} x2={xMin} y2={y + 5} stroke="#8c8c8c" strokeWidth={1} />
+                      <line x1={xMax} y1={y - 5} x2={xMax} y2={y + 5} stroke="#8c8c8c" strokeWidth={1} />
+                      {/* 箱体 */}
+                      <rect x={xQ1} y={y - 7} width={Math.max(1, xQ3 - xQ1)} height={14} fill="#69b1ff" fillOpacity={0.4} stroke="#1890ff" strokeWidth={1} />
+                      {/* 中位线 */}
+                      <line x1={xMed} y1={y - 7} x2={xMed} y2={y + 7} stroke="#722ed1" strokeWidth={1.5} />
+                      <title>{`${dom.d}: n=${dom.n} min=${q.min.toFixed(2)} Q1=${q.q1.toFixed(2)} 中位=${q.median.toFixed(2)} Q3=${q.q3.toFixed(2)} max=${q.max.toFixed(2)}`}</title>
+                      <text x={W - padR + 2} y={y + 3} fontSize={9} fill="#8c8c8c">n={dom.n}</text>
+                    </g>
+                  )
+                })}
+              </svg>
+              <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#1890ff' }}>▭</span> Q1-Q3 箱体</Text>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#722ed1' }}>│</span> 中位数</Text>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#8c8c8c' }}>├─┤</span> min-max 须线</Text>
+              </div>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无经验数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 
