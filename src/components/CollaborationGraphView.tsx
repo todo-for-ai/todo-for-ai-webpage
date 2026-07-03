@@ -397,10 +397,17 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             : ratio >= 0.25 ? '#69b1ff'
             : '#bfbfbf'
           const stroke = edgeColorByCount
+          // 声誉差梯度：两端 Agent 声誉差≥30 时用虚线，标识"声誉悬殊协作"
+          const srcNode = nodes.find((n) => n.id === e.source)
+          const tgtNode = nodes.find((n) => n.id === e.target)
+          const srcRep = srcNode?.reputation
+          const tgtRep = tgtNode?.reputation
+          const repDiff = (srcRep != null && tgtRep != null) ? Math.abs(srcRep - tgtRep) : null
+          const reputationGap = repDiff != null && repDiff >= 30
           const arrow = highlighted ? 'url(#cg-arrow-hl)' : 'url(#cg-arrow)'
-          const tooltip = fwd || rev
+          const tooltip = (fwd || rev
             ? `${e.source}→${e.target}: ${fwd} 条 · ${e.target}→${e.source}: ${rev} 条 · 共 ${e.count}`
-            : `${e.source} ↔ ${e.target}: ${e.count} 条消息`
+            : `${e.source} ↔ ${e.target}: ${e.count} 条消息`) + (repDiff != null ? ` · 声誉差 ${repDiff}${reputationGap ? '（悬殊）' : ''}` : '')
           const mx = (a.x + b.x) / 2
           const my = (a.y + b.y) / 2
           return (
@@ -413,6 +420,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                 stroke={stroke}
                 strokeWidth={highlighted ? w + 1 : w}
                 strokeOpacity={anyHover ? (highlighted ? 0.9 : 0.08) : baseOpacity}
+                strokeDasharray={reputationGap && !highlighted ? '5 4' : undefined}
                 markerEnd={oneWay ? arrow : undefined}
                 markerStart={(!oneWay && fwd && rev) ? arrow : undefined}
                 onMouseEnter={() => setHoveredEdge({ source: e.source, target: e.target })}
@@ -562,6 +570,10 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
             {l}
           </span>
         ))}
+        <span style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+          <span style={{ display: 'inline-block', width: 14, borderTop: '2px dashed #fa541c' }} />
+          声誉差≥30
+        </span>
       </div>
       {/* 节点尺寸图例（按消息量梯度） */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
