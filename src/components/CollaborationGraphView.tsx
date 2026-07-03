@@ -486,7 +486,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
                 fill={highlighted ? '#1890ff' : kindColor(n.kind)}
                 stroke={isCenter ? '#faad14' : '#fff'}
                 strokeWidth={isCenter ? 3 : 1.5}
-                fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.4) : 1)}
+                fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.4) : ([0.45, 0.6, 0.85, 1][nodeTier(n)]))}
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
               </circle>
