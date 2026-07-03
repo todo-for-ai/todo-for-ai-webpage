@@ -2080,6 +2080,80 @@ const Dashboard = () => {
                   </div>
                 )
               })()}
+              {(() => {
+                // Agent × 维度子分数热力（声誉/完成/冲突/违规）
+                const top = items.slice(0, 12)
+                if (top.length === 0) return null
+                const dims = [
+                  { key: 'reputation', label: '声誉' },
+                  { key: 'completion', label: '完成' },
+                  { key: 'conflict', label: '冲突' },
+                  { key: 'violation', label: '违规' },
+                ] as const
+                const cellColor = (v: number) => {
+                  if (v >= 80) return '#52c41a'
+                  if (v >= 60) return '#a0d911'
+                  if (v >= 40) return '#faad14'
+                  if (v >= 20) return '#fa8c16'
+                  return '#ff4d4f'
+                }
+                return (
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>Agent × 维度子分数热力（top{top.length}）:</Text>
+                    <div style={{ marginTop: 4, overflowX: 'auto' }}>
+                      <table style={{ borderCollapse: 'collapse', fontSize: 10 }}>
+                        <thead>
+                          <tr>
+                            <th style={{ padding: '2px 6px', borderBottom: '1px solid #f0f0f0', textAlign: 'left', position: 'sticky', left: 0, background: '#fff' }}>Agent</th>
+                            {dims.map((d) => (
+                              <th key={d.key} style={{ padding: '2px 8px', borderBottom: '1px solid #f0f0f0', color: '#8c8c8c' }}>{d.label}</th>
+                            ))}
+                            <th style={{ padding: '2px 8px', borderBottom: '1px solid #f0f0f0', color: '#8c8c8c' }}>综合</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {top.map((a) => (
+                            <tr key={a.agent_id}>
+                              <td style={{ padding: '2px 6px', color: '#595959', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: '#fff' }} title={a.name}>{a.name.length > 10 ? a.name.slice(0, 9) + '…' : a.name}</td>
+                              {dims.map((d) => {
+                                const v = a.sub_scores[d.key] ?? 0
+                                return (
+                                  <td key={d.key} style={{ padding: 0 }}>
+                                    <Tooltip title={`${a.name} ${d.label}: ${v}`}>
+                                      <div style={{ width: 46, height: 22, background: cellColor(v), color: v >= 50 ? '#fff' : '#595959', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, margin: 1, fontSize: 10 }}>
+                                        {v}
+                                      </div>
+                                    </Tooltip>
+                                  </td>
+                                )
+                              })}
+                              <td style={{ padding: 0 }}>
+                                <div style={{ width: 46, height: 22, background: cellColor(a.health_score), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, margin: 1, fontSize: 10, fontWeight: 'bold' }}>
+                                  {a.health_score}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                      <Text type="secondary" style={{ fontSize: 10 }}>色阶:</Text>
+                      {[
+                        { c: '#ff4d4f', l: '<20' },
+                        { c: '#fa8c16', l: '≥20' },
+                        { c: '#faad14', l: '≥40' },
+                        { c: '#a0d911', l: '≥60' },
+                        { c: '#52c41a', l: '≥80' },
+                      ].map(({ c, l }) => (
+                        <Text key={l} type="secondary" style={{ fontSize: 10 }}>
+                          <span style={{ display: 'inline-block', width: 12, height: 10, background: c, borderRadius: 2, verticalAlign: 'middle' }} /> {l}
+                        </Text>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )
         })() : (
