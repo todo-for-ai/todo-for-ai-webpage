@@ -98,6 +98,20 @@ export interface TaskOverdueTrend {
   by_priority_totals: Record<string, number>
 }
 
+export interface TaskCompletionByProjectItem {
+  project_id: number
+  name: string
+  total: number
+  daily: { date: string; done: number }[]
+}
+
+export interface TaskCompletionByProject {
+  days: number
+  total_done: number
+  all_days: string[]
+  series: TaskCompletionByProjectItem[]
+}
+
 export interface CreateTaskData {
   project_id: number
   title?: string
@@ -246,6 +260,11 @@ export class TasksApi {
   // 获取任务逾期趋势（按 due_date 分日）
   async getOverdueTrend(days = 30): Promise<TaskOverdueTrend> {
     return apiClient.get<TaskOverdueTrend>(`/tasks/overdue-trend?days=${days}`)
+  }
+
+  // 获取任务按项目完成趋势
+  async getCompletionByProject(days = 30, limit = 8): Promise<TaskCompletionByProject> {
+    return apiClient.get<TaskCompletionByProject>(`/tasks/completion-by-project?days=${days}&limit=${limit}`)
   }
 }
 
