@@ -33,7 +33,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -88,6 +88,7 @@ const Dashboard = () => {
   const [experiencesLowConfidence, setExperiencesLowConfidence] = useState<ExperiencesLowConfidence | null>(null)
   const [experiencesScatter, setExperiencesScatter] = useState<ExperiencesScatter | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
+  const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
@@ -229,6 +230,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesLowConfidence().then(setExperiencesLowConfidence).catch(() => {})
       agentsApi.getExperiencesScatter(200).then(setExperiencesScatter).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
+      tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
       agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
@@ -1796,6 +1798,37 @@ const Dashboard = () => {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  )
+                })()}
+                {(() => {
+                  // 逾期趋势：按 due_date 分日的逾期数，火山色柱
+                  if (!taskOverdueTrend || taskOverdueTrend.trend.length === 0) return null
+                  const trend = taskOverdueTrend.trend
+                  const maxOverdue = Math.max(1, ...trend.map((b) => b.overdue))
+                  const priorityTotals = taskOverdueTrend.by_priority_totals || {}
+                  const priorityEntries = Object.entries(priorityTotals)
+                  return (
+                    <div style={{ marginTop: 12 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        逾期趋势（近 {taskOverdueTrend.days} 天，按截止日分桶，共 {taskOverdueTrend.total_overdue} 个逾期）:
+                      </Text>
+                      {priorityEntries.length > 0 && (
+                        <div style={{ marginTop: 2 }}>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            按优先级累计: {priorityEntries.map(([k, v]) => `${k}=${v}`).join(' · ')}
+                          </Text>
+                        </div>
+                      )}
+                      <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-end', gap: 2, height: 56, overflowX: 'auto', paddingBottom: 2 }}>
+                        {trend.map((b) => (
+                          <Tooltip key={b.date} title={`${b.date}: 逾期 ${b.overdue}${Object.keys(b.by_priority).length ? ` [${Object.entries(b.by_priority).map(([k, v]) => `${k}=${v}`).join(', ')}]` : ''}`}>
+                            <div style={{ flex: '0 0 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                              <div style={{ width: 10, height: `${(b.overdue / maxOverdue) * 100}%`, minHeight: 2, background: '#fa541c', borderRadius: 2 }} />
+                            </div>
+                          </Tooltip>
+                        ))}
+                      </div>
                     </div>
                   )
                 })()}
