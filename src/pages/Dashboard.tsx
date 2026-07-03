@@ -2050,6 +2050,53 @@ const Dashboard = () => {
                   </div>
                 )
               })()}
+              {(() => {
+                // 按 kind 分层声誉曲线（各 kind 每日平均声誉）
+                const kindOverall = agentHealthTrend.by_kind_overall || {}
+                const kinds = Object.keys(kindOverall).slice(0, 6)
+                if (kinds.length === 0) return null
+                const trend = agentHealthTrend.trend
+                const n = trend.length
+                if (n < 2) return null
+                const W = 520, H = 70, padL = 4, padR = 4, padT = 6, padB = 14
+                const xStep = (W - padL - padR) / Math.max(1, n - 1)
+                const palette = ['#1677ff', '#52c41a', '#722ed1', '#13c2c2', '#fa8c16', '#8c8c8c']
+                const kindColor: Record<string, string> = { assistant: '#1677ff', worker: '#52c41a', orchestrator: '#722ed1', reviewer: '#13c2c2', planner: '#fa8c16', observer: '#8c8c8c' }
+                const lineFor = (kind: string) => {
+                  const pts: string[] = []
+                  trend.forEach((b, i) => {
+                    const v = b.by_kind_avg?.[kind]
+                    if (v == null) return
+                    const x = padL + i * xStep
+                    const y = H - padB - (v / 100) * (H - padT - padB)
+                    pts.push(`${x.toFixed(1)},${y.toFixed(1)}`)
+                  })
+                  return pts.join(' ')
+                }
+                return (
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>按 kind 分层声誉趋势:</Text>
+                    <svg width={W} height={H} style={{ display: 'block' }}>
+                      {kinds.map((k, idx) => {
+                        const pts = lineFor(k)
+                        if (pts.split(' ').length < 2) return null
+                        const c = kindColor[k] || palette[idx % palette.length]
+                        return <polyline key={k} points={pts} fill="none" stroke={c} strokeWidth={1.6} opacity={0.85} />
+                      })}
+                    </svg>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
+                      {kinds.map((k, idx) => {
+                        const c = kindColor[k] || palette[idx % palette.length]
+                        return (
+                          <Text key={k} type="secondary" style={{ fontSize: 10 }}>
+                            <span style={{ color: c }}>●</span> {k} ({kindOverall[k]})
+                          </Text>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )
         })()}

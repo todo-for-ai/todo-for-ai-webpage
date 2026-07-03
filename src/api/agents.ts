@@ -911,6 +911,7 @@ export interface AgentHealthTrendBucket {
   negative: number
   conflicts: number
   sandbox_violations: number
+  by_kind_avg?: Record<string, number>
 }
 
 export interface AgentHealthTrend {
@@ -922,6 +923,7 @@ export interface AgentHealthTrend {
   total_violations: number
   agent_id: number | null
   agent_name: string | null
+  by_kind_overall?: Record<string, number>
 }
 
 export interface AgentHealthAlertItem extends AgentHealthItem {
