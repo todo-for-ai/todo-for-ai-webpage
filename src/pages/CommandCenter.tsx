@@ -992,7 +992,7 @@ const CommandCenter: React.FC = () => {
                 onChange={(v) => setGraphMinCount(v ?? null)}
               />
               <Button size="small" icon={<ReloadOutlined />} onClick={() => { try { localStorage.removeItem('ccCollabGraphPositions') } catch { /* ignore */ } setGraphResetKey((k) => k + 1) }}>重置布局</Button>
-              <Checkbox size="small" checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
+              <Checkbox checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
               <Button size="small" icon={<ExpandOutlined />} onClick={() => setGraphFullscreen(true)}>全屏</Button>
             </Space>
           }

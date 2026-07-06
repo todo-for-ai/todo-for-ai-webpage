@@ -185,13 +185,25 @@ export interface HandoffTaskResult {
 }
 
 export interface DispatchTasksData {
-  project_id?: number
+  auto_dispatch_enabled?: boolean
+  project_id?: number | null
   max_assignments?: number
   lease_seconds?: number
   match_capabilities?: boolean
   require_capability_match?: boolean
   candidate_agent_ids?: number[]
   include_self?: boolean
+}
+
+export interface DispatchPolicy extends DispatchTasksData {
+  auto_dispatch_enabled: boolean
+  project_id?: number | null
+  max_assignments: number
+  lease_seconds: number
+  match_capabilities: boolean
+  require_capability_match: boolean
+  candidate_agent_ids: number[]
+  include_self: boolean
 }
 
 export interface DispatchAssignment {
@@ -206,11 +218,57 @@ export interface DispatchAssignment {
 export interface DispatchTasksResult {
   coordinator: Agent
   assignments: DispatchAssignment[]
+  policy?: DispatchPolicy
+  options?: DispatchPolicy
   summary: {
     claimable_tasks: number
     available_agents: number
     dispatched: number
     skipped_no_match: number
+  }
+}
+
+export interface DispatchPreviewCandidate {
+  agent: Agent
+  score: number
+  strategy: 'capability_match' | 'priority_fifo'
+  matched_capabilities: string[]
+  matched_tags: string[]
+  matched_text: string[]
+  missing_required: string[]
+  experience_bonus?: number
+}
+
+export interface DispatchPreviewAssignment extends DispatchPreviewCandidate {
+  task: Task
+}
+
+export interface DispatchPreviewTaskCandidates {
+  task: Task
+  candidates: DispatchPreviewCandidate[]
+}
+
+export interface DispatchPreviewUnmatchedTask {
+  task: Task
+  reason: 'no_matching_agent' | 'agent_capacity_exhausted'
+  candidate_count: number
+  best_candidate?: DispatchPreviewCandidate | null
+}
+
+export interface DispatchPreviewResult {
+  coordinator: Agent
+  proposed_assignments: DispatchPreviewAssignment[]
+  task_candidates: DispatchPreviewTaskCandidates[]
+  unmatched_tasks: DispatchPreviewUnmatchedTask[]
+  policy?: DispatchPolicy
+  options?: DispatchPolicy
+  summary: {
+    claimable_tasks: number
+    available_agents: number
+    planned: number
+    skipped_no_match: number
+    skipped_capacity: number
+    max_assignments: number
   }
 }
 
@@ -592,6 +650,7 @@ export interface OrchestratorLastRun {
 
 export interface OrchestratorStatus {
   enabled: boolean
+  interval_seconds?: number
   last_run: OrchestratorLastRun | null
 }
 
@@ -1013,9 +1072,34 @@ export interface ExperiencesScatter {
   max_reuses: number
 }
 
+export interface ExperiencesReuseTrendBucket {
+  date: string
+  reused: number
+  reuse_count: number
+  avg_confidence: number
+  decayed: number
+}
+
+export interface ExperiencesReuseTrend {
+  trend: ExperiencesReuseTrendBucket[]
+  total_reused: number
+  total_reuse_count: number
+  decayed_count: number
+  total_experiences: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
+}
+
+export interface PaginatedResponse<T> {
+  data?: T[]
+  items?: T[]
+  pagination?: Pagination
+  message?: string
+  success?: boolean
+  timestamp?: string
 }
 
 export interface AgentQueryParams {
@@ -1191,6 +1275,20 @@ export class AgentsApi {
     return unwrapData<DispatchTasksResult>(await apiClient.post(`/agents/${agentId}/dispatch`, data))
   }
 
+  async getDispatchPolicy(agentId: number): Promise<{ policy: DispatchPolicy }> {
+    return unwrapData<{ policy: DispatchPolicy }>(await apiClient.get(`/agents/${agentId}/dispatch/policy`))
+  }
+
+  async updateDispatchPolicy(agentId: number, policy: DispatchTasksData): Promise<{ policy: DispatchPolicy; coordinator: Agent }> {
+    return unwrapData<{ policy: DispatchPolicy; coordinator: Agent }>(
+      await apiClient.put(`/agents/${agentId}/dispatch/policy`, { policy })
+    )
+  }
+
+  async previewDispatchTasks(agentId: number, data: DispatchTasksData = {}): Promise<DispatchPreviewResult> {
+    return unwrapData<DispatchPreviewResult>(await apiClient.post(`/agents/${agentId}/dispatch/preview`, data))
+  }
+
   async getAgentInbox(agentId: number, params?: { since_id?: number; per_page?: number; include_self?: boolean }): Promise<AgentInboxResult> {
     return unwrapData<AgentInboxResult>(await apiClient.get(`/agents/${agentId}/inbox${buildQuery(params)}`))
   }
@@ -1291,6 +1389,10 @@ export class AgentsApi {
 
   async getExperiencesScatter(limit = 200): Promise<ExperiencesScatter> {
     return unwrapData<ExperiencesScatter>(await apiClient.get(`/agents/experiences/scatter${buildQuery({ limit })}`))
+  }
+
+  async getExperiencesReuseTrend(days = 30): Promise<ExperiencesReuseTrend> {
+    return unwrapData<ExperiencesReuseTrend>(await apiClient.get(`/agents/experiences/reuse-trend${buildQuery({ days })}`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
@@ -1655,7 +1757,7 @@ export class AgentsApi {
     params?: { limit?: number; since?: string; until?: string }
   ): Promise<ReputationHistory> {
     return unwrapData<ReputationHistory>(
-      await apiClient.get(`/agents/${agentId}/reputation/history`, { params })
+      await apiClient.get(`/agents/${agentId}/reputation/history${buildQuery(params)}`)
     )
   }
 
@@ -1847,11 +1949,11 @@ export class AgentsApi {
   }
 
   async getSandboxViolationTrend(days = 30): Promise<SandboxViolationTrend> {
-    return unwrapData<SandboxViolationTrend>(await apiClient.get('/agents/sandboxes/violation-trend', { params: { days } }))
+    return unwrapData<SandboxViolationTrend>(await apiClient.get(`/agents/sandboxes/violation-trend${buildQuery({ days })}`))
   }
 
   async getSandboxViolationsByAgent(days = 30, limit = 10): Promise<SandboxViolationsByAgent> {
-    return unwrapData<SandboxViolationsByAgent>(await apiClient.get('/agents/sandboxes/violations-by-agent', { params: { days, limit } }))
+    return unwrapData<SandboxViolationsByAgent>(await apiClient.get(`/agents/sandboxes/violations-by-agent${buildQuery({ days, limit })}`))
   }
 
   async getSandboxTemplateUsage(): Promise<SandboxTemplateUsage> {
@@ -1910,11 +2012,11 @@ export class AgentsApi {
   }
 
   async getConflictsTrend(days = 30): Promise<ConflictsTrend> {
-    return unwrapData<ConflictsTrend>(await apiClient.get('/agents/conflicts/trend', { params: { days } }))
+    return unwrapData<ConflictsTrend>(await apiClient.get(`/agents/conflicts/trend${buildQuery({ days })}`))
   }
 
   async getConflictsByAgent(limit = 10): Promise<ConflictsByAgent> {
-    return unwrapData<ConflictsByAgent>(await apiClient.get('/agents/conflicts/by-agent', { params: { limit } }))
+    return unwrapData<ConflictsByAgent>(await apiClient.get(`/agents/conflicts/by-agent${buildQuery({ limit })}`))
   }
 
   async getConflictsStrategyStats(): Promise<ConflictsStrategyStats> {

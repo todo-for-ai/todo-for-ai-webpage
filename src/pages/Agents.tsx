@@ -15,6 +15,7 @@ import {
   Row,
   Select,
   Space,
+  Statistic,
   Switch,
   Table,
   Tag,
@@ -41,6 +42,7 @@ import {
   DeploymentUnitOutlined,
   EditOutlined,
   EyeOutlined,
+  FieldTimeOutlined,
   PlayCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
@@ -64,7 +66,6 @@ import {
 } from '@ant-design/icons'
 import {
   agentsApi,
-  projectsApi,
   type Agent,
   type AgentKind,
   type AgentStatus,
@@ -76,6 +77,9 @@ import {
   type NotificationItem,
   type CollaborationGraph,
   type ReputationHistory,
+  type DispatchTasksData,
+  type DispatchPolicy,
+  type DispatchPreviewResult,
 } from '../api/agents'
 import CapabilityRadar from '../components/Agent/CapabilityRadar'
 import CollaborationGraphView from '../components/CollaborationGraphView'
@@ -84,6 +88,16 @@ import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
+const { Option } = Select
+
+const DEFAULT_DISPATCH_PREVIEW_OPTIONS: DispatchTasksData = {
+  auto_dispatch_enabled: false,
+  max_assignments: 5,
+  lease_seconds: 1800,
+  match_capabilities: true,
+  require_capability_match: false,
+  include_self: false,
+}
 
 const statusColor: Record<AgentStatus, string> = {
   active: 'green',
@@ -235,6 +249,80 @@ const matchStrategyLabel = (strategy: unknown) => {
   return strategy ? String(strategy) : '指定任务'
 }
 
+const normalizeDispatchOptions = (options: DispatchTasksData): DispatchTasksData => {
+  const payload: DispatchTasksData = {}
+
+  if (typeof options.auto_dispatch_enabled === 'boolean') {
+    payload.auto_dispatch_enabled = options.auto_dispatch_enabled
+  }
+  if (options.project_id) {
+    payload.project_id = Number(options.project_id)
+  }
+  if (options.max_assignments) {
+    payload.max_assignments = Number(options.max_assignments)
+  }
+  if (options.lease_seconds) {
+    payload.lease_seconds = Number(options.lease_seconds)
+  }
+  if (options.match_capabilities === false) {
+    payload.match_capabilities = false
+  } else if (options.match_capabilities === true) {
+    payload.match_capabilities = true
+  }
+  if (options.require_capability_match) {
+    payload.require_capability_match = true
+  }
+  if (options.include_self) {
+    payload.include_self = true
+  }
+  if (options.candidate_agent_ids && options.candidate_agent_ids.length > 0) {
+    payload.candidate_agent_ids = options.candidate_agent_ids.map(Number).filter(id => Number.isFinite(id))
+  }
+
+  return payload
+}
+
+const normalizeDispatchPolicyPayload = (options: DispatchTasksData): DispatchPolicy => ({
+  auto_dispatch_enabled: !!options.auto_dispatch_enabled,
+  project_id: options.project_id ? Number(options.project_id) : null,
+  max_assignments: options.max_assignments ? Number(options.max_assignments) : DEFAULT_DISPATCH_PREVIEW_OPTIONS.max_assignments || 5,
+  lease_seconds: options.lease_seconds ? Number(options.lease_seconds) : DEFAULT_DISPATCH_PREVIEW_OPTIONS.lease_seconds || 1800,
+  match_capabilities: options.match_capabilities !== false,
+  require_capability_match: options.match_capabilities === false ? false : !!options.require_capability_match,
+  include_self: !!options.include_self,
+  candidate_agent_ids: (options.candidate_agent_ids || []).map(Number).filter(id => Number.isFinite(id) && id > 0),
+})
+
+const getAgentDispatchPolicy = (agent?: Agent | null): DispatchTasksData => {
+  const config = isRecord(agent?.config) ? agent?.config : {}
+  const policy = isRecord(config?.dispatch_policy) ? config.dispatch_policy : {}
+  const candidateIds = Array.isArray(policy.candidate_agent_ids)
+    ? policy.candidate_agent_ids.map(Number).filter(id => Number.isFinite(id) && id > 0)
+    : undefined
+
+  return {
+    ...DEFAULT_DISPATCH_PREVIEW_OPTIONS,
+    auto_dispatch_enabled: typeof policy.auto_dispatch_enabled === 'boolean'
+      ? policy.auto_dispatch_enabled
+      : DEFAULT_DISPATCH_PREVIEW_OPTIONS.auto_dispatch_enabled,
+    project_id: policy.project_id ? Number(policy.project_id) : undefined,
+    max_assignments: policy.max_assignments ? Number(policy.max_assignments) : DEFAULT_DISPATCH_PREVIEW_OPTIONS.max_assignments,
+    lease_seconds: policy.lease_seconds ? Number(policy.lease_seconds) : DEFAULT_DISPATCH_PREVIEW_OPTIONS.lease_seconds,
+    match_capabilities: policy.match_capabilities === false ? false : DEFAULT_DISPATCH_PREVIEW_OPTIONS.match_capabilities,
+    require_capability_match: !!policy.require_capability_match,
+    include_self: !!policy.include_self,
+    candidate_agent_ids: candidateIds && candidateIds.length > 0 ? candidateIds : undefined,
+  }
+}
+
+const withAgentDispatchPolicy = (agent: Agent, policy: DispatchPolicy): Agent => ({
+  ...agent,
+  config: {
+    ...(isRecord(agent.config) ? agent.config : {}),
+    dispatch_policy: policy,
+  },
+})
+
 const getClaimMatch = (runMetadata?: Record<string, unknown>) => {
   const capabilityMatch = runMetadata?.capability_match
   return isRecord(capabilityMatch) ? capabilityMatch : null
@@ -296,6 +384,30 @@ const Agents: React.FC = () => {
   const [broadcastAgent, setBroadcastAgent] = useState<Agent | null>(null)
   const [broadcastContent, setBroadcastContent] = useState('')
   const [broadcasting, setBroadcasting] = useState(false)
+  const [dispatchPreviewOpen, setDispatchPreviewOpen] = useState(false)
+  const [dispatchPreviewAgent, setDispatchPreviewAgent] = useState<Agent | null>(null)
+  const [dispatchPreview, setDispatchPreview] = useState<DispatchPreviewResult | null>(null)
+  const [dispatchPreviewLoading, setDispatchPreviewLoading] = useState(false)
+  const [dispatchPreviewApplying, setDispatchPreviewApplying] = useState(false)
+  const [dispatchPolicySaving, setDispatchPolicySaving] = useState(false)
+  const [dispatchPolicyDirty, setDispatchPolicyDirty] = useState(false)
+  const [dispatchPreviewOptions, setDispatchPreviewOptions] = useState<DispatchTasksData>(DEFAULT_DISPATCH_PREVIEW_OPTIONS)
+  const dispatchCandidateOptions = useMemo(() => {
+    return agents
+      .filter(agent => {
+        if (agent.status !== 'active') {
+          return false
+        }
+        if (agent.kind !== 'coordinator') {
+          return true
+        }
+        return dispatchPreviewOptions.include_self && agent.id === dispatchPreviewAgent?.id
+      })
+      .map(agent => ({
+        label: `${agent.name} · ${agent.kind}`,
+        value: agent.id,
+      }))
+  }, [agents, dispatchPreviewAgent?.id, dispatchPreviewOptions.include_self])
 
   // Direct message state
   const [dmOpen, setDmOpen] = useState(false)
@@ -446,15 +558,20 @@ const Agents: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveMode, statusFilter, reviewActionFilter, searchText, drawerOpen, selectedAgent])
 
-  // 自动 dispatch：每 60s 对所有活跃 coordinator 自动触发派活
+  // 自动 dispatch：每 60s 对开启策略的活跃 coordinator 自动触发派活
   useEffect(() => {
     if (!liveMode) return
     const timer = window.setInterval(async () => {
       if (typeof document !== 'undefined' && document.hidden) return
-      const coordinators = agents.filter(a => a.kind === 'coordinator' && a.status === 'active')
+      const coordinators = agents.filter(a => {
+        if (a.kind !== 'coordinator' || a.status !== 'active') {
+          return false
+        }
+        return getAgentDispatchPolicy(a).auto_dispatch_enabled === true
+      })
       for (const coord of coordinators) {
         try {
-          await agentsApi.dispatchTasks(coord.id, { max_assignments: 5 })
+          await agentsApi.dispatchTasks(coord.id, normalizeDispatchOptions(getAgentDispatchPolicy(coord)))
         } catch {
           // silent — may fail if no claimable tasks, that's fine
         }
@@ -882,7 +999,7 @@ const Agents: React.FC = () => {
   const loadExperiences = async (agent: Agent) => {
     setExperiencesLoading(true)
     try {
-      const data = await agentsApi.listAgentExperiences(agent.id)
+      const data: any = await agentsApi.listAgentExperiences(agent.id)
       setExperiences(data?.data?.items || data?.items || (Array.isArray(data?.data) ? data.data : []))
     } catch { message.error('加载经验失败') }
     finally { setExperiencesLoading(false) }
@@ -984,7 +1101,7 @@ const Agents: React.FC = () => {
     if (!selectedAgent) return
     setSharedExperiencesLoading(true)
     try {
-      const data = await agentsApi.listSharedExperiences(selectedAgent.id)
+      const data: any = await agentsApi.listSharedExperiences(selectedAgent.id)
       setSharedExperiences(data?.data?.items || data?.items || (Array.isArray(data?.data) ? data.data : []))
       setSharedExperiencesOpen(true)
     } catch { message.error('加载共享经验失败') }
@@ -1011,7 +1128,7 @@ const Agents: React.FC = () => {
   const loadCrossProjects = async (agent: Agent) => {
     setCrossProjectLoading(true)
     try {
-      const data = await agentsApi.listAgentCrossProjects(agent.id)
+      const data: any = await agentsApi.listAgentCrossProjects(agent.id)
       setCrossProjects(Array.isArray(data) ? data : data?.items || [])
     } catch { message.error('加载跨项目授权失败') }
     finally { setCrossProjectLoading(false) }
@@ -1106,7 +1223,7 @@ const Agents: React.FC = () => {
     if (!selectedAgent) return
     setCrossTasksLoading(true)
     try {
-      const data = await agentsApi.findCrossProjectTasks(selectedAgent.id)
+      const data: any = await agentsApi.findCrossProjectTasks(selectedAgent.id)
       setCrossTasks(Array.isArray(data) ? data : data?.items || [])
       setCrossTasksOpen(true)
     } catch { message.error('加载跨项目任务失败') }
@@ -1593,9 +1710,18 @@ const Agents: React.FC = () => {
     }
   }
 
-  const dispatchTasks = async (agent: Agent) => {
+  const updateDispatchPreviewOptions = (patch: Partial<DispatchTasksData>) => {
+    setDispatchPreviewOptions(prev => ({
+      ...prev,
+      ...patch,
+    }))
+    setDispatchPolicyDirty(true)
+    setDispatchPreview(null)
+  }
+
+  const dispatchTasks = async (agent: Agent, options: DispatchTasksData = {}) => {
     try {
-      const result = await agentsApi.dispatchTasks(agent.id, {})
+      const result = await agentsApi.dispatchTasks(agent.id, normalizeDispatchOptions(options))
       const { dispatched, claimable_tasks, available_agents } = result.summary
       if (dispatched === 0) {
         message.info(
@@ -1619,8 +1745,81 @@ const Agents: React.FC = () => {
       if (drawerOpen) {
         loadAssignments(agent)
       }
+      return true
     } catch (error) {
       message.error(error instanceof Error ? error.message : '自动派活失败')
+      return false
+    }
+  }
+
+  const previewDispatchTasks = async (agent: Agent, options?: DispatchTasksData) => {
+    const hasExplicitOptions = !!options
+    let nextOptions = options || getAgentDispatchPolicy(agent)
+    setDispatchPreviewOptions(nextOptions)
+    setDispatchPreviewAgent(agent)
+    setDispatchPreviewOpen(true)
+    setDispatchPreviewLoading(true)
+    setDispatchPreview(null)
+    try {
+      if (!hasExplicitOptions) {
+        const { policy } = await agentsApi.getDispatchPolicy(agent.id)
+        nextOptions = policy
+        const agentWithLatestPolicy = withAgentDispatchPolicy(agent, policy)
+        setDispatchPreviewAgent(agentWithLatestPolicy)
+        setDispatchPreviewOptions(nextOptions)
+        setDispatchPolicyDirty(false)
+        setAgents(prev => prev.map(item => item.id === agent.id ? agentWithLatestPolicy : item))
+      }
+      const result = await agentsApi.previewDispatchTasks(agent.id, normalizeDispatchOptions(nextOptions))
+      setDispatchPreview(result)
+      setDispatchPreviewOptions(result.options || nextOptions)
+      if (!hasExplicitOptions) {
+        setDispatchPolicyDirty(false)
+      }
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '派活预览失败')
+    } finally {
+      setDispatchPreviewLoading(false)
+    }
+  }
+
+  const saveDispatchPolicy = async () => {
+    if (!dispatchPreviewAgent) {
+      return
+    }
+
+    setDispatchPolicySaving(true)
+    try {
+      const result = await agentsApi.updateDispatchPolicy(
+        dispatchPreviewAgent.id,
+        normalizeDispatchPolicyPayload(dispatchPreviewOptions),
+      )
+      setDispatchPreviewAgent(result.coordinator)
+      setDispatchPreviewOptions(result.policy)
+      setDispatchPolicyDirty(false)
+      setAgents(prev => prev.map(agent => agent.id === result.coordinator.id ? result.coordinator : agent))
+      message.success('派活策略已保存')
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '保存派活策略失败')
+    } finally {
+      setDispatchPolicySaving(false)
+    }
+  }
+
+  const applyDispatchPreview = async () => {
+    if (!dispatchPreviewAgent) {
+      return
+    }
+
+    setDispatchPreviewApplying(true)
+    try {
+      const dispatched = await dispatchTasks(dispatchPreviewAgent, dispatchPreviewOptions)
+      if (dispatched) {
+        setDispatchPreviewOpen(false)
+        setDispatchPreview(null)
+      }
+    } finally {
+      setDispatchPreviewApplying(false)
     }
   }
 
@@ -1899,11 +2098,18 @@ const Agents: React.FC = () => {
             </Button>
           </Tooltip>
           {record.kind === 'coordinator' ? (
-            <Tooltip title="作为协调器，把待办任务按能力匹配自动分派给空闲 Agent">
-              <Button size="small" type="primary" icon={<DeploymentUnitOutlined />} onClick={() => dispatchTasks(record)}>
-                自动派活
-              </Button>
-            </Tooltip>
+            <>
+              <Tooltip title="先查看待办任务与空闲 Agent 的匹配计划">
+                <Button size="small" icon={<SearchOutlined />} onClick={() => previewDispatchTasks(record)}>
+                  预览派活
+                </Button>
+              </Tooltip>
+              <Tooltip title="作为协调器，把待办任务按能力匹配自动分派给空闲 Agent">
+                <Button size="small" type="primary" icon={<DeploymentUnitOutlined />} onClick={() => dispatchTasks(record)}>
+                  自动派活
+                </Button>
+              </Tooltip>
+            </>
           ) : (
             <>
               <Button size="small" icon={<PlayCircleOutlined />} onClick={() => claimTask(record, null, true)}>
@@ -2855,6 +3061,269 @@ const Agents: React.FC = () => {
           maxLength={500}
           showCount
         />
+      </Modal>
+
+      {/* 派活预览 Modal */}
+      <Modal
+        title={`派活预览 — ${dispatchPreviewAgent?.name || ''}`}
+        open={dispatchPreviewOpen}
+        onCancel={() => {
+          setDispatchPreviewOpen(false)
+          setDispatchPreviewAgent(null)
+          setDispatchPreview(null)
+          setDispatchPolicyDirty(false)
+        }}
+        onOk={applyDispatchPreview}
+        okText="按此计划派发"
+        cancelText="关闭"
+        confirmLoading={dispatchPreviewApplying}
+        okButtonProps={{ disabled: !dispatchPreview || dispatchPreview.summary.planned === 0 }}
+        width={980}
+      >
+        <Spin spinning={dispatchPreviewLoading}>
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Row gutter={[12, 12]} align="bottom">
+              <Col xs={24} sm={12} md={6}>
+                <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>本轮上限</Text>
+                <InputNumber
+                  min={1}
+                  max={20}
+                  value={dispatchPreviewOptions.max_assignments}
+                  onChange={value => updateDispatchPreviewOptions({ max_assignments: value ? Number(value) : undefined })}
+                  style={{ width: '100%' }}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>租约秒数</Text>
+                <InputNumber
+                  min={60}
+                  max={86400}
+                  step={300}
+                  value={dispatchPreviewOptions.lease_seconds}
+                  onChange={value => updateDispatchPreviewOptions({ lease_seconds: value ? Number(value) : undefined })}
+                  style={{ width: '100%' }}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>项目 ID</Text>
+                <InputNumber
+                  min={1}
+                  value={dispatchPreviewOptions.project_id}
+                  onChange={value => updateDispatchPreviewOptions({ project_id: value ? Number(value) : undefined })}
+                  placeholder="全部项目"
+                  style={{ width: '100%' }}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                  <Button
+                    block
+                    icon={<SearchOutlined />}
+                    loading={dispatchPreviewLoading}
+                    onClick={() => dispatchPreviewAgent && previewDispatchTasks(dispatchPreviewAgent, dispatchPreviewOptions)}
+                  >
+                    生成预览
+                  </Button>
+                  <Button
+                    block
+                    icon={<SettingOutlined />}
+                    loading={dispatchPolicySaving}
+                    disabled={dispatchPreviewLoading}
+                    onClick={saveDispatchPolicy}
+                  >
+                    保存策略
+                  </Button>
+                </Space>
+              </Col>
+              <Col span={24}>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  maxTagCount="responsive"
+                  placeholder="默认使用所有空闲 Worker Agent"
+                  value={dispatchPreviewOptions.candidate_agent_ids || []}
+                  options={dispatchCandidateOptions}
+                  onChange={values => updateDispatchPreviewOptions({ candidate_agent_ids: values.length ? values : undefined })}
+                  style={{ width: '100%' }}
+                />
+              </Col>
+              <Col span={24}>
+                <Space wrap size={[16, 8]}>
+                  <Space size={6}>
+                    <Switch
+                      size="small"
+                      checked={!!dispatchPreviewOptions.auto_dispatch_enabled}
+                      onChange={checked => updateDispatchPreviewOptions({ auto_dispatch_enabled: checked })}
+                    />
+                    <Text>自动派活</Text>
+                  </Space>
+                  <Checkbox
+                    checked={dispatchPreviewOptions.match_capabilities !== false}
+                    onChange={event => updateDispatchPreviewOptions({
+                      match_capabilities: event.target.checked,
+                      require_capability_match: event.target.checked ? dispatchPreviewOptions.require_capability_match : false,
+                    })}
+                  >
+                    能力匹配
+                  </Checkbox>
+                  <Checkbox
+                    checked={!!dispatchPreviewOptions.require_capability_match}
+                    disabled={dispatchPreviewOptions.match_capabilities === false}
+                    onChange={event => updateDispatchPreviewOptions({ require_capability_match: event.target.checked })}
+                  >
+                    只派给有匹配分的 Agent
+                  </Checkbox>
+                  <Checkbox
+                    checked={!!dispatchPreviewOptions.include_self}
+                    onChange={event => updateDispatchPreviewOptions({ include_self: event.target.checked })}
+                  >
+                    允许协调器参与执行
+                  </Checkbox>
+                </Space>
+              </Col>
+            </Row>
+
+            <Alert
+              type={dispatchPolicyDirty ? 'warning' : 'info'}
+              showIcon
+              message={dispatchPolicyDirty ? '当前策略有未保存改动' : '当前策略已与后端同步'}
+              description={
+                dispatchPreview?.options ? (
+                  <Space wrap size={[6, 6]}>
+                    <Tag>上限 {dispatchPreview.options.max_assignments}</Tag>
+                    <Tag>租约 {dispatchPreview.options.lease_seconds}s</Tag>
+                    <Tag>{dispatchPreview.options.project_id ? `项目 #${dispatchPreview.options.project_id}` : '全部项目'}</Tag>
+                    <Tag color={dispatchPreview.options.match_capabilities ? 'blue' : 'default'}>
+                      {dispatchPreview.options.match_capabilities ? '能力匹配' : '先进先派'}
+                    </Tag>
+                    {dispatchPreview.options.require_capability_match && <Tag color="green">要求匹配分</Tag>}
+                    {dispatchPreview.options.include_self && <Tag color="purple">包含协调器</Tag>}
+                    {dispatchPreview.options.candidate_agent_ids.length > 0 && (
+                      <Tag>候选池 {dispatchPreview.options.candidate_agent_ids.length}</Tag>
+                    )}
+                  </Space>
+                ) : undefined
+              }
+            />
+
+            <Divider style={{ margin: '4px 0' }} />
+
+            {dispatchPreview ? (
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Row gutter={12}>
+                <Col span={6}><Statistic title="可派任务" value={dispatchPreview.summary.claimable_tasks} /></Col>
+                <Col span={6}><Statistic title="空闲 Agent" value={dispatchPreview.summary.available_agents} /></Col>
+                <Col span={6}><Statistic title="本轮计划" value={dispatchPreview.summary.planned} /></Col>
+                <Col span={6}><Statistic title="未派发" value={dispatchPreview.unmatched_tasks.length} /></Col>
+              </Row>
+
+              <Table
+                size="small"
+                rowKey={record => `${record.task.id}-${record.agent.id}`}
+                dataSource={dispatchPreview.proposed_assignments}
+                pagination={false}
+                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前没有可执行的派发计划" /> }}
+                columns={[
+                  {
+                    title: '任务',
+                    dataIndex: ['task', 'title'],
+                    render: (_: unknown, record) => (
+                      <Space direction="vertical" size={0}>
+                        <Text strong>#{record.task.id} {record.task.title}</Text>
+                        <Text type="secondary">{record.task.project?.name || '-'}</Text>
+                      </Space>
+                    ),
+                  },
+                  {
+                    title: '推荐 Agent',
+                    dataIndex: ['agent', 'name'],
+                    width: 180,
+                    render: (_: unknown, record) => (
+                      <Space direction="vertical" size={0}>
+                        <Text>{record.agent.name}</Text>
+                        <Text type="secondary">{record.agent.kind}</Text>
+                      </Space>
+                    ),
+                  },
+                  {
+                    title: '匹配',
+                    key: 'match',
+                    width: 220,
+                    render: (_: unknown, record) => (
+                      <Space direction="vertical" size={4}>
+                        <Space size={4}>
+                          <Tag color={record.score > 0 ? 'green' : 'default'}>{record.score} 分</Tag>
+                          <Tag color="blue">{matchStrategyLabel(record.strategy)}</Tag>
+                        </Space>
+                        {renderCapabilities(record.matched_capabilities || [], 3)}
+                      </Space>
+                    ),
+                  },
+                ]}
+              />
+
+              {dispatchPreview.task_candidates.length > 0 && (
+                <div>
+                  <Text strong>候选匹配</Text>
+                  <List
+                    size="small"
+                    dataSource={dispatchPreview.task_candidates.slice(0, 8)}
+                    renderItem={item => (
+                      <List.Item>
+                        <List.Item.Meta
+                          title={<Text>#{item.task.id} {item.task.title}</Text>}
+                          description={
+                            <Space wrap size={[4, 4]}>
+                              {item.candidates.length > 0 ? item.candidates.slice(0, 5).map(candidate => (
+                                <Tag key={candidate.agent.id} color={candidate.score > 0 ? 'green' : 'default'}>
+                                  {candidate.agent.name}: {candidate.score}
+                                </Tag>
+                              )) : (
+                                <Text type="secondary">无候选 Agent</Text>
+                              )}
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              )}
+
+              {dispatchPreview.unmatched_tasks.length > 0 && (
+                <div>
+                  <Text strong>未进入本轮计划</Text>
+                  <List
+                    size="small"
+                    dataSource={dispatchPreview.unmatched_tasks.slice(0, 8)}
+                    renderItem={item => (
+                      <List.Item>
+                        <List.Item.Meta
+                          title={<Text>#{item.task.id} {item.task.title}</Text>}
+                          description={
+                            <Space wrap size={4}>
+                              <Tag color={item.reason === 'no_matching_agent' ? 'orange' : 'default'}>
+                                {item.reason === 'no_matching_agent' ? '无匹配 Agent' : '空闲容量不足'}
+                              </Tag>
+                              {item.best_candidate && (
+                                <Text type="secondary">
+                                  最佳候选 {item.best_candidate.agent.name}，{item.best_candidate.score} 分
+                                </Text>
+                              )}
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              )}
+            </Space>
+          ) : (
+            !dispatchPreviewLoading && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无派活预览" />
+          )}
+          </Space>
+        </Spin>
       </Modal>
 
       {/* Agent 直接消息 Modal */}
@@ -4142,24 +4611,30 @@ const Agents: React.FC = () => {
             </Descriptions>
             {Object.keys(adaptSuggestions.suggested_additions || {}).length > 0 && (
               <Card size="small" title="建议添加" style={{ marginTop: 12 }} extra={<Button size="small" type="primary" onClick={() => applyAdaptation(Object.keys(adaptSuggestions.suggested_additions), [])}>全部添加</Button>}>
-                <List size="small" dataSource={Object.entries(adaptSuggestions.suggested_additions)} renderItem(([cap, info]: [string, any]) => (
-                  <List.Item extra={<Button size="small" onClick={() => applyAdaptation([cap], [])}>添加</Button>}>
-                    <Tag color="green">{cap}</Tag>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{info.reason}</Text>
-                    <Text type="secondary" style={{ fontSize: 10 }}>置信度: {info.confidence}</Text>
-                  </List.Item>
-                )} />
+                <List size="small" dataSource={Object.entries(adaptSuggestions.suggested_additions)} renderItem={entry => {
+                  const [cap, info] = entry as [string, any]
+                  return (
+                    <List.Item extra={<Button size="small" onClick={() => applyAdaptation([cap], [])}>添加</Button>}>
+                      <Tag color="green">{cap}</Tag>
+                      <Text type="secondary" style={{ fontSize: 11 }}>{info.reason}</Text>
+                      <Text type="secondary" style={{ fontSize: 10 }}>置信度: {info.confidence}</Text>
+                    </List.Item>
+                  )
+                }} />
               </Card>
             )}
             {Object.keys(adaptSuggestions.suggested_removals || {}).length > 0 && (
               <Card size="small" title="建议移除" style={{ marginTop: 12 }} type="inner" extra={<Button size="small" danger onClick={() => applyAdaptation([], Object.keys(adaptSuggestions.suggested_removals))}>全部移除</Button>}>
-                <List size="small" dataSource={Object.entries(adaptSuggestions.suggested_removals)} renderItem(([cap, info]: [string, any]) => (
-                  <List.Item extra={<Button size="small" danger onClick={() => applyAdaptation([], [cap])}>移除</Button>}>
-                    <Tag color="red">{cap}</Tag>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{info.reason}</Text>
-                    <Text type="secondary" style={{ fontSize: 10 }}>置信度: {info.confidence}</Text>
-                  </List.Item>
-                )} />
+                <List size="small" dataSource={Object.entries(adaptSuggestions.suggested_removals)} renderItem={entry => {
+                  const [cap, info] = entry as [string, any]
+                  return (
+                    <List.Item extra={<Button size="small" danger onClick={() => applyAdaptation([], [cap])}>移除</Button>}>
+                      <Tag color="red">{cap}</Tag>
+                      <Text type="secondary" style={{ fontSize: 11 }}>{info.reason}</Text>
+                      <Text type="secondary" style={{ fontSize: 10 }}>置信度: {info.confidence}</Text>
+                    </List.Item>
+                  )
+                }} />
               </Card>
             )}
             {Object.keys(adaptSuggestions.suggested_additions || {}).length === 0 && Object.keys(adaptSuggestions.suggested_removals || {}).length === 0 && (

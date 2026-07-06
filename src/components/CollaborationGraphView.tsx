@@ -98,6 +98,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   if (centerNodeId !== undefined) usedIds.add(centerNodeId)
   const nodes = (kindSet ? kindNodes : allNodes).filter((n) => usedIds.has(n.id))
   const edges = filteredEdges
+  const cx = size / 2
+  const cy = size / 2
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
   const [hoveredEdge, setHoveredEdge] = useState<{ source: number; target: number } | null>(null)
   // 拖拽：节点位置覆盖（用户手动调整），可选从 localStorage 恢复
@@ -210,8 +212,6 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
   }
 
-  const cx = size / 2
-  const cy = size / 2
   const maxMsg = Math.max(1, ...nodes.map((n) => n.messages))
   const maxCount = Math.max(1, ...edges.map((e) => e.count))
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown, Checkbox, Slider } from 'antd'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown, Checkbox, Slider, Badge, Alert } from 'antd'
 import {
   ProjectOutlined,
   CheckSquareOutlined,
@@ -37,7 +37,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -90,6 +90,7 @@ const Dashboard = () => {
   const [experiencesStats, setExperiencesStats] = useState<ExperiencesStats | null>(null)
   const [experiencesLowConfidence, setExperiencesLowConfidence] = useState<ExperiencesLowConfidence | null>(null)
   const [experiencesScatter, setExperiencesScatter] = useState<ExperiencesScatter | null>(null)
+  const [experiencesReuseTrend, setExperiencesReuseTrend] = useState<ExperiencesReuseTrend | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
@@ -235,6 +236,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesStats().then(setExperiencesStats).catch(() => {})
       agentsApi.getExperiencesLowConfidence().then(setExperiencesLowConfidence).catch(() => {})
       agentsApi.getExperiencesScatter(200).then(setExperiencesScatter).catch(() => {})
+      agentsApi.getExperiencesReuseTrend(30).then(setExperiencesReuseTrend).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
@@ -1067,7 +1069,7 @@ const Dashboard = () => {
               onChange={(v) => setGraphMinCount(v ?? null)}
             />
             <Button size="small" icon={<ReloadOutlined />} onClick={() => { try { localStorage.removeItem('collabGraphPositions') } catch { /* ignore */ } setGraphResetKey((k) => k + 1) }}>重置布局</Button>
-            <Checkbox size="small" checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
+            <Checkbox checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
             <Button size="small" icon={<ExpandOutlined />} onClick={() => setGraphFullscreen(true)}>全屏</Button>
           </Space>
         }
@@ -1749,6 +1751,91 @@ const Dashboard = () => {
         )}
       </Card>
 
+      {/* Experiences Reuse-Decay Trend */}
+      <Card
+        title={<Space><LineChartOutlined /> 经验复用 × 衰减趋势</Space>}
+        extra={experiencesReuseTrend ? (
+          <Space size={16}>
+            <Text type="secondary" style={{ fontSize: 12 }}>被复用 <b style={{ color: '#13c2c2' }}>{experiencesReuseTrend.total_reused}</b></Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>累计复用 <b style={{ color: '#722ed1' }}>{experiencesReuseTrend.total_reuse_count}</b></Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>已衰减 <b style={{ color: '#ff4d4f' }}>{experiencesReuseTrend.decayed_count}</b>/{experiencesReuseTrend.total_experiences}</Text>
+          </Space>
+        ) : null}
+        style={{ marginBottom: 16 }}
+      >
+        {experiencesReuseTrend && experiencesReuseTrend.trend.length > 0 ? (() => {
+          const trend = experiencesReuseTrend.trend
+          const W = 760, H = 200, padL = 40, padR = 40, padT = 14, padB = 28
+          const iw = W - padL - padR, ih = H - padT - padB
+          const maxRC = Math.max(1, ...trend.map((b) => b.reuse_count))
+          const xFor = (i: number) => padL + (trend.length === 1 ? iw / 2 : (i / (trend.length - 1)) * iw)
+          const yRC = (v: number) => padT + ih - (v / maxRC) * ih
+          const yConf = (v: number) => padT + ih - v * ih
+          // polyline paths
+          const rcPath = trend.map((b, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yRC(b.reuse_count).toFixed(1)}`).join(' ')
+          const confPath = trend.map((b, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yConf(b.avg_confidence).toFixed(1)}`).join(' ')
+          // gridlines
+          const gridYs = [0, 0.25, 0.5, 0.75, 1]
+          const fmtDate = (d: string) => {
+            const parts = d.split('-')
+            return parts.length >= 3 ? `${parts[1]}/${parts[2]}` : d
+          }
+          return (
+            <div style={{ overflowX: 'auto' }}>
+              <svg width={W} height={H} style={{ display: 'block' }}>
+                {/* y gridlines (confidence axis 0-1) */}
+                {gridYs.map((g) => {
+                  const y = padT + ih - g * ih
+                  return (
+                    <g key={g}>
+                      <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#f0f0f0" strokeWidth={1} />
+                      <text x={padL - 4} y={y + 3} fontSize={9} fill="#8c8c8c" textAnchor="end">{g.toFixed(2)}</text>
+                    </g>
+                  )
+                })}
+                {/* right axis labels reuse_count */}
+                {[0, 0.5, 1].map((g) => {
+                  const y = padT + ih - g * ih
+                  const v = Math.round(g * maxRC)
+                  return <text key={`r${g}`} x={W - padR + 4} y={y + 3} fontSize={9} fill="#13c2c2" textAnchor="start">{v}</text>
+                })}
+                {/* decayed bars (background) */}
+                {trend.map((b, i) => {
+                  if (b.decayed === 0) return null
+                  const bh = (b.decayed / Math.max(1, ...trend.map((x) => x.decayed))) * ih * 0.5
+                  return <rect key={`d${i}`} x={xFor(i) - 4} y={padT + ih - bh} width={8} height={bh} fill="#ff4d4f" fillOpacity={0.18} />
+                })}
+                {/* reuse_count line (cyan) */}
+                <path d={rcPath} fill="none" stroke="#13c2c2" strokeWidth={2} />
+                {trend.map((b, i) => (
+                  <circle key={`rc${i}`} cx={xFor(i)} cy={yRC(b.reuse_count)} r={2.5} fill="#13c2c2">
+                    <title>{`${fmtDate(b.date)} 累计复用=${b.reuse_count} 复用经验=${b.reused} 平均置信度=${b.avg_confidence} 已衰减=${b.decayed}`}</title>
+                  </circle>
+                ))}
+                {/* avg_confidence line (purple) */}
+                <path d={confPath} fill="none" stroke="#722ed1" strokeWidth={2} strokeDasharray="4 3" />
+                {trend.map((b, i) => (
+                  <circle key={`cf${i}`} cx={xFor(i)} cy={yConf(b.avg_confidence)} r={2.5} fill="#722ed1">
+                    <title>{`${fmtDate(b.date)} 平均置信度=${b.avg_confidence} 累计复用=${b.reuse_count} 已衰减=${b.decayed}`}</title>
+                  </circle>
+                ))}
+                {/* x axis labels (first/mid/last) */}
+                {trend.length > 0 && [0, Math.floor((trend.length - 1) / 2), trend.length - 1].filter((v, i, a) => a.indexOf(v) === i).map((i) => (
+                  <text key={`x${i}`} x={xFor(i)} y={H - 8} fontSize={9} fill="#8c8c8c" textAnchor="middle">{fmtDate(trend[i].date)}</text>
+                ))}
+              </svg>
+              <div style={{ display: 'flex', gap: 16, marginTop: 2, flexWrap: 'wrap' }}>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#13c2c2' }}>━</span> 累计复用次数(左)</Text>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#722ed1' }}>┄</span> 平均置信度(右 0-1)</Text>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#ff4d4f' }}>▏</span> 当日已衰减经验数</Text>
+              </div>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无复用趋势数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
       {/* Task Lifecycle Stats */}
       <Card
         title={<Space><FieldTimeOutlined /> 任务生命周期</Space>}
@@ -2060,7 +2147,7 @@ const Dashboard = () => {
                       {top.map((a, idx) => (
                         <g key={a.agent_id}>
                           <polygon
-                            points={polyFor(a.sub_scores)}
+                            points={polyFor(a.sub_scores as unknown as Record<string, number>)}
                             fill={ringColors[idx % ringColors.length]}
                             fillOpacity={0.12}
                             stroke={ringColors[idx % ringColors.length]}
@@ -2193,7 +2280,6 @@ const Dashboard = () => {
                   <MiniTrendChart
                     series={[{ key: 'avg_reputation', label: '平均声誉', color: '#722ed1', values: valid.map((b) => b.avg_reputation as number) }]}
                     labels={valid.map((b) => b.date)}
-                    width={trendW}
                     height={84}
                   />
                 </div>
@@ -2352,7 +2438,7 @@ const Dashboard = () => {
             </Text>
             <div style={{ marginTop: 4 }}>
               <WorkflowRunTrendChart
-                buckets={productivityTrend.trend.map((b) => ({ date: b.date, succeeded: b.done, failed: b.failed }))}
+                buckets={productivityTrend.trend.map((b) => ({ date: b.date, succeeded: b.done, failed: b.failed, failed_steps: b.failed }))}
                 width={520}
                 height={84}
               />
@@ -2551,7 +2637,7 @@ const Dashboard = () => {
               </div>
             </div>
           )
-        }) : (
+        })() : (
           <Empty description="暂无失败记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
@@ -2662,7 +2748,7 @@ const Dashboard = () => {
                   <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
                     {Object.entries(conflictData.by_status || {}).map(([k, v]: any) => v > 0 ? (
                       <Tag key={k} color={k === 'resolved' ? 'green' : k === 'detected' ? 'red' : k === 'ignored' ? 'default' : 'blue'} style={{ fontSize: 11 }}>{k}: {v}</Tag>
-                    ) : null}
+                    ) : null)}
                   </Space>
                 </Col>
               </Row>
