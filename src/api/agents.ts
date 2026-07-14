@@ -914,6 +914,21 @@ export interface AgentProductivityAlerts {
   items: AgentProductivityAlertItem[]
 }
 
+/** Agent 运行资源使用项 */
+export interface AgentRunResourceUsageItem {
+  agent_id: number
+  name: string
+  total_runs: number
+  total_hours: number
+  avg_run_minutes: number
+}
+
+/** Agent 运行资源使用排行 */
+export interface AgentRunResourceUsage {
+  items: AgentRunResourceUsageItem[]
+  total_runs: number
+}
+
 export interface AgentProductivityByKindItem {
   kind: string
   agent_count: number
@@ -1505,6 +1520,10 @@ export class AgentsApi {
 
   async getAgentProductivity(days = 30, limit = 20): Promise<AgentProductivity> {
     return unwrapData<AgentProductivity>(await apiClient.get(`/agents/productivity${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentRunResourceUsage(days = 30, limit = 10): Promise<AgentRunResourceUsage> {
+    return unwrapData<AgentRunResourceUsage>(await apiClient.get(`/agents/run-resource-usage${buildQuery({ days, limit })}`))
   }
 
   async getAgentProductivityTrend(days = 30): Promise<AgentProductivityTrend> {

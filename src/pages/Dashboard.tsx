@@ -38,7 +38,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -105,6 +105,7 @@ const Dashboard = () => {
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
   const [productivityByKind, setProductivityByKind] = useState<AgentProductivityByKind | null>(null)
+  const [agentRunResourceUsage, setAgentRunResourceUsage] = useState<AgentRunResourceUsage | null>(null)
   const [productivityHourly, setProductivityHourly] = useState<AgentProductivityHourlyHeatmap | null>(null)
   const [agentFailureReasons, setAgentFailureReasons] = useState<AgentFailureReasons | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
@@ -257,6 +258,7 @@ const Dashboard = () => {
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
       agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
       agentsApi.getAgentProductivityByKind(30).then(setProductivityByKind).catch(() => {})
+      agentsApi.getAgentRunResourceUsage(30, 8).then(setAgentRunResourceUsage).catch(() => {})
       agentsApi.getAgentProductivityHourlyHeatmap(30, 15).then(setProductivityHourly).catch(() => {})
       agentsApi.getAgentFailureReasons(30, 15).then(setAgentFailureReasons).catch(() => {})
     } catch {
@@ -2939,6 +2941,34 @@ const Dashboard = () => {
           <Empty description="暂无完成时段数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* Agent Run Resource Usage */}
+      {agentRunResourceUsage && agentRunResourceUsage.items.length > 0 && (() => {
+        const items = agentRunResourceUsage.items
+        const maxHours = Math.max(1, ...items.map((it) => it.total_hours))
+        return (
+          <Card
+            title={<Space><ThunderboltOutlined /> Agent 运行资源排行</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>共 {agentRunResourceUsage.total_runs} 次</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {items.map((it) => (
+                <div key={it.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <span style={{ width: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={it.name}>{it.name}</span>
+                  <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 14, position: 'relative', overflow: 'hidden' }}>
+                    <Tooltip title={`${it.name}: ${it.total_runs}次 总${it.total_hours}h 均${it.avg_run_minutes}min`}>
+                      <div style={{ width: `${(it.total_hours / maxHours) * 100}%`, height: '100%', background: '#722ed1', borderRadius: 3, opacity: 0.7 }} />
+                    </Tooltip>
+                  </div>
+                  <span style={{ color: '#722ed1', minWidth: 40, textAlign: 'right', fontSize: 11 }}>{it.total_hours}h</span>
+                  <Text type="secondary" style={{ fontSize: 10 }}>{it.total_runs}次 均{it.avg_run_minutes}min</Text>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Agent Failure Reasons */}
       <Card
