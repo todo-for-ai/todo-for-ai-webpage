@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -50,6 +50,7 @@ const Workflows: React.FC = () => {
   const [stepStats, setStepStats] = useState<WorkflowStepStats | null>(null)
   const [stepDurationHistogram, setStepDurationHistogram] = useState<WorkflowStepDurationHistogram | null>(null)
   const [runDurationPercentiles, setRunDurationPercentiles] = useState<WorkflowRunDurationPercentiles | null>(null)
+  const [stepFailureRate, setStepFailureRate] = useState<WorkflowStepFailureRate | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
@@ -127,6 +128,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowStepStats(30).then(setStepStats).catch(() => {})
       agentsApi.getWorkflowStepDurationHistogram(10).then(setStepDurationHistogram).catch(() => {})
       agentsApi.getWorkflowRunDurationPercentiles(30).then(setRunDurationPercentiles).catch(() => {})
+      agentsApi.getWorkflowStepFailureRate(30, 15).then(setStepFailureRate).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
@@ -934,6 +936,37 @@ const Workflows: React.FC = () => {
               <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#fa8c16' }}>━</span> P90</Text>
               <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#ff4d4f' }}>━</span> P95</Text>
             </div>
+          </Card>
+        )
+      })()}
+
+      {/* 步骤失败率排行 */}
+      {stepFailureRate && stepFailureRate.items.length > 0 && (() => {
+        const items = stepFailureRate.items
+        const maxRate = Math.max(...items.map(it => it.failure_rate), 1)
+        const barMaxW = 200
+        return (
+          <Card
+            title={<Space><WarningOutlined /> 步骤失败率排行</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>共 {stepFailureRate.total_steps} 步 · {stepFailureRate.total_failed} 失败</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            {items.map((it, idx) => {
+              const barW = Math.max(2, (it.failure_rate / maxRate) * barMaxW)
+              const ratio = it.failure_rate / 100
+              const barColor = ratio < 0.1 ? '#52c41a' : ratio < 0.3 ? '#faad14' : '#ff4d4f'
+              return (
+                <div key={it.step_key} style={{ display: 'flex', alignItems: 'center', marginBottom: 6, gap: 8 }}>
+                  <Text style={{ width: 140, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.step_key}>{it.step_key}</Text>
+                  <svg width={barMaxW + 4} height={14} style={{ flexShrink: 0 }}>
+                    <rect x={0} y={2} width={barMaxW} height={10} rx={2} fill="#f5f5f5" />
+                    <rect x={0} y={2} width={barW} height={10} rx={2} fill={barColor} />
+                  </svg>
+                  <Text style={{ fontSize: 11, color: barColor, minWidth: 44 }}>{it.failure_rate.toFixed(1)}%</Text>
+                  <Text type="secondary" style={{ fontSize: 10 }}>{it.failed}/{it.total}</Text>
+                </div>
+              )
+            })}
           </Card>
         )
       })()}

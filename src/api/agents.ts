@@ -788,6 +788,21 @@ export interface WorkflowRunDurationPercentiles {
   total_avg_duration: number
 }
 
+/** 工作流步骤失败率条目 */
+export interface WorkflowStepFailureRateItem {
+  step_key: string
+  total: number
+  failed: number
+  failure_rate: number
+}
+
+/** 工作流步骤失败率排行 */
+export interface WorkflowStepFailureRate {
+  items: WorkflowStepFailureRateItem[]
+  total_steps: number
+  total_failed: number
+}
+
 /** 失败步骤按耗时排行单项 */
 export interface WorkflowFailedStepByDuration {
   step_key: string
@@ -1487,6 +1502,10 @@ export class AgentsApi {
 
   async getWorkflowRunDurationPercentiles(days = 30): Promise<WorkflowRunDurationPercentiles> {
     return unwrapData<WorkflowRunDurationPercentiles>(await apiClient.get(`/agents/workflows/run-duration-percentiles${buildQuery({ days })}`))
+  }
+
+  async getWorkflowStepFailureRate(days = 30, limit = 15): Promise<WorkflowStepFailureRate> {
+    return unwrapData<WorkflowStepFailureRate>(await apiClient.get(`/agents/workflows/step-failure-rate${buildQuery({ days, limit })}`))
   }
 
   async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
