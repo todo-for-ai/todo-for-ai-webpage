@@ -770,6 +770,24 @@ export interface WorkflowStepDurationHistogram {
   bin_labels: string[]
 }
 
+/** 工作流运行时长分位数日桶 */
+export interface WorkflowRunDurationBucket {
+  date: string
+  count: number
+  p50: number
+  p90: number
+  p95: number
+  median: number
+  avg: number
+}
+
+/** 工作流运行时长分位数趋势 */
+export interface WorkflowRunDurationPercentiles {
+  buckets: WorkflowRunDurationBucket[]
+  total_runs: number
+  total_avg_duration: number
+}
+
 /** 失败步骤按耗时排行单项 */
 export interface WorkflowFailedStepByDuration {
   step_key: string
@@ -1119,6 +1137,21 @@ export interface ExperiencesDecayByDomain {
   total_decayed: number
 }
 
+export interface ExperiencesDecayByTaskTypeItem {
+  task_type: string
+  total: number
+  active: number
+  decayed: number
+  avg_confidence: number
+  reuses: number
+}
+
+export interface ExperiencesDecayByTaskType {
+  task_types: ExperiencesDecayByTaskTypeItem[]
+  total_active: number
+  total_decayed: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1406,6 +1439,10 @@ export class AgentsApi {
     return unwrapData<WorkflowStepDurationHistogram>(await apiClient.get(`/agents/workflows/step-duration-histogram${buildQuery({ limit })}`))
   }
 
+  async getWorkflowRunDurationPercentiles(days = 30): Promise<WorkflowRunDurationPercentiles> {
+    return unwrapData<WorkflowRunDurationPercentiles>(await apiClient.get(`/agents/workflows/run-duration-percentiles${buildQuery({ days })}`))
+  }
+
   async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
     return unwrapData<WorkflowFailedStepsByDuration>(await apiClient.get(`/agents/workflows/failed-steps/by-duration${buildQuery({ days, limit })}`))
   }
@@ -1432,6 +1469,10 @@ export class AgentsApi {
 
   async getExperiencesDecayByDomain(limit = 15): Promise<ExperiencesDecayByDomain> {
     return unwrapData<ExperiencesDecayByDomain>(await apiClient.get(`/agents/experiences/decay-by-domain${buildQuery({ limit })}`))
+  }
+
+  async getExperiencesDecayByTaskType(limit = 15): Promise<ExperiencesDecayByTaskType> {
+    return unwrapData<ExperiencesDecayByTaskType>(await apiClient.get(`/agents/experiences/decay-by-task-type${buildQuery({ limit })}`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
