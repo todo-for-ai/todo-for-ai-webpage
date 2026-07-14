@@ -1183,6 +1183,21 @@ export interface ExperiencesConfidenceDistribution {
   total: number
 }
 
+/** 经验来源分布项 */
+export interface ExperiencesSourceItem {
+  source: string
+  count: number
+  percentage: number
+  avg_confidence: number
+  avg_reuses: number
+}
+
+/** 经验来源分布 */
+export interface ExperiencesSourceDistribution {
+  sources: ExperiencesSourceItem[]
+  total: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1508,6 +1523,10 @@ export class AgentsApi {
 
   async getExperiencesConfidenceDistribution(): Promise<ExperiencesConfidenceDistribution> {
     return unwrapData<ExperiencesConfidenceDistribution>(await apiClient.get(`/agents/experiences/confidence-distribution`))
+  }
+
+  async getExperiencesSourceDistribution(): Promise<ExperiencesSourceDistribution> {
+    return unwrapData<ExperiencesSourceDistribution>(await apiClient.get(`/agents/experiences/source-distribution`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
