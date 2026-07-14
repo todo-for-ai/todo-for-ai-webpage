@@ -832,6 +832,19 @@ export interface WorkflowStepRetryTopology {
   total_retries: number
 }
 
+export interface WorkflowStepHourlyItem {
+  step_key: string
+  total: number
+  hours: Record<string, number>
+  peak_hour: number | null
+  business_hours_ratio: number
+}
+
+export interface WorkflowStepHourlyDistribution {
+  days: number
+  steps: WorkflowStepHourlyItem[]
+}
+
 /** 失败步骤按耗时排行单项 */
 export interface WorkflowFailedStepByDuration {
   step_key: string
@@ -1621,6 +1634,10 @@ export class AgentsApi {
 
   async getWorkflowStepRetryTopology(days = 30, limit = 15): Promise<WorkflowStepRetryTopology> {
     return unwrapData<WorkflowStepRetryTopology>(await apiClient.get(`/agents/workflows/step-retry-topology${buildQuery({ days, limit })}`))
+  }
+
+  async getWorkflowStepHourlyDistribution(days = 30, limit = 10): Promise<WorkflowStepHourlyDistribution> {
+    return unwrapData<WorkflowStepHourlyDistribution>(await apiClient.get(`/agents/workflows/step-hourly-distribution${buildQuery({ days, limit })}`))
   }
 
   async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
