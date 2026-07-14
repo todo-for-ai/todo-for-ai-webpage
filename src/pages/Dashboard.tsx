@@ -2499,6 +2499,54 @@ const Dashboard = () => {
                   />
                 </div>
               )}
+              {/* 按 kind 分组趋势线 */}
+              {(() => {
+                const kindAvgs: Record<string, number[]> = {}
+                const kindColors: Record<string, string> = { coordinator: '#722ed1', autonomous: '#13c2c2', assistant: '#1890ff', external: '#fa8c16' }
+                const allDates = agentHealthTrend!.trend.map((b) => b.date)
+                agentHealthTrend!.trend.forEach((b) => {
+                  if (!b.by_kind_avg) return
+                  Object.entries(b.by_kind_avg).forEach(([k, v]) => {
+                    if (!kindAvgs[k]) kindAvgs[k] = new Array(allDates.length).fill(null as unknown as number)
+                    const idx = allDates.indexOf(b.date)
+                    if (idx >= 0) kindAvgs[k][idx] = v
+                  })
+                })
+                const kinds = Object.keys(kindAvgs).filter((k) => kindAvgs[k].some((v) => v != null))
+                if (kinds.length < 2) return null
+                const kW = 260, kH = 70, kPadL = 24, kPadR = 4, kPadT = 4, kPadB = 14
+                const kPlotW = kW - kPadL - kPadR
+                const kPlotH = kH - kPadT - kPadB
+                const kXStep = allDates.length > 1 ? kPlotW / (allDates.length - 1) : 0
+                return (
+                  <div style={{ marginTop: 6 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>按 Kind 分组趋势</Text>
+                    <svg width={kW} height={kH} style={{ display: 'block' }}>
+                      {[0, 50, 100].map((v) => {
+                        const y = kPadT + kPlotH - (v / 100) * kPlotH
+                        return <line key={v} x1={kPadL} y1={y} x2={kW - kPadR} y2={y} stroke="#f0f0f0" strokeWidth={0.5} />
+                      })}
+                      {kinds.map((k) => {
+                        const pts = kindAvgs[k].map((v, i) => {
+                          if (v == null) return ''
+                          const x = kPadL + i * kXStep
+                          const y = kPadT + kPlotH - (v / 100) * kPlotH
+                          return `${x.toFixed(1)},${y.toFixed(1)}`
+                        }).filter(Boolean).join(' ')
+                        if (!pts) return null
+                        return <polyline key={k} points={pts} fill="none" stroke={kindColors[k] || '#8c8c8c'} strokeWidth={1.5} />
+                      })}
+                    </svg>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
+                      {kinds.map((k) => (
+                        <Text key={k} type="secondary" style={{ fontSize: 10 }}>
+                          <span style={{ color: kindColors[k] || '#8c8c8c' }}>━</span> {k}
+                        </Text>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
               {eventDays.length > 0 && daySpan > 1 && (
                 <div style={{ marginTop: 6 }}>
                   <Text type="secondary" style={{ fontSize: 11 }}>事件标记（与上方趋势同 x 轴）</Text>
