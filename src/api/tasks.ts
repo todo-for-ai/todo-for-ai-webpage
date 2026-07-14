@@ -111,6 +111,22 @@ export interface TaskOverdueByAssignee {
   total_overdue: number
 }
 
+/** 任务逾期聚类条目 */
+export interface TaskOverdueClusterItem {
+  project_id: number
+  project_name: string
+  priority: string
+  count: number
+  avg_days_overdue: number
+  titles: string[]
+}
+
+/** 任务逾期聚类分析 */
+export interface TaskOverdueClustering {
+  clusters: TaskOverdueClusterItem[]
+  total_overdue: number
+}
+
 /** 任务按优先级完成率项 */
 export interface TaskCompletionByPriorityItem {
   priority: string
@@ -326,6 +342,11 @@ export class TasksApi {
   // 获取任务逾期按负责人分布
   async getOverdueByAssignee(limit = 10): Promise<TaskOverdueByAssignee> {
     return apiClient.get<TaskOverdueByAssignee>(`/tasks/overdue-by-assignee?limit=${limit}`)
+  }
+
+  // 获取任务逾期聚类分析
+  async getOverdueClustering(limit = 15): Promise<TaskOverdueClustering> {
+    return apiClient.get<TaskOverdueClustering>(`/tasks/overdue-clustering?limit=${limit}`)
   }
 
   // 获取任务按优先级完成率

@@ -34,10 +34,11 @@ import {
   BarChartOutlined,
   BugOutlined,
   UserOutlined,
+  ClusterOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -100,6 +101,7 @@ const Dashboard = () => {
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskOverdueByAssignee, setTaskOverdueByAssignee] = useState<TaskOverdueByAssignee | null>(null)
+  const [taskOverdueClustering, setTaskOverdueClustering] = useState<TaskOverdueClustering | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
   const [taskCompletionByAssignee, setTaskCompletionByAssignee] = useState<TaskCompletionByAssignee | null>(null)
   const [taskCompletionByPriority, setTaskCompletionByPriority] = useState<TaskCompletionByPriority | null>(null)
@@ -257,6 +259,7 @@ const Dashboard = () => {
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getOverdueByAssignee(10).then(setTaskOverdueByAssignee).catch(() => {})
+      tasksApi.getOverdueClustering(15).then(setTaskOverdueClustering).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
       tasksApi.getCompletionByAssignee(30, 8).then(setTaskCompletionByAssignee).catch(() => {})
       tasksApi.getCompletionByPriority(30).then(setTaskCompletionByPriority).catch(() => {})
@@ -2263,6 +2266,45 @@ const Dashboard = () => {
           </div>
         </Card>
       )}
+
+      {/* 任务逾期聚类分析 */}
+      {taskOverdueClustering && taskOverdueClustering.clusters.length > 0 && (() => {
+        const clusters = taskOverdueClustering.clusters
+        const maxCount = Math.max(...clusters.map(c => c.count), 1)
+        const barMaxW = 140
+        const priorityColors: Record<string, string> = { urgent: '#ff4d4f', high: '#fa8c16', medium: '#1890ff', low: '#52c41a' }
+        return (
+          <Card
+            title={<Space><ClusterOutlined /> 任务逾期聚类分析</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>共 {taskOverdueClustering.total_overdue} 个逾期</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            {clusters.map((c, idx) => {
+              const barW = Math.max(2, (c.count / maxCount) * barMaxW)
+              const pColor = priorityColors[c.priority] || '#8c8c8c'
+              return (
+                <div key={idx} style={{ marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 12, width: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.project_name}>{c.project_name}</Text>
+                    <Tag color={pColor} style={{ fontSize: 10, lineHeight: '16px', margin: 0 }}>{c.priority}</Tag>
+                    <svg width={barMaxW + 4} height={12} style={{ flexShrink: 0 }}>
+                      <rect x={0} y={1} width={barMaxW} height={10} rx={2} fill="#f5f5f5" />
+                      <rect x={0} y={1} width={barW} height={10} rx={2} fill="#ff4d4f" opacity={0.7} />
+                    </svg>
+                    <Text style={{ fontSize: 11, color: '#ff4d4f', minWidth: 20 }}>{c.count}</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>均{c.avg_days_overdue}天超期</Text>
+                  </div>
+                  {c.titles.length > 0 && (
+                    <Text type="secondary" style={{ fontSize: 9, marginLeft: 118, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.titles.join('; ')}>
+                      {c.titles.join('; ')}
+                    </Text>
+                  )}
+                </div>
+              )
+            })}
+          </Card>
+        )
+      })()}
 
       {/* Task Completion by Priority */}
       {taskCompletionByPriority && taskCompletionByPriority.priorities.length > 0 && (() => {
