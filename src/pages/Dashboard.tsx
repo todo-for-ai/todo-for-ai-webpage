@@ -33,10 +33,11 @@ import {
   HeatMapOutlined,
   BarChartOutlined,
   BugOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -94,6 +95,7 @@ const Dashboard = () => {
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
+  const [taskCompletionByAssignee, setTaskCompletionByAssignee] = useState<TaskCompletionByAssignee | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
@@ -240,6 +242,7 @@ const Dashboard = () => {
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
+      tasksApi.getCompletionByAssignee(30, 8).then(setTaskCompletionByAssignee).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
       agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
@@ -2053,6 +2056,56 @@ const Dashboard = () => {
               <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
                 {series.map((s, idx) => (
                   <Text key={s.project_id} type="secondary" style={{ fontSize: 10 }}>
+                    <span style={{ color: palette[idx % palette.length] }}>●</span> {s.name} ({s.total})
+                  </Text>
+                ))}
+              </div>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无完成数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Task Completion by Assignee Trend */}
+      <Card
+        title={<Space><UserOutlined /> 任务按负责人完成趋势</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {taskCompletionByAssignee && taskCompletionByAssignee.series.length > 0 ? (() => {
+          const series = taskCompletionByAssignee.series
+          const allDays = taskCompletionByAssignee.all_days
+          const n = allDays.length
+          if (n < 2) return <Empty description="样本不足" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          const maxDone = Math.max(1, ...series.flatMap((s) => s.daily.map((d) => d.done)))
+          const W = 560, H = 160, padL = 12, padR = 12, padT = 10, padB = 24
+          const xStep = (W - padL - padR) / Math.max(1, n - 1)
+          const palette = ['#722ed1', '#13c2c2', '#fa8c16', '#eb2f96', '#1677ff', '#52c41a', '#fa541c', '#08979c']
+          const yOf = (v: number) => H - padB - (v / maxDone) * (H - padT - padB)
+          const lineFor = (s: { daily: { done: number }[] }) =>
+            s.daily.map((d, i) => `${(padL + i * xStep).toFixed(1)},${yOf(d.done).toFixed(1)}`).join(' ')
+          return (
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                近 {taskCompletionByAssignee.days} 天完成趋势（共 {taskCompletionByAssignee.total_done} 个完成，top{series.length} Agent）
+              </Text>
+              <svg width={W} height={H} style={{ display: 'block', marginTop: 4 }}>
+                {[0, 0.5, 1].map((g) => {
+                  const y = H - padB - g * (H - padT - padB)
+                  return <line key={g} x1={padL} y1={y} x2={W - padR} y2={y} stroke="#f0f0f0" strokeWidth={1} />
+                })}
+                {series.map((s, idx) => (
+                  <g key={s.agent_id}>
+                    <polyline points={lineFor(s)} fill="none" stroke={palette[idx % palette.length]} strokeWidth={1.6} opacity={0.85} />
+                    <title>{`${s.name}: 共${s.total}个完成`}</title>
+                  </g>
+                ))}
+                <text x={padL} y={H - 6} fontSize={9} fill="#8c8c8c">{allDays[0]}</text>
+                <text x={W - padR} y={H - 6} fontSize={9} fill="#8c8c8c" textAnchor="end">{allDays[n - 1]}</text>
+              </svg>
+              <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
+                {series.map((s, idx) => (
+                  <Text key={s.agent_id} type="secondary" style={{ fontSize: 10 }}>
                     <span style={{ color: palette[idx % palette.length] }}>●</span> {s.name} ({s.total})
                   </Text>
                 ))}

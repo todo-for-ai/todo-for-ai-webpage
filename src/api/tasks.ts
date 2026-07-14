@@ -112,6 +112,20 @@ export interface TaskCompletionByProject {
   series: TaskCompletionByProjectItem[]
 }
 
+export interface TaskCompletionByAssigneeItem {
+  agent_id: number
+  name: string
+  total: number
+  daily: { date: string; done: number }[]
+}
+
+export interface TaskCompletionByAssignee {
+  days: number
+  total_done: number
+  all_days: string[]
+  series: TaskCompletionByAssigneeItem[]
+}
+
 export interface CreateTaskData {
   project_id: number
   title?: string
@@ -265,6 +279,11 @@ export class TasksApi {
   // 获取任务按项目完成趋势
   async getCompletionByProject(days = 30, limit = 8): Promise<TaskCompletionByProject> {
     return apiClient.get<TaskCompletionByProject>(`/tasks/completion-by-project?days=${days}&limit=${limit}`)
+  }
+
+  // 获取任务按负责人完成趋势
+  async getCompletionByAssignee(days = 30, limit = 8): Promise<TaskCompletionByAssignee> {
+    return apiClient.get<TaskCompletionByAssignee>(`/tasks/completion-by-assignee?days=${days}&limit=${limit}`)
   }
 }
 
