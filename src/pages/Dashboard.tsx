@@ -38,7 +38,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -96,6 +96,7 @@ const Dashboard = () => {
   const [experiencesDecayByTaskType, setExperiencesDecayByTaskType] = useState<ExperiencesDecayByTaskType | null>(null)
   const [experiencesConfidenceDistribution, setExperiencesConfidenceDistribution] = useState<ExperiencesConfidenceDistribution | null>(null)
   const [experiencesSourceDistribution, setExperiencesSourceDistribution] = useState<ExperiencesSourceDistribution | null>(null)
+  const [experiencesPropagationChain, setExperiencesPropagationChain] = useState<ExperiencesPropagationChain | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskOverdueByAssignee, setTaskOverdueByAssignee] = useState<TaskOverdueByAssignee | null>(null)
@@ -252,6 +253,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesDecayByTaskType(15).then(setExperiencesDecayByTaskType).catch(() => {})
       agentsApi.getExperiencesConfidenceDistribution().then(setExperiencesConfidenceDistribution).catch(() => {})
       agentsApi.getExperiencesSourceDistribution().then(setExperiencesSourceDistribution).catch(() => {})
+      agentsApi.getExperiencesPropagationChain(10).then(setExperiencesPropagationChain).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getOverdueByAssignee(10).then(setTaskOverdueByAssignee).catch(() => {})
@@ -2018,6 +2020,41 @@ const Dashboard = () => {
           <Empty description="暂无来源分布数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* 经验共享传播链 */}
+      {experiencesPropagationChain && experiencesPropagationChain.chains.length > 0 && (() => {
+        const chains = experiencesPropagationChain.chains
+        const maxReuses = Math.max(...chains.map(c => c.total_reuses), 1)
+        const barMaxW = 180
+        return (
+          <Card
+            title={<Space><ApartmentOutlined /> 经验共享传播链</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>{experiencesPropagationChain.total_shared} 条共享 · {experiencesPropagationChain.total_propagated} 次传播</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            {chains.map((c) => {
+              const barW = Math.max(2, (c.total_reuses / maxReuses) * barMaxW)
+              const domains = c.top_domains.slice(0, 3).join('/')
+              return (
+                <div key={c.source_agent_id} style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <Text style={{ fontSize: 12, width: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.source_agent_name}>{c.source_agent_name}</Text>
+                    <svg width={barMaxW + 4} height={12} style={{ flexShrink: 0 }}>
+                      <rect x={0} y={1} width={barMaxW} height={10} rx={2} fill="#f5f5f5" />
+                      <rect x={0} y={1} width={barW} height={10} rx={2} fill="#722ed1" opacity={0.7} />
+                    </svg>
+                    <Text style={{ fontSize: 11, color: '#722ed1', minWidth: 30 }}>{c.total_reuses}</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{c.shared_count}条共享</Text>
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 10, marginLeft: 108 }}>
+                    {domains ? `[${domains}]` : ''} {c.top_experiences.slice(0, 2).map(e => `${e.domain || '?'}(${e.times_reused})`).join(', ')}
+                  </Text>
+                </div>
+              )
+            })}
+          </Card>
+        )
+      })()}
 
       {/* Task Lifecycle Stats */}
       <Card

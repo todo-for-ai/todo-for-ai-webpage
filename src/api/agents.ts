@@ -1229,6 +1229,23 @@ export interface ExperiencesSourceDistribution {
   total: number
 }
 
+/** 经验传播链条目 */
+export interface ExperiencesPropagationChainItem {
+  source_agent_id: number
+  source_agent_name: string
+  shared_count: number
+  total_reuses: number
+  top_domains: string[]
+  top_experiences: { id: number; domain: string | null; experience_type: string; times_reused: number; confidence: number | null }[]
+}
+
+/** 经验共享传播链 */
+export interface ExperiencesPropagationChain {
+  chains: ExperiencesPropagationChainItem[]
+  total_shared: number
+  total_propagated: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1562,6 +1579,10 @@ export class AgentsApi {
 
   async getExperiencesSourceDistribution(): Promise<ExperiencesSourceDistribution> {
     return unwrapData<ExperiencesSourceDistribution>(await apiClient.get(`/agents/experiences/source-distribution`))
+  }
+
+  async getExperiencesPropagationChain(limit = 10): Promise<ExperiencesPropagationChain> {
+    return unwrapData<ExperiencesPropagationChain>(await apiClient.get(`/agents/experiences/propagation-chain${buildQuery({ limit })}`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
