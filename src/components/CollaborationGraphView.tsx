@@ -15,6 +15,8 @@ const KIND_COLORS: Record<string, string> = {
 const KIND_COLOR_DEFAULT = '#8c8c8c'
 const kindColor = (kind?: string | null) =>
   (kind && KIND_COLORS[kind]) || KIND_COLOR_DEFAULT
+const kindGradientUrl = (kind?: string | null) =>
+  (kind && KIND_COLORS[kind]) ? `url(#cg-grad-${kind})` : 'url(#cg-grad-default)'
 
 // 声誉 0-100 -> 环颜色（红<40 黄40-70 绿>70）
 const reputationColor = (rep?: number | null) => {
@@ -360,6 +362,36 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           <marker id="cg-arrow-hl" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
             <path d="M0,0 L6,3 L0,6 Z" fill="#1890ff" />
           </marker>
+          {/* 按 kind 的径向渐变：中心亮→边缘深，增强节点立体感 */}
+          {Object.entries(KIND_COLORS).map(([kind, color]) => {
+            // 将 hex 转为更亮/更暗版本
+            const r = parseInt(color.slice(1, 3), 16)
+            const g = parseInt(color.slice(3, 5), 16)
+            const b = parseInt(color.slice(5, 7), 16)
+            const lighter = `rgb(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)})`
+            const darker = `rgb(${Math.max(0, r - 40)},${Math.max(0, g - 40)},${Math.max(0, b - 40)})`
+            return (
+              <radialGradient key={kind} id={`cg-grad-${kind}`} cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stopColor={lighter} />
+                <stop offset="100%" stopColor={darker} />
+              </radialGradient>
+            )
+          })}
+          {/* 默认 kind 渐变 */}
+          {(() => {
+            const color = KIND_COLOR_DEFAULT
+            const r = parseInt(color.slice(1, 3), 16)
+            const g = parseInt(color.slice(3, 5), 16)
+            const b = parseInt(color.slice(5, 7), 16)
+            const lighter = `rgb(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)})`
+            const darker = `rgb(${Math.max(0, r - 40)},${Math.max(0, g - 40)},${Math.max(0, b - 40)})`
+            return (
+              <radialGradient id="cg-grad-default" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stopColor={lighter} />
+                <stop offset="100%" stopColor={darker} />
+              </radialGradient>
+            )
+          })()}
         </defs>
         {/* 透明背景：接收平移拖拽 */}
         <rect x="0" y="0" width={size} height={size} fill="transparent" onMouseDown={onBgMouseDown} style={{ cursor: 'move' }} />
@@ -505,7 +537,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               })()}
               <circle
                 r={r}
-                fill={highlighted ? '#1890ff' : kindColor(n.kind)}
+                fill={highlighted ? '#1890ff' : kindGradientUrl(n.kind)}
                 stroke={isCenter ? '#faad14' : '#fff'}
                 strokeWidth={isCenter ? 3 : 1.5}
                 fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.4) : ([0.45, 0.6, 0.85, 1][nodeTier(n)]))}
