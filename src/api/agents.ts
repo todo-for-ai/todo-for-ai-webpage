@@ -803,6 +803,20 @@ export interface WorkflowStepFailureRate {
   total_failed: number
 }
 
+/** 步骤共失败矩阵条目 */
+export interface WorkflowStepCofailureKey {
+  step_key: string
+  failures: number
+}
+
+/** 步骤共失败矩阵 */
+export interface WorkflowStepCofailureMatrix {
+  step_keys: WorkflowStepCofailureKey[]
+  matrix: Record<string, Record<string, number>>
+  max_cofailure: number
+  total_runs_with_multi_failure: number
+}
+
 /** 失败步骤按耗时排行单项 */
 export interface WorkflowFailedStepByDuration {
   step_key: string
@@ -1539,6 +1553,10 @@ export class AgentsApi {
 
   async getWorkflowStepFailureRate(days = 30, limit = 15): Promise<WorkflowStepFailureRate> {
     return unwrapData<WorkflowStepFailureRate>(await apiClient.get(`/agents/workflows/step-failure-rate${buildQuery({ days, limit })}`))
+  }
+
+  async getWorkflowStepCofailureMatrix(days = 30, limit = 8): Promise<WorkflowStepCofailureMatrix> {
+    return unwrapData<WorkflowStepCofailureMatrix>(await apiClient.get(`/agents/workflows/step-cofailure-matrix${buildQuery({ days, limit })}`))
   }
 
   async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
