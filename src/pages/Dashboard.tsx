@@ -2471,6 +2471,31 @@ const Dashboard = () => {
                     <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
                       <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#722ed1' }}>━</span> 平均声誉(0-100)</Text>
                       <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>┄</span> 完成数(max {maxDone})</Text>
+                      {(() => {
+                        // Pearson 相关系数：声誉 vs 产出完成数
+                        const pairs: [number, number][] = []
+                        agentHealthTrend.trend.forEach((b) => {
+                          if (b.avg_reputation == null) return
+                          const d = prodByDate[b.date] || 0
+                          pairs.push([b.avg_reputation, d])
+                        })
+                        if (pairs.length < 3) return null
+                        const n = pairs.length
+                        const sumX = pairs.reduce((s, p) => s + p[0], 0)
+                        const sumY = pairs.reduce((s, p) => s + p[1], 0)
+                        const sumXY = pairs.reduce((s, p) => s + p[0] * p[1], 0)
+                        const sumX2 = pairs.reduce((s, p) => s + p[0] * p[0], 0)
+                        const sumY2 = pairs.reduce((s, p) => s + p[1] * p[1], 0)
+                        const denom = Math.sqrt(Math.max(0, (n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY)))
+                        const r = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom
+                        const rLabel = Math.abs(r) >= 0.7 ? '强' : Math.abs(r) >= 0.4 ? '中' : '弱'
+                        const rColor = Math.abs(r) >= 0.7 ? '#722ed1' : Math.abs(r) >= 0.4 ? '#1890ff' : '#8c8c8c'
+                        return (
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            相关性 r=<b style={{ color: rColor }}>{r.toFixed(2)}</b>({rLabel}, n={n})
+                          </Text>
+                        )
+                      })()}
                     </div>
                   </div>
                 )
