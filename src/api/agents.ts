@@ -1143,6 +1143,19 @@ export interface AgentHealthTrend {
   by_kind_overall?: Record<string, number>
 }
 
+export interface HealthStateTransitionFlow {
+  source: string
+  target: string
+  value: number
+}
+
+export interface AgentHealthStateTransitions {
+  days: number
+  states: { name: string; count: number }[]
+  flows: HealthStateTransitionFlow[]
+  total_transitions: number
+}
+
 export interface AgentHealthAlertItem extends AgentHealthItem {
   reasons: string[]
   recommendations: string[]
@@ -1750,6 +1763,10 @@ export class AgentsApi {
 
   async getAgentHealthTrend(days = 30, agentId?: number): Promise<AgentHealthTrend> {
     return unwrapData<AgentHealthTrend>(await apiClient.get(`/agents/health/trend${buildQuery({ days, agent_id: agentId })}`))
+  }
+
+  async getAgentHealthStateTransitions(days = 30): Promise<AgentHealthStateTransitions> {
+    return unwrapData<AgentHealthStateTransitions>(await apiClient.get(`/agents/health/state-transitions${buildQuery({ days })}`))
   }
 
   async getAgentHealthAlerts(weights: HealthWeights = {}): Promise<AgentHealthAlerts> {

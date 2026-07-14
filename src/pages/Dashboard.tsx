@@ -41,7 +41,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -132,6 +132,7 @@ const Dashboard = () => {
     agentsApi.getAgentHealthTrend(30, agentId).then(setAgentHealthTrend).catch(() => {}).finally(() => setHealthTrendLoading(false))
   }
   const [agentHealthAlerts, setAgentHealthAlerts] = useState<AgentHealthAlerts | null>(null)
+  const [healthStateTransitions, setHealthStateTransitions] = useState<AgentHealthStateTransitions | null>(null)
   const [healthWeights, setHealthWeights] = useState<HealthWeights>({ w_reputation: 0.4, w_completion: 0.3, w_conflict: 0.15, w_violation: 0.15 })
   const [healthAlertsLoading, setHealthAlertsLoading] = useState(false)
 
@@ -303,6 +304,7 @@ const Dashboard = () => {
       agentsApi.getConflictsSandboxCorrelation(30, 2).then(setConflictsSandboxCorrelation).catch(() => {})
       agentsApi.getAgentHealth(30).then(setAgentHealth).catch(() => {})
       agentsApi.getAgentHealthTrend(30).then(setAgentHealthTrend).catch(() => {})
+      agentsApi.getAgentHealthStateTransitions(30).then(setHealthStateTransitions).catch(() => {})
       agentsApi.getAgentHealthAlerts(healthWeights).then(setAgentHealthAlerts).catch(() => {})
     } catch {
       // silent
@@ -3678,6 +3680,72 @@ const Dashboard = () => {
           </Spin>
         </Card>
       )}
+
+      {/* 健康状态流转 */}
+      {healthStateTransitions && healthStateTransitions.flows.length > 0 && (() => {
+        const states = healthStateTransitions.states
+        const flows = healthStateTransitions.flows
+        const stateColors: Record<string, string> = { healthy: '#52c41a', degraded: '#faad14', critical: '#ff4d4f' }
+        const w = 360
+        const h = 200
+        const padL = 60
+        const padR = 60
+        const padT = 20
+        const padB = 20
+        const barH = 28
+        const gapY = 12
+        const srcX = padL
+        const dstX = w - padR
+        const srcNames = states.map(s => s.name)
+        const dstNames = states.map(s => s.name)
+        const srcY = (name: string) => padT + srcNames.indexOf(name) * (barH + gapY) + barH / 2
+        const dstY = (name: string) => padT + dstNames.indexOf(name) * (barH + gapY) + barH / 2
+        const maxVal = Math.max(...flows.map(f => f.value), 1)
+        return (
+          <Card
+            title={<Space><SwapOutlined /> 健康状态流转</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {healthStateTransitions.days} 天 · {healthStateTransitions.total_transitions} 次转换</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <svg width={w} height={h} style={{ overflow: 'visible' }}>
+              {/* Source labels */}
+              {srcNames.map((name, i) => (
+                <g key={`src-${name}`}>
+                  <rect x={srcX - 50} y={padT + i * (barH + gapY)} width={48} height={barH} rx={4} fill={stateColors[name] || '#8c8c8c'} opacity={0.15} />
+                  <text x={srcX - 26} y={padT + i * (barH + gapY) + barH / 2 + 3} fontSize={10} fill={stateColors[name] || '#595959'} textAnchor="middle" fontWeight={500}>{name}</text>
+                </g>
+              ))}
+              {/* Target labels */}
+              {dstNames.map((name, i) => (
+                <g key={`dst-${name}`}>
+                  <rect x={dstX + 2} y={padT + i * (barH + gapY)} width={48} height={barH} rx={4} fill={stateColors[name] || '#8c8c8c'} opacity={0.15} />
+                  <text x={dstX + 26} y={padT + i * (barH + gapY) + barH / 2 + 3} fontSize={10} fill={stateColors[name] || '#595959'} textAnchor="middle" fontWeight={500}>{name}</text>
+                </g>
+              ))}
+              {/* Flow paths */}
+              {flows.map((f, i) => {
+                const sy = srcY(f.source)
+                const dy = dstY(f.target)
+                const thickness = Math.max(2, (f.value / maxVal) * 14)
+                const midX = (srcX + dstX) / 2
+                const color = stateColors[f.source] || '#8c8c8c'
+                return (
+                  <g key={`flow-${i}`}>
+                    <path
+                      d={`M ${srcX} ${sy} C ${midX} ${sy}, ${midX} ${dy}, ${dstX} ${dy}`}
+                      fill="none"
+                      stroke={color}
+                      strokeWidth={thickness}
+                      opacity={0.4}
+                    />
+                    <text x={midX} y={(sy + dy) / 2 - 4} fontSize={9} fill="#595959" textAnchor="middle">{f.value}</text>
+                  </g>
+                )
+              })}
+            </svg>
+          </Card>
+        )
+      })()}
 
       {/* Conflict Monitor */}
       <Card
