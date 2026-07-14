@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -55,6 +55,7 @@ const Workflows: React.FC = () => {
   const [successRateByWorkflow, setSuccessRateByWorkflow] = useState<WorkflowSuccessRateByWorkflow | null>(null)
   const [stepRetryTopology, setStepRetryTopology] = useState<WorkflowStepRetryTopology | null>(null)
   const [stepHourlyDistribution, setStepHourlyDistribution] = useState<WorkflowStepHourlyDistribution | null>(null)
+  const [stepDependencyBottleneck, setStepDependencyBottleneck] = useState<WorkflowStepDependencyBottleneck | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
@@ -137,6 +138,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowSuccessRateByWorkflow(30, 10).then(setSuccessRateByWorkflow).catch(() => {})
       agentsApi.getWorkflowStepRetryTopology(30, 15).then(setStepRetryTopology).catch(() => {})
       agentsApi.getWorkflowStepHourlyDistribution(30, 10).then(setStepHourlyDistribution).catch(() => {})
+      agentsApi.getWorkflowStepDependencyBottleneck(30, 10).then(setStepDependencyBottleneck).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
@@ -1174,6 +1176,51 @@ const Workflows: React.FC = () => {
           </Card>
         )
       })()}
+
+      {/* Step Dependency Bottleneck */}
+      {stepDependencyBottleneck && stepDependencyBottleneck.workflows.length > 0 && (
+        <Card
+          title={<Space><ApartmentOutlined /> 步骤依赖瓶颈分析</Space>}
+          style={{ marginBottom: 24 }}
+        >
+          {stepDependencyBottleneck.workflows.map((wf, wfi) => {
+            const maxDur = Math.max(1, ...wf.all_steps.map(s => s.avg_duration))
+            return (
+              <div key={wfi} style={{ marginBottom: wfi < stepDependencyBottleneck.workflows.length - 1 ? 16 : 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text strong>{wf.workflow_name}</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>关键路径耗时 {wf.critical_path_duration}s · {wf.active_steps}/{wf.total_steps} 活跃步骤</Text>
+                </div>
+                {/* Critical path chain */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', marginBottom: 6 }}>
+                  {wf.critical_path.map((cs, ci) => (
+                    <span key={ci} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                      {ci > 0 && <span style={{ color: '#bfbfbf' }}>→</span>}
+                      <Tooltip title={`${cs.name}: ${cs.avg_duration}s (瓶颈 ${cs.bottleneck_score}%)`}>
+                        <Tag color={cs.bottleneck_score >= 40 ? 'red' : cs.bottleneck_score >= 25 ? 'orange' : 'blue'} style={{ fontSize: 10, margin: 0 }}>
+                          {cs.step_key} {cs.avg_duration}s
+                        </Tag>
+                      </Tooltip>
+                    </span>
+                  ))}
+                </div>
+                {/* All steps bars */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {wf.all_steps.map((s, si) => (
+                    <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                      <span style={{ width: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: s.is_on_critical_path ? '#cf1322' : '#595959', fontWeight: s.is_on_critical_path ? 600 : 400 }} title={s.name}>{s.step_key}</span>
+                      <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 2, height: 10, position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ width: `${(s.avg_duration / maxDur) * 100}%`, height: '100%', background: s.is_on_critical_path ? '#ff4d4f' : '#1890ff', borderRadius: 2 }} />
+                      </div>
+                      <span style={{ color: '#8c8c8c', minWidth: 40, textAlign: 'right' }}>{s.avg_duration}s</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </Card>
+      )}
 
       {/* Workflow runs */}
       <Card title="运行记录" style={{ marginBottom: 24 }} extra={<Button size="small" onClick={loadRuns}>刷新</Button>}>

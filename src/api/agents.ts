@@ -1091,6 +1091,36 @@ export interface AgentFailureErrorPatterns {
   total_failed: number
 }
 
+export interface WorkflowStepBottleneckStep {
+  step_key: string
+  name: string
+  depends_on: string[]
+  avg_duration: number
+  bottleneck_score: number
+}
+
+export interface WorkflowStepBottleneckAllStep {
+  step_key: string
+  name: string
+  depends_on: string[]
+  avg_duration: number
+  is_on_critical_path: boolean
+}
+
+export interface WorkflowStepBottleneckWorkflow {
+  workflow_id: number
+  workflow_name: string
+  critical_path: WorkflowStepBottleneckStep[]
+  critical_path_duration: number
+  all_steps: WorkflowStepBottleneckAllStep[]
+  total_steps: number
+  active_steps: number
+}
+
+export interface WorkflowStepDependencyBottleneck {
+  workflows: WorkflowStepBottleneckWorkflow[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1774,6 +1804,10 @@ export class AgentsApi {
 
   async getAgentFailureErrorPatterns(days = 30, limit = 10, prefixLen = 40): Promise<AgentFailureErrorPatterns> {
     return unwrapData<AgentFailureErrorPatterns>(await apiClient.get(`/agents/failure-error-patterns${buildQuery({ days, limit, prefix_len: prefixLen })}`))
+  }
+
+  async getWorkflowStepDependencyBottleneck(days = 30, limit = 10): Promise<WorkflowStepDependencyBottleneck> {
+    return unwrapData<WorkflowStepDependencyBottleneck>(await apiClient.get(`/agents/workflows/step-dependency-bottleneck${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
