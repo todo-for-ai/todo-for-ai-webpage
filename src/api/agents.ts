@@ -754,6 +754,22 @@ export interface WorkflowStepStats {
   items: WorkflowStepStat[]
 }
 
+/** 步骤耗时分布直方图单项 */
+export interface WorkflowStepDurationHistogramItem {
+  step_key: string
+  sample_size: number
+  bins: Record<string, number>
+  median_seconds: number
+  p95_seconds: number
+  min_seconds: number
+  max_seconds: number
+}
+
+export interface WorkflowStepDurationHistogram {
+  items: WorkflowStepDurationHistogramItem[]
+  bin_labels: string[]
+}
+
 /** 失败步骤按耗时排行单项 */
 export interface WorkflowFailedStepByDuration {
   step_key: string
@@ -1384,6 +1400,10 @@ export class AgentsApi {
 
   async getWorkflowStepStats(limit = 30): Promise<WorkflowStepStats> {
     return unwrapData<WorkflowStepStats>(await apiClient.get(`/agents/workflows/step-stats${buildQuery({ limit })}`))
+  }
+
+  async getWorkflowStepDurationHistogram(limit = 10): Promise<WorkflowStepDurationHistogram> {
+    return unwrapData<WorkflowStepDurationHistogram>(await apiClient.get(`/agents/workflows/step-duration-histogram${buildQuery({ limit })}`))
   }
 
   async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
