@@ -629,6 +629,25 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               >
                 {n.messages}
               </text>
+              {/* Hover 详情面板 */}
+              {hoveredNode === n.id && !dimmed && (() => {
+                const pw = 140
+                const ph = 68
+                const px = pos.x + r + 6
+                const py = pos.y - ph / 2
+                // 防溢出
+                const fx = px + pw > size ? pos.x - r - pw - 6 : px
+                const fy = Math.max(2, Math.min(size - ph - 2, py))
+                return (
+                  <foreignObject x={fx} y={fy} width={pw} height={ph} style={{ pointerEvents: 'none' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.96)', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 6px', fontSize: 10, color: '#595959', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: 11, color: '#262626', marginBottom: 2 }}>{n.name}</div>
+                      <div>Kind: <span style={{ color: kindColor(n.kind) }}>{n.kind || 'unknown'}</span></div>
+                      <div>消息: <b>{n.messages}</b>{n.reputation !== null && n.reputation !== undefined ? ` · 声誉: <b style={{ color: reputationColor(n.reputation) || '#595959' }}>${Math.round(n.reputation)}</b>` : ''}</div>
+                    </div>
+                  </foreignObject>
+                )
+              })()}
             </g>
           )
         })}
