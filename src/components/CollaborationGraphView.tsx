@@ -420,14 +420,26 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           const by = b.y - uy * rb
           // 单向：画一条带箭头线（指向接收方）；双向：画一条线 + 两端各一个箭头
           const oneWay = (fwd > 0) !== (rev > 0)
-          // 边按消息量比例渐变着色：低频灰 → 中频蓝 → 高频紫红
+          // 边按消息量比例渐变着色：连续插值 灰→蓝→紫
           const ratio = e.count / maxCount
           const edgeColorByCount = highlighted
             ? '#1890ff'
-            : ratio >= 0.75 ? '#722ed1'
-            : ratio >= 0.5 ? '#1890ff'
-            : ratio >= 0.25 ? '#69b1ff'
-            : '#bfbfbf'
+            : (() => {
+                // 灰(191,191,191) → 蓝(24,144,255) → 紫(114,46,209)
+                let r: number, g: number, b: number
+                if (ratio < 0.5) {
+                  const t = ratio * 2
+                  r = Math.round(191 + (24 - 191) * t)
+                  g = Math.round(191 + (144 - 191) * t)
+                  b = Math.round(191 + (255 - 191) * t)
+                } else {
+                  const t = (ratio - 0.5) * 2
+                  r = Math.round(24 + (114 - 24) * t)
+                  g = Math.round(144 + (46 - 144) * t)
+                  b = Math.round(255 + (209 - 255) * t)
+                }
+                return `rgb(${r},${g},${b})`
+              })()
           const stroke = edgeColorByCount
           // 声誉差梯度：两端 Agent 声誉差≥30 时用虚线，标识"声誉悬殊协作"
           const srcNode = nodes.find((n) => n.id === e.source)
@@ -631,20 +643,13 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           </span>
         ))}
       </div>
-      {/* 边色阶图例（按消息量） */}
+      {/* 边色阶图例（按消息量连续渐变） */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 10, color: '#8c8c8c' }}>边色阶(消息量):</span>
-        {[
-          { c: '#bfbfbf', l: '低' },
-          { c: '#69b1ff', l: '中低' },
-          { c: '#1890ff', l: '中' },
-          { c: '#722ed1', l: '高' },
-        ].map(({ c, l }) => (
-          <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <span style={{ display: 'inline-block', width: 14, height: 3, background: c, borderRadius: 2 }} />
-            {l}
-          </span>
-        ))}
+        <span style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+          <span style={{ display: 'inline-block', width: 50, height: 6, borderRadius: 3, background: 'linear-gradient(to right, #bfbfbf, #1890ff, #722ed1)' }} />
+          低 → 高
+        </span>
         <span style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
           <span style={{ display: 'inline-block', width: 14, borderTop: '2px dashed #fa541c' }} />
           声誉差≥30
