@@ -1182,6 +1182,15 @@ export interface ExperiencesReuseTrend {
   total_experiences: number
 }
 
+/** 经验置信度衰减预测 */
+export interface ExperiencesConfidenceDecayForecast {
+  trend: { date: string; avg_confidence: number }[]
+  forecast: { date: string; predicted_confidence: number }[]
+  slope: number
+  r_squared: number
+  days_to_decay: number | null
+}
+
 export interface ExperiencesDecayByDomainItem {
   domain: string
   total: number
@@ -1581,6 +1590,10 @@ export class AgentsApi {
 
   async getExperiencesReuseTrend(days = 30): Promise<ExperiencesReuseTrend> {
     return unwrapData<ExperiencesReuseTrend>(await apiClient.get(`/agents/experiences/reuse-trend${buildQuery({ days })}`))
+  }
+
+  async getExperiencesConfidenceDecayForecast(days = 30): Promise<ExperiencesConfidenceDecayForecast> {
+    return unwrapData<ExperiencesConfidenceDecayForecast>(await apiClient.get(`/agents/experiences/confidence-decay-forecast${buildQuery({ days })}`))
   }
 
   async getExperiencesDecayByDomain(limit = 15): Promise<ExperiencesDecayByDomain> {

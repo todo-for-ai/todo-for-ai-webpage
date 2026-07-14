@@ -39,7 +39,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -93,6 +93,7 @@ const Dashboard = () => {
   const [experiencesLowConfidence, setExperiencesLowConfidence] = useState<ExperiencesLowConfidence | null>(null)
   const [experiencesScatter, setExperiencesScatter] = useState<ExperiencesScatter | null>(null)
   const [experiencesReuseTrend, setExperiencesReuseTrend] = useState<ExperiencesReuseTrend | null>(null)
+  const [experiencesDecayForecast, setExperiencesDecayForecast] = useState<ExperiencesConfidenceDecayForecast | null>(null)
   const [experiencesDecayByDomain, setExperiencesDecayByDomain] = useState<ExperiencesDecayByDomain | null>(null)
   const [experiencesDecayByTaskType, setExperiencesDecayByTaskType] = useState<ExperiencesDecayByTaskType | null>(null)
   const [experiencesConfidenceDistribution, setExperiencesConfidenceDistribution] = useState<ExperiencesConfidenceDistribution | null>(null)
@@ -251,6 +252,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesLowConfidence().then(setExperiencesLowConfidence).catch(() => {})
       agentsApi.getExperiencesScatter(200).then(setExperiencesScatter).catch(() => {})
       agentsApi.getExperiencesReuseTrend(30).then(setExperiencesReuseTrend).catch(() => {})
+      agentsApi.getExperiencesConfidenceDecayForecast(30).then(setExperiencesDecayForecast).catch(() => {})
       agentsApi.getExperiencesDecayByDomain(15).then(setExperiencesDecayByDomain).catch(() => {})
       agentsApi.getExperiencesDecayByTaskType(15).then(setExperiencesDecayByTaskType).catch(() => {})
       agentsApi.getExperiencesConfidenceDistribution().then(setExperiencesConfidenceDistribution).catch(() => {})
@@ -1861,6 +1863,82 @@ const Dashboard = () => {
           <Empty description="暂无复用趋势数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* 置信度衰减预测 */}
+      {experiencesDecayForecast && experiencesDecayForecast.trend.length >= 3 && (() => {
+        const trend = experiencesDecayForecast.trend
+        const forecast = experiencesDecayForecast.forecast
+        const slope = experiencesDecayForecast.slope
+        const rSq = experiencesDecayForecast.r_squared
+        const daysToDecay = experiencesDecayForecast.days_to_decay
+        const all = [...trend.map(t => t.avg_confidence), ...forecast.map(f => f.predicted_confidence)]
+        const minC = Math.min(...all, 0)
+        const maxC = Math.max(...all, 1)
+        const range = maxC - minC || 1
+        const W = 400, H = 120, padL = 32, padR = 8, padT = 8, padB = 20
+        const iw = W - padL - padR, ih = H - padT - padB
+        const total = trend.length + forecast.length
+        const xFor = (i: number) => padL + (total <= 1 ? iw / 2 : (i / (total - 1)) * iw)
+        const yFor = (v: number) => padT + ih - ((v - minC) / range) * ih
+        const trendPts = trend.map((t, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(t.avg_confidence).toFixed(1)}`).join(' ')
+        const fcStart = trend.length - 1
+        const forecastPts = forecast.map((f, i) => {
+          const x = xFor(fcStart + i + 1)
+          return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${yFor(f.predicted_confidence).toFixed(1)}`
+        }).join(' ')
+        // Connect trend last point to forecast first point
+        const bridge = trend.length > 0 && forecast.length > 0
+          ? `M${xFor(fcStart).toFixed(1)},${yFor(trend[trend.length - 1].avg_confidence).toFixed(1)} L${xFor(fcStart + 1).toFixed(1)},${yFor(forecast[0].predicted_confidence).toFixed(1)}`
+          : ''
+        return (
+          <Card
+            title={<Space><FundOutlined /> 置信度衰减预测</Space>}
+            extra={
+              <Space size={12}>
+                <Text type="secondary" style={{ fontSize: 10 }}>斜率={slope}</Text>
+                <Text type="secondary" style={{ fontSize: 10 }}>R²={rSq}</Text>
+                {daysToDecay != null && <Text style={{ fontSize: 10, color: '#ff4d4f' }}>≈{daysToDecay}天后<0.5</Text>}
+              </Space>
+            }
+            style={{ marginBottom: 16 }}
+          >
+            <svg width={W} height={H} style={{ display: 'block' }}>
+              {/* 0.5 threshold line */}
+              {(() => {
+                const y05 = yFor(0.5)
+                return <line x1={padL} y1={y05} x2={W - padR} y2={y05} stroke="#ff4d4f" strokeDasharray="4 3" strokeWidth={0.5} />
+              })()}
+              {/* Y grid */}
+              {[0.2, 0.4, 0.6, 0.8, 1.0].filter(v => v >= minC && v <= maxC).map(v => {
+                const y = yFor(v)
+                return <line key={v} x1={padL} y1={y} x2={W - padR} y2={y} stroke="#f5f5f5" strokeWidth={0.5} />
+              })}
+              {/* Historical line */}
+              <path d={trendPts} fill="none" stroke="#722ed1" strokeWidth={1.5} />
+              {/* Bridge */}
+              {bridge && <path d={bridge} fill="none" stroke="#fa8c16" strokeWidth={1.5} strokeDasharray="3 3" />}
+              {/* Forecast line */}
+              {forecastPts && <path d={forecastPts} fill="none" stroke="#fa8c16" strokeWidth={1.5} strokeDasharray="3 3" />}
+              {/* Forecast dots */}
+              {forecast.map((f, i) => (
+                <circle key={`fc${i}`} cx={xFor(fcStart + i + 1)} cy={yFor(f.predicted_confidence)} r={3} fill="#fa8c16" fillOpacity={0.7}>
+                  <title>{f.date}: 预测={f.predicted_confidence}</title>
+                </circle>
+              ))}
+              {/* X labels */}
+              {[0, Math.floor((trend.length - 1) / 2), trend.length - 1].filter((v, i, a) => a.indexOf(v) === i && v >= 0).map(i => (
+                <text key={`xl${i}`} x={xFor(i)} y={H - 4} fontSize={8} fill="#8c8c8c" textAnchor="middle">{trend[i].date.slice(5)}</text>
+              ))}
+              {forecast.length > 0 && <text x={xFor(total - 1)} y={H - 4} fontSize={8} fill="#fa8c16" textAnchor="middle">{forecast[forecast.length - 1].date.slice(5)}</text>}
+            </svg>
+            <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#722ed1' }}>━</span> 历史</Text>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#fa8c16' }}>┄</span> 预测</Text>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#ff4d4f' }}>---</span> 0.5 衰减线</Text>
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Experiences Decay by Domain */}
       <Card
