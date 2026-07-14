@@ -98,6 +98,19 @@ export interface TaskOverdueTrend {
   by_priority_totals: Record<string, number>
 }
 
+export interface TaskOverdueByAssigneeItem {
+  agent_id: number
+  name: string
+  overdue: number
+  by_priority: Record<string, number>
+  earliest_due: string | null
+}
+
+export interface TaskOverdueByAssignee {
+  items: TaskOverdueByAssigneeItem[]
+  total_overdue: number
+}
+
 export interface TaskCompletionByProjectItem {
   project_id: number
   name: string
@@ -274,6 +287,11 @@ export class TasksApi {
   // 获取任务逾期趋势（按 due_date 分日）
   async getOverdueTrend(days = 30): Promise<TaskOverdueTrend> {
     return apiClient.get<TaskOverdueTrend>(`/tasks/overdue-trend?days=${days}`)
+  }
+
+  // 获取任务逾期按负责人分布
+  async getOverdueByAssignee(limit = 10): Promise<TaskOverdueByAssignee> {
+    return apiClient.get<TaskOverdueByAssignee>(`/tasks/overdue-by-assignee?limit=${limit}`)
   }
 
   // 获取任务按项目完成趋势

@@ -37,7 +37,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -95,6 +95,7 @@ const Dashboard = () => {
   const [experiencesDecayByDomain, setExperiencesDecayByDomain] = useState<ExperiencesDecayByDomain | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
+  const [taskOverdueByAssignee, setTaskOverdueByAssignee] = useState<TaskOverdueByAssignee | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
   const [taskCompletionByAssignee, setTaskCompletionByAssignee] = useState<TaskCompletionByAssignee | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
@@ -243,6 +244,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesDecayByDomain(15).then(setExperiencesDecayByDomain).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
+      tasksApi.getOverdueByAssignee(10).then(setTaskOverdueByAssignee).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
       tasksApi.getCompletionByAssignee(30, 8).then(setTaskCompletionByAssignee).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
@@ -2060,6 +2062,37 @@ const Dashboard = () => {
           <Empty description="加载中" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* Task Overdue by Assignee */}
+      {taskOverdueByAssignee && taskOverdueByAssignee.items.length > 0 && (
+        <Card
+          title={<Space><UserOutlined /> 任务逾期按负责人</Space>}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>共 {taskOverdueByAssignee.total_overdue} 个逾期</Text>}
+          style={{ marginBottom: 24 }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {taskOverdueByAssignee.items.map((a) => {
+              const maxOverdue = Math.max(1, taskOverdueByAssignee!.items[0].overdue)
+              const priorityTags = Object.entries(a.by_priority).map(([k, v]) => {
+                const color = k === 'urgent' ? 'red' : k === 'high' ? 'orange' : k === 'medium' ? 'blue' : 'default'
+                return <Tag key={k} color={color} style={{ fontSize: 10 }}>{k}: {v}</Tag>
+              })
+              return (
+                <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <span style={{ width: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={a.name}>{a.name}</span>
+                  <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 14, position: 'relative', overflow: 'hidden' }}>
+                    <Tooltip title={`${a.name}: ${a.overdue}个逾期${a.earliest_due ? ` · 最早到期 ${a.earliest_due.slice(0, 10)}` : ''}`}>
+                      <div style={{ width: `${(a.overdue / maxOverdue) * 100}%`, height: '100%', background: '#ff4d4f', borderRadius: 3 }} />
+                    </Tooltip>
+                  </div>
+                  <span style={{ color: '#ff4d4f', minWidth: 30, textAlign: 'right' }}>{a.overdue}</span>
+                  <Space size={4}>{priorityTags}</Space>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Task Completion by Project Trend */}
       <Card
