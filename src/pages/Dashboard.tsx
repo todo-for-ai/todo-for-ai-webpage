@@ -37,7 +37,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -102,6 +102,7 @@ const Dashboard = () => {
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
   const [taskCompletionByAssignee, setTaskCompletionByAssignee] = useState<TaskCompletionByAssignee | null>(null)
   const [taskCompletionByPriority, setTaskCompletionByPriority] = useState<TaskCompletionByPriority | null>(null)
+  const [taskCompletionRateByProject, setTaskCompletionRateByProject] = useState<TaskCompletionRateByProject | null>(null)
   const [agentProductivity, setAgentProductivity] = useState<AgentProductivity | null>(null)
   const [productivityTrend, setProductivityTrend] = useState<AgentProductivityTrend | null>(null)
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
@@ -256,6 +257,7 @@ const Dashboard = () => {
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
       tasksApi.getCompletionByAssignee(30, 8).then(setTaskCompletionByAssignee).catch(() => {})
       tasksApi.getCompletionByPriority(30).then(setTaskCompletionByPriority).catch(() => {})
+      tasksApi.getCompletionRateByProject(30, 10).then(setTaskCompletionRateByProject).catch(() => {})
       agentsApi.getAgentProductivity(30, 20).then(setAgentProductivity).catch(() => {})
       agentsApi.getAgentProductivityTrend(30).then(setProductivityTrend).catch(() => {})
       agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
@@ -2259,6 +2261,47 @@ const Dashboard = () => {
                 <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#1890ff' }}>■</span> 进行中</Text>
                 <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#d9d9d9' }}>■</span> 取消</Text>
               </div>
+            </div>
+          </Card>
+        )
+      })()}
+
+      {/* 任务按项目完成率对比 */}
+      {taskCompletionRateByProject && taskCompletionRateByProject.projects.length > 0 && (() => {
+        const projects = taskCompletionRateByProject.projects
+        const maxTotal = Math.max(...projects.map(p => p.total), 1)
+        const barMaxW = 180
+        return (
+          <Card
+            title={<Space><ProjectOutlined /> 任务按项目完成率对比</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>共 {taskCompletionRateByProject.total_tasks} 任务 · {taskCompletionRateByProject.total_done} 完成</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            {projects.map((p) => {
+              const doneW = (p.done / maxTotal) * barMaxW
+              const ipW = (p.in_progress / maxTotal) * barMaxW
+              const cancelW = (p.cancelled / maxTotal) * barMaxW
+              const rateColor = p.completion_rate >= 70 ? '#52c41a' : p.completion_rate >= 40 ? '#faad14' : '#ff4d4f'
+              return (
+                <div key={p.project_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <Tooltip title={`${p.name}: 总${p.total} 完成=${p.done} 进行中=${p.in_progress} 取消=${p.cancelled}`}>
+                    <Text style={{ fontSize: 12, width: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</Text>
+                  </Tooltip>
+                  <svg width={barMaxW + 4} height={14} style={{ flexShrink: 0 }}>
+                    <rect x={0} y={2} width={barMaxW} height={10} rx={2} fill="#f5f5f5" />
+                    <rect x={0} y={2} width={doneW} height={10} rx={2} fill="#52c41a" opacity={0.7} />
+                    <rect x={doneW} y={2} width={ipW} height={10} fill="#1890ff" opacity={0.5} />
+                    <rect x={doneW + ipW} y={2} width={cancelW} height={10} fill="#d9d9d9" opacity={0.6} />
+                  </svg>
+                  <Text style={{ fontSize: 11, color: rateColor, minWidth: 44 }}>{p.completion_rate}%</Text>
+                  <Text type="secondary" style={{ fontSize: 10 }}>{p.done}/{p.total}</Text>
+                </div>
+              )
+            })}
+            <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#52c41a' }}>■</span> 完成</Text>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#1890ff' }}>■</span> 进行中</Text>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#d9d9d9' }}>■</span> 取消</Text>
             </div>
           </Card>
         )

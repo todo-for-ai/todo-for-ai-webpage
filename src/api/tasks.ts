@@ -127,6 +127,24 @@ export interface TaskCompletionByPriority {
   total: number
 }
 
+/** 任务按项目完成率条目 */
+export interface TaskCompletionRateByProjectItem {
+  project_id: number
+  name: string
+  total: number
+  done: number
+  cancelled: number
+  in_progress: number
+  completion_rate: number
+}
+
+/** 任务按项目完成率对比 */
+export interface TaskCompletionRateByProject {
+  projects: TaskCompletionRateByProjectItem[]
+  total_tasks: number
+  total_done: number
+}
+
 export interface TaskCompletionByProjectItem {
   project_id: number
   name: string
@@ -313,6 +331,11 @@ export class TasksApi {
   // 获取任务按优先级完成率
   async getCompletionByPriority(days = 30): Promise<TaskCompletionByPriority> {
     return apiClient.get<TaskCompletionByPriority>(`/tasks/completion-by-priority?days=${days}`)
+  }
+
+  // 获取任务按项目完成率对比
+  async getCompletionRateByProject(days = 30, limit = 10): Promise<TaskCompletionRateByProject> {
+    return apiClient.get<TaskCompletionRateByProject>(`/tasks/completion-rate-by-project?days=${days}&limit=${limit}`)
   }
 
   // 获取任务按项目完成趋势
