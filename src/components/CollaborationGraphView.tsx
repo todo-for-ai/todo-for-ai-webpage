@@ -429,6 +429,28 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               >
                 <title>{tooltip}</title>
               </line>
+              {/* 高频边脉冲流光动画：ratio≥0.5 时叠加一条流动虚线 */}
+              {ratio >= 0.5 && !anyHover && (() => {
+                const flowDur = ratio >= 0.75 ? '1.5s' : '2.5s'
+                const flowOpacity = ratio >= 0.75 ? 0.5 : 0.3
+                return (
+                  <line
+                    x1={oneWay ? ax : a.x + ux * ra}
+                    y1={oneWay ? ay : a.y + uy * ra}
+                    x2={oneWay ? bx : b.x - ux * rb}
+                    y2={oneWay ? by : b.y - uy * rb}
+                    stroke={stroke}
+                    strokeWidth={Math.max(1, w * 0.6)}
+                    strokeOpacity={flowOpacity}
+                    strokeDasharray="6 10"
+                    markerEnd={undefined}
+                    markerStart={undefined}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <animate attributeName="stroke-dashoffset" from="0" to="-32" dur={flowDur} repeatCount="indefinite" />
+                  </line>
+                )
+              })()}
               {showEdgeLabels && (
                 <text
                   x={mx}
