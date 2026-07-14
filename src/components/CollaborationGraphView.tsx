@@ -550,8 +550,9 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               <circle
                 r={r}
                 fill={highlighted ? '#1890ff' : kindGradientUrl(n.kind)}
-                stroke={isCenter ? '#faad14' : '#fff'}
-                strokeWidth={isCenter ? 3 : 1.5}
+                stroke={isCenter ? '#faad14' : kindColor(n.kind)}
+                strokeWidth={isCenter ? 3 : 2}
+                strokeDasharray={isCenter ? undefined : '4 2'}
                 fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.4) : ([0.45, 0.6, 0.85, 1][nodeTier(n)]))}
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
@@ -653,11 +654,11 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         })}
         </g>
       </svg>
-      {/* kind 颜色图例 */}
+      {/* kind 颜色图例（填充+虚线边框表示分组） */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
         {Object.entries(KIND_COLORS).map(([kind, color]) => (
           <span key={kind} style={{ fontSize: 11, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color }} />
+            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color, border: `2px dashed ${color}`, boxSizing: 'border-box' }} />
             {kind}
           </span>
         ))}
