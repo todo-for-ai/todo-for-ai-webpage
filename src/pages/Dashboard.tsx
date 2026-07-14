@@ -38,7 +38,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -108,6 +108,7 @@ const Dashboard = () => {
   const [productivityAlerts, setProductivityAlerts] = useState<AgentProductivityAlerts | null>(null)
   const [productivityByKind, setProductivityByKind] = useState<AgentProductivityByKind | null>(null)
   const [agentRunResourceUsage, setAgentRunResourceUsage] = useState<AgentRunResourceUsage | null>(null)
+  const [agentProdWeeklyComparison, setAgentProdWeeklyComparison] = useState<AgentProductivityWeeklyComparison | null>(null)
   const [productivityHourly, setProductivityHourly] = useState<AgentProductivityHourlyHeatmap | null>(null)
   const [agentFailureReasons, setAgentFailureReasons] = useState<AgentFailureReasons | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
@@ -263,6 +264,7 @@ const Dashboard = () => {
       agentsApi.getAgentProductivityAlerts().then(setProductivityAlerts).catch(() => {})
       agentsApi.getAgentProductivityByKind(30).then(setProductivityByKind).catch(() => {})
       agentsApi.getAgentRunResourceUsage(30, 8).then(setAgentRunResourceUsage).catch(() => {})
+      agentsApi.getAgentProductivityWeeklyComparison(10).then(setAgentProdWeeklyComparison).catch(() => {})
       agentsApi.getAgentProductivityHourlyHeatmap(30, 15).then(setProductivityHourly).catch(() => {})
       agentsApi.getAgentFailureReasons(30, 15).then(setAgentFailureReasons).catch(() => {})
     } catch {
@@ -3049,6 +3051,49 @@ const Dashboard = () => {
                   <Text type="secondary" style={{ fontSize: 10 }}>{it.total_runs}次 均{it.avg_run_minutes}min</Text>
                 </div>
               ))}
+            </div>
+          </Card>
+        )
+      })()}
+
+      {/* Agent 产出效率周间对比 */}
+      {agentProdWeeklyComparison && agentProdWeeklyComparison.agents.length > 0 && (() => {
+        const agents = agentProdWeeklyComparison.agents
+        const maxWeek = Math.max(...agents.map(a => Math.max(a.this_week, a.last_week)), 1)
+        const barMaxW = 140
+        return (
+          <Card
+            title={<Space><SwapOutlined /> Agent 产出周间对比</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>本周 {agentProdWeeklyComparison.total_this_week} · 上周 {agentProdWeeklyComparison.total_last_week}</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            {agents.map((a) => {
+              const thisW = Math.max(2, (a.this_week / maxWeek) * barMaxW)
+              const lastW = Math.max(2, (a.last_week / maxWeek) * barMaxW)
+              const changeColor = a.change_pct > 0 ? '#52c41a' : a.change_pct < 0 ? '#ff4d4f' : '#8c8c8c'
+              const arrow = a.change_pct > 0 ? '↑' : a.change_pct < 0 ? '↓' : '→'
+              return (
+                <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 12 }}>
+                  <Text style={{ width: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.name}>{a.name}</Text>
+                  <Tooltip title={`上周: ${a.last_week}`}>
+                    <svg width={barMaxW + 4} height={10} style={{ flexShrink: 0 }}>
+                      <rect x={0} y={1} width={barMaxW} height={8} rx={2} fill="#f5f5f5" />
+                      <rect x={0} y={1} width={lastW} height={8} rx={2} fill="#bfbfbf" opacity={0.5} />
+                    </svg>
+                  </Tooltip>
+                  <Tooltip title={`本周: ${a.this_week}`}>
+                    <svg width={barMaxW + 4} height={10} style={{ flexShrink: 0 }}>
+                      <rect x={0} y={1} width={barMaxW} height={8} rx={2} fill="#f5f5f5" />
+                      <rect x={0} y={1} width={thisW} height={8} rx={2} fill="#1890ff" opacity={0.7} />
+                    </svg>
+                  </Tooltip>
+                  <Text style={{ color: changeColor, minWidth: 50, fontSize: 11 }}>{arrow}{Math.abs(a.change_pct)}%</Text>
+                </div>
+              )
+            })}
+            <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#bfbfbf' }}>■</span> 上周</Text>
+              <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#1890ff' }}>■</span> 本周</Text>
             </div>
           </Card>
         )

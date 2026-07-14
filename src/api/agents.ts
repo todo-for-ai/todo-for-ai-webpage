@@ -944,6 +944,22 @@ export interface AgentRunResourceUsage {
   total_runs: number
 }
 
+/** Agent 产出效率周间对比条目 */
+export interface AgentProductivityWeeklyItem {
+  agent_id: number
+  name: string
+  this_week: number
+  last_week: number
+  change_pct: number
+}
+
+/** Agent 产出效率周间对比 */
+export interface AgentProductivityWeeklyComparison {
+  agents: AgentProductivityWeeklyItem[]
+  total_this_week: number
+  total_last_week: number
+}
+
 export interface AgentProductivityByKindItem {
   kind: string
   agent_count: number
@@ -1562,6 +1578,10 @@ export class AgentsApi {
 
   async getAgentRunResourceUsage(days = 30, limit = 10): Promise<AgentRunResourceUsage> {
     return unwrapData<AgentRunResourceUsage>(await apiClient.get(`/agents/run-resource-usage${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentProductivityWeeklyComparison(limit = 10): Promise<AgentProductivityWeeklyComparison> {
+    return unwrapData<AgentProductivityWeeklyComparison>(await apiClient.get(`/agents/productivity/weekly-comparison${buildQuery({ limit })}`))
   }
 
   async getAgentProductivityTrend(days = 30): Promise<AgentProductivityTrend> {
