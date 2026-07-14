@@ -141,6 +141,23 @@ export interface TaskPriorityTrend {
   totals: Record<string, number>
 }
 
+export interface TaskCompletionForecastPriority {
+  priority: string
+  remaining: number
+  estimated_days: number
+  estimated_date: string | null
+}
+
+export interface TaskCompletionForecast {
+  days: number
+  velocity: number
+  total_done_in_window: number
+  total_remaining: number
+  days_to_complete: number | null
+  estimated_completion_date: string | null
+  priority_forecast: TaskCompletionForecastPriority[]
+}
+
 /** 任务按优先级完成率项 */
 export interface TaskCompletionByPriorityItem {
   priority: string
@@ -386,6 +403,11 @@ export class TasksApi {
   // 获取任务优先级分布趋势
   async getPriorityTrend(days = 30): Promise<TaskPriorityTrend> {
     return apiClient.get<TaskPriorityTrend>(`/tasks/priority-trend?days=${days}`)
+  }
+
+  // 获取任务完成预测
+  async getCompletionForecast(days = 30): Promise<TaskCompletionForecast> {
+    return apiClient.get<TaskCompletionForecast>(`/tasks/completion-forecast?days=${days}`)
   }
 }
 

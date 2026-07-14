@@ -13,6 +13,7 @@ import {
   TeamOutlined,
   ApartmentOutlined,
   RadarChartOutlined,
+  AimOutlined,
   SwapOutlined,
   DashboardOutlined,
   ReloadOutlined,
@@ -39,7 +40,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -106,6 +107,7 @@ const Dashboard = () => {
   const [taskOverdueByAssignee, setTaskOverdueByAssignee] = useState<TaskOverdueByAssignee | null>(null)
   const [taskOverdueClustering, setTaskOverdueClustering] = useState<TaskOverdueClustering | null>(null)
   const [taskPriorityTrend, setTaskPriorityTrend] = useState<TaskPriorityTrend | null>(null)
+  const [taskCompletionForecast, setTaskCompletionForecast] = useState<TaskCompletionForecast | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
   const [taskCompletionByAssignee, setTaskCompletionByAssignee] = useState<TaskCompletionByAssignee | null>(null)
   const [taskCompletionByPriority, setTaskCompletionByPriority] = useState<TaskCompletionByPriority | null>(null)
@@ -268,6 +270,7 @@ const Dashboard = () => {
       tasksApi.getOverdueByAssignee(10).then(setTaskOverdueByAssignee).catch(() => {})
       tasksApi.getOverdueClustering(15).then(setTaskOverdueClustering).catch(() => {})
       tasksApi.getPriorityTrend(30).then(setTaskPriorityTrend).catch(() => {})
+      tasksApi.getCompletionForecast(30).then(setTaskCompletionForecast).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
       tasksApi.getCompletionByAssignee(30, 8).then(setTaskCompletionByAssignee).catch(() => {})
       tasksApi.getCompletionByPriority(30).then(setTaskCompletionByPriority).catch(() => {})
@@ -2515,6 +2518,40 @@ const Dashboard = () => {
               {lines.map(({ key, color, label }) => (
                 <Text key={key} style={{ fontSize: 10 }}><span style={{ display: 'inline-block', width: 12, height: 2, background: color, verticalAlign: 'middle', marginRight: 4 }} />{label} {totals[key] ?? 0}</Text>
               ))}
+            </div>
+          </Card>
+        )
+      })()}
+
+      {/* 任务完成预测 */}
+      {taskCompletionForecast && taskCompletionForecast.total_remaining > 0 && taskCompletionForecast.velocity > 0 && (() => {
+        const fc = taskCompletionForecast
+        const priorityColors: Record<string, string> = { critical: '#ff4d4f', high: '#fa8c16', medium: '#1890ff', low: '#52c41a' }
+        return (
+          <Card
+            title={<Space><AimOutlined /> 任务完成预测</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>速度 {fc.velocity} 任务/天</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <Row gutter={16} style={{ marginBottom: 12 }}>
+              <Col span={8}><Statistic title="剩余任务" value={fc.total_remaining} valueStyle={{ fontSize: 16 }} /></Col>
+              <Col span={8}><Statistic title="预计天数" value={fc.days_to_complete ?? '—'} suffix="天" valueStyle={{ fontSize: 16, color: '#1890ff' }} /></Col>
+              <Col span={8}><Statistic title="预计完成" value={fc.estimated_completion_date ?? '—'} valueStyle={{ fontSize: 14, color: '#52c41a' }} /></Col>
+            </Row>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {fc.priority_forecast.filter(p => p.remaining > 0).map((p) => {
+                const color = priorityColors[p.priority] || '#8c8c8c'
+                return (
+                  <div key={p.priority} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 11, width: 40, color, fontWeight: 600 }}>{p.priority}</Text>
+                    <Text style={{ fontSize: 11 }}>剩余 {p.remaining}</Text>
+                    <div style={{ flex: 1, height: 6, background: '#f5f5f5', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.min(p.estimated_days / Math.max(fc.days_to_complete || 1, 1) * 100, 100)}%`, height: '100%', background: color, borderRadius: 3 }} />
+                    </div>
+                    <Text style={{ fontSize: 10, color: '#8c8c8c', minWidth: 80 }}>{p.estimated_date || '—'}</Text>
+                  </div>
+                )
+              })}
             </div>
           </Card>
         )
