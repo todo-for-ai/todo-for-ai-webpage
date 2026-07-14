@@ -2739,6 +2739,64 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
+              {/* 异常检测标记 */}
+              {(() => {
+                if (valid.length < 5) return null
+                const vals = valid.map((b) => b.avg_reputation as number)
+                const mean = vals.reduce((s, v) => s + v, 0) / vals.length
+                const std = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length)
+                // 异常点：值 < 均值-2σ 或连续3天下降的起始
+                const anomalies: { idx: number; type: string; val: number }[] = []
+                vals.forEach((v, i) => {
+                  if (std > 0 && v < mean - 2 * std) anomalies.push({ idx: i, type: 'spike', val: v })
+                  if (i >= 2 && vals[i] < vals[i - 1] && vals[i - 1] < vals[i - 2]) {
+                    if (!anomalies.find(a => a.idx === i - 2)) anomalies.push({ idx: i - 2, type: 'decline', val: vals[i - 2] })
+                  }
+                })
+                if (anomalies.length === 0) return null
+                const aW = 520, aH = 36, aPadL = 4, aPadR = 4
+                const aXStep = (aW - aPadL - aPadR) / Math.max(1, valid.length - 1)
+                const minV = Math.min(...vals)
+                const maxV = Math.max(...vals)
+                const range = maxV - minV || 1
+                return (
+                  <div style={{ marginTop: 6 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>异常检测（均值={mean.toFixed(1)} σ={std.toFixed(1)}）</Text>
+                    <svg width={aW} height={aH} style={{ display: 'block' }}>
+                      {/* 均值线 */}
+                      {(() => {
+                        const y = 4 + (1 - (mean - minV) / range) * 24
+                        return <line x1={aPadL} y1={y} x2={aW - aPadR} y2={y} stroke="#d9d9d9" strokeDasharray="3 2" strokeWidth={0.5} />
+                      })()}
+                      {/* -2σ 阈值线 */}
+                      {(() => {
+                        const thresh = mean - 2 * std
+                        if (thresh < minV) return null
+                        const y = 4 + (1 - (thresh - minV) / range) * 24
+                        return <line x1={aPadL} y1={y} x2={aW - aPadR} y2={y} stroke="#ff4d4f" strokeDasharray="4 3" strokeWidth={0.5} />
+                      })()}
+                      {/* 异常点 */}
+                      {anomalies.map((a, ai) => {
+                        const x = aPadL + a.idx * aXStep
+                        const y = 4 + (1 - (a.val - minV) / range) * 24
+                        const isDecline = a.type === 'decline'
+                        return (
+                          <g key={ai}>
+                            <circle cx={x} cy={y} r={5} fill={isDecline ? '#fa8c16' : '#ff4d4f'} fillOpacity={0.25} stroke={isDecline ? '#fa8c16' : '#ff4d4f'} strokeWidth={1} />
+                            <circle cx={x} cy={y} r={2} fill={isDecline ? '#fa8c16' : '#ff4d4f'} />
+                            <title>{valid[a.idx].date}: {a.type === 'spike' ? '突降异常' : '连续下降'} 声誉={a.val.toFixed(1)}</title>
+                          </g>
+                        )
+                      })}
+                    </svg>
+                    <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
+                      <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#ff4d4f' }}>◉</span> 突降(&lt;μ-2σ)</Text>
+                      <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#fa8c16' }}>◉</span> 连续下降(3天)</Text>
+                      <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#d9d9d9' }}>---</span> 均值</Text>
+                    </div>
+                  </div>
+                )
+              })()}
               {(() => {
                 // 双轴对比：声誉（紫，左轴）× 产出完成数（绿，右轴），按 date 对齐
                 if (!productivityTrend || productivityTrend.trend.length < 2 || daySpan < 2) return null
