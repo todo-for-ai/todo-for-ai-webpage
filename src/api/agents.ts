@@ -848,6 +848,21 @@ export interface WorkflowRunTrend {
   total_failed_steps: number
 }
 
+export interface WorkflowSuccessRateItem {
+  workflow_id: number
+  name: string
+  total: number
+  succeeded: number
+  failed: number
+  cancelled: number
+  success_rate: number
+  avg_duration: number
+}
+
+export interface WorkflowSuccessRateByWorkflow {
+  workflows: WorkflowSuccessRateItem[]
+}
+
 /** 失败步骤与冲突/沙盒违规的跨维度关联 */
 export interface WorkflowFailureCorrelationAgent {
   agent_id: number
@@ -1574,6 +1589,10 @@ export class AgentsApi {
 
   async getWorkflowRunTrend(days = 30): Promise<WorkflowRunTrend> {
     return unwrapData<WorkflowRunTrend>(await apiClient.get(`/agents/workflows/run-trend${buildQuery({ days })}`))
+  }
+
+  async getWorkflowSuccessRateByWorkflow(days = 30, limit = 10): Promise<WorkflowSuccessRateByWorkflow> {
+    return unwrapData<WorkflowSuccessRateByWorkflow>(await apiClient.get(`/agents/workflows/success-rate-by-workflow${buildQuery({ days, limit })}`))
   }
 
   async getExperiencesStats(): Promise<ExperiencesStats> {

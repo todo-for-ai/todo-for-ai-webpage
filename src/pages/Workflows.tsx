@@ -11,11 +11,11 @@ import {
   CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
   ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
   HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
-  SettingOutlined, LineChartOutlined,
+  SettingOutlined, LineChartOutlined, PieChartOutlined,
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -52,6 +52,7 @@ const Workflows: React.FC = () => {
   const [runDurationPercentiles, setRunDurationPercentiles] = useState<WorkflowRunDurationPercentiles | null>(null)
   const [stepFailureRate, setStepFailureRate] = useState<WorkflowStepFailureRate | null>(null)
   const [stepCofailureMatrix, setStepCofailureMatrix] = useState<WorkflowStepCofailureMatrix | null>(null)
+  const [successRateByWorkflow, setSuccessRateByWorkflow] = useState<WorkflowSuccessRateByWorkflow | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
@@ -131,6 +132,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowRunDurationPercentiles(30).then(setRunDurationPercentiles).catch(() => {})
       agentsApi.getWorkflowStepFailureRate(30, 15).then(setStepFailureRate).catch(() => {})
       agentsApi.getWorkflowStepCofailureMatrix(30, 8).then(setStepCofailureMatrix).catch(() => {})
+      agentsApi.getWorkflowSuccessRateByWorkflow(30, 10).then(setSuccessRateByWorkflow).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
@@ -1031,6 +1033,46 @@ const Workflows: React.FC = () => {
                 ))}
               </div>
               <Text type="secondary" style={{ fontSize: 9 }}>低 → 高</Text>
+            </div>
+          </Card>
+        )
+      })()}
+
+      {/* 工作流成功率对比 */}
+      {successRateByWorkflow && successRateByWorkflow.workflows.length > 0 && (() => {
+        const wfs = successRateByWorkflow.workflows
+        const maxTotal = Math.max(...wfs.map(w => w.total), 1)
+        return (
+          <Card
+            title={<Space><PieChartOutlined /> 工作流成功率对比</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>近 30 天 · Top {wfs.length}</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {wfs.map((w, i) => {
+                const barW = Math.max(w.total / maxTotal * 100, 4)
+                const succW = w.succeeded / w.total * barW
+                const failW = w.failed / w.total * barW
+                const cancelW = w.cancelled / w.total * barW
+                const dur = w.avg_duration >= 3600 ? `${(w.avg_duration / 3600).toFixed(1)}h` : w.avg_duration >= 60 ? `${(w.avg_duration / 60).toFixed(1)}m` : `${w.avg_duration.toFixed(0)}s`
+                return (
+                  <div key={w.workflow_id}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                      <Text style={{ fontSize: 12, fontWeight: 500, maxWidth: '50%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.name}</Text>
+                      <Text style={{ fontSize: 11, color: w.success_rate >= 80 ? '#52c41a' : w.success_rate >= 50 ? '#faad14' : '#ff4d4f', fontWeight: 600 }}>{w.success_rate}% 成功</Text>
+                    </div>
+                    <div style={{ display: 'flex', height: 14, borderRadius: 3, overflow: 'hidden', background: '#f5f5f5' }}>
+                      {w.succeeded > 0 && <div style={{ width: `${succW}%`, background: '#52c41a', minWidth: 2 }} title={`成功: ${w.succeeded}`} />}
+                      {w.failed > 0 && <div style={{ width: `${failW}%`, background: '#ff4d4f', minWidth: 2 }} title={`失败: ${w.failed}`} />}
+                      {w.cancelled > 0 && <div style={{ width: `${cancelW}%`, background: '#d9d9d9', minWidth: 2 }} title={`取消: ${w.cancelled}`} />}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 1 }}>
+                      <Text type="secondary" style={{ fontSize: 10 }}>共 {w.total} 次</Text>
+                      <Text type="secondary" style={{ fontSize: 10 }}>平均耗时 {dur}</Text>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </Card>
         )
