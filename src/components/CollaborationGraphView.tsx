@@ -490,6 +490,27 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
               </circle>
+              {/* 脉冲扩散环：按 nodeTier 活跃度动画，tier 越高脉冲越快越明显 */}
+              {(() => {
+                const tier = nodeTier(n)
+                if (tier === 0 || dimmed) return null
+                const dur = [0, 3.5, 2.5, 1.5][tier]
+                const pulseColor = highlighted ? '#1890ff' : kindColor(n.kind)
+                const pulseOpacity = anyHover ? (highlighted ? 0.6 : 0.15) : [0, 0.25, 0.4, 0.55][tier]
+                return (
+                  <circle
+                    r={r}
+                    fill="none"
+                    stroke={pulseColor}
+                    strokeWidth={2}
+                    strokeOpacity={pulseOpacity}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <animate attributeName="r" from={r} to={r + 8} dur={`${dur}s`} repeatCount="indefinite" />
+                    <animate attributeName="stroke-opacity" from={pulseOpacity} to="0" dur={`${dur}s`} repeatCount="indefinite" />
+                  </circle>
+                )
+              })()}
               {/* 节点中心：tier≥2 且有声誉时显示声誉数值，否则显示消息量梯度内点 */}
               {(() => {
                 const tier = nodeTier(n)
