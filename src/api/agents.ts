@@ -1088,6 +1088,21 @@ export interface ExperiencesReuseTrend {
   total_experiences: number
 }
 
+export interface ExperiencesDecayByDomainItem {
+  domain: string
+  total: number
+  active: number
+  decayed: number
+  avg_confidence: number
+  reuses: number
+}
+
+export interface ExperiencesDecayByDomain {
+  domains: ExperiencesDecayByDomainItem[]
+  total_active: number
+  total_decayed: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1393,6 +1408,10 @@ export class AgentsApi {
 
   async getExperiencesReuseTrend(days = 30): Promise<ExperiencesReuseTrend> {
     return unwrapData<ExperiencesReuseTrend>(await apiClient.get(`/agents/experiences/reuse-trend${buildQuery({ days })}`))
+  }
+
+  async getExperiencesDecayByDomain(limit = 15): Promise<ExperiencesDecayByDomain> {
+    return unwrapData<ExperiencesDecayByDomain>(await apiClient.get(`/agents/experiences/decay-by-domain${buildQuery({ limit })}`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {

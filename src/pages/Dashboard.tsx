@@ -38,7 +38,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesDecayByDomain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -92,6 +92,7 @@ const Dashboard = () => {
   const [experiencesLowConfidence, setExperiencesLowConfidence] = useState<ExperiencesLowConfidence | null>(null)
   const [experiencesScatter, setExperiencesScatter] = useState<ExperiencesScatter | null>(null)
   const [experiencesReuseTrend, setExperiencesReuseTrend] = useState<ExperiencesReuseTrend | null>(null)
+  const [experiencesDecayByDomain, setExperiencesDecayByDomain] = useState<ExperiencesDecayByDomain | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
@@ -239,6 +240,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesLowConfidence().then(setExperiencesLowConfidence).catch(() => {})
       agentsApi.getExperiencesScatter(200).then(setExperiencesScatter).catch(() => {})
       agentsApi.getExperiencesReuseTrend(30).then(setExperiencesReuseTrend).catch(() => {})
+      agentsApi.getExperiencesDecayByDomain(15).then(setExperiencesDecayByDomain).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
@@ -1836,6 +1838,49 @@ const Dashboard = () => {
           )
         })() : (
           <Empty description="暂无复用趋势数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Experiences Decay by Domain */}
+      <Card
+        title={<Space><HeatMapOutlined /> 经验按域衰减对比</Space>}
+        extra={experiencesDecayByDomain ? (
+          <Space size={16}>
+            <Text type="secondary" style={{ fontSize: 12 }}>活跃 <b style={{ color: '#52c41a' }}>{experiencesDecayByDomain.total_active}</b></Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>衰减 <b style={{ color: '#ff4d4f' }}>{experiencesDecayByDomain.total_decayed}</b></Text>
+          </Space>
+        ) : null}
+        style={{ marginBottom: 16 }}
+      >
+        {experiencesDecayByDomain && experiencesDecayByDomain.domains.length > 0 ? (() => {
+          const domains = experiencesDecayByDomain.domains
+          const maxTotal = Math.max(1, ...domains.map((d) => d.total))
+          return (
+            <div>
+              {domains.map((d) => {
+                const activePct = d.total > 0 ? d.active / d.total : 0
+                const decayedPct = d.total > 0 ? d.decayed / d.total : 0
+                return (
+                  <div key={d.domain} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <Tooltip title={`${d.domain}: 总${d.total} 活跃=${d.active} 衰减=${d.decayed} 平均置信度=${d.avg_confidence} 复用=${d.reuses}`}>
+                      <Text style={{ fontSize: 11, width: 100, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.domain}</Text>
+                    </Tooltip>
+                    <div style={{ flex: 1, height: 16, background: '#f5f5f5', borderRadius: 3, overflow: 'hidden', display: 'flex' }}>
+                      <div style={{ width: `${activePct * 100}%`, height: '100%', background: '#52c41a', opacity: 0.7 }} />
+                      <div style={{ width: `${decayedPct * 100}%`, height: '100%', background: '#ff4d4f', opacity: 0.6 }} />
+                    </div>
+                    <Text type="secondary" style={{ fontSize: 10, width: 50 }}>{d.total}</Text>
+                  </div>
+                )
+              })}
+              <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#52c41a' }}>■</span> 活跃(置信度≥0.5)</Text>
+                <Text type="secondary" style={{ fontSize: 10 }}><span style={{ color: '#ff4d4f' }}>■</span> 衰减(置信度<0.5)</Text>
+              </div>
+            </div>
+          )
+        })() : (
+          <Empty description="暂无经验衰减数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 
