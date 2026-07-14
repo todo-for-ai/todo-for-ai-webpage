@@ -1072,6 +1072,25 @@ export interface AgentFailureReasons {
   items: AgentFailureReasonItem[]
 }
 
+export interface FailureErrorPatternAgent {
+  agent_id: number
+  name: string
+}
+
+export interface FailureErrorPattern {
+  pattern: string
+  count: number
+  affected_agents: FailureErrorPatternAgent[]
+  peak_hour: number | null
+  hour_distribution: Record<string, number>
+}
+
+export interface AgentFailureErrorPatterns {
+  days: number
+  patterns: FailureErrorPattern[]
+  total_failed: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1751,6 +1770,10 @@ export class AgentsApi {
 
   async getAgentFailureReasons(days = 30, limit = 15): Promise<AgentFailureReasons> {
     return unwrapData<AgentFailureReasons>(await apiClient.get(`/agents/failure-reasons${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentFailureErrorPatterns(days = 30, limit = 10, prefixLen = 40): Promise<AgentFailureErrorPatterns> {
+    return unwrapData<AgentFailureErrorPatterns>(await apiClient.get(`/agents/failure-error-patterns${buildQuery({ days, limit, prefix_len: prefixLen })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
