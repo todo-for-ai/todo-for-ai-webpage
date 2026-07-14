@@ -12,6 +12,7 @@ import {
   SafetyCertificateOutlined,
   TeamOutlined,
   ApartmentOutlined,
+  RadarChartOutlined,
   SwapOutlined,
   DashboardOutlined,
   ReloadOutlined,
@@ -39,7 +40,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -99,6 +100,7 @@ const Dashboard = () => {
   const [experiencesConfidenceDistribution, setExperiencesConfidenceDistribution] = useState<ExperiencesConfidenceDistribution | null>(null)
   const [experiencesSourceDistribution, setExperiencesSourceDistribution] = useState<ExperiencesSourceDistribution | null>(null)
   const [experiencesPropagationChain, setExperiencesPropagationChain] = useState<ExperiencesPropagationChain | null>(null)
+  const [skillCoverageRadar, setSkillCoverageRadar] = useState<ExperiencesSkillCoverageRadar | null>(null)
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskOverdueByAssignee, setTaskOverdueByAssignee] = useState<TaskOverdueByAssignee | null>(null)
@@ -260,6 +262,7 @@ const Dashboard = () => {
       agentsApi.getExperiencesConfidenceDistribution().then(setExperiencesConfidenceDistribution).catch(() => {})
       agentsApi.getExperiencesSourceDistribution().then(setExperiencesSourceDistribution).catch(() => {})
       agentsApi.getExperiencesPropagationChain(10).then(setExperiencesPropagationChain).catch(() => {})
+      agentsApi.getExperiencesSkillCoverageRadar(6, 8).then(setSkillCoverageRadar).catch(() => {})
       tasksApi.getStats().then(setTaskStats).catch(() => {})
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getOverdueByAssignee(10).then(setTaskOverdueByAssignee).catch(() => {})
@@ -2137,6 +2140,71 @@ const Dashboard = () => {
                 </div>
               )
             })}
+          </Card>
+        )
+      })()}
+
+      {/* Agent 技能覆盖雷达 */}
+      {skillCoverageRadar && skillCoverageRadar.agents.length > 0 && skillCoverageRadar.domain_labels.length >= 3 && (() => {
+        const agents = skillCoverageRadar.agents
+        const labels = skillCoverageRadar.domain_labels
+        const n = labels.length
+        const cx = 140
+        const cy = 140
+        const r = 110
+        const angleStep = (2 * Math.PI) / n
+        const colors = ['#1890ff', '#722ed1', '#fa8c16', '#52c41a', '#eb2f96', '#13c2c2']
+        return (
+          <Card
+            title={<Space><RadarChartOutlined /> Agent 技能覆盖雷达</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>{n} 个技能维度 · {agents.length} 个 Agent</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <svg width={280} height={280} style={{ flexShrink: 0 }}>
+                {/* Grid rings */}
+                {[20, 40, 60, 80, 100].map(pct => {
+                  const rr = r * pct / 100
+                  const pts = Array.from({ length: n }, (_, i) => {
+                    const a = -Math.PI / 2 + i * angleStep
+                    return `${cx + rr * Math.cos(a)},${cy + rr * Math.sin(a)}`
+                  }).join(' ')
+                  return <polygon key={`ring-${pct}`} points={pts} fill="none" stroke="#f0f0f0" strokeWidth={0.5} />
+                })}
+                {/* Axis lines + labels */}
+                {labels.map((l, i) => {
+                  const a = -Math.PI / 2 + i * angleStep
+                  const ex = cx + r * Math.cos(a)
+                  const ey = cy + r * Math.sin(a)
+                  const lx = cx + (r + 16) * Math.cos(a)
+                  const ly = cy + (r + 16) * Math.sin(a)
+                  return (
+                    <g key={`ax-${i}`}>
+                      <line x1={cx} y1={cy} x2={ex} y2={ey} stroke="#e8e8e8" strokeWidth={0.5} />
+                      <text x={lx} y={ly + 3} fontSize={9} fill="#8c8c8c" textAnchor="middle">{l.length > 6 ? l.slice(0, 5) + '…' : l}</text>
+                    </g>
+                  )
+                })}
+                {/* Agent polygons */}
+                {agents.map((ag, ai) => {
+                  const color = colors[ai % colors.length]
+                  const pts = ag.scores.map((s, i) => {
+                    const a = -Math.PI / 2 + i * angleStep
+                    const rr = r * s / 100
+                    return `${cx + rr * Math.cos(a)},${cy + rr * Math.sin(a)}`
+                  }).join(' ')
+                  return <polygon key={`ag-${ag.agent_id}`} points={pts} fill={color} fillOpacity={0.12} stroke={color} strokeWidth={1.5} />
+                })}
+              </svg>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+                {agents.map((ag, ai) => (
+                  <Text key={ag.agent_id} style={{ fontSize: 11 }}>
+                    <span style={{ display: 'inline-block', width: 10, height: 10, background: colors[ai % colors.length], borderRadius: 2, verticalAlign: 'middle', marginRight: 4 }} />
+                    {ag.name} ({ag.total_experiences}条)
+                  </Text>
+                ))}
+              </div>
+            </div>
           </Card>
         )
       })()}

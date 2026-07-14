@@ -1292,6 +1292,19 @@ export interface ExperiencesPropagationChain {
   total_propagated: number
 }
 
+export interface SkillCoverageAgent {
+  agent_id: number
+  name: string
+  scores: number[]
+  total_experiences: number
+}
+
+export interface ExperiencesSkillCoverageRadar {
+  agents: SkillCoverageAgent[]
+  domain_labels: string[]
+  max_count: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1641,6 +1654,10 @@ export class AgentsApi {
 
   async getExperiencesPropagationChain(limit = 10): Promise<ExperiencesPropagationChain> {
     return unwrapData<ExperiencesPropagationChain>(await apiClient.get(`/agents/experiences/propagation-chain${buildQuery({ limit })}`))
+  }
+
+  async getExperiencesSkillCoverageRadar(limit = 6, domains = 8): Promise<ExperiencesSkillCoverageRadar> {
+    return unwrapData<ExperiencesSkillCoverageRadar>(await apiClient.get(`/agents/experiences/skill-coverage-radar${buildQuery({ limit, domains })}`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
