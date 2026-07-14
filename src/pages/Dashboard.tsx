@@ -39,7 +39,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -114,6 +114,7 @@ const Dashboard = () => {
   const [agentRunResourceUsage, setAgentRunResourceUsage] = useState<AgentRunResourceUsage | null>(null)
   const [agentProdWeeklyComparison, setAgentProdWeeklyComparison] = useState<AgentProductivityWeeklyComparison | null>(null)
   const [productivityHourly, setProductivityHourly] = useState<AgentProductivityHourlyHeatmap | null>(null)
+  const [productivityCalendar, setProductivityCalendar] = useState<AgentProductivityCalendarHeatmap | null>(null)
   const [agentFailureReasons, setAgentFailureReasons] = useState<AgentFailureReasons | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
@@ -273,6 +274,7 @@ const Dashboard = () => {
       agentsApi.getAgentRunResourceUsage(30, 8).then(setAgentRunResourceUsage).catch(() => {})
       agentsApi.getAgentProductivityWeeklyComparison(10).then(setAgentProdWeeklyComparison).catch(() => {})
       agentsApi.getAgentProductivityHourlyHeatmap(30, 15).then(setProductivityHourly).catch(() => {})
+      agentsApi.getAgentProductivityCalendarHeatmap(90, 10).then(setProductivityCalendar).catch(() => {})
       agentsApi.getAgentFailureReasons(30, 15).then(setAgentFailureReasons).catch(() => {})
     } catch {
       // silent
@@ -3242,6 +3244,94 @@ const Dashboard = () => {
           <Empty description="暂无完成时段数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* Agent 产出日历热力图 */}
+      {productivityCalendar && productivityCalendar.agents.length > 0 && (() => {
+        const agents = productivityCalendar.agents
+        const matrix = productivityCalendar.matrix
+        const maxCell = Math.max(1, productivityCalendar.max_cell)
+        const dateRange = productivityCalendar.date_range
+        // Render a grid: each row = agent, columns = weeks (7 days per col)
+        // Group dates by week
+        const weeks: string[][] = []
+        let cur: string[] = []
+        for (const d of dateRange) {
+          cur.push(d)
+          if (cur.length === 7) { weeks.push(cur); cur = [] }
+        }
+        if (cur.length > 0) weeks.push(cur)
+        const cellColor = (v: number) => {
+          if (!v) return '#f0f0f0'
+          const r = v / maxCell
+          if (r >= 0.75) return '#135200'
+          if (r >= 0.5) return '#389e0d'
+          if (r >= 0.25) return '#95de64'
+          return '#d9f7be'
+        }
+        const cellSize = 13
+        const gap = 2
+        const labelW = 80
+        const svgW = labelW + weeks.length * (cellSize + gap) + 20
+        const svgH = labelW + agents.length * (cellSize + gap) + 30
+        return (
+          <Card
+            title={<Space><CalendarOutlined /> 产出日历热力</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {productivityCalendar.days} 天</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <div style={{ overflowX: 'auto' }}>
+              <svg width={svgW} height={svgH} style={{ overflow: 'visible' }}>
+                {/* Week labels (month) */}
+                {weeks.map((w, wi) => {
+                  const month = w[0]?.slice(5, 7)
+                  const showLabel = wi === 0 || (w[0] && weeks[wi - 1]?.[0]?.slice(5, 7) !== month)
+                  return showLabel ? (
+                    <text key={`wm-${wi}`} x={labelW + wi * (cellSize + gap)} y={14} fontSize={9} fill="#8c8c8c">{month}月</text>
+                  ) : null
+                })}
+                {/* Agent rows */}
+                {agents.map((a, ai) => {
+                  const row = matrix[String(a.agent_id)] || {}
+                  return (
+                    <g key={`ar-${a.agent_id}`}>
+                      <text x={labelW - 4} y={28 + ai * (cellSize + gap) + cellSize / 2 + 2} fontSize={9} fill="#595959" textAnchor="end">{a.name.length > 8 ? a.name.slice(0, 7) + '…' : a.name}</text>
+                      {weeks.map((w, wi) => (
+                        <g key={`wk-${wi}`}>
+                          {w.map((d, di) => {
+                            const v = row[d] || 0
+                            const isFuture = d > new Date().toISOString().slice(0, 10)
+                            return (
+                              <Tooltip key={d} title={`${a.name} ${d}: ${v} 完成`}>
+                                <rect
+                                  x={labelW + wi * (cellSize + gap)}
+                                  y={28 + ai * (cellSize + gap) + di * (cellSize + gap)}
+                                  width={cellSize}
+                                  height={cellSize}
+                                  rx={2}
+                                  fill={isFuture ? '#fafafa' : cellColor(v)}
+                                  stroke="#fff"
+                                  strokeWidth={0.5}
+                                />
+                              </Tooltip>
+                            )
+                          })}
+                        </g>
+                      ))}
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, alignItems: 'center' }}>
+              <Text type="secondary" style={{ fontSize: 10 }}>少</Text>
+              {['#f0f0f0', '#d9f7be', '#95de64', '#389e0d', '#135200'].map((c, i) => (
+                <div key={i} style={{ width: 12, height: 10, background: c, borderRadius: 2 }} />
+              ))}
+              <Text type="secondary" style={{ fontSize: 10 }}>多</Text>
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Agent Run Resource Usage */}
       {agentRunResourceUsage && agentRunResourceUsage.items.length > 0 && (() => {

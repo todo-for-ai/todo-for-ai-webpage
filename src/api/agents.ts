@@ -1023,6 +1023,14 @@ export interface AgentProductivityHourlyHeatmap {
   peak_hour: number | null
 }
 
+export interface AgentProductivityCalendarHeatmap {
+  days: number
+  agents: AgentProductivityHourlyHeatmapAgent[]
+  matrix: Record<string, Record<string, number>>
+  max_cell: number
+  date_range: string[]
+}
+
 export interface AgentFailureReasonItem {
   reason: string
   count: number
@@ -1669,6 +1677,10 @@ export class AgentsApi {
 
   async getAgentProductivityHourlyHeatmap(days = 30, limit = 15): Promise<AgentProductivityHourlyHeatmap> {
     return unwrapData<AgentProductivityHourlyHeatmap>(await apiClient.get(`/agents/productivity/hourly-heatmap${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentProductivityCalendarHeatmap(days = 90, limit = 10): Promise<AgentProductivityCalendarHeatmap> {
+    return unwrapData<AgentProductivityCalendarHeatmap>(await apiClient.get(`/agents/productivity/calendar-heatmap${buildQuery({ days, limit })}`))
   }
 
   async getAgentFailureReasons(days = 30, limit = 15): Promise<AgentFailureReasons> {
