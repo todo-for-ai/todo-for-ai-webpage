@@ -1152,6 +1152,22 @@ export interface ExperiencesDecayByTaskType {
   total_decayed: number
 }
 
+/** 置信度区间分布桶 */
+export interface ExperiencesConfidenceBin {
+  label: string
+  range_low: number
+  range_high: number
+  count: number
+  percentage: number
+  avg_reuses: number
+}
+
+/** 经验置信度区间分布 */
+export interface ExperiencesConfidenceDistribution {
+  bins: ExperiencesConfidenceBin[]
+  total: number
+}
+
 export interface ListResult<T> {
   items: T[]
   pagination: Pagination
@@ -1473,6 +1489,10 @@ export class AgentsApi {
 
   async getExperiencesDecayByTaskType(limit = 15): Promise<ExperiencesDecayByTaskType> {
     return unwrapData<ExperiencesDecayByTaskType>(await apiClient.get(`/agents/experiences/decay-by-task-type${buildQuery({ limit })}`))
+  }
+
+  async getExperiencesConfidenceDistribution(): Promise<ExperiencesConfidenceDistribution> {
+    return unwrapData<ExperiencesConfidenceDistribution>(await apiClient.get(`/agents/experiences/confidence-distribution`))
   }
 
   async getWorkflowFailureCorrelation(days = 30, windowHours = 2): Promise<WorkflowFailureCorrelation> {
