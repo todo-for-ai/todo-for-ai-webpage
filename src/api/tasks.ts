@@ -111,6 +111,22 @@ export interface TaskOverdueByAssignee {
   total_overdue: number
 }
 
+/** 任务按优先级完成率项 */
+export interface TaskCompletionByPriorityItem {
+  priority: string
+  total: number
+  done: number
+  cancelled: number
+  in_progress: number
+  completion_rate: number
+}
+
+/** 任务按优先级完成率 */
+export interface TaskCompletionByPriority {
+  priorities: TaskCompletionByPriorityItem[]
+  total: number
+}
+
 export interface TaskCompletionByProjectItem {
   project_id: number
   name: string
@@ -292,6 +308,11 @@ export class TasksApi {
   // 获取任务逾期按负责人分布
   async getOverdueByAssignee(limit = 10): Promise<TaskOverdueByAssignee> {
     return apiClient.get<TaskOverdueByAssignee>(`/tasks/overdue-by-assignee?limit=${limit}`)
+  }
+
+  // 获取任务按优先级完成率
+  async getCompletionByPriority(days = 30): Promise<TaskCompletionByPriority> {
+    return apiClient.get<TaskCompletionByPriority>(`/tasks/completion-by-priority?days=${days}`)
   }
 
   // 获取任务按项目完成趋势
