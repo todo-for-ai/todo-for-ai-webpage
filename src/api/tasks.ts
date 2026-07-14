@@ -127,6 +127,20 @@ export interface TaskOverdueClustering {
   total_overdue: number
 }
 
+export interface TaskPriorityTrendBucket {
+  date: string
+  critical: number
+  high: number
+  medium: number
+  low: number
+}
+
+export interface TaskPriorityTrend {
+  days: number
+  trend: TaskPriorityTrendBucket[]
+  totals: Record<string, number>
+}
+
 /** 任务按优先级完成率项 */
 export interface TaskCompletionByPriorityItem {
   priority: string
@@ -367,6 +381,11 @@ export class TasksApi {
   // 获取任务按负责人完成趋势
   async getCompletionByAssignee(days = 30, limit = 8): Promise<TaskCompletionByAssignee> {
     return apiClient.get<TaskCompletionByAssignee>(`/tasks/completion-by-assignee?days=${days}&limit=${limit}`)
+  }
+
+  // 获取任务优先级分布趋势
+  async getPriorityTrend(days = 30): Promise<TaskPriorityTrend> {
+    return apiClient.get<TaskPriorityTrend>(`/tasks/priority-trend?days=${days}`)
   }
 }
 

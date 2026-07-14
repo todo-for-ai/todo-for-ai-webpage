@@ -38,7 +38,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -103,6 +103,7 @@ const Dashboard = () => {
   const [taskOverdueTrend, setTaskOverdueTrend] = useState<TaskOverdueTrend | null>(null)
   const [taskOverdueByAssignee, setTaskOverdueByAssignee] = useState<TaskOverdueByAssignee | null>(null)
   const [taskOverdueClustering, setTaskOverdueClustering] = useState<TaskOverdueClustering | null>(null)
+  const [taskPriorityTrend, setTaskPriorityTrend] = useState<TaskPriorityTrend | null>(null)
   const [taskCompletionByProject, setTaskCompletionByProject] = useState<TaskCompletionByProject | null>(null)
   const [taskCompletionByAssignee, setTaskCompletionByAssignee] = useState<TaskCompletionByAssignee | null>(null)
   const [taskCompletionByPriority, setTaskCompletionByPriority] = useState<TaskCompletionByPriority | null>(null)
@@ -263,6 +264,7 @@ const Dashboard = () => {
       tasksApi.getOverdueTrend(30).then(setTaskOverdueTrend).catch(() => {})
       tasksApi.getOverdueByAssignee(10).then(setTaskOverdueByAssignee).catch(() => {})
       tasksApi.getOverdueClustering(15).then(setTaskOverdueClustering).catch(() => {})
+      tasksApi.getPriorityTrend(30).then(setTaskPriorityTrend).catch(() => {})
       tasksApi.getCompletionByProject(30, 8).then(setTaskCompletionByProject).catch(() => {})
       tasksApi.getCompletionByAssignee(30, 8).then(setTaskCompletionByAssignee).catch(() => {})
       tasksApi.getCompletionByPriority(30).then(setTaskCompletionByPriority).catch(() => {})
@@ -2382,6 +2384,70 @@ const Dashboard = () => {
                 </div>
               )
             })}
+          </Card>
+        )
+      })()}
+
+      {/* 任务优先级分布趋势 */}
+      {taskPriorityTrend && taskPriorityTrend.trend.length > 1 && (() => {
+        const trend = taskPriorityTrend.trend
+        const totals = taskPriorityTrend.totals
+        const w = 480
+        const h = 160
+        const padL = 36
+        const padR = 12
+        const padT = 12
+        const padB = 24
+        const plotW = w - padL - padR
+        const plotH = h - padT - padB
+        const maxVal = Math.max(1, ...trend.flatMap(t => [t.critical, t.high, t.medium, t.low]))
+        const xStep = trend.length > 1 ? plotW / (trend.length - 1) : plotW
+        const yScale = (v: number) => padT + plotH - (v / maxVal) * plotH
+        const xOf = (i: number) => padL + i * xStep
+        const lines = [
+          { key: 'critical', color: '#ff4d4f', label: '紧急' },
+          { key: 'high', color: '#fa8c16', label: '高' },
+          { key: 'medium', color: '#1890ff', label: '中' },
+          { key: 'low', color: '#52c41a', label: '低' },
+        ] as const
+        return (
+          <Card
+            title={<Space><FieldTimeOutlined /> 任务优先级分布趋势</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {taskPriorityTrend.days} 天</Text>}
+            style={{ marginBottom: 24 }}
+          >
+            <svg width={w} height={h} style={{ overflow: 'visible' }}>
+              {/* Y grid */}
+              {[0, 0.25, 0.5, 0.75, 1].map(r => (
+                <line key={`yg-${r}`} x1={padL} y1={yScale(r * maxVal)} x2={w - padR} y2={yScale(r * maxVal)} stroke="#f0f0f0" strokeWidth={0.5} />
+              ))}
+              {/* Lines */}
+              {lines.map(({ key, color }) => {
+                const pts = trend.map((t, i) => `${xOf(i)},${yScale(t[key])}`).join(' ')
+                return (
+                  <polyline key={key} points={pts} fill="none" stroke={color} strokeWidth={1.5} />
+                )
+              })}
+              {/* Dots on last point */}
+              {lines.map(({ key, color }) => {
+                const last = trend[trend.length - 1]
+                const i = trend.length - 1
+                return <circle key={`dot-${key}`} cx={xOf(i)} cy={yScale(last[key])} r={3} fill={color} />
+              })}
+              {/* X labels (first + last + mid) */}
+              {trend.length > 2 && (
+                <>
+                  <text x={padL} y={h - 4} fontSize={8} fill="#8c8c8c" textAnchor="start">{trend[0].date.slice(5)}</text>
+                  <text x={xOf(Math.floor(trend.length / 2))} y={h - 4} fontSize={8} fill="#8c8c8c" textAnchor="middle">{trend[Math.floor(trend.length / 2)].date.slice(5)}</text>
+                  <text x={xOf(trend.length - 1)} y={h - 4} fontSize={8} fill="#8c8c8c" textAnchor="end">{trend[trend.length - 1].date.slice(5)}</text>
+                </>
+              )}
+            </svg>
+            <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+              {lines.map(({ key, color, label }) => (
+                <Text key={key} style={{ fontSize: 10 }}><span style={{ display: 'inline-block', width: 12, height: 2, background: color, verticalAlign: 'middle', marginRight: 4 }} />{label} {totals[key] ?? 0}</Text>
+              ))}
+            </div>
           </Card>
         )
       })()}
