@@ -817,6 +817,21 @@ export interface WorkflowStepCofailureMatrix {
   total_runs_with_multi_failure: number
 }
 
+export interface WorkflowStepRetryItem {
+  step_key: string
+  total_runs: number
+  retries: number
+  retry_rate: number
+  first_attempt_success_rate: number
+  retry_success_rate: number
+}
+
+export interface WorkflowStepRetryTopology {
+  days: number
+  steps: WorkflowStepRetryItem[]
+  total_retries: number
+}
+
 /** 失败步骤按耗时排行单项 */
 export interface WorkflowFailedStepByDuration {
   step_key: string
@@ -1602,6 +1617,10 @@ export class AgentsApi {
 
   async getWorkflowStepCofailureMatrix(days = 30, limit = 8): Promise<WorkflowStepCofailureMatrix> {
     return unwrapData<WorkflowStepCofailureMatrix>(await apiClient.get(`/agents/workflows/step-cofailure-matrix${buildQuery({ days, limit })}`))
+  }
+
+  async getWorkflowStepRetryTopology(days = 30, limit = 15): Promise<WorkflowStepRetryTopology> {
+    return unwrapData<WorkflowStepRetryTopology>(await apiClient.get(`/agents/workflows/step-retry-topology${buildQuery({ days, limit })}`))
   }
 
   async getWorkflowFailedStepsByDuration(days = 30, limit = 20): Promise<WorkflowFailedStepsByDuration> {
