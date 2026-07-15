@@ -1224,6 +1224,20 @@ export interface WorkflowSimilarityMatrix {
   days: number
 }
 
+export interface AgentRunResourceTrendAgent {
+  agent_id: number
+  agent_name: string
+  total_runs: number
+  count_series: number[]
+  duration_series: number[]
+}
+
+export interface AgentRunResourceTrend {
+  agents: AgentRunResourceTrendAgent[]
+  days: number
+  date_range: string[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1927,6 +1941,10 @@ export class AgentsApi {
 
   async getWorkflowSimilarityMatrix(days = 30, limit = 5, maxRuns = 20): Promise<WorkflowSimilarityMatrix> {
     return unwrapData<WorkflowSimilarityMatrix>(await apiClient.get(`/agents/workflows/similarity-matrix${buildQuery({ days, limit, max_runs: maxRuns })}`))
+  }
+
+  async getAgentRunResourceTrend(days = 14, limit = 10): Promise<AgentRunResourceTrend> {
+    return unwrapData<AgentRunResourceTrend>(await apiClient.get(`/agents/run-resource-trend${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {

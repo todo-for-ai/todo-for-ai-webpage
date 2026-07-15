@@ -43,7 +43,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -173,6 +173,7 @@ const Dashboard = () => {
   const [collabTimeline, setCollabTimeline] = useState<CollaborationGraphTimeline | null>(null)
   const [collabTimelineIdx, setCollabTimelineIdx] = useState(0)
   const [taskAllocationFairness, setTaskAllocationFairness] = useState<TaskAllocationFairness | null>(null)
+  const [agentRunResourceTrend, setAgentRunResourceTrend] = useState<AgentRunResourceTrend | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
   const collabSvgRef = useRef<SVGSVGElement>(null)
   // 节点点击展开的协作明细 Modal
@@ -296,6 +297,7 @@ const Dashboard = () => {
       agentsApi.getAgentCapabilityGapAnalysis(10, 0.5).then(setCapabilityGapAnalysis).catch(() => {})
       agentsApi.getCollaborationGraphTimeline(14, 'day', 30).then(setCollabTimeline).catch(() => {})
       agentsApi.getTaskAllocationFairness(30).then(setTaskAllocationFairness).catch(() => {})
+      agentsApi.getAgentRunResourceTrend(14, 10).then(setAgentRunResourceTrend).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -3834,6 +3836,56 @@ const Dashboard = () => {
             <span style={{ fontSize: 10, color: '#52c41a' }}>■ 完成</span>
             <span style={{ fontSize: 10, color: '#1890ff' }}>■ 进行中</span>
             <span style={{ fontSize: 10, color: '#d9d9d9' }}>■ 待认领</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Agent Run Resource Trend */}
+      {agentRunResourceTrend && agentRunResourceTrend.agents.length > 0 && (
+        <Card
+          title={<Space><LineChartOutlined /> Agent 运行资源趋势</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {agentRunResourceTrend.days} 天</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {agentRunResourceTrend.agents.map((a, ai) => {
+              const maxCount = Math.max(1, ...a.count_series)
+              const maxDur = Math.max(1, ...a.duration_series.filter(d => d > 0))
+              const sparkW = 200
+              const sparkH = 24
+              return (
+                <div key={ai} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text strong style={{ fontSize: 12 }}>{a.agent_name}</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{a.total_runs} 次运行</Text>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 9 }}>运行次数</Text>
+                      <svg width={sparkW} height={sparkH} style={{ display: 'block' }}>
+                        {a.count_series.filter(v => v > 0).length > 1 && (() => {
+                          const pts = a.count_series.map((v, i) => `${(i / (a.count_series.length - 1)) * sparkW},${sparkH - (v / maxCount) * (sparkH - 2)}`).join(' ')
+                          return <polyline points={pts} fill="none" stroke="#1890ff" strokeWidth={1.5} />
+                        })()}
+                      </svg>
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 9 }}>平均时长(s)</Text>
+                      <svg width={sparkW} height={sparkH} style={{ display: 'block' }}>
+                        {a.duration_series.filter(v => v > 0).length > 1 && (() => {
+                          const pts = a.duration_series.map((v, i) => `${(i / (a.duration_series.length - 1)) * sparkW},${sparkH - (v / maxDur) * (sparkH - 2)}`).join(' ')
+                          return <polyline points={pts} fill="none" stroke="#fa8c16" strokeWidth={1.5} />
+                        })()}
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 16, marginTop: 6, justifyContent: 'center' }}>
+            <span style={{ fontSize: 10, color: '#1890ff' }}>— 运行次数</span>
+            <span style={{ fontSize: 10, color: '#fa8c16' }}>— 平均时长</span>
           </div>
         </Card>
       )}
