@@ -1155,6 +1155,29 @@ export interface AgentCapabilityGapAnalysis {
   agents: CapabilityGapAgent[]
 }
 
+export interface CollaborationTimelineEdge {
+  source: number
+  target: number
+  source_name: string
+  target_name: string
+  count: number
+  source_to_target: number
+  target_to_source: number
+}
+
+export interface CollaborationTimelineSnapshot {
+  date: string
+  edges: CollaborationTimelineEdge[]
+  total_edges: number
+  active_agents: number
+}
+
+export interface CollaborationGraphTimeline {
+  bucket_type: string
+  days: number
+  snapshots: CollaborationTimelineSnapshot[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1846,6 +1869,10 @@ export class AgentsApi {
 
   async getAgentCapabilityGapAnalysis(limit = 10, minConfidence = 0.5): Promise<AgentCapabilityGapAnalysis> {
     return unwrapData<AgentCapabilityGapAnalysis>(await apiClient.get(`/agents/capability-gap-analysis${buildQuery({ limit, min_confidence: minConfidence })}`))
+  }
+
+  async getCollaborationGraphTimeline(days = 14, bucket = 'day', limit = 50): Promise<CollaborationGraphTimeline> {
+    return unwrapData<CollaborationGraphTimeline>(await apiClient.get(`/agents/collaboration-graph-timeline${buildQuery({ days, bucket, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
