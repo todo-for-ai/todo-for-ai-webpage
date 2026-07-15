@@ -80,6 +80,7 @@ import {
   type DispatchTasksData,
   type DispatchPolicy,
   type DispatchPreviewResult,
+  type ChannelActivityTrend,
 } from '../api/agents'
 import CapabilityRadar from '../components/Agent/CapabilityRadar'
 import CollaborationGraphView from '../components/CollaborationGraphView'
@@ -424,6 +425,7 @@ const Agents: React.FC = () => {
 
   // Channels
   const [channels, setChannels] = useState<any[]>([])
+  const [channelActivityTrend, setChannelActivityTrend] = useState<ChannelActivityTrend | null>(null)
   const [channelsOpen, setChannelsOpen] = useState(false)
   const [channelCreateOpen, setChannelCreateOpen] = useState(false)
   const [channelForm, setChannelForm] = useState<any>({ name: '', description: '', agent_ids: [] })
@@ -812,6 +814,7 @@ const Agents: React.FC = () => {
     try {
       const result = await agentsApi.listChannels()
       setChannels(Array.isArray(result) ? result : [])
+      agentsApi.getChannelActivityTrend(14, 10).then(setChannelActivityTrend).catch(() => {})
     } catch { message.error('加载频道失败') }
   }
 
@@ -3452,7 +3455,27 @@ const Agents: React.FC = () => {
             >
               <List.Item.Meta
                 title={<Space><TeamOutlined />{ch.name}<Tag>{(ch.members || []).length} 成员</Tag></Space>}
-                description={ch.description || (ch.task_id ? `任务 #${ch.task_id}` : ch.project_id ? `项目 #${ch.project_id}` : '全局频道')}
+                description={
+                  <div>
+                    <span>{ch.description || (ch.task_id ? `任务 #${ch.task_id}` : ch.project_id ? `项目 #${ch.project_id}` : '全局频道')}</span>
+                    {channelActivityTrend && (() => {
+                      const chActivity = channelActivityTrend.channels.find((ca: any) => ca.channel_id === ch.id)
+                      if (!chActivity || chActivity.daily_counts.length < 2) return null
+                      const maxV = Math.max(1, ...chActivity.daily_counts)
+                      const sparkW = 120
+                      const sparkH = 20
+                      const pts = chActivity.daily_counts.map((v: number, i: number) => `${(i / (chActivity.daily_counts.length - 1)) * sparkW},${sparkH - (v / maxV) * (sparkH - 2)}`).join(' ')
+                      return (
+                        <div style={{ marginTop: 4 }}>
+                          <svg width={sparkW} height={sparkH} style={{ display: 'block' }}>
+                            <polyline points={pts} fill="none" stroke="#1890ff" strokeWidth={1.5} />
+                          </svg>
+                          <Text type="secondary" style={{ fontSize: 9, marginLeft: 4 }}>活跃成员 {chActivity.active_members}</Text>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                }
               />
             </List.Item>
           )}

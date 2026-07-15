@@ -158,6 +158,36 @@ export interface TaskCompletionForecast {
   priority_forecast: TaskCompletionForecastPriority[]
 }
 
+/** 任务依赖链 */
+export interface TaskDependencyChain {
+  root_id: number
+  root_title: string
+  depth: number
+  total_tasks: number
+  completed: number
+  in_progress: number
+  progress_pct: number
+}
+
+/** 任务依赖链分析 */
+export interface TaskDependencyChainAnalysis {
+  chains: TaskDependencyChain[]
+}
+
+/** 评论情感趋势每日统计 */
+export interface CommentSentimentDay {
+  date: string
+  positive: number
+  negative: number
+  neutral: number
+}
+
+/** 任务评论情感趋势 */
+export interface TaskCommentSentimentTrend {
+  days: number
+  trend: CommentSentimentDay[]
+}
+
 /** 任务按优先级完成率项 */
 export interface TaskCompletionByPriorityItem {
   priority: string
@@ -408,6 +438,18 @@ export class TasksApi {
   // 获取任务完成预测
   async getCompletionForecast(days = 30): Promise<TaskCompletionForecast> {
     return apiClient.get<TaskCompletionForecast>(`/tasks/completion-forecast?days=${days}`)
+  }
+
+  // 获取任务依赖链分析
+  async getDependencyChain(limit = 10, projectId?: number): Promise<TaskDependencyChainAnalysis> {
+    const params = new URLSearchParams({ limit: String(limit) })
+    if (projectId) params.append('project_id', String(projectId))
+    return apiClient.get<TaskDependencyChainAnalysis>(`/tasks/dependency-chain?${params}`)
+  }
+
+  // 获取任务评论情感趋势
+  async getCommentSentimentTrend(days = 30): Promise<TaskCommentSentimentTrend> {
+    return apiClient.get<TaskCommentSentimentTrend>(`/tasks/comment-sentiment-trend?days=${days}`)
   }
 }
 

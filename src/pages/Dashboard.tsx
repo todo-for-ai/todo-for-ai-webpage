@@ -42,8 +42,8 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend } from '../api/tasks'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -174,6 +174,10 @@ const Dashboard = () => {
   const [collabTimelineIdx, setCollabTimelineIdx] = useState(0)
   const [taskAllocationFairness, setTaskAllocationFairness] = useState<TaskAllocationFairness | null>(null)
   const [agentRunResourceTrend, setAgentRunResourceTrend] = useState<AgentRunResourceTrend | null>(null)
+  const [depChain, setDepChain] = useState<TaskDependencyChainAnalysis | null>(null)
+  const [skillMatching, setSkillMatching] = useState<AgentSkillMatching | null>(null)
+  const [commentSentiment, setCommentSentiment] = useState<TaskCommentSentimentTrend | null>(null)
+  const [handoffStats, setHandoffStats] = useState<AgentTaskHandoffStats | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
   const collabSvgRef = useRef<SVGSVGElement>(null)
   // 节点点击展开的协作明细 Modal
@@ -298,6 +302,10 @@ const Dashboard = () => {
       agentsApi.getCollaborationGraphTimeline(14, 'day', 30).then(setCollabTimeline).catch(() => {})
       agentsApi.getTaskAllocationFairness(30).then(setTaskAllocationFairness).catch(() => {})
       agentsApi.getAgentRunResourceTrend(14, 10).then(setAgentRunResourceTrend).catch(() => {})
+      tasksApi.getDependencyChain(10).then(setDepChain).catch(() => {})
+      agentsApi.getAgentSkillMatching(10).then(setSkillMatching).catch(() => {})
+      tasksApi.getCommentSentimentTrend(30).then(setCommentSentiment).catch(() => {})
+      agentsApi.getAgentTaskHandoffStats(30, 10).then(setHandoffStats).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -3886,6 +3894,128 @@ const Dashboard = () => {
           <div style={{ display: 'flex', gap: 16, marginTop: 6, justifyContent: 'center' }}>
             <span style={{ fontSize: 10, color: '#1890ff' }}>— 运行次数</span>
             <span style={{ fontSize: 10, color: '#fa8c16' }}>— 平均时长</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Task Dependency Chain */}
+      {depChain && depChain.chains.length > 0 && (
+        <Card
+          title={<Space><ApartmentOutlined /> 任务依赖链分析</Space>}
+          style={{ marginBottom: 24 }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {depChain.chains.map((c, ci) => {
+              const barW = 200
+              const barH = 8
+              const pct = c.progress_pct
+              return (
+                <div key={ci} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text strong style={{ fontSize: 12 }}>{c.root_title}</Text>
+                    <Space size={4}>
+                      <Tag style={{ fontSize: 10 }}>深度 {c.depth}</Tag>
+                      <Tag color="blue" style={{ fontSize: 10 }}>{c.total_tasks} 任务</Tag>
+                    </Space>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <svg width={barW} height={barH + 4} style={{ display: 'block' }}>
+                      <rect x={0} y={2} width={barW} height={barH} fill="#f0f0f0" rx={2} />
+                      <rect x={0} y={2} width={barW * pct / 100} height={barH} fill="#52c41a" rx={2} />
+                    </svg>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{c.completed}/{c.total_tasks} 完成 ({pct}%)</Text>
+                    {c.in_progress > 0 && <Tag color="processing" style={{ fontSize: 9 }}>{c.in_progress} 进行中</Tag>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Agent Skill Matching */}
+      {skillMatching && skillMatching.tasks.length > 0 && (
+        <Card
+          title={<Space><RadarChartOutlined /> Agent 技能匹配推荐</Space>}
+          style={{ marginBottom: 24 }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {skillMatching.tasks.map((t, ti) => (
+              <div key={ti} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                <Text strong style={{ fontSize: 12 }}>{t.task_title}</Text>
+                <div style={{ marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {t.recommendations.map((r, ri) => (
+                    <Tag key={ri} color={r.match_score >= 50 ? 'green' : 'blue'} style={{ fontSize: 10 }}>
+                      {r.agent_name} ({r.match_score}%)
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Task Comment Sentiment Trend */}
+      {commentSentiment && commentSentiment.trend.length > 0 && (
+        <Card
+          title={<Space><SmileOutlined /> 评论情感趋势</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {commentSentiment.days} 天</Text>}
+        >
+          {(() => {
+            const trend = commentSentiment.trend
+            const maxVal = Math.max(1, ...trend.map(d => d.positive + d.negative + d.neutral))
+            const svgW = 400
+            const svgH = 100
+            const xStep = svgW / Math.max(1, trend.length - 1)
+            const toY = (v: number) => svgH - (v / maxVal) * (svgH - 4)
+            const posPts = trend.map((d, i) => `${i * xStep},${toY(d.positive)}`).join(' ')
+            const negPts = trend.map((d, i) => `${i * xStep},${toY(d.negative)}`).join(' ')
+            const neuPts = trend.map((d, i) => `${i * xStep},${toY(d.neutral)}`).join(' ')
+            return (
+              <svg width={svgW} height={svgH} style={{ display: 'block' }}>
+                {trend.length > 1 && (
+                  <>
+                    <polyline points={posPts} fill="none" stroke="#52c41a" strokeWidth={1.5} />
+                    <polyline points={negPts} fill="none" stroke="#ff4d4f" strokeWidth={1.5} />
+                    <polyline points={neuPts} fill="none" stroke="#d9d9d9" strokeWidth={1.5} />
+                  </>
+                )}
+              </svg>
+            )
+          })()}
+          <div style={{ display: 'flex', gap: 16, marginTop: 6, justifyContent: 'center' }}>
+            <span style={{ fontSize: 10, color: '#52c41a' }}>— 积极</span>
+            <span style={{ fontSize: 10, color: '#ff4d4f' }}>— 消极</span>
+            <span style={{ fontSize: 10, color: '#d9d9d9' }}>— 中性</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Agent Task Handoff Stats */}
+      {handoffStats && handoffStats.handoffs.length > 0 && (
+        <Card
+          title={<Space><SwapOutlined /> Agent 任务交接统计</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {handoffStats.days} 天</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {handoffStats.handoffs.map((h, hi) => {
+              const maxCount = Math.max(1, handoffStats.handoffs[0].count)
+              const barW = 160
+              return (
+                <div key={hi} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                  <span style={{ minWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={h.from_agent}>{h.from_agent}</span>
+                  <span style={{ color: '#1890ff' }}>→</span>
+                  <span style={{ minWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={h.to_agent}>{h.to_agent}</span>
+                  <svg width={barW} height={10} style={{ display: 'block' }}>
+                    <rect x={0} y={1} width={barW * h.count / maxCount} height={8} fill="#1890ff" rx={2} />
+                  </svg>
+                  <Text type="secondary" style={{ fontSize: 10 }}>{h.count}次{h.avg_duration_seconds != null ? ` 均${h.avg_duration_seconds}s` : ''}</Text>
+                </div>
+              )
+            })}
           </div>
         </Card>
       )}

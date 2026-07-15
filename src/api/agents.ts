@@ -1238,6 +1238,74 @@ export interface AgentRunResourceTrend {
   date_range: string[]
 }
 
+/** 技能匹配推荐候选人 */
+export interface SkillMatchCandidate {
+  agent_id: number
+  agent_name: string
+  match_score: number
+  matched_capabilities: string[]
+}
+
+/** 技能匹配推荐任务 */
+export interface SkillMatchingTask {
+  task_id: number
+  task_title: string
+  recommendations: SkillMatchCandidate[]
+}
+
+/** Agent 技能匹配推荐 */
+export interface AgentSkillMatching {
+  tasks: SkillMatchingTask[]
+}
+
+/** 步骤耗时直方图桶 */
+export interface StepDurationBucket {
+  range: string
+  count: number
+}
+
+/** 步骤耗时直方图步骤 */
+export interface StepDurationHistogramStep {
+  step_key: string
+  buckets: StepDurationBucket[]
+  total: number
+}
+
+/** 工作流步骤耗时分布直方图（增量267） */
+export interface StepDurationHistogramResult {
+  steps: StepDurationHistogramStep[]
+  days: number
+}
+
+/** Agent 任务交接对 */
+export interface AgentTaskHandoffPair {
+  from_agent: string
+  to_agent: string
+  count: number
+  avg_duration_seconds: number | null
+}
+
+/** Agent 任务交接统计 */
+export interface AgentTaskHandoffStats {
+  handoffs: AgentTaskHandoffPair[]
+  days: number
+}
+
+/** 频道活跃度趋势 */
+export interface ChannelActivityItem {
+  channel_id: number
+  channel_name: string
+  daily_counts: number[]
+  active_members: number
+  date_range: string[]
+}
+
+/** 频道活跃度趋势 */
+export interface ChannelActivityTrend {
+  channels: ChannelActivityItem[]
+  days: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1945,6 +2013,22 @@ export class AgentsApi {
 
   async getAgentRunResourceTrend(days = 14, limit = 10): Promise<AgentRunResourceTrend> {
     return unwrapData<AgentRunResourceTrend>(await apiClient.get(`/agents/run-resource-trend${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentSkillMatching(limit = 10): Promise<AgentSkillMatching> {
+    return unwrapData<AgentSkillMatching>(await apiClient.get(`/agents/skill-matching${buildQuery({ limit })}`))
+  }
+
+  async getWorkflowStepDurationHistogram(days = 30, limit = 10): Promise<StepDurationHistogramResult> {
+    return unwrapData<StepDurationHistogramResult>(await apiClient.get(`/agents/workflows/step-duration-histogram${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentTaskHandoffStats(days = 30, limit = 10): Promise<AgentTaskHandoffStats> {
+    return unwrapData<AgentTaskHandoffStats>(await apiClient.get(`/agents/task-handoff-stats${buildQuery({ days, limit })}`))
+  }
+
+  async getChannelActivityTrend(days = 14, limit = 10): Promise<ChannelActivityTrend> {
+    return unwrapData<ChannelActivityTrend>(await apiClient.get(`/agents/channels/activity-trend${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {

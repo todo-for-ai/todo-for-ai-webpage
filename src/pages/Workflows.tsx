@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck, type WorkflowSimilarityMatrix } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck, type WorkflowSimilarityMatrix, type StepDurationHistogramResult } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -57,6 +57,7 @@ const Workflows: React.FC = () => {
   const [stepHourlyDistribution, setStepHourlyDistribution] = useState<WorkflowStepHourlyDistribution | null>(null)
   const [stepDependencyBottleneck, setStepDependencyBottleneck] = useState<WorkflowStepDependencyBottleneck | null>(null)
   const [similarityMatrix, setSimilarityMatrix] = useState<WorkflowSimilarityMatrix | null>(null)
+  const [stepDurationHist, setStepDurationHist] = useState<StepDurationHistogramResult | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
@@ -141,6 +142,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowStepHourlyDistribution(30, 10).then(setStepHourlyDistribution).catch(() => {})
       agentsApi.getWorkflowStepDependencyBottleneck(30, 10).then(setStepDependencyBottleneck).catch(() => {})
       agentsApi.getWorkflowSimilarityMatrix(30, 5, 20).then(setSimilarityMatrix).catch(() => {})
+      agentsApi.getWorkflowStepDurationHistogram(30, 10).then(setStepDurationHist).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
@@ -1289,6 +1291,48 @@ const Workflows: React.FC = () => {
               </div>
             )
           })}
+        </Card>
+      )}
+
+      {/* Step Duration Histogram */}
+      {stepDurationHist && stepDurationHist.steps.length > 0 && (
+        <Card
+          title={<Space><BarChartOutlined /> 步骤耗时分布直方图</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {stepDurationHist.days} 天</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {stepDurationHist.steps.map((s, si) => {
+              const maxCount = Math.max(1, ...s.buckets.map(b => b.count))
+              const barW = 32
+              const barGap = 4
+              const svgH = 60
+              return (
+                <div key={si} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text strong style={{ fontSize: 12 }}>{s.step_key}</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{s.total} 次完成</Text>
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <svg width={s.buckets.length * (barW + barGap)} height={svgH} style={{ display: 'block' }}>
+                      {s.buckets.map((b, bi) => {
+                        const h = maxCount > 0 ? (b.count / maxCount) * (svgH - 16) : 0
+                        return (
+                          <g key={bi}>
+                            <rect x={bi * (barW + barGap)} y={svgH - 12 - h} width={barW} height={Math.max(h, 1)} fill="#1890ff" rx={2} />
+                            <text x={bi * (barW + barGap) + barW / 2} y={svgH - 2} fontSize={7} fill="#8c8c8c" textAnchor="middle">{b.range}</text>
+                            {b.count > 0 && (
+                              <text x={bi * (barW + barGap) + barW / 2} y={svgH - 14 - h} fontSize={7} fill="#595959" textAnchor="middle">{b.count}</text>
+                            )}
+                          </g>
+                        )
+                      })}
+                    </svg>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </Card>
       )}
 
