@@ -1121,6 +1121,40 @@ export interface WorkflowStepDependencyBottleneck {
   workflows: WorkflowStepBottleneckWorkflow[]
 }
 
+export interface CapabilityGapItem {
+  domain: string
+  success_count: number
+  avg_confidence: number
+  failure_count: number
+}
+
+export interface CapabilityOverclaimItem {
+  capability: string
+  failure_count: number
+  risk: 'high' | 'medium' | 'low'
+}
+
+export interface CapabilityMatchedItem {
+  capability: string
+  domain: string
+  success_count: number
+  avg_confidence: number
+}
+
+export interface CapabilityGapAgent {
+  agent_id: number
+  agent_name: string
+  total_capabilities: number
+  coverage_score: number
+  gaps: CapabilityGapItem[]
+  overclaims: CapabilityOverclaimItem[]
+  matched: CapabilityMatchedItem[]
+}
+
+export interface AgentCapabilityGapAnalysis {
+  agents: CapabilityGapAgent[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1808,6 +1842,10 @@ export class AgentsApi {
 
   async getWorkflowStepDependencyBottleneck(days = 30, limit = 10): Promise<WorkflowStepDependencyBottleneck> {
     return unwrapData<WorkflowStepDependencyBottleneck>(await apiClient.get(`/agents/workflows/step-dependency-bottleneck${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentCapabilityGapAnalysis(limit = 10, minConfidence = 0.5): Promise<AgentCapabilityGapAnalysis> {
+    return unwrapData<AgentCapabilityGapAnalysis>(await apiClient.get(`/agents/capability-gap-analysis${buildQuery({ limit, min_confidence: minConfidence })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {

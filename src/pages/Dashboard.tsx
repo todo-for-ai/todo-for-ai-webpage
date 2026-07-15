@@ -37,11 +37,12 @@ import {
   BugOutlined,
   UserOutlined,
   ClusterOutlined,
+  AuditOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -122,6 +123,7 @@ const Dashboard = () => {
   const [productivityCalendar, setProductivityCalendar] = useState<AgentProductivityCalendarHeatmap | null>(null)
   const [agentFailureReasons, setAgentFailureReasons] = useState<AgentFailureReasons | null>(null)
   const [agentFailureErrorPatterns, setAgentFailureErrorPatterns] = useState<AgentFailureErrorPatterns | null>(null)
+  const [capabilityGapAnalysis, setCapabilityGapAnalysis] = useState<AgentCapabilityGapAnalysis | null>(null)
   const [conflictsSandboxCorrelation, setConflictsSandboxCorrelation] = useState<ConflictsSandboxCorrelation | null>(null)
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null)
   const [agentHealthTrend, setAgentHealthTrend] = useState<AgentHealthTrend | null>(null)
@@ -287,6 +289,7 @@ const Dashboard = () => {
       agentsApi.getAgentProductivityCalendarHeatmap(90, 10).then(setProductivityCalendar).catch(() => {})
       agentsApi.getAgentFailureReasons(30, 15).then(setAgentFailureReasons).catch(() => {})
       agentsApi.getAgentFailureErrorPatterns(30, 10, 40).then(setAgentFailureErrorPatterns).catch(() => {})
+      agentsApi.getAgentCapabilityGapAnalysis(10, 0.5).then(setCapabilityGapAnalysis).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -3652,6 +3655,62 @@ const Dashboard = () => {
           )
         })() : (
           <Empty description="暂无错误模式数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </Card>
+
+      {/* Agent Capability Gap Analysis */}
+      <Card
+        title={<Space><AuditOutlined /> Agent 能力缺口分析</Space>}
+        style={{ marginBottom: 24 }}
+      >
+        {capabilityGapAnalysis && capabilityGapAnalysis.agents.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {capabilityGapAnalysis.agents.map((a, ai) => (
+              <div key={ai} style={{ background: '#fafafa', borderRadius: 4, padding: '8px 10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text strong>{a.agent_name}</Text>
+                  <Space size={8}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>{a.total_capabilities} 项能力</Text>
+                    <Tag color={a.coverage_score >= 80 ? 'green' : a.coverage_score >= 50 ? 'orange' : 'red'}>
+                      覆盖率 {a.coverage_score}%
+                    </Tag>
+                  </Space>
+                </div>
+                {/* Coverage bar */}
+                <div style={{ background: '#f0f0f0', borderRadius: 3, height: 8, marginBottom: 6, overflow: 'hidden' }}>
+                  <div style={{ width: `${a.coverage_score}%`, height: '100%', background: a.coverage_score >= 80 ? '#52c41a' : a.coverage_score >= 50 ? '#fa8c16' : '#ff4d4f', borderRadius: 3 }} />
+                </div>
+                {/* Gaps */}
+                {a.gaps.length > 0 && (
+                  <div style={{ marginBottom: 4 }}>
+                    <Text type="secondary" style={{ fontSize: 10 }}>缺口（有经验但未声明）:</Text>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                      {a.gaps.map((g, gi) => (
+                        <Tooltip key={gi} title={`${g.success_count}次成功 · 置信度${(g.avg_confidence * 100).toFixed(0)}% · ${g.failure_count}次失败`}>
+                          <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>{g.domain}</Tag>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Overclaims */}
+                {a.overclaims.length > 0 && (
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 10 }}>过度声明（无成功经验支撑）:</Text>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                      {a.overclaims.map((o, oi) => (
+                        <Tooltip key={oi} title={`${o.failure_count}次失败 · 风险${o.risk}`}>
+                          <Tag color={o.risk === 'high' ? 'red' : o.risk === 'medium' ? 'orange' : 'default'} style={{ fontSize: 10, margin: 0 }}>{o.capability}</Tag>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty description="暂无能力缺口数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 
