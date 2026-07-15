@@ -38,11 +38,12 @@ import {
   UserOutlined,
   ClusterOutlined,
   AuditOutlined,
+  PieChartOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -171,6 +172,7 @@ const Dashboard = () => {
   const [collabGraph, setCollabGraph] = useState<CollaborationGraph | null>(null)
   const [collabTimeline, setCollabTimeline] = useState<CollaborationGraphTimeline | null>(null)
   const [collabTimelineIdx, setCollabTimelineIdx] = useState(0)
+  const [taskAllocationFairness, setTaskAllocationFairness] = useState<TaskAllocationFairness | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
   const collabSvgRef = useRef<SVGSVGElement>(null)
   // 节点点击展开的协作明细 Modal
@@ -293,6 +295,7 @@ const Dashboard = () => {
       agentsApi.getAgentFailureErrorPatterns(30, 10, 40).then(setAgentFailureErrorPatterns).catch(() => {})
       agentsApi.getAgentCapabilityGapAnalysis(10, 0.5).then(setCapabilityGapAnalysis).catch(() => {})
       agentsApi.getCollaborationGraphTimeline(14, 'day', 30).then(setCollabTimeline).catch(() => {})
+      agentsApi.getTaskAllocationFairness(30).then(setTaskAllocationFairness).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -3767,6 +3770,73 @@ const Dashboard = () => {
           <Empty description="暂无能力缺口数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* Task Allocation Fairness */}
+      {taskAllocationFairness && taskAllocationFairness.agents.length > 0 && (
+        <Card
+          title={<Space><PieChartOutlined /> 任务分配公平性</Space>}
+          style={{ marginBottom: 24 }}
+          extra={
+            <Space>
+              <Tag color={taskAllocationFairness.gini < 0.2 ? 'green' : taskAllocationFairness.gini < 0.4 ? 'orange' : 'red'}>
+                Gini {taskAllocationFairness.gini}
+              </Tag>
+              <Tag>{taskAllocationFairness.fairness_level === 'equal' ? '均衡' : taskAllocationFairness.fairness_level === 'moderate' ? '适中' : '不均衡'}</Tag>
+              <Text type="secondary" style={{ fontSize: 11 }}>近 {taskAllocationFairness.days} 天 · {taskAllocationFairness.total_tasks} 任务</Text>
+            </Space>
+          }
+        >
+          {/* Lorenz curve SVG */}
+          {taskAllocationFairness.lorenz_curve.length > 1 && (() => {
+            const w = 280
+            const h = 180
+            const pad = 30
+            const pw = w - pad * 2
+            const ph = h - pad * 2
+            const pts = taskAllocationFairness.lorenz_curve
+            const linePoints = pts.map((p, i) => `${pad + (p.agent_percent / 100) * pw},${pad + ph - (p.task_percent / 100) * ph}`).join(' ')
+            const equalityLine = `${pad},${pad + ph} ${pad + pw},${pad}`
+            return (
+              <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                <svg width={w} height={h} style={{ overflow: 'visible' }}>
+                  <line x1={pad} y1={pad + ph} x2={pad + pw} y2={pad} stroke="#d9d9d9" strokeWidth={1} strokeDasharray="4,2" />
+                  <polyline points={equalityLine} fill="none" stroke="#e8e8e8" strokeWidth={1} strokeDasharray="4,2" />
+                  <polyline points={linePoints} fill="none" stroke="#1890ff" strokeWidth={2} />
+                  <line x1={pad} y1={pad} x2={pad} y2={pad + ph} stroke="#bfbfbf" strokeWidth={1} />
+                  <line x1={pad} y1={pad + ph} x2={pad + pw} y2={pad + ph} stroke="#bfbfbf" strokeWidth={1} />
+                  <text x={pad + pw / 2} y={h - 2} fontSize={9} fill="#8c8c8c" textAnchor="middle">Agent 累计占比 %</text>
+                  <text x={4} y={pad + ph / 2} fontSize={9} fill="#8c8c8c" textAnchor="middle" transform={`rotate(-90, 4, ${pad + ph / 2})`}>任务累计占比 %</text>
+                </svg>
+                <Text type="secondary" style={{ fontSize: 10 }}>Lorenz 曲线 — 越偏离对角线越不均衡</Text>
+              </div>
+            )
+          })()}
+          {/* Agent bars */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {taskAllocationFairness.agents.map((a, ai) => {
+              const maxT = Math.max(1, ...taskAllocationFairness.agents.map(x => x.total))
+              return (
+                <div key={ai} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                  <span style={{ width: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={a.name}>{a.name}</span>
+                  <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 2, height: 12, overflow: 'hidden', display: 'flex' }}>
+                    <div style={{ width: `${(a.completed / maxT) * 100}%`, height: '100%', background: '#52c41a' }} />
+                    <div style={{ width: `${(a.in_progress / maxT) * 100}%`, height: '100%', background: '#1890ff' }} />
+                    <div style={{ width: `${(a.assigned / maxT) * 100}%`, height: '100%', background: '#d9d9d9' }} />
+                  </div>
+                  <Tooltip title={`完成 ${a.completed} · 进行中 ${a.in_progress} · 待认领 ${a.assigned}`}>
+                    <span style={{ color: '#8c8c8c', minWidth: 30, textAlign: 'right' }}>{a.total}</span>
+                  </Tooltip>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 12, marginTop: 6, justifyContent: 'center' }}>
+            <span style={{ fontSize: 10, color: '#52c41a' }}>■ 完成</span>
+            <span style={{ fontSize: 10, color: '#1890ff' }}>■ 进行中</span>
+            <span style={{ fontSize: 10, color: '#d9d9d9' }}>■ 待认领</span>
+          </div>
+        </Card>
+      )}
 
       {/* Low-efficiency Agent Alerts */}
       {productivityAlerts && productivityAlerts.items.length > 0 && (

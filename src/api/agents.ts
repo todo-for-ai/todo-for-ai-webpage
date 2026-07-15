@@ -1178,6 +1178,28 @@ export interface CollaborationGraphTimeline {
   snapshots: CollaborationTimelineSnapshot[]
 }
 
+export interface TaskAllocationFairnessAgent {
+  name: string
+  total: number
+  completed: number
+  in_progress: number
+  assigned: number
+}
+
+export interface TaskAllocationLorenzPoint {
+  agent_percent: number
+  task_percent: number
+}
+
+export interface TaskAllocationFairness {
+  gini: number
+  fairness_level: string
+  agents: TaskAllocationFairnessAgent[]
+  lorenz_curve: TaskAllocationLorenzPoint[]
+  days: number
+  total_tasks: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1873,6 +1895,10 @@ export class AgentsApi {
 
   async getCollaborationGraphTimeline(days = 14, bucket = 'day', limit = 50): Promise<CollaborationGraphTimeline> {
     return unwrapData<CollaborationGraphTimeline>(await apiClient.get(`/agents/collaboration-graph-timeline${buildQuery({ days, bucket, limit })}`))
+  }
+
+  async getTaskAllocationFairness(days = 30): Promise<TaskAllocationFairness> {
+    return unwrapData<TaskAllocationFairness>(await apiClient.get(`/agents/task-allocation-fairness${buildQuery({ days })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
