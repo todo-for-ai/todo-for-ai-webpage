@@ -11,11 +11,11 @@ import {
   CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
   ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
   HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
-  SettingOutlined, LineChartOutlined, PieChartOutlined, RetweetOutlined,
+  SettingOutlined, LineChartOutlined, PieChartOutlined, RetweetOutlined, DotChartOutlined,
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck, type WorkflowSimilarityMatrix } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -56,6 +56,7 @@ const Workflows: React.FC = () => {
   const [stepRetryTopology, setStepRetryTopology] = useState<WorkflowStepRetryTopology | null>(null)
   const [stepHourlyDistribution, setStepHourlyDistribution] = useState<WorkflowStepHourlyDistribution | null>(null)
   const [stepDependencyBottleneck, setStepDependencyBottleneck] = useState<WorkflowStepDependencyBottleneck | null>(null)
+  const [similarityMatrix, setSimilarityMatrix] = useState<WorkflowSimilarityMatrix | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
@@ -139,6 +140,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowStepRetryTopology(30, 15).then(setStepRetryTopology).catch(() => {})
       agentsApi.getWorkflowStepHourlyDistribution(30, 10).then(setStepHourlyDistribution).catch(() => {})
       agentsApi.getWorkflowStepDependencyBottleneck(30, 10).then(setStepDependencyBottleneck).catch(() => {})
+      agentsApi.getWorkflowSimilarityMatrix(30, 5, 20).then(setSimilarityMatrix).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
@@ -1215,6 +1217,74 @@ const Workflows: React.FC = () => {
                       <span style={{ color: '#8c8c8c', minWidth: 40, textAlign: 'right' }}>{s.avg_duration}s</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )
+          })}
+        </Card>
+      )}
+
+      {/* Workflow Run Similarity Matrix */}
+      {similarityMatrix && similarityMatrix.workflows.length > 0 && (
+        <Card
+          title={<Space><DotChartOutlined /> 运行相似度矩阵</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {similarityMatrix.days} 天 · Jaccard 相似度</Text>}
+        >
+          {similarityMatrix.workflows.map((wf, wfi) => {
+            const n = wf.matrix.length
+            if (n < 2) return null
+            const cellSize = Math.min(28, Math.max(14, Math.floor(240 / n)))
+            const svgW = 40 + n * cellSize
+            const svgH = 30 + n * cellSize
+            const simColor = (v: number) => {
+              if (v >= 0.8) return '#52c41a'
+              if (v >= 0.6) return '#73d13d'
+              if (v >= 0.4) return '#faad14'
+              if (v >= 0.2) return '#fa8c16'
+              return '#ff4d4f'
+            }
+            return (
+              <div key={wfi} style={{ marginBottom: wfi < similarityMatrix.workflows.length - 1 ? 16 : 0 }}>
+                <Text strong style={{ fontSize: 12 }}>{wf.workflow_name}</Text>
+                <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>{wf.run_count} 次运行</Text>
+                <div style={{ overflowX: 'auto', marginTop: 4 }}>
+                  <svg width={svgW} height={svgH} style={{ overflow: 'visible' }}>
+                    {/* Column labels */}
+                    {wf.run_ids.map((_, ci) => (
+                      <text key={`cl-${ci}`} x={40 + ci * cellSize + cellSize / 2} y={10} fontSize={7} fill="#8c8c8c" textAnchor="middle">#{wf.run_ids[ci]}</text>
+                    ))}
+                    {/* Row labels + cells */}
+                    {wf.matrix.map((row, ri) => (
+                      <g key={`row-${ri}`}>
+                        <text x={36} y={30 + ri * cellSize + cellSize / 2 + 3} fontSize={7} fill="#8c8c8c" textAnchor="end">#{wf.run_ids[ri]}</text>
+                        {row.map((v, ci) => (
+                          <Tooltip key={`c-${ri}-${ci}`} title={`#${wf.run_ids[ri]} ↔ #${wf.run_ids[ci]}: ${(v * 100).toFixed(0)}%`}>
+                            <rect x={40 + ci * cellSize} y={30 + ri * cellSize} width={cellSize - 1} height={cellSize - 1} rx={2} fill={ri === ci ? '#e6f7ff' : simColor(v)} />
+                          </Tooltip>
+                        ))}
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+                {/* Most / least similar */}
+                <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 10 }}>
+                  {wf.most_similar.length > 0 && (
+                    <div>
+                      <Text type="secondary">最相似: </Text>
+                      {wf.most_similar.map((p, pi) => (
+                        <Tag key={pi} color="green" style={{ fontSize: 9, margin: '0 2px' }}>#{p.run_a}↔#{p.run_b} {(p.similarity * 100).toFixed(0)}%</Tag>
+                      ))}
+                    </div>
+                  )}
+                  {wf.least_similar.length > 0 && (
+                    <div>
+                      <Text type="secondary">最不相似: </Text>
+                      {wf.least_similar.map((p, pi) => (
+                        <Tag key={pi} color="red" style={{ fontSize: 9, margin: '0 2px' }}>#{p.run_a}↔#{p.run_b} {(p.similarity * 100).toFixed(0)}%</Tag>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )

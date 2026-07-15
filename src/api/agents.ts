@@ -1200,6 +1200,30 @@ export interface TaskAllocationFairness {
   total_tasks: number
 }
 
+export interface WorkflowSimilarityPair {
+  run_a: number
+  run_b: number
+  similarity: number
+  shared_steps: number
+  unique_a: number
+  unique_b: number
+}
+
+export interface WorkflowSimilarityWorkflow {
+  workflow_id: number
+  workflow_name: string
+  run_count: number
+  matrix: number[][]
+  run_ids: number[]
+  most_similar: WorkflowSimilarityPair[]
+  least_similar: WorkflowSimilarityPair[]
+}
+
+export interface WorkflowSimilarityMatrix {
+  workflows: WorkflowSimilarityWorkflow[]
+  days: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -1899,6 +1923,10 @@ export class AgentsApi {
 
   async getTaskAllocationFairness(days = 30): Promise<TaskAllocationFairness> {
     return unwrapData<TaskAllocationFairness>(await apiClient.get(`/agents/task-allocation-fairness${buildQuery({ days })}`))
+  }
+
+  async getWorkflowSimilarityMatrix(days = 30, limit = 5, maxRuns = 20): Promise<WorkflowSimilarityMatrix> {
+    return unwrapData<WorkflowSimilarityMatrix>(await apiClient.get(`/agents/workflows/similarity-matrix${buildQuery({ days, limit, max_runs: maxRuns })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
