@@ -1469,6 +1469,29 @@ export interface AgentCapabilitySupplyDemand {
   active_task_total: number
 }
 
+/** 单个工作流结构复杂度记录 */
+export interface WorkflowStructuralComplexityItem {
+  workflow_id: number
+  workflow_name: string
+  version: number
+  step_count: number
+  max_depth: number
+  total_edges: number
+  avg_fan_in: number
+  avg_fan_out: number
+  root_count: number
+  leaf_count: number
+  parallelism_budget: number | null
+}
+
+/** 工作流结构复杂度分析 */
+export interface WorkflowStructuralComplexity {
+  workflows: WorkflowStructuralComplexityItem[]
+  total_workflows: number
+  avg_steps: number
+  avg_depth: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2224,6 +2247,10 @@ export class AgentsApi {
 
   async getAgentCapabilitySupplyDemand(limit = 20): Promise<AgentCapabilitySupplyDemand> {
     return unwrapData<AgentCapabilitySupplyDemand>(await apiClient.get(`/agents/capability-supply-demand${buildQuery({ limit })}`))
+  }
+
+  async getWorkflowStructuralComplexity(limit = 20): Promise<WorkflowStructuralComplexity> {
+    return unwrapData<WorkflowStructuralComplexity>(await apiClient.get(`/agents/workflows/structural-complexity${buildQuery({ limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {

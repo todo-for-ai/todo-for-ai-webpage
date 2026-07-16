@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck, type WorkflowSimilarityMatrix, type StepDurationHistogramResult, type WorkflowStepBottleneckTimeline } from '../api/agents'
+import { agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent, type WorkflowRunConsoleResult, type WorkflowRunConsoleStep, type WorkflowStepStats, type WorkflowRunTrend, type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep, type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram, type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate, type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow, type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution, type WorkflowStepDependencyBottleneck, type WorkflowSimilarityMatrix, type StepDurationHistogramResult, type WorkflowStepBottleneckTimeline, type WorkflowStructuralComplexity } from '../api/agents'
 import WorkflowDagViewer, { type DagStepData } from '../components/Workflow/WorkflowDagViewer'
 import SortableStepCard from '../components/Workflow/SortableStepCard'
 import WorkflowRunTrendChart from '../components/WorkflowRunTrendChart'
@@ -59,6 +59,7 @@ const Workflows: React.FC = () => {
   const [similarityMatrix, setSimilarityMatrix] = useState<WorkflowSimilarityMatrix | null>(null)
   const [stepDurationHist, setStepDurationHist] = useState<StepDurationHistogramResult | null>(null)
   const [stepBottleneckTl, setStepBottleneckTl] = useState<WorkflowStepBottleneckTimeline | null>(null)
+  const [structuralComplexity, setStructuralComplexity] = useState<WorkflowStructuralComplexity | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
   const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
   const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
@@ -145,6 +146,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowSimilarityMatrix(30, 5, 20).then(setSimilarityMatrix).catch(() => {})
       agentsApi.getWorkflowStepDurationHistogram(30, 10).then(setStepDurationHist).catch(() => {})
       agentsApi.getWorkflowStepBottleneckTimeline(30, 8).then(setStepBottleneckTl).catch(() => {})
+      agentsApi.getWorkflowStructuralComplexity(20).then(setStructuralComplexity).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
       agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
       agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
@@ -1374,6 +1376,44 @@ const Workflows: React.FC = () => {
             <span style={{ fontSize: 10, color: '#52c41a' }}>— 改善(&lt;-20%)</span>
             <span style={{ fontSize: 10, color: '#1890ff' }}>— 稳定</span>
             <span style={{ fontSize: 10, color: '#ff4d4f' }}>— 恶化(&gt;+20%)</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Workflow Structural Complexity */}
+      {structuralComplexity && structuralComplexity.total_workflows > 0 && (
+        <Card
+          title={<Space><ApartmentOutlined /> 结构复杂度</Space>}
+          size="small"
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>{structuralComplexity.total_workflows} 个工作流 · 均步数 {structuralComplexity.avg_steps} · 均深度 {structuralComplexity.avg_depth}</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {structuralComplexity.workflows.map((w, wi) => {
+              const maxDepthAll = Math.max(1, ...structuralComplexity.workflows.map(x => x.max_depth))
+              return (
+                <div key={wi} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text strong style={{ fontSize: 12 }}>{w.workflow_name} <Tag style={{ fontSize: 9 }}>v{w.version}</Tag></Text>
+                    <Space size={4}>
+                      <Tag color={w.max_depth >= 5 ? 'red' : w.max_depth >= 3 ? 'orange' : 'green'} style={{ fontSize: 10 }}>深度 {w.max_depth}</Tag>
+                      <Tag style={{ fontSize: 10 }}>{w.step_count} 步</Tag>
+                      <Tag style={{ fontSize: 10 }}>{w.total_edges} 边</Tag>
+                    </Space>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, height: 6, background: '#f0f0f0', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ width: `${(w.max_depth / maxDepthAll) * 100}%`, height: '100%', background: w.max_depth >= 5 ? '#ff4d4f' : w.max_depth >= 3 ? '#faad14' : '#52c41a' }} />
+                    </div>
+                    <Space size={4} style={{ fontSize: 10 }}>
+                      <Tag style={{ fontSize: 9 }}>根 {w.root_count}</Tag>
+                      <Tag style={{ fontSize: 9 }}>叶 {w.leaf_count}</Tag>
+                      <Tag style={{ fontSize: 9 }}>扇入 {w.avg_fan_in}</Tag>
+                    </Space>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </Card>
       )}
