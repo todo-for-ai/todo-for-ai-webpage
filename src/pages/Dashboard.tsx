@@ -45,7 +45,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts, type AgentCrossProjectEfficiency } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts, type AgentCrossProjectEfficiency, type AgentCapabilitySupplyDemand } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -185,6 +185,7 @@ const Dashboard = () => {
   const [specializationEvo, setSpecializationEvo] = useState<AgentSpecializationEvolution | null>(null)
   const [decayAlerts, setDecayAlerts] = useState<AgentExperiencesDecayAlerts | null>(null)
   const [crossProjEff, setCrossProjEff] = useState<AgentCrossProjectEfficiency | null>(null)
+  const [capSupplyDemand, setCapSupplyDemand] = useState<AgentCapabilitySupplyDemand | null>(null)
   const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
   const [protocolLatency, setProtocolLatency] = useState<ProtocolDecisionLatency | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
@@ -320,6 +321,7 @@ const Dashboard = () => {
       agentsApi.getAgentSpecializationEvolution(12, 8).then(setSpecializationEvo).catch(() => {})
       agentsApi.getAgentExperiencesDecayAlerts(30, 0.1, 10).then(setDecayAlerts).catch(() => {})
       agentsApi.getAgentCrossProjectEfficiency(30, 20).then(setCrossProjEff).catch(() => {})
+      agentsApi.getAgentCapabilitySupplyDemand(20).then(setCapSupplyDemand).catch(() => {})
       agentsApi.getKnowledgePropagationNetwork(90, 20).then(setPropagationNet).catch(() => {})
       agentsApi.getProtocolDecisionLatency(30).then(setProtocolLatency).catch(() => {})
     } catch {
@@ -4186,6 +4188,42 @@ const Dashboard = () => {
                   </div>
                   <Tag color={a.utilized ? 'blue' : 'default'} style={{ fontSize: 10, margin: 0 }}>{a.tasks_completed_in_host}</Tag>
                   {!a.is_active && <Tag style={{ fontSize: 9, margin: 0 }}>未激活</Tag>}
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Capability Supply-Demand */}
+      {capSupplyDemand && capSupplyDemand.total_capabilities > 0 && (
+        <Card
+          title={<Space><SwapOutlined /> 能力供需匹配</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>{capSupplyDemand.agent_total} Agent · {capSupplyDemand.active_task_total} 活跃任务 · {capSupplyDemand.bottleneck_count} 瓶颈/缺口</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {capSupplyDemand.capabilities.map((c, ci) => {
+              const maxV = Math.max(1, ...capSupplyDemand.capabilities.map(x => Math.max(x.supply, x.demand)))
+              const half = 80
+              const statusColor: Record<string, string> = { missing: '#ff4d4f', bottleneck: '#fa8c16', surplus: '#1890ff', unused_supply: '#8c8c8c', balanced: '#52c41a' }
+              const statusText: Record<string, string> = { missing: '缺口', bottleneck: '瓶颈', surplus: '过剩', unused_supply: '闲置', balanced: '平衡' }
+              return (
+                <div key={ci} style={{ background: '#fafafa', borderRadius: 4, padding: '5px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                    <Text strong style={{ fontSize: 12 }}>{c.capability}</Text>
+                    <Space size={4}>
+                      <Tag color="blue" style={{ fontSize: 10 }}>供 {c.supply}</Tag>
+                      <Tag color="red" style={{ fontSize: 10 }}>需 {c.demand}</Tag>
+                      <Tag color={statusColor[c.status]} style={{ fontSize: 10 }}>{statusText[c.status]}</Tag>
+                    </Space>
+                  </div>
+                  <svg width={half * 2} height={10} style={{ display: 'block' }}>
+                    <title>{`供给 ${c.supply} / 需求 ${c.demand}`}</title>
+                    <line x1={half} y1={0} x2={half} y2={10} stroke="#d9d9d9" strokeWidth={1} />
+                    <rect x={half - (c.supply / maxV) * half} y={2} width={(c.supply / maxV) * half} height={6} fill="#1890ff" fillOpacity={0.7} rx={1} />
+                    <rect x={half} y={2} width={(c.demand / maxV) * half} height={6} fill="#ff4d4f" fillOpacity={0.7} rx={1} />
+                  </svg>
                 </div>
               )
             })}

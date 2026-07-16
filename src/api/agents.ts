@@ -1448,6 +1448,27 @@ export interface AgentCrossProjectEfficiency {
   days: number
 }
 
+export type CapabilityStatus = 'missing' | 'bottleneck' | 'surplus' | 'unused_supply' | 'balanced'
+
+/** 单项能力供需记录 */
+export interface CapabilitySupplyDemandItem {
+  capability: string
+  supply: number
+  demand: number
+  gap: number
+  ratio: number | null
+  status: CapabilityStatus
+}
+
+/** Agent 能力供需匹配度 */
+export interface AgentCapabilitySupplyDemand {
+  capabilities: CapabilitySupplyDemandItem[]
+  total_capabilities: number
+  bottleneck_count: number
+  agent_total: number
+  active_task_total: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2199,6 +2220,10 @@ export class AgentsApi {
 
   async getAgentCrossProjectEfficiency(days = 30, limit = 20): Promise<AgentCrossProjectEfficiency> {
     return unwrapData<AgentCrossProjectEfficiency>(await apiClient.get(`/agents/cross-project-efficiency${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentCapabilitySupplyDemand(limit = 20): Promise<AgentCapabilitySupplyDemand> {
+    return unwrapData<AgentCapabilitySupplyDemand>(await apiClient.get(`/agents/capability-supply-demand${buildQuery({ limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
