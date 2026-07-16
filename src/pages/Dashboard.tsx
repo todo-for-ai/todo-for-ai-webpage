@@ -43,7 +43,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -179,6 +179,7 @@ const Dashboard = () => {
   const [commentSentiment, setCommentSentiment] = useState<TaskCommentSentimentTrend | null>(null)
   const [handoffStats, setHandoffStats] = useState<AgentTaskHandoffStats | null>(null)
   const [workloadForecast, setWorkloadForecast] = useState<AgentWorkloadForecast | null>(null)
+  const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
   const collabSvgRef = useRef<SVGSVGElement>(null)
   // 节点点击展开的协作明细 Modal
@@ -308,6 +309,7 @@ const Dashboard = () => {
       tasksApi.getCommentSentimentTrend(30).then(setCommentSentiment).catch(() => {})
       agentsApi.getAgentTaskHandoffStats(30, 10).then(setHandoffStats).catch(() => {})
       agentsApi.getAgentWorkloadForecast(30, 3, 10).then(setWorkloadForecast).catch(() => {})
+      agentsApi.getKnowledgePropagationNetwork(90, 20).then(setPropagationNet).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -4034,6 +4036,53 @@ const Dashboard = () => {
             <span style={{ fontSize: 10, color: '#1890ff' }}>— 历史</span>
             <span style={{ fontSize: 10, color: '#ff4d4f' }}>┄ 预测</span>
           </div>
+        </Card>
+      )}
+
+      {/* Knowledge Propagation Network */}
+      {propagationNet && propagationNet.nodes.length > 0 && (
+        <Card
+          title={<Space><ShareAltOutlined /> 知识传播网络</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {propagationNet.days} 天 · 分享 {propagationNet.total_shared_experiences} · 复用 {propagationNet.total_reuses}</Text>}
+        >
+          {(() => {
+            const nodes = propagationNet.nodes
+            const edges = propagationNet.edges
+            const size = 280
+            const cx = size / 2
+            const cy = size / 2
+            const radius = size / 2 - 30
+            const pos: Record<number, { x: number; y: number }> = {}
+            nodes.forEach((n, i) => {
+              const angle = (i / nodes.length) * 2 * Math.PI - Math.PI / 2
+              pos[n.agent_id] = { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) }
+            })
+            const maxReuse = Math.max(1, ...nodes.map(n => n.total_reuses))
+            const maxW = Math.max(1, ...edges.map(e => e.weight))
+            return (
+              <svg width={size} height={size} style={{ display: 'block', margin: '0 auto' }}>
+                {edges.map((e, ei) => {
+                  const s = pos[e.source]
+                  const t = pos[e.target]
+                  if (!s || !t) return null
+                  return <line key={`e${ei}`} x1={s.x} y1={s.y} x2={t.x} y2={t.y} stroke="#722ed1" strokeWidth={0.5 + (e.weight / maxW) * 2.5} strokeOpacity={0.4} />
+                })}
+                {nodes.map((n) => {
+                  const p = pos[n.agent_id]
+                  if (!p) return null
+                  const r = 6 + (n.total_reuses / maxReuse) * 10
+                  return (
+                    <g key={`n${n.agent_id}`}>
+                      <circle cx={p.x} cy={p.y} r={r} fill="#722ed1" fillOpacity={0.7} />
+                      <text x={p.x} y={p.y - r - 3} fontSize={8} fill="#595959" textAnchor="middle">{n.agent_name}</text>
+                      <title>{`${n.agent_name}: 分享${n.shared_experiences} 复用${n.total_reuses}`}</title>
+                    </g>
+                  )
+                })}
+              </svg>
+            )
+          })()}
         </Card>
       )}
 

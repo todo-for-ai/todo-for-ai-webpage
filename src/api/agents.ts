@@ -1327,6 +1327,31 @@ export interface AgentWorkloadForecast {
   date_range: string[]
 }
 
+/** 知识传播网络节点 */
+export interface KnowledgePropagationNode {
+  agent_id: number
+  agent_name: string
+  shared_experiences: number
+  total_reuses: number
+  domains: string[]
+}
+
+/** 知识传播网络边 */
+export interface KnowledgePropagationEdge {
+  source: number
+  target: number
+  weight: number
+}
+
+/** 跨 Agent 知识传播网络 */
+export interface KnowledgePropagationNetwork {
+  nodes: KnowledgePropagationNode[]
+  edges: KnowledgePropagationEdge[]
+  days: number
+  total_shared_experiences: number
+  total_reuses: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2054,6 +2079,10 @@ export class AgentsApi {
 
   async getAgentWorkloadForecast(days = 30, horizon = 3, limit = 10): Promise<AgentWorkloadForecast> {
     return unwrapData<AgentWorkloadForecast>(await apiClient.get(`/agents/workload-forecast${buildQuery({ days, horizon, limit })}`))
+  }
+
+  async getKnowledgePropagationNetwork(days = 90, limit = 20): Promise<KnowledgePropagationNetwork> {
+    return unwrapData<KnowledgePropagationNetwork>(await apiClient.get(`/agents/knowledge-propagation-network${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
