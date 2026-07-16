@@ -1492,6 +1492,26 @@ export interface WorkflowStructuralComplexity {
   avg_depth: number
 }
 
+export type AgentIdleStage = 'active' | 'idle' | 'stale' | 'dormant' | 'never'
+
+/** 单个 Agent 闲置记录 */
+export interface AgentIdleItem {
+  agent_id: number
+  agent_name: string
+  status: string | null
+  last_seen_at: string | null
+  last_activity_at: string | null
+  idle_hours: number | null
+  stage: AgentIdleStage
+}
+
+/** Agent 闲置时长排行 */
+export interface AgentIdleRanking {
+  agents: AgentIdleItem[]
+  total_agents: number
+  stage_counts: Record<string, number>
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2251,6 +2271,10 @@ export class AgentsApi {
 
   async getWorkflowStructuralComplexity(limit = 20): Promise<WorkflowStructuralComplexity> {
     return unwrapData<WorkflowStructuralComplexity>(await apiClient.get(`/agents/workflows/structural-complexity${buildQuery({ limit })}`))
+  }
+
+  async getAgentIdleRanking(limit = 20): Promise<AgentIdleRanking> {
+    return unwrapData<AgentIdleRanking>(await apiClient.get(`/agents/idle-ranking${buildQuery({ limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {

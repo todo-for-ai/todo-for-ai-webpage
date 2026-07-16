@@ -45,7 +45,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts, type AgentCrossProjectEfficiency, type AgentCapabilitySupplyDemand } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts, type AgentCrossProjectEfficiency, type AgentCapabilitySupplyDemand, type AgentIdleRanking } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -72,6 +72,11 @@ const _KIND_LABELS: Record<string, string> = {
   coordinator: '协调者',
   external: '外部',
 }
+
+const IDLE_STAGE_COLOR: Record<string, string> = { active: '#52c41a', idle: '#1890ff', stale: '#faad14', dormant: '#ff4d4f', never: '#8c8c8c' }
+const IDLE_STAGE_ZH: Record<string, string> = { active: '活跃', idle: '空闲', stale: '陈旧', dormant: '休眠', never: '从未' }
+const stageColor = (s: string) => IDLE_STAGE_COLOR[s] || '#8c8c8c'
+const stageZh = (s: string) => IDLE_STAGE_ZH[s] || s
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -186,6 +191,7 @@ const Dashboard = () => {
   const [decayAlerts, setDecayAlerts] = useState<AgentExperiencesDecayAlerts | null>(null)
   const [crossProjEff, setCrossProjEff] = useState<AgentCrossProjectEfficiency | null>(null)
   const [capSupplyDemand, setCapSupplyDemand] = useState<AgentCapabilitySupplyDemand | null>(null)
+  const [idleRanking, setIdleRanking] = useState<AgentIdleRanking | null>(null)
   const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
   const [protocolLatency, setProtocolLatency] = useState<ProtocolDecisionLatency | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
@@ -322,6 +328,7 @@ const Dashboard = () => {
       agentsApi.getAgentExperiencesDecayAlerts(30, 0.1, 10).then(setDecayAlerts).catch(() => {})
       agentsApi.getAgentCrossProjectEfficiency(30, 20).then(setCrossProjEff).catch(() => {})
       agentsApi.getAgentCapabilitySupplyDemand(20).then(setCapSupplyDemand).catch(() => {})
+      agentsApi.getAgentIdleRanking(20).then(setIdleRanking).catch(() => {})
       agentsApi.getKnowledgePropagationNetwork(90, 20).then(setPropagationNet).catch(() => {})
       agentsApi.getProtocolDecisionLatency(30).then(setProtocolLatency).catch(() => {})
     } catch {
@@ -4224,6 +4231,33 @@ const Dashboard = () => {
                     <rect x={half - (c.supply / maxV) * half} y={2} width={(c.supply / maxV) * half} height={6} fill="#1890ff" fillOpacity={0.7} rx={1} />
                     <rect x={half} y={2} width={(c.demand / maxV) * half} height={6} fill="#ff4d4f" fillOpacity={0.7} rx={1} />
                   </svg>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Agent Idle Ranking */}
+      {idleRanking && idleRanking.total_agents > 0 && (
+        <Card
+          title={<Space><ClockCircleOutlined /> Agent 闲置排行</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>{idleRanking.total_agents} Agent · {Object.entries(idleRanking.stage_counts).map(([k, v]) => `${stageZh(k)} ${v}`).join(' · ')}</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {idleRanking.agents.map((a, ai) => {
+              const maxHours = Math.max(1, ...idleRanking.agents.map(x => x.idle_hours ?? 0))
+              const hours = a.idle_hours ?? 0
+              const dur = a.idle_hours == null ? '从未' : hours < 24 ? `${hours.toFixed(1)}h` : `${(hours / 24).toFixed(1)}d`
+              return (
+                <div key={ai} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <Text style={{ minWidth: 110, fontSize: 12 }} ellipsis>{a.agent_name}</Text>
+                  <Tag color={stageColor(a.stage)} style={{ fontSize: 10, margin: 0 }}>{stageZh(a.stage)}</Tag>
+                  <div style={{ flex: 1, height: 8, background: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${(hours / maxHours) * 100}%`, height: '100%', background: stageColor(a.stage) }} />
+                  </div>
+                  <Text style={{ minWidth: 42, fontSize: 11, textAlign: 'right' }} type="secondary">{dur}</Text>
                 </div>
               )
             })}
