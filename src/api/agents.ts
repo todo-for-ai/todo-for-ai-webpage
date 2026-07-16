@@ -1385,6 +1385,24 @@ export interface ProtocolDecisionLatency {
   total: number
 }
 
+/** Agent 专长演化（单 Agent） */
+export interface SpecializationEvolutionAgent {
+  agent_id: number
+  agent_name: string
+  series: number[]
+  peak_domains: number
+  peak_week_idx: number
+  total_domains: number
+  domains: string[]
+}
+
+/** Agent 专长演化分析 */
+export interface AgentSpecializationEvolution {
+  agents: SpecializationEvolutionAgent[]
+  weeks: number
+  week_labels: string[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2124,6 +2142,10 @@ export class AgentsApi {
 
   async getProtocolDecisionLatency(days = 30): Promise<ProtocolDecisionLatency> {
     return unwrapData<ProtocolDecisionLatency>(await apiClient.get(`/agents/protocol-decision-latency${buildQuery({ days })}`))
+  }
+
+  async getAgentSpecializationEvolution(weeks = 12, limit = 8): Promise<AgentSpecializationEvolution> {
+    return unwrapData<AgentSpecializationEvolution>(await apiClient.get(`/agents/specialization-evolution${buildQuery({ weeks, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {

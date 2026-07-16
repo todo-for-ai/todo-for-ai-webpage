@@ -13,6 +13,7 @@ import {
   TeamOutlined,
   ApartmentOutlined,
   RadarChartOutlined,
+  RiseOutlined,
   AimOutlined,
   SwapOutlined,
   DashboardOutlined,
@@ -43,7 +44,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -180,6 +181,7 @@ const Dashboard = () => {
   const [reworkAnalysis, setReworkAnalysis] = useState<TaskReworkAnalysis | null>(null)
   const [handoffStats, setHandoffStats] = useState<AgentTaskHandoffStats | null>(null)
   const [workloadForecast, setWorkloadForecast] = useState<AgentWorkloadForecast | null>(null)
+  const [specializationEvo, setSpecializationEvo] = useState<AgentSpecializationEvolution | null>(null)
   const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
   const [protocolLatency, setProtocolLatency] = useState<ProtocolDecisionLatency | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
@@ -312,6 +314,7 @@ const Dashboard = () => {
       tasksApi.getReworkAnalysis(30, 15).then(setReworkAnalysis).catch(() => {})
       agentsApi.getAgentTaskHandoffStats(30, 10).then(setHandoffStats).catch(() => {})
       agentsApi.getAgentWorkloadForecast(30, 3, 10).then(setWorkloadForecast).catch(() => {})
+      agentsApi.getAgentSpecializationEvolution(12, 8).then(setSpecializationEvo).catch(() => {})
       agentsApi.getKnowledgePropagationNetwork(90, 20).then(setPropagationNet).catch(() => {})
       agentsApi.getProtocolDecisionLatency(30).then(setProtocolLatency).catch(() => {})
     } catch {
@@ -4073,6 +4076,47 @@ const Dashboard = () => {
           <div style={{ display: 'flex', gap: 16, marginTop: 6, justifyContent: 'center' }}>
             <span style={{ fontSize: 10, color: '#1890ff' }}>— 历史</span>
             <span style={{ fontSize: 10, color: '#ff4d4f' }}>┄ 预测</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Agent Specialization Evolution */}
+      {specializationEvo && specializationEvo.agents.length > 0 && (
+        <Card
+          title={<Space><RiseOutlined /> Agent 专长演化</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {specializationEvo.weeks} 周 · 周域覆盖数</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {specializationEvo.agents.map((a, ai) => {
+              const maxV = Math.max(1, ...a.series)
+              const cellW = 18
+              const h = 18
+              return (
+                <div key={ai} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text strong style={{ fontSize: 12 }}>{a.agent_name}</Text>
+                    <Space size={4}>
+                      <Tag color="purple" style={{ fontSize: 10 }}>累计 {a.total_domains} 域</Tag>
+                      <Tag style={{ fontSize: 10 }}>峰值 {a.peak_domains}</Tag>
+                    </Space>
+                  </div>
+                  <div style={{ display: 'flex', gap: 1 }}>
+                    {a.series.map((v, wi) => (
+                      <svg key={wi} width={cellW} height={h} style={{ display: 'block' }}>
+                        <title>{`${specializationEvo.week_labels[wi]}: ${v} 域`}</title>
+                        <rect x={0} y={h - (v / maxV) * (h - 2)} width={cellW - 1} height={(v / maxV) * (h - 2)} fill={`rgba(114, 46, 209, ${0.3 + (v / maxV) * 0.7})`} rx={1} />
+                      </svg>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 2 }}>
+                    {a.domains.map((d, di) => (
+                      <Tag key={di} style={{ fontSize: 9, margin: '1px' }}>{d}</Tag>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </Card>
       )}
