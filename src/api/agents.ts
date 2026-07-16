@@ -1352,6 +1352,22 @@ export interface KnowledgePropagationNetwork {
   total_reuses: number
 }
 
+/** 步骤瓶颈时序（单步） */
+export interface StepBottleneckTimelineStep {
+  step_key: string
+  series: number[]
+  avg_duration: number
+  sample_count: number
+  change_pct: number
+}
+
+/** 工作流步骤瓶颈时序分析 */
+export interface WorkflowStepBottleneckTimeline {
+  steps: StepBottleneckTimelineStep[]
+  days: number
+  date_range: string[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2083,6 +2099,10 @@ export class AgentsApi {
 
   async getKnowledgePropagationNetwork(days = 90, limit = 20): Promise<KnowledgePropagationNetwork> {
     return unwrapData<KnowledgePropagationNetwork>(await apiClient.get(`/agents/knowledge-propagation-network${buildQuery({ days, limit })}`))
+  }
+
+  async getWorkflowStepBottleneckTimeline(days = 30, limit = 8): Promise<WorkflowStepBottleneckTimeline> {
+    return unwrapData<WorkflowStepBottleneckTimeline>(await apiClient.get(`/agents/workflows/step-bottleneck-timeline${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
