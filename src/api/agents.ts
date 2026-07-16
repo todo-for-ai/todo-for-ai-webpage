@@ -1368,6 +1368,23 @@ export interface WorkflowStepBottleneckTimeline {
   date_range: string[]
 }
 
+/** 协议决策延迟（按类型） */
+export interface ProtocolLatencyType {
+  protocol_type: string
+  count: number
+  avg_seconds: number
+  median_seconds: number
+  min_seconds: number
+  max_seconds: number
+}
+
+/** 协议决策延迟分析 */
+export interface ProtocolDecisionLatency {
+  types: ProtocolLatencyType[]
+  days: number
+  total: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2103,6 +2120,10 @@ export class AgentsApi {
 
   async getWorkflowStepBottleneckTimeline(days = 30, limit = 8): Promise<WorkflowStepBottleneckTimeline> {
     return unwrapData<WorkflowStepBottleneckTimeline>(await apiClient.get(`/agents/workflows/step-bottleneck-timeline${buildQuery({ days, limit })}`))
+  }
+
+  async getProtocolDecisionLatency(days = 30): Promise<ProtocolDecisionLatency> {
+    return unwrapData<ProtocolDecisionLatency>(await apiClient.get(`/agents/protocol-decision-latency${buildQuery({ days })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
