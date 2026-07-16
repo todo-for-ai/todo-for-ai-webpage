@@ -12,6 +12,7 @@ import {
   SafetyCertificateOutlined,
   TeamOutlined,
   ApartmentOutlined,
+  DeploymentUnitOutlined,
   RadarChartOutlined,
   RiseOutlined,
   AimOutlined,
@@ -44,7 +45,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts, type AgentCrossProjectEfficiency } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -183,6 +184,7 @@ const Dashboard = () => {
   const [workloadForecast, setWorkloadForecast] = useState<AgentWorkloadForecast | null>(null)
   const [specializationEvo, setSpecializationEvo] = useState<AgentSpecializationEvolution | null>(null)
   const [decayAlerts, setDecayAlerts] = useState<AgentExperiencesDecayAlerts | null>(null)
+  const [crossProjEff, setCrossProjEff] = useState<AgentCrossProjectEfficiency | null>(null)
   const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
   const [protocolLatency, setProtocolLatency] = useState<ProtocolDecisionLatency | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
@@ -317,6 +319,7 @@ const Dashboard = () => {
       agentsApi.getAgentWorkloadForecast(30, 3, 10).then(setWorkloadForecast).catch(() => {})
       agentsApi.getAgentSpecializationEvolution(12, 8).then(setSpecializationEvo).catch(() => {})
       agentsApi.getAgentExperiencesDecayAlerts(30, 0.1, 10).then(setDecayAlerts).catch(() => {})
+      agentsApi.getAgentCrossProjectEfficiency(30, 20).then(setCrossProjEff).catch(() => {})
       agentsApi.getKnowledgePropagationNetwork(90, 20).then(setPropagationNet).catch(() => {})
       agentsApi.getProtocolDecisionLatency(30).then(setProtocolLatency).catch(() => {})
     } catch {
@@ -4150,6 +4153,39 @@ const Dashboard = () => {
                   <div style={{ marginTop: 4, height: 6, background: '#f0f0f0', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ width: `${(a.drop / maxDrop) * 100}%`, height: '100%', background: a.drop >= 0.2 ? '#ff4d4f' : '#faad14' }} />
                   </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Cross-Project Agent Efficiency */}
+      {crossProjEff && crossProjEff.total_authorizations > 0 && (
+        <Card
+          title={<Space><DeploymentUnitOutlined /> 跨项目借调效率</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {crossProjEff.days} 天 · 利用率 {(crossProjEff.utilization_rate * 100).toFixed(0)}%</Text>}
+        >
+          <Row gutter={16} style={{ marginBottom: 12 }}>
+            <Col span={6}><Statistic title="总授权" value={crossProjEff.total_authorizations} valueStyle={{ fontSize: 16 }} /></Col>
+            <Col span={6}><Statistic title="活跃" value={crossProjEff.active_count} valueStyle={{ fontSize: 16, color: '#1890ff' }} /></Col>
+            <Col span={6}><Statistic title="已利用" value={crossProjEff.utilized_count} valueStyle={{ fontSize: 16, color: '#52c41a' }} /></Col>
+            <Col span={6}><Statistic title="闲置" value={crossProjEff.idle_count} valueStyle={{ fontSize: 16, color: crossProjEff.idle_count > 0 ? '#faad14' : undefined }} /></Col>
+          </Row>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {crossProjEff.authorizations.map((a, ai) => {
+              const maxDone = Math.max(1, ...crossProjEff.authorizations.map(x => x.tasks_completed_in_host))
+              return (
+                <div key={ai} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <Text style={{ minWidth: 110, fontSize: 12 }} ellipsis>{a.agent_name}</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>→</Text>
+                  <Text style={{ minWidth: 120, fontSize: 12 }} ellipsis>{a.host_project_name}</Text>
+                  <div style={{ flex: 1, height: 10, background: '#f0f0f0', borderRadius: 5, overflow: 'hidden' }}>
+                    <div style={{ width: `${(a.tasks_completed_in_host / maxDone) * 100}%`, height: '100%', background: a.utilized ? '#1890ff' : '#d9d9d9' }} />
+                  </div>
+                  <Tag color={a.utilized ? 'blue' : 'default'} style={{ fontSize: 10, margin: 0 }}>{a.tasks_completed_in_host}</Tag>
+                  {!a.is_active && <Tag style={{ fontSize: 9, margin: 0 }}>未激活</Tag>}
                 </div>
               )
             })}

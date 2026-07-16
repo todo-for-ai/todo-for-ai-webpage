@@ -1424,6 +1424,30 @@ export interface AgentExperiencesDecayAlerts {
   min_drop: number
 }
 
+/** 单条跨项目授权效率记录 */
+export interface CrossProjectAuthEfficiency {
+  authorization_id: number
+  agent_id: number
+  agent_name: string
+  host_project_id: number
+  host_project_name: string
+  tasks_completed_in_host: number
+  is_active: boolean
+  expires_at: string | null
+  utilized: boolean
+}
+
+/** 跨项目 Agent 借调效率 */
+export interface AgentCrossProjectEfficiency {
+  authorizations: CrossProjectAuthEfficiency[]
+  total_authorizations: number
+  active_count: number
+  utilized_count: number
+  idle_count: number
+  utilization_rate: number
+  days: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2171,6 +2195,10 @@ export class AgentsApi {
 
   async getAgentExperiencesDecayAlerts(days = 30, minDrop = 0.1, limit = 10): Promise<AgentExperiencesDecayAlerts> {
     return unwrapData<AgentExperiencesDecayAlerts>(await apiClient.get(`/agents/experiences/decay-alerts${buildQuery({ days, min_drop: minDrop, limit })}`))
+  }
+
+  async getAgentCrossProjectEfficiency(days = 30, limit = 20): Promise<AgentCrossProjectEfficiency> {
+    return unwrapData<AgentCrossProjectEfficiency>(await apiClient.get(`/agents/cross-project-efficiency${buildQuery({ days, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
