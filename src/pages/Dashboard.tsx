@@ -43,7 +43,7 @@ import {
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend } from '../api/tasks'
-import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats } from '../api/agents'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
 import SecurityTrendSection from '../components/SecurityTrendSection'
@@ -178,6 +178,7 @@ const Dashboard = () => {
   const [skillMatching, setSkillMatching] = useState<AgentSkillMatching | null>(null)
   const [commentSentiment, setCommentSentiment] = useState<TaskCommentSentimentTrend | null>(null)
   const [handoffStats, setHandoffStats] = useState<AgentTaskHandoffStats | null>(null)
+  const [workloadForecast, setWorkloadForecast] = useState<AgentWorkloadForecast | null>(null)
   const [collabGraphLoading, setCollabGraphLoading] = useState(false)
   const collabSvgRef = useRef<SVGSVGElement>(null)
   // 节点点击展开的协作明细 Modal
@@ -306,6 +307,7 @@ const Dashboard = () => {
       agentsApi.getAgentSkillMatching(10).then(setSkillMatching).catch(() => {})
       tasksApi.getCommentSentimentTrend(30).then(setCommentSentiment).catch(() => {})
       agentsApi.getAgentTaskHandoffStats(30, 10).then(setHandoffStats).catch(() => {})
+      agentsApi.getAgentWorkloadForecast(30, 3, 10).then(setWorkloadForecast).catch(() => {})
     } catch {
       // silent
     } finally {
@@ -3989,6 +3991,48 @@ const Dashboard = () => {
             <span style={{ fontSize: 10, color: '#52c41a' }}>— 积极</span>
             <span style={{ fontSize: 10, color: '#ff4d4f' }}>— 消极</span>
             <span style={{ fontSize: 10, color: '#d9d9d9' }}>— 中性</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Agent Workload Forecast */}
+      {workloadForecast && workloadForecast.agents.length > 0 && (
+        <Card
+          title={<Space><ThunderboltOutlined /> Agent 工作负载预测</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {workloadForecast.days} 天 · 预测 {workloadForecast.horizon} 天</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {workloadForecast.agents.map((a, ai) => {
+              const all = [...a.series, ...a.forecast]
+              const maxV = Math.max(1, ...all)
+              const w = 180
+              const h = 28
+              const totalLen = a.series.length + a.forecast.length
+              const histPts = a.series.map((v, i) => `${(i / (totalLen - 1)) * w},${h - (v / maxV) * (h - 2)}`).join(' ')
+              const fcStartIdx = a.series.length - 1
+              const fcPts = a.forecast.map((v, k) => `${((fcStartIdx + k) / (totalLen - 1)) * w},${h - (v / maxV) * (h - 2)}`).join(' ')
+              const trendColor = a.trend === 'up' ? '#ff4d4f' : a.trend === 'down' ? '#52c41a' : '#8c8c8c'
+              return (
+                <div key={ai} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text strong style={{ fontSize: 12 }}>{a.agent_name}</Text>
+                    <Space size={4}>
+                      <Tag color={a.trend === 'up' ? 'red' : a.trend === 'down' ? 'green' : 'default'} style={{ fontSize: 10 }}>{a.trend === 'up' ? '↑上升' : a.trend === 'down' ? '↓下降' : '→平稳'}</Tag>
+                      <Tag style={{ fontSize: 10 }}>预测 +{a.forecast_total}</Tag>
+                    </Space>
+                  </div>
+                  <svg width={w} height={h} style={{ display: 'block' }}>
+                    {a.series.length > 1 && <polyline points={histPts} fill="none" stroke="#1890ff" strokeWidth={1.5} />}
+                    {a.forecast.length > 0 && <polyline points={fcPts} fill="none" stroke={trendColor} strokeWidth={1.5} strokeDasharray="4 3" />}
+                  </svg>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 16, marginTop: 6, justifyContent: 'center' }}>
+            <span style={{ fontSize: 10, color: '#1890ff' }}>— 历史</span>
+            <span style={{ fontSize: 10, color: '#ff4d4f' }}>┄ 预测</span>
           </div>
         </Card>
       )}

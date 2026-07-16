@@ -1306,6 +1306,27 @@ export interface ChannelActivityTrend {
   days: number
 }
 
+/** Agent 工作负载预测（单 Agent） */
+export interface WorkloadForecastAgent {
+  agent_id: number
+  agent_name: string
+  total: number
+  recent_avg: number
+  slope: number
+  trend: 'up' | 'down' | 'flat'
+  series: number[]
+  forecast: number[]
+  forecast_total: number
+}
+
+/** Agent 工作负载预测结果 */
+export interface AgentWorkloadForecast {
+  agents: WorkloadForecastAgent[]
+  days: number
+  horizon: number
+  date_range: string[]
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2029,6 +2050,10 @@ export class AgentsApi {
 
   async getChannelActivityTrend(days = 14, limit = 10): Promise<ChannelActivityTrend> {
     return unwrapData<ChannelActivityTrend>(await apiClient.get(`/agents/channels/activity-trend${buildQuery({ days, limit })}`))
+  }
+
+  async getAgentWorkloadForecast(days = 30, horizon = 3, limit = 10): Promise<AgentWorkloadForecast> {
+    return unwrapData<AgentWorkloadForecast>(await apiClient.get(`/agents/workload-forecast${buildQuery({ days, horizon, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
