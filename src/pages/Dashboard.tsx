@@ -42,7 +42,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
-import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend } from '../api/tasks'
+import { tasksApi, type TaskStats, type TaskOverdueTrend, type TaskCompletionByProject, type TaskCompletionByAssignee, type TaskOverdueByAssignee, type TaskCompletionByPriority, type TaskCompletionRateByProject, type TaskOverdueClustering, type TaskPriorityTrend, type TaskCompletionForecast, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../api/tasks'
 import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestrationRunItem, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type ExperiencesStats, type ExperiencesLowConfidence, type ExperiencesScatter, type ExperiencesReuseTrend, type ExperiencesConfidenceDecayForecast, type ExperiencesDecayByDomain, type ExperiencesDecayByTaskType, type ExperiencesConfidenceDistribution, type ExperiencesSourceDistribution, type ExperiencesPropagationChain, type ExperiencesSkillCoverageRadar, type AgentProductivity, type AgentProductivityTrend, type AgentProductivityAlerts, type AgentProductivityByKind, type AgentProductivityHourlyHeatmap, type AgentProductivityCalendarHeatmap, type AgentProductivityWeeklyComparison, type AgentFailureReasons, type AgentFailureErrorPatterns, type AgentCapabilityGapAnalysis, type ConflictsSandboxCorrelation, type AgentHealth, type AgentHealthTrend, type AgentHealthAlerts, type AgentHealthStateTransitions, type HealthWeights, type AgentRunResourceUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency } from '../api/agents'
 import ActivityHeatmap from '../components/ActivityHeatmap'
 import MiniTrendChart from '../components/MiniTrendChart'
@@ -177,6 +177,7 @@ const Dashboard = () => {
   const [depChain, setDepChain] = useState<TaskDependencyChainAnalysis | null>(null)
   const [skillMatching, setSkillMatching] = useState<AgentSkillMatching | null>(null)
   const [commentSentiment, setCommentSentiment] = useState<TaskCommentSentimentTrend | null>(null)
+  const [reworkAnalysis, setReworkAnalysis] = useState<TaskReworkAnalysis | null>(null)
   const [handoffStats, setHandoffStats] = useState<AgentTaskHandoffStats | null>(null)
   const [workloadForecast, setWorkloadForecast] = useState<AgentWorkloadForecast | null>(null)
   const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
@@ -308,6 +309,7 @@ const Dashboard = () => {
       tasksApi.getDependencyChain(10).then(setDepChain).catch(() => {})
       agentsApi.getAgentSkillMatching(10).then(setSkillMatching).catch(() => {})
       tasksApi.getCommentSentimentTrend(30).then(setCommentSentiment).catch(() => {})
+      tasksApi.getReworkAnalysis(30, 15).then(setReworkAnalysis).catch(() => {})
       agentsApi.getAgentTaskHandoffStats(30, 10).then(setHandoffStats).catch(() => {})
       agentsApi.getAgentWorkloadForecast(30, 3, 10).then(setWorkloadForecast).catch(() => {})
       agentsApi.getKnowledgePropagationNetwork(90, 20).then(setPropagationNet).catch(() => {})
@@ -3996,6 +3998,40 @@ const Dashboard = () => {
             <span style={{ fontSize: 10, color: '#ff4d4f' }}>— 消极</span>
             <span style={{ fontSize: 10, color: '#d9d9d9' }}>— 中性</span>
           </div>
+        </Card>
+      )}
+
+      {/* Task Rework Analysis */}
+      {reworkAnalysis && reworkAnalysis.total_reworked > 0 && (
+        <Card
+          title={<Space><ReloadOutlined /> 任务返工分析</Space>}
+          style={{ marginBottom: 24 }}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {reworkAnalysis.days} 天 · {reworkAnalysis.total_reworked} 任务 {reworkAnalysis.total_rework_events} 次返工</Text>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {reworkAnalysis.tasks.map((t, ti) => {
+              const maxC = Math.max(1, ...reworkAnalysis.tasks.map(x => x.rework_count))
+              const barW = 120
+              return (
+                <div key={ti} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                  <span style={{ minWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.title}>{t.title}</span>
+                  <svg width={barW} height={10} style={{ display: 'block' }}>
+                    <rect x={0} y={1} width={barW * t.rework_count / maxC} height={8} fill="#fa8c16" rx={2} />
+                  </svg>
+                  <Tag color="orange" style={{ fontSize: 10 }}>{t.rework_count}次</Tag>
+                  <Text type="secondary" style={{ fontSize: 9 }}>{t.project_name}</Text>
+                </div>
+              )
+            })}
+          </div>
+          {reworkAnalysis.by_project.length > 0 && (
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f0f0f0' }}>
+              <Text type="secondary" style={{ fontSize: 11 }}>按项目：</Text>
+              {reworkAnalysis.by_project.map((p, pi) => (
+                <Tag key={pi} color="volcano" style={{ fontSize: 9, margin: '2px' }}>{p.project_name}: {p.rework_count}</Tag>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 

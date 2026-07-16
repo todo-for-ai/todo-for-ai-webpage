@@ -188,6 +188,29 @@ export interface TaskCommentSentimentTrend {
   trend: CommentSentimentDay[]
 }
 
+/** 返工任务条目 */
+export interface ReworkTaskItem {
+  task_id: number
+  title: string
+  project_name: string
+  rework_count: number
+}
+
+/** 按项目返工统计 */
+export interface ReworkProjectItem {
+  project_name: string
+  rework_count: number
+}
+
+/** 任务返工分析 */
+export interface TaskReworkAnalysis {
+  tasks: ReworkTaskItem[]
+  by_project: ReworkProjectItem[]
+  days: number
+  total_reworked: number
+  total_rework_events: number
+}
+
 /** 任务按优先级完成率项 */
 export interface TaskCompletionByPriorityItem {
   priority: string
@@ -450,6 +473,11 @@ export class TasksApi {
   // 获取任务评论情感趋势
   async getCommentSentimentTrend(days = 30): Promise<TaskCommentSentimentTrend> {
     return apiClient.get<TaskCommentSentimentTrend>(`/tasks/comment-sentiment-trend?days=${days}`)
+  }
+
+  // 获取任务返工分析
+  async getReworkAnalysis(days = 30, limit = 15): Promise<TaskReworkAnalysis> {
+    return apiClient.get<TaskReworkAnalysis>(`/tasks/rework-analysis?days=${days}&limit=${limit}`)
   }
 }
 
