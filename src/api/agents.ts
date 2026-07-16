@@ -1403,6 +1403,27 @@ export interface AgentSpecializationEvolution {
   week_labels: string[]
 }
 
+/** 单条经验置信度衰减告警 */
+export interface ExperiencesDecayAlert {
+  agent_id: number
+  agent_name: string
+  older_avg_confidence: number
+  newer_avg_confidence: number
+  drop: number
+  older_count: number
+  newer_count: number
+  current_confidence: number
+  recommendation: 'review_recent_experiences' | 'monitor'
+}
+
+/** Agent 经验置信度衰减告警 */
+export interface AgentExperiencesDecayAlerts {
+  alerts: ExperiencesDecayAlert[]
+  total_alerts: number
+  days: number
+  min_drop: number
+}
+
 export interface ConflictsSandboxCorrelationTypeItem {
   total: number
   with_violation: number
@@ -2146,6 +2167,10 @@ export class AgentsApi {
 
   async getAgentSpecializationEvolution(weeks = 12, limit = 8): Promise<AgentSpecializationEvolution> {
     return unwrapData<AgentSpecializationEvolution>(await apiClient.get(`/agents/specialization-evolution${buildQuery({ weeks, limit })}`))
+  }
+
+  async getAgentExperiencesDecayAlerts(days = 30, minDrop = 0.1, limit = 10): Promise<AgentExperiencesDecayAlerts> {
+    return unwrapData<AgentExperiencesDecayAlerts>(await apiClient.get(`/agents/experiences/decay-alerts${buildQuery({ days, min_drop: minDrop, limit })}`))
   }
 
   async getConflictsSandboxCorrelation(days = 30, windowHours = 2): Promise<ConflictsSandboxCorrelation> {
