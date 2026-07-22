@@ -1,5 +1,5 @@
 import { Tag, Tooltip, Space, Typography } from 'antd'
-import type { Agent, AgentStatus, AgentKind, DispatchTasksData, DispatchPolicy, ReviewQueueItem, TaskAssignmentState } from '../../api/agents'
+import type { Agent, AgentStatus, AgentKind, DispatchTasksData, DispatchPolicy, ReviewQueueItem, TaskAssignmentState, ReviewQueueAction } from '../../api/agents'
 
 const { Text } = Typography
 
@@ -12,14 +12,14 @@ export const DEFAULT_DISPATCH_PREVIEW_OPTIONS: DispatchTasksData = {
   include_self: false,
 }
 
-const statusColor: Record<AgentStatus, string> = {
+export const statusColor: Record<AgentStatus, string> = {
   active: 'green',
   paused: 'gold',
   offline: 'default',
   disabled: 'red',
 }
 
-const stateColor: Record<TaskAssignmentState, string> = {
+export const stateColor: Record<TaskAssignmentState, string> = {
   assigned: 'blue',
   claimed: 'cyan',
   running: 'processing',
@@ -31,40 +31,40 @@ const stateColor: Record<TaskAssignmentState, string> = {
   expired: 'default',
 }
 
-const kindOptions: { label: string; value: AgentKind }[] = [
+export const kindOptions: { label: string; value: AgentKind }[] = [
   { label: '助手', value: 'assistant' },
   { label: '自主执行', value: 'autonomous' },
   { label: '协调器', value: 'coordinator' },
   { label: '外部系统', value: 'external' },
 ]
 
-const statusOptions: { label: string; value: AgentStatus }[] = [
+export const statusOptions: { label: string; value: AgentStatus }[] = [
   { label: '活跃', value: 'active' },
   { label: '暂停', value: 'paused' },
   { label: '离线', value: 'offline' },
   { label: '禁用', value: 'disabled' },
 ]
 
-const reviewActionOptions: { label: string; value: ReviewQueueAction }[] = [
+export const reviewActionOptions: { label: string; value: ReviewQueueAction }[] = [
   { label: '全部待处理', value: 'all' },
   { label: '等待反馈', value: 'human_feedback' },
   { label: '最终审核', value: 'final_review' },
 ]
 
-const reviewActionLabel: Record<ReviewQueueItem['action'], string> = {
+export const reviewActionLabel: Record<ReviewQueueItem['action'], string> = {
   human_feedback: '等待人工反馈',
   final_review: '最终审核',
   review: '需要审核',
 }
 
-const reviewActionColor: Record<ReviewQueueItem['action'], string> = {
+export const reviewActionColor: Record<ReviewQueueItem['action'], string> = {
   human_feedback: 'gold',
   final_review: 'purple',
   review: 'blue',
 }
 
 // Agent 预设模板
-const AGENT_TEMPLATES: Record<string, {
+export const AGENT_TEMPLATES: Record<string, {
   label: string
   name: string
   description: string
@@ -127,32 +127,32 @@ export const formatDateTime = (value?: string) => {
   return new Date(value).toLocaleString()
 }
 
-const parseLines = (value?: string) => {
+export const parseLines = (value?: string) => {
   return (value || '')
     .split('\n')
     .map(item => item.trim())
     .filter(Boolean)
 }
 
-const stringifyConfig = (agent?: Agent | null) => {
+export const stringifyConfig = (agent?: Agent | null) => {
   if (!agent?.config || Object.keys(agent.config).length === 0) {
     return '{}'
   }
   return JSON.stringify(agent.config, null, 2)
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
+export const isRecord = (value: unknown): value is Record<string, unknown> => {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
-const toStringList = (value: unknown): string[] => {
+export const toStringList = (value: unknown): string[] => {
   if (!Array.isArray(value)) {
     return []
   }
   return value.map(item => String(item)).filter(Boolean)
 }
 
-const matchStrategyLabel = (strategy: unknown) => {
+export const matchStrategyLabel = (strategy: unknown) => {
   if (strategy === 'capability_match') {
     return '能力匹配'
   }
@@ -162,7 +162,7 @@ const matchStrategyLabel = (strategy: unknown) => {
   return strategy ? String(strategy) : '指定任务'
 }
 
-const normalizeDispatchOptions = (options: DispatchTasksData): DispatchTasksData => {
+export const normalizeDispatchOptions = (options: DispatchTasksData): DispatchTasksData => {
   const payload: DispatchTasksData = {}
 
   if (typeof options.auto_dispatch_enabled === 'boolean') {
@@ -195,7 +195,7 @@ const normalizeDispatchOptions = (options: DispatchTasksData): DispatchTasksData
   return payload
 }
 
-const normalizeDispatchPolicyPayload = (options: DispatchTasksData): DispatchPolicy => ({
+export const normalizeDispatchPolicyPayload = (options: DispatchTasksData): DispatchPolicy => ({
   auto_dispatch_enabled: !!options.auto_dispatch_enabled,
   project_id: options.project_id ? Number(options.project_id) : null,
   max_assignments: options.max_assignments ? Number(options.max_assignments) : DEFAULT_DISPATCH_PREVIEW_OPTIONS.max_assignments || 5,
@@ -206,7 +206,7 @@ const normalizeDispatchPolicyPayload = (options: DispatchTasksData): DispatchPol
   candidate_agent_ids: (options.candidate_agent_ids || []).map(Number).filter(id => Number.isFinite(id) && id > 0),
 })
 
-const getAgentDispatchPolicy = (agent?: Agent | null): DispatchTasksData => {
+export const getAgentDispatchPolicy = (agent?: Agent | null): DispatchTasksData => {
   const config = isRecord(agent?.config) ? agent?.config : {}
   const policy = isRecord(config?.dispatch_policy) ? config.dispatch_policy : {}
   const candidateIds = Array.isArray(policy.candidate_agent_ids)
@@ -228,7 +228,7 @@ const getAgentDispatchPolicy = (agent?: Agent | null): DispatchTasksData => {
   }
 }
 
-const withAgentDispatchPolicy = (agent: Agent, policy: DispatchPolicy): Agent => ({
+export const withAgentDispatchPolicy = (agent: Agent, policy: DispatchPolicy): Agent => ({
   ...agent,
   config: {
     ...(isRecord(agent.config) ? agent.config : {}),
@@ -236,12 +236,12 @@ const withAgentDispatchPolicy = (agent: Agent, policy: DispatchPolicy): Agent =>
   },
 })
 
-const getClaimMatch = (runMetadata?: Record<string, unknown>) => {
+export const getClaimMatch = (runMetadata?: Record<string, unknown>) => {
   const capabilityMatch = runMetadata?.capability_match
   return isRecord(capabilityMatch) ? capabilityMatch : null
 }
 
-const renderCapabilities = (capabilities: string[] = [], limit = 4) => {
+export const renderCapabilities = (capabilities: string[] = [], limit = 4) => {
   if (capabilities.length === 0) {
     return <Text type="secondary">未配置</Text>
   }

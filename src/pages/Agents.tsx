@@ -87,12 +87,11 @@ import CollaborationGraphView from '../components/CollaborationGraphView'
 import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
+import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
+
 const { Title, Text } = Typography
 const { TextArea } = Input
 const { Option } = Select
-import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities } from './agents/utils'
-
-}
 
 const Agents: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([])
