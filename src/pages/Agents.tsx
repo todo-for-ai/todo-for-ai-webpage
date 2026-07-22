@@ -88,6 +88,7 @@ import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
+import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer } from './agents/modals'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -2809,267 +2810,27 @@ const Agents: React.FC = () => {
       </Modal>
 
       {/* 派活预览 Modal */}
-      <Modal
-        title={`派活预览 — ${dispatchPreviewAgent?.name || ''}`}
+      <DispatchPreviewModal
         open={dispatchPreviewOpen}
-        onCancel={() => {
+        agent={dispatchPreviewAgent}
+        preview={dispatchPreview}
+        loading={dispatchPreviewLoading}
+        applying={dispatchPreviewApplying}
+        policySaving={dispatchPolicySaving}
+        policyDirty={dispatchPolicyDirty}
+        options={dispatchPreviewOptions}
+        candidateOptions={dispatchCandidateOptions}
+        onClose={() => {
           setDispatchPreviewOpen(false)
           setDispatchPreviewAgent(null)
           setDispatchPreview(null)
           setDispatchPolicyDirty(false)
         }}
-        onOk={applyDispatchPreview}
-        okText="按此计划派发"
-        cancelText="关闭"
-        confirmLoading={dispatchPreviewApplying}
-        okButtonProps={{ disabled: !dispatchPreview || dispatchPreview.summary.planned === 0 }}
-        width={980}
-      >
-        <Spin spinning={dispatchPreviewLoading}>
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Row gutter={[12, 12]} align="bottom">
-              <Col xs={24} sm={12} md={6}>
-                <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>本轮上限</Text>
-                <InputNumber
-                  min={1}
-                  max={20}
-                  value={dispatchPreviewOptions.max_assignments}
-                  onChange={value => updateDispatchPreviewOptions({ max_assignments: value ? Number(value) : undefined })}
-                  style={{ width: '100%' }}
-                />
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>租约秒数</Text>
-                <InputNumber
-                  min={60}
-                  max={86400}
-                  step={300}
-                  value={dispatchPreviewOptions.lease_seconds}
-                  onChange={value => updateDispatchPreviewOptions({ lease_seconds: value ? Number(value) : undefined })}
-                  style={{ width: '100%' }}
-                />
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>项目 ID</Text>
-                <InputNumber
-                  min={1}
-                  value={dispatchPreviewOptions.project_id}
-                  onChange={value => updateDispatchPreviewOptions({ project_id: value ? Number(value) : undefined })}
-                  placeholder="全部项目"
-                  style={{ width: '100%' }}
-                />
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Space direction="vertical" size={6} style={{ width: '100%' }}>
-                  <Button
-                    block
-                    icon={<SearchOutlined />}
-                    loading={dispatchPreviewLoading}
-                    onClick={() => dispatchPreviewAgent && previewDispatchTasks(dispatchPreviewAgent, dispatchPreviewOptions)}
-                  >
-                    生成预览
-                  </Button>
-                  <Button
-                    block
-                    icon={<SettingOutlined />}
-                    loading={dispatchPolicySaving}
-                    disabled={dispatchPreviewLoading}
-                    onClick={saveDispatchPolicy}
-                  >
-                    保存策略
-                  </Button>
-                </Space>
-              </Col>
-              <Col span={24}>
-                <Select
-                  mode="multiple"
-                  allowClear
-                  maxTagCount="responsive"
-                  placeholder="默认使用所有空闲 Worker Agent"
-                  value={dispatchPreviewOptions.candidate_agent_ids || []}
-                  options={dispatchCandidateOptions}
-                  onChange={values => updateDispatchPreviewOptions({ candidate_agent_ids: values.length ? values : undefined })}
-                  style={{ width: '100%' }}
-                />
-              </Col>
-              <Col span={24}>
-                <Space wrap size={[16, 8]}>
-                  <Space size={6}>
-                    <Switch
-                      size="small"
-                      checked={!!dispatchPreviewOptions.auto_dispatch_enabled}
-                      onChange={checked => updateDispatchPreviewOptions({ auto_dispatch_enabled: checked })}
-                    />
-                    <Text>自动派活</Text>
-                  </Space>
-                  <Checkbox
-                    checked={dispatchPreviewOptions.match_capabilities !== false}
-                    onChange={event => updateDispatchPreviewOptions({
-                      match_capabilities: event.target.checked,
-                      require_capability_match: event.target.checked ? dispatchPreviewOptions.require_capability_match : false,
-                    })}
-                  >
-                    能力匹配
-                  </Checkbox>
-                  <Checkbox
-                    checked={!!dispatchPreviewOptions.require_capability_match}
-                    disabled={dispatchPreviewOptions.match_capabilities === false}
-                    onChange={event => updateDispatchPreviewOptions({ require_capability_match: event.target.checked })}
-                  >
-                    只派给有匹配分的 Agent
-                  </Checkbox>
-                  <Checkbox
-                    checked={!!dispatchPreviewOptions.include_self}
-                    onChange={event => updateDispatchPreviewOptions({ include_self: event.target.checked })}
-                  >
-                    允许协调器参与执行
-                  </Checkbox>
-                </Space>
-              </Col>
-            </Row>
-
-            <Alert
-              type={dispatchPolicyDirty ? 'warning' : 'info'}
-              showIcon
-              message={dispatchPolicyDirty ? '当前策略有未保存改动' : '当前策略已与后端同步'}
-              description={
-                dispatchPreview?.options ? (
-                  <Space wrap size={[6, 6]}>
-                    <Tag>上限 {dispatchPreview.options.max_assignments}</Tag>
-                    <Tag>租约 {dispatchPreview.options.lease_seconds}s</Tag>
-                    <Tag>{dispatchPreview.options.project_id ? `项目 #${dispatchPreview.options.project_id}` : '全部项目'}</Tag>
-                    <Tag color={dispatchPreview.options.match_capabilities ? 'blue' : 'default'}>
-                      {dispatchPreview.options.match_capabilities ? '能力匹配' : '先进先派'}
-                    </Tag>
-                    {dispatchPreview.options.require_capability_match && <Tag color="green">要求匹配分</Tag>}
-                    {dispatchPreview.options.include_self && <Tag color="purple">包含协调器</Tag>}
-                    {dispatchPreview.options.candidate_agent_ids.length > 0 && (
-                      <Tag>候选池 {dispatchPreview.options.candidate_agent_ids.length}</Tag>
-                    )}
-                  </Space>
-                ) : undefined
-              }
-            />
-
-            <Divider style={{ margin: '4px 0' }} />
-
-            {dispatchPreview ? (
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Row gutter={12}>
-                <Col span={6}><Statistic title="可派任务" value={dispatchPreview.summary.claimable_tasks} /></Col>
-                <Col span={6}><Statistic title="空闲 Agent" value={dispatchPreview.summary.available_agents} /></Col>
-                <Col span={6}><Statistic title="本轮计划" value={dispatchPreview.summary.planned} /></Col>
-                <Col span={6}><Statistic title="未派发" value={dispatchPreview.unmatched_tasks.length} /></Col>
-              </Row>
-
-              <Table
-                size="small"
-                rowKey={record => `${record.task.id}-${record.agent.id}`}
-                dataSource={dispatchPreview.proposed_assignments}
-                pagination={false}
-                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前没有可执行的派发计划" /> }}
-                columns={[
-                  {
-                    title: '任务',
-                    dataIndex: ['task', 'title'],
-                    render: (_: unknown, record) => (
-                      <Space direction="vertical" size={0}>
-                        <Text strong>#{record.task.id} {record.task.title}</Text>
-                        <Text type="secondary">{record.task.project?.name || '-'}</Text>
-                      </Space>
-                    ),
-                  },
-                  {
-                    title: '推荐 Agent',
-                    dataIndex: ['agent', 'name'],
-                    width: 180,
-                    render: (_: unknown, record) => (
-                      <Space direction="vertical" size={0}>
-                        <Text>{record.agent.name}</Text>
-                        <Text type="secondary">{record.agent.kind}</Text>
-                      </Space>
-                    ),
-                  },
-                  {
-                    title: '匹配',
-                    key: 'match',
-                    width: 220,
-                    render: (_: unknown, record) => (
-                      <Space direction="vertical" size={4}>
-                        <Space size={4}>
-                          <Tag color={record.score > 0 ? 'green' : 'default'}>{record.score} 分</Tag>
-                          <Tag color="blue">{matchStrategyLabel(record.strategy)}</Tag>
-                        </Space>
-                        {renderCapabilities(record.matched_capabilities || [], 3)}
-                      </Space>
-                    ),
-                  },
-                ]}
-              />
-
-              {dispatchPreview.task_candidates.length > 0 && (
-                <div>
-                  <Text strong>候选匹配</Text>
-                  <List
-                    size="small"
-                    dataSource={dispatchPreview.task_candidates.slice(0, 8)}
-                    renderItem={item => (
-                      <List.Item>
-                        <List.Item.Meta
-                          title={<Text>#{item.task.id} {item.task.title}</Text>}
-                          description={
-                            <Space wrap size={[4, 4]}>
-                              {item.candidates.length > 0 ? item.candidates.slice(0, 5).map(candidate => (
-                                <Tag key={candidate.agent.id} color={candidate.score > 0 ? 'green' : 'default'}>
-                                  {candidate.agent.name}: {candidate.score}
-                                </Tag>
-                              )) : (
-                                <Text type="secondary">无候选 Agent</Text>
-                              )}
-                            </Space>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                </div>
-              )}
-
-              {dispatchPreview.unmatched_tasks.length > 0 && (
-                <div>
-                  <Text strong>未进入本轮计划</Text>
-                  <List
-                    size="small"
-                    dataSource={dispatchPreview.unmatched_tasks.slice(0, 8)}
-                    renderItem={item => (
-                      <List.Item>
-                        <List.Item.Meta
-                          title={<Text>#{item.task.id} {item.task.title}</Text>}
-                          description={
-                            <Space wrap size={4}>
-                              <Tag color={item.reason === 'no_matching_agent' ? 'orange' : 'default'}>
-                                {item.reason === 'no_matching_agent' ? '无匹配 Agent' : '空闲容量不足'}
-                              </Tag>
-                              {item.best_candidate && (
-                                <Text type="secondary">
-                                  最佳候选 {item.best_candidate.agent.name}，{item.best_candidate.score} 分
-                                </Text>
-                              )}
-                            </Space>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                </div>
-              )}
-            </Space>
-          ) : (
-            !dispatchPreviewLoading && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无派活预览" />
-          )}
-          </Space>
-        </Spin>
-      </Modal>
+        onApply={applyDispatchPreview}
+        onPreview={() => dispatchPreviewAgent && previewDispatchTasks(dispatchPreviewAgent, dispatchPreviewOptions)}
+        onSavePolicy={saveDispatchPolicy}
+        onUpdateOptions={updateDispatchPreviewOptions}
+      />
 
       {/* Agent 直接消息 Modal */}
       <Modal
@@ -3648,322 +3409,58 @@ const Agents: React.FC = () => {
       </Modal>
 
       {/* Sandbox Management Drawer */}
-      <Drawer
-        title={<Space><SafetyOutlined /> Agent 执行沙盒</Space>}
+      <SandboxDrawer
         open={sandboxOpen}
+        sandboxes={sandboxes}
+        templates={sandboxTemplates}
+        agents={agents}
+        templateOpen={sandboxTemplateOpen}
+        formOpen={sandboxFormOpen}
+        editingId={sandboxEditingId}
+        formData={sandboxForm}
+        execOpen={sandboxExecOpen}
+        execSandboxId={sandboxExecSandboxId}
+        executions={sandboxExecutions}
+        execDetail={sandboxExecDetail}
+        execDetailOpen={sandboxExecDetailOpen}
+        checkOpen={sandboxCheckOpen}
+        checkForm={sandboxCheckForm}
+        checkResult={sandboxCheckResult}
+        startOpen={sandboxStartOpen}
+        startForm={sandboxStartForm}
+        violationOpen={sandboxViolationOpen}
+        violationForm={sandboxViolationForm}
         onClose={() => setSandboxOpen(false)}
-        width={900}
-        extra={<Space>
-          <Button icon={<AppstoreOutlined />} onClick={openSandboxTemplates}>模板</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateSandbox}>新建沙盒</Button>
-        </Space>}
-      >
-        <Alert
-          message="安全执行环境隔离"
-          description="沙盒策略控制 Agent 执行时的工具访问、网络出口、文件系统范围和资源限制。每次执行会冻结策略快照用于审计。"
-          type="info"
-          style={{ marginBottom: 16 }}
-          showIcon
-        />
-        <List
-          dataSource={sandboxes}
-          locale={{ emptyText: '暂无沙盒策略' }}
-          renderItem={(s: any) => (
-            <List.Item
-              actions={[
-                <Button size="small" onClick={() => openEditSandbox(s.id)}>编辑</Button>,
-                <Button size="small" icon={<SearchOutlined />} onClick={() => openSandboxCheck(s.id)}>检查</Button>,
-                <Button size="small" onClick={() => openSandboxStart(s.id)}>启动执行</Button>,
-                <Button size="small" onClick={() => openSandboxExec(s.id)}>执行记录</Button>,
-                <Popconfirm title="确认删除此沙盒？" onConfirm={() => deleteSandbox(s.id)}>
-                  <Button size="small" danger>删除</Button>
-                </Popconfirm>,
-              ]}
-            >
-              <List.Item.Meta
-                title={<Space><Text strong>{s.name}</Text><Tag color={s.security_level === 'strict' ? 'red' : s.security_level === 'permissive' ? 'green' : 'orange'}>{s.security_level}</Tag>{s.is_active ? <Tag color="blue">活跃</Tag> : <Tag>停用</Tag>}{s.agent_id ? <Tag color="purple">Agent #{s.agent_id}</Tag> : <Tag>未绑定</Tag>}</Space>}
-                description={
-                  <Space size={[16, 4]} wrap style={{ fontSize: 12 }}>
-                    <span>工具: {(s.allowed_tools || []).length}允许 / {(s.blocked_tools || []).length}禁止</span>
-                    <span>网络: {(s.allowed_network_hosts || []).length}主机</span>
-                    <span>超时: {s.timeout_seconds || 0}s</span>
-                    <span>内存: {s.max_memory_mb || 0}MB</span>
-                    <span>执行: {s.stats?.total_executions || 0}</span>
-                    <span style={{ color: (s.stats?.violations || 0) > 0 ? '#ff4d4f' : undefined }}>违规: {s.stats?.violations || 0}</span>
-                  </Space>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      </Drawer>
-
-      {/* Sandbox Templates Modal */}
-      <Modal
-        title={<Space><AppstoreOutlined /> 沙盒策略模板</Space>}
-        open={sandboxTemplateOpen}
-        onCancel={() => setSandboxTemplateOpen(false)}
-        footer={null}
-        width={720}
-      >
-        <Alert
-          message="从预置模板一键创建沙盒策略"
-          description="模板提供常见安全配置基线，创建后可进一步编辑调整。"
-          type="info"
-          style={{ marginBottom: 16 }}
-          showIcon
-        />
-        <List
-          dataSource={sandboxTemplates}
-          locale={{ emptyText: '暂无模板' }}
-          renderItem={(t: any) => (
-            <List.Item
-              actions={[
-                <Popconfirm key="inst" title={`从模板 "${t.name}" 创建沙盒？`} onConfirm={() => instantiateTemplate(t.key, t.name)}>
-                  <Button type="primary" size="small">从此模板创建</Button>
-                </Popconfirm>,
-              ]}
-            >
-              <List.Item.Meta
-                title={<Space><Text strong>{t.name}</Text><Tag color={t.security_level === 'strict' ? 'red' : t.security_level === 'permissive' ? 'green' : 'orange'}>{t.security_level}</Tag><Tag>{t.key}</Tag></Space>}
-                description={<Space size={[16, 4]} wrap style={{ fontSize: 12 }}>
-                  <span>{t.description}</span>
-                  <span>超时: {t.timeout_seconds}s</span>
-                  <span>内存: {t.max_memory_mb}MB</span>
-                  <span>工具: {(t.allowed_tools || []).length}允许/{(t.blocked_tools || []).length}禁止</span>
-                </Space>}
-              />
-            </List.Item>
-          )}
-        />
-      </Modal>
-
-      {/* Sandbox Create/Edit Modal */}
-      <Modal
-        title={sandboxEditingId ? '编辑沙盒策略' : '新建沙盒策略'}
-        open={sandboxFormOpen}
-        onCancel={() => setSandboxFormOpen(false)}
-        onOk={submitSandboxForm}
-        okText="保存"
-        width={680}
-      >
-        <Form layout="vertical">
-          <Form.Item label="名称" required>
-            <Input value={sandboxForm.name} onChange={e => setSandboxForm({ ...sandboxForm, name: e.target.value })} placeholder="沙盒名称" />
-          </Form.Item>
-          <Form.Item label="描述">
-            <Input value={sandboxForm.description} onChange={e => setSandboxForm({ ...sandboxForm, description: e.target.value })} placeholder="沙盒用途说明" />
-          </Form.Item>
-          <Form.Item label="绑定 Agent">
-            <Select value={sandboxForm.agent_id} onChange={v => setSandboxForm({ ...sandboxForm, agent_id: v })} allowClear placeholder="不绑定 (可复用模板)" style={{ width: '100%' }}>
-              {agents.map(a => <Select.Option key={a.id} value={a.id}>{a.name}</Select.Option>)}
-            </Select>
-          </Form.Item>
-          <Form.Item label="安全级别" required>
-            <Select value={sandboxForm.security_level} onChange={v => setSandboxForm({ ...sandboxForm, security_level: v })}>
-              <Select.Option value="strict">严格 (无网络/无写盘/仅白名单工具)</Select.Option>
-              <Select.Option value="moderate">中等 (受限网络/范围写盘/工具白名单)</Select.Option>
-              <Select.Option value="permissive">宽松 (全网络/全盘/工具黑名单)</Select.Option>
-            </Select>
-          </Form.Item>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item label="允许工具 (逗号分隔)">
-                <Input value={(sandboxForm.allowed_tools || []).join(', ')} onChange={e => setSandboxForm({ ...sandboxForm, allowed_tools: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] })} placeholder="tool_a, tool_b" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="禁止工具 (逗号分隔)">
-                <Input value={(sandboxForm.blocked_tools || []).join(', ')} onChange={e => setSandboxForm({ ...sandboxForm, blocked_tools: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] })} placeholder="tool_x, tool_y" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="允许网络主机 (逗号分隔, 后缀匹配)">
-            <Input value={(sandboxForm.allowed_network_hosts || []).join(', ')} onChange={e => setSandboxForm({ ...sandboxForm, allowed_network_hosts: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] })} placeholder="api.example.com, cdn.example.com" />
-          </Form.Item>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item label="写入路径 (逗号分隔)">
-                <Input value={(sandboxForm.fs_write_paths || []).join(', ')} onChange={e => setSandboxForm({ ...sandboxForm, fs_write_paths: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] })} placeholder="/tmp/work, /data/out" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="读取路径 (逗号分隔)">
-                <Input value={(sandboxForm.fs_read_paths || []).join(', ')} onChange={e => setSandboxForm({ ...sandboxForm, fs_read_paths: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] })} placeholder="/data/in" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={6}><Form.Item label="超时(秒)"><InputNumber value={sandboxForm.timeout_seconds} onChange={v => setSandboxForm({ ...sandboxForm, timeout_seconds: v || 0 })} min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={6}><Form.Item label="内存(MB)"><InputNumber value={sandboxForm.max_memory_mb} onChange={v => setSandboxForm({ ...sandboxForm, max_memory_mb: v || 0 })} min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={6}><Form.Item label="CPU(秒)"><InputNumber value={sandboxForm.max_cpu_seconds} onChange={v => setSandboxForm({ ...sandboxForm, max_cpu_seconds: v || 0 })} min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={6}><Form.Item label="输出Token"><InputNumber value={sandboxForm.max_output_tokens} onChange={v => setSandboxForm({ ...sandboxForm, max_output_tokens: v || 0 })} min={0} style={{ width: '100%' }} /></Form.Item></Col>
-          </Row>
-        </Form>
-      </Modal>
-
-      {/* Sandbox Executions Modal */}
-      <Modal
-        title={`沙盒执行记录 #${sandboxExecSandboxId || ''}`}
-        open={sandboxExecOpen}
-        onCancel={() => setSandboxExecOpen(false)}
-        footer={null}
-        width={820}
-      >
-        <Table
-          size="small"
-          dataSource={sandboxExecutions}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          columns={[
-            { title: 'ID', dataIndex: 'id', width: 60 },
-            { title: 'Agent', dataIndex: 'agent_id', width: 70, render: (v: number) => `#${v}` },
-            { title: '状态', dataIndex: 'status', width: 90, render: (s: string) => <Tag color={s === 'completed' ? 'green' : s === 'running' ? 'blue' : s === 'violated' ? 'red' : s === 'revoked' ? 'orange' : 'default'}>{s}</Tag> },
-            { title: '工具调用', dataIndex: 'tool_calls', width: 80 },
-            { title: '网络调用', dataIndex: 'network_calls', width: 80 },
-            { title: '开始', dataIndex: 'started_at', width: 150, render: (v: string) => v || '-' },
-            { title: '操作', width: 200, render: (_: any, r: any) => (
-              <Space size={4} wrap>
-                <Button size="small" onClick={() => openSandboxExecDetail(r.id)}>详情</Button>
-                {r.status === 'running' && <>
-                  <Button size="small" onClick={() => completeSandboxExec(r.id)}>完成</Button>
-                  <Popconfirm title="吊销此执行？" onConfirm={() => revokeSandboxExec(r.id)}>
-                    <Button size="small" danger>吊销</Button>
-                  </Popconfirm>
-                  <Button size="small" onClick={() => openSandboxViolation(r.id)}>报违规</Button>
-                </>}
-              </Space>
-            ) },
-          ]}
-        />
-      </Modal>
-
-      {/* Sandbox Execution Detail Modal */}
-      <Modal
-        title={`执行详情 #${sandboxExecDetail?.id || ''}`}
-        open={sandboxExecDetailOpen}
-        onCancel={() => setSandboxExecDetailOpen(false)}
-        footer={null}
-        width={700}
-      >
-        {sandboxExecDetail && (
-          <>
-            <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
-              <Descriptions.Item label="状态"><Tag color={sandboxExecDetail.status === 'completed' ? 'green' : sandboxExecDetail.status === 'violated' ? 'red' : 'blue'}>{sandboxExecDetail.status}</Tag></Descriptions.Item>
-              <Descriptions.Item label="Agent">#{sandboxExecDetail.agent_id}</Descriptions.Item>
-              <Descriptions.Item label="开始">{sandboxExecDetail.started_at || '-'}</Descriptions.Item>
-              <Descriptions.Item label="结束">{sandboxExecDetail.ended_at || '-'}</Descriptions.Item>
-              <Descriptions.Item label="工具调用">{sandboxExecDetail.tool_calls || 0}</Descriptions.Item>
-              <Descriptions.Item label="网络调用">{sandboxExecDetail.network_calls || 0}</Descriptions.Item>
-              <Descriptions.Item label="内存峰值">{sandboxExecDetail.peak_memory_mb || 0} MB</Descriptions.Item>
-              <Descriptions.Item label="CPU">{sandboxExecDetail.cpu_seconds || 0}s</Descriptions.Item>
-              {sandboxExecDetail.termination_reason && <Descriptions.Item label="终止原因" span={2}>{sandboxExecDetail.termination_reason}</Descriptions.Item>}
-              {sandboxExecDetail.output_summary && <Descriptions.Item label="输出摘要" span={2}>{sandboxExecDetail.output_summary}</Descriptions.Item>}
-            </Descriptions>
-            <Title level={5}>违规记录 ({(sandboxExecDetail.violations || []).length})</Title>
-            {(sandboxExecDetail.violations || []).length > 0 ? (
-              <List
-                size="small"
-                bordered
-                dataSource={sandboxExecDetail.violations}
-                renderItem={(v: any) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      title={<Space><Tag color="red">{v.violation_type}</Tag><Text type="secondary">{v.blocked_at}</Text></Space>}
-                      description={<div><div>{v.attempted_action}</div>{v.detail && <Text type="secondary" style={{ fontSize: 11 }}>{v.detail}</Text>}</div>}
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : <Empty description="无违规记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
-          </>
-        )}
-      </Modal>
-
-      {/* Sandbox Check Modal */}
-      <Modal
-        title="沙盒策略检查 (Dry-run)"
-        open={sandboxCheckOpen}
-        onCancel={() => setSandboxCheckOpen(false)}
-        onOk={submitSandboxCheck}
-        okText="检查"
-      >
-        <Form layout="vertical">
-          <Form.Item label="动作类型" required>
-            <Select value={sandboxCheckForm.action} onChange={v => setSandboxCheckForm({ ...sandboxCheckForm, action: v })}>
-              <Select.Option value="tool">工具调用 (tool)</Select.Option>
-              <Select.Option value="network">网络访问 (network)</Select.Option>
-              <Select.Option value="fs_write">文件写入 (fs_write)</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="目标" required>
-            <Input value={sandboxCheckForm.target} onChange={e => setSandboxCheckForm({ ...sandboxCheckForm, target: e.target.value })} placeholder="工具名 / 主机名 / 路径" />
-          </Form.Item>
-        </Form>
-        {sandboxCheckResult && (
-          <Alert
-            type={sandboxCheckResult.allowed ? 'success' : 'error'}
-            message={sandboxCheckResult.allowed ? '允许' : '拒绝'}
-            description={sandboxCheckResult.reason || (sandboxCheckResult.allowed ? '符合沙盒策略' : '违反沙盒策略')}
-            showIcon
-          />
-        )}
-      </Modal>
-
-      {/* Sandbox Start Execution Modal */}
-      <Modal
-        title="启动沙盒执行"
-        open={sandboxStartOpen}
-        onCancel={() => setSandboxStartOpen(false)}
-        onOk={submitSandboxStart}
-        okText="启动"
-      >
-        <Form layout="vertical">
-          <Form.Item label="Agent" required>
-            <Select value={sandboxStartForm.agent_id} onChange={v => setSandboxStartForm({ ...sandboxStartForm, agent_id: v })} placeholder="选择执行 Agent" style={{ width: '100%' }}>
-              {agents.map(a => <Select.Option key={a.id} value={a.id}>{a.name}</Select.Option>)}
-            </Select>
-          </Form.Item>
-          <Form.Item label="关联 AgentRun ID (可选)">
-            <InputNumber value={sandboxStartForm.run_id} onChange={v => setSandboxStartForm({ ...sandboxStartForm, run_id: v || undefined })} placeholder="AgentRun ID" style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item label="关联 WorkflowStepRun ID (可选)">
-            <InputNumber value={sandboxStartForm.step_run_id} onChange={v => setSandboxStartForm({ ...sandboxStartForm, step_run_id: v || undefined })} placeholder="StepRun ID" style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Sandbox Violation Report Modal */}
-      <Modal
-        title="报告沙盒违规"
-        open={sandboxViolationOpen}
-        onCancel={() => setSandboxViolationOpen(false)}
-        onOk={submitSandboxViolation}
-        okText="记录"
-      >
-        <Form layout="vertical">
-          <Form.Item label="违规类型" required>
-            <Select value={sandboxViolationForm.violation_type} onChange={v => setSandboxViolationForm({ ...sandboxViolationForm, violation_type: v })}>
-              <Select.Option value="disallowed_tool">禁止工具</Select.Option>
-              <Select.Option value="network_blocked">网络被阻止</Select.Option>
-              <Select.Option value="fs_write_blocked">写入被阻止</Select.Option>
-              <Select.Option value="fs_read_blocked">读取被阻止</Select.Option>
-              <Select.Option value="resource_limit">资源超限</Select.Option>
-              <Select.Option value="timeout">超时</Select.Option>
-              <Select.Option value="capability_exceed">能力越界</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="尝试动作">
-            <Input value={sandboxViolationForm.attempted_action} onChange={e => setSandboxViolationForm({ ...sandboxViolationForm, attempted_action: e.target.value })} placeholder="Agent 试图做什么" />
-          </Form.Item>
-          <Form.Item label="详情">
-            <Input.TextArea value={sandboxViolationForm.detail} onChange={e => setSandboxViolationForm({ ...sandboxViolationForm, detail: e.target.value })} placeholder="为何被阻止" rows={3} />
-          </Form.Item>
-          <Form.Item>
-            <Checkbox checked={sandboxViolationForm.terminate} onChange={e => setSandboxViolationForm({ ...sandboxViolationForm, terminate: e.target.checked })}>同时终止此执行 (标记为 violated)</Checkbox>
-          </Form.Item>
-        </Form>
-      </Modal>
+        onOpenTemplates={openSandboxTemplates}
+        onCreate={openCreateSandbox}
+        onEdit={openEditSandbox}
+        onDelete={deleteSandbox}
+        onSubmitForm={submitSandboxForm}
+        onInstantiateTemplate={instantiateTemplate}
+        onCloseTemplates={() => setSandboxTemplateOpen(false)}
+        onOpenExec={openSandboxExec}
+        onOpenExecDetail={openSandboxExecDetail}
+        onCompleteExec={completeSandboxExec}
+        onRevokeExec={revokeSandboxExec}
+        onOpenCheck={openSandboxCheck}
+        onSubmitCheck={submitSandboxCheck}
+        onOpenStart={openSandboxStart}
+        onSubmitStart={submitSandboxStart}
+        onOpenViolation={openSandboxViolation}
+        onSubmitViolation={submitSandboxViolation}
+        setFormData={setSandboxForm}
+        setCheckForm={setSandboxCheckForm}
+        setStartForm={setSandboxStartForm}
+        setViolationForm={setSandboxViolationForm}
+        setExecDetailOpen={setSandboxExecDetailOpen}
+        setExecOpen={setSandboxExecOpen}
+        setFormOpen={setSandboxFormOpen}
+        setTemplateOpen={setSandboxTemplateOpen}
+        setCheckOpen={setSandboxCheckOpen}
+        setStartOpen={setSandboxStartOpen}
+        setViolationOpen={setSandboxViolationOpen}
+        setCheckResult={setSandboxCheckResult}
+      />
 
       {/* Workflow Step Dynamic Reconfiguration Modal */}
       <Modal
@@ -4049,110 +3546,26 @@ const Agents: React.FC = () => {
       </Modal>
 
       {/* Conflict Management Drawer */}
-      <Drawer
-        title={<Space><WarningOutlined /> 协作冲突检测与解决</Space>}
+      <ConflictDrawer
         open={conflictOpen}
+        conflicts={conflicts}
+        detail={conflictDetail}
+        detailOpen={conflictDetailOpen}
+        resolveOpen={conflictResolveOpen}
+        resolveForm={conflictResolveForm}
         onClose={() => setConflictOpen(false)}
-        width={820}
-        extra={<Space>
-          <Button icon={<ReloadOutlined />} onClick={() => loadConflicts()}>刷新</Button>
-          <Popconfirm title="自动解决低严重度冲突？(严重冲突不会自动处理)" onConfirm={autoResolveConflicts}>
-            <Button icon={<ThunderboltOutlined />}>自动解决</Button>
-          </Popconfirm>
-          <Button type="primary" icon={<SearchOutlined />} onClick={scanConflicts} loading={false}>扫描冲突</Button>
-        </Space>}
-      >
-        <Alert
-          message="协作冲突检测"
-          description="扫描检测重复认领、过期分配、协议僵局等冲突，并提供自动/手动解决策略。"
-          type="info"
-          style={{ marginBottom: 16 }}
-          showIcon
-        />
-        <List
-          dataSource={conflicts}
-          locale={{ emptyText: '暂无活跃冲突' }}
-          renderItem={(c: any) => (
-            <List.Item
-              actions={[
-                <Button size="small" onClick={() => openConflictDetail(c.id)}>详情</Button>,
-                <Button size="small" type="primary" onClick={() => openResolveConflict(c)}>解决</Button>,
-                <Button size="small" onClick={() => acknowledgeConflict(c.id)}>确认</Button>,
-                <Popconfirm title="忽略此冲突？" onConfirm={() => ignoreConflict(c.id)}>
-                  <Button size="small" danger>忽略</Button>
-                </Popconfirm>,
-              ]}
-            >
-              <List.Item.Meta
-                title={<Space>
-                  <Tag color={c.severity === 'critical' ? 'red' : c.severity === 'warning' ? 'orange' : 'blue'}>{c.severity}</Tag>
-                  <Tag color="purple">{c.conflict_type}</Tag>
-                  <Tag>{c.status}</Tag>
-                  <Text strong>{c.title}</Text>
-                </Space>}
-                description={<Space size={[16, 4]} wrap style={{ fontSize: 12 }}>
-                  <span>涉及 Agent: {(c.agent_ids || []).map((id: number) => `#${id}`).join(', ') || '-'}</span>
-                  {c.suggested_strategy && <span>建议: {c.suggested_strategy}</span>}
-                </Space>}
-              />
-            </List.Item>
-          )}
-        />
-      </Drawer>
-
-      {/* Conflict Detail Modal */}
-      <Modal
-        title={`冲突详情 #${conflictDetail?.id || ''}`}
-        open={conflictDetailOpen}
-        onCancel={() => setConflictDetailOpen(false)}
-        footer={conflictDetail && conflictDetail.status !== 'resolved' && conflictDetail.status !== 'ignored' ? [
-          <Button key="ack" onClick={() => { acknowledgeConflict(conflictDetail.id); setConflictDetailOpen(false) }}>确认</Button>,
-          <Button key="ign" danger onClick={() => { ignoreConflict(conflictDetail.id); setConflictDetailOpen(false) }}>忽略</Button>,
-          <Button key="res" type="primary" onClick={() => { const c = conflictDetail; setConflictDetailOpen(false); openResolveConflict(c) }}>解决</Button>,
-        ] : null}
-      >
-        {conflictDetail && (
-          <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="类型"><Tag color="purple">{conflictDetail.conflict_type}</Tag></Descriptions.Item>
-            <Descriptions.Item label="严重度"><Tag color={conflictDetail.severity === 'critical' ? 'red' : conflictDetail.severity === 'warning' ? 'orange' : 'blue'}>{conflictDetail.severity}</Tag></Descriptions.Item>
-            <Descriptions.Item label="状态"><Tag>{conflictDetail.status}</Tag></Descriptions.Item>
-            <Descriptions.Item label="标题">{conflictDetail.title}</Descriptions.Item>
-            <Descriptions.Item label="描述">{conflictDetail.description}</Descriptions.Item>
-            <Descriptions.Item label="涉及 Agent">{(conflictDetail.agent_ids || []).map((id: number) => `#${id}`).join(', ') || '-'}</Descriptions.Item>
-            <Descriptions.Item label="建议策略">{conflictDetail.suggested_strategy || '-'}</Descriptions.Item>
-            {conflictDetail.task_id && <Descriptions.Item label="任务">#{conflictDetail.task_id}</Descriptions.Item>}
-            {conflictDetail.protocol_id && <Descriptions.Item label="协议">#{conflictDetail.protocol_id}</Descriptions.Item>}
-            {conflictDetail.evidence && Object.keys(conflictDetail.evidence).length > 0 && <Descriptions.Item label="证据"><pre style={{ margin: 0, fontSize: 11 }}>{JSON.stringify(conflictDetail.evidence, null, 2)}</pre></Descriptions.Item>}
-            {conflictDetail.resolution && <Descriptions.Item label="解决说明">{conflictDetail.resolution}</Descriptions.Item>}
-          </Descriptions>
-        )}
-      </Modal>
-
-      {/* Conflict Resolve Modal */}
-      <Modal
-        title={`解决冲突 #${conflictResolveForm.conflict_id}`}
-        open={conflictResolveOpen}
-        onCancel={() => setConflictResolveOpen(false)}
-        onOk={submitResolveConflict}
-        okText="解决"
-      >
-        <Form layout="vertical">
-          <Form.Item label="解决策略" required>
-            <Select value={conflictResolveForm.strategy} onChange={v => setConflictResolveForm({ ...conflictResolveForm, strategy: v })}>
-              <Select.Option value="first_wins">先到先得 (保留最早分配)</Select.Option>
-              <Select.Option value="highest_reputation">最高声誉 (声誉最佳者胜出)</Select.Option>
-              <Select.Option value="least_loaded">最少负载 (活跃任务最少者胜出)</Select.Option>
-              <Select.Option value="auto_retry">自动重试 (取消过期/重新排队)</Select.Option>
-              <Select.Option value="split">拆分 (分配给多方)</Select.Option>
-              <Select.Option value="escalate">升级 (转交协调者)</Select.Option>
-              <Select.Option value="manual">人工 (仅记录)</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="解决说明">
-            <Input.TextArea value={conflictResolveForm.description} onChange={e => setConflictResolveForm({ ...conflictResolveForm, description: e.target.value })} placeholder="可选: 解决备注" rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onRefresh={() => loadConflicts()}
+        onScan={scanConflicts}
+        onAutoResolve={autoResolveConflicts}
+        onOpenDetail={openConflictDetail}
+        onAcknowledge={acknowledgeConflict}
+        onIgnore={ignoreConflict}
+        onOpenResolve={openResolveConflict}
+        onSubmitResolve={submitResolveConflict}
+        setDetailOpen={setConflictDetailOpen}
+        setResolveOpen={setConflictResolveOpen}
+        setResolveForm={setConflictResolveForm}
+      />
 
       {/* Protocol Respond Modal */}
       <Modal
