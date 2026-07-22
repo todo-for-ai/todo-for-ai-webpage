@@ -88,7 +88,7 @@ import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
-import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal } from './agents/modals'
+import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer } from './agents/modals'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -2749,29 +2749,15 @@ const Agents: React.FC = () => {
       </Drawer>
 
       {/* 广播消息 Modal */}
-      <Modal
-        title={`广播消息 — ${broadcastAgent?.name || ''}`}
+      <BroadcastModal
         open={broadcastOpen}
-        onCancel={() => { setBroadcastOpen(false); setBroadcastAgent(null); setBroadcastContent('') }}
-        onOk={sendBroadcast}
-        confirmLoading={broadcasting}
-        okText="发送广播"
-        cancelText="取消"
-      >
-        <div style={{ marginBottom: 12 }}>
-          <Text type="secondary">
-            消息将发送给所有在线（ACTIVE）的 Agent，通过 Notification 系统推送给它们。
-          </Text>
-        </div>
-        <Input.TextArea
-          rows={4}
-          placeholder="请输入要广播的内容..."
-          value={broadcastContent}
-          onChange={e => setBroadcastContent(e.target.value)}
-          maxLength={500}
-          showCount
-        />
-      </Modal>
+        agent={broadcastAgent}
+        content={broadcastContent}
+        sending={broadcasting}
+        onClose={() => { setBroadcastOpen(false); setBroadcastAgent(null); setBroadcastContent('') }}
+        onContentChange={setBroadcastContent}
+        onSend={sendBroadcast}
+      />
 
       {/* 派活预览 Modal */}
       <DispatchPreviewModal
@@ -2894,121 +2880,32 @@ const Agents: React.FC = () => {
         </Spin>
       </Modal>
 
-      {/* Channels Modal */}
-      <Modal
-        title="协作频道"
+      {/* Channels Drawer */}
+      <ChannelsDrawer
         open={channelsOpen}
-        onCancel={() => setChannelsOpen(false)}
-        footer={null}
-        width={800}
-      >
-        <div style={{ marginBottom: 12 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setChannelCreateOpen(true)}>创建频道</Button>
-        </div>
-        <List
-          size="small"
-          dataSource={channels}
-          renderItem={(ch: any) => (
-            <List.Item
-              actions={[
-                <Button key="chat" size="small" type="primary" onClick={() => openChat(ch)}>进入</Button>,
-                <Popconfirm key="del" title="确定删除此频道？" onConfirm={async () => {
-                  try { await agentsApi.deleteChannel(ch.id); message.success('已删除'); loadChannels() }
-                  catch { message.error('删除失败') }
-                }}>
-                  <Button size="small" danger icon={<DeleteOutlined />} />
-                </Popconfirm>,
-              ]}
-            >
-              <List.Item.Meta
-                title={<Space><TeamOutlined />{ch.name}<Tag>{(ch.members || []).length} 成员</Tag></Space>}
-                description={
-                  <div>
-                    <span>{ch.description || (ch.task_id ? `任务 #${ch.task_id}` : ch.project_id ? `项目 #${ch.project_id}` : '全局频道')}</span>
-                    {channelActivityTrend && (() => {
-                      const chActivity = channelActivityTrend.channels.find((ca: any) => ca.channel_id === ch.id)
-                      if (!chActivity || chActivity.daily_counts.length < 2) return null
-                      const maxV = Math.max(1, ...chActivity.daily_counts)
-                      const sparkW = 120
-                      const sparkH = 20
-                      const pts = chActivity.daily_counts.map((v: number, i: number) => `${(i / (chActivity.daily_counts.length - 1)) * sparkW},${sparkH - (v / maxV) * (sparkH - 2)}`).join(' ')
-                      return (
-                        <div style={{ marginTop: 4 }}>
-                          <svg width={sparkW} height={sparkH} style={{ display: 'block' }}>
-                            <polyline points={pts} fill="none" stroke="#1890ff" strokeWidth={1.5} />
-                          </svg>
-                          <Text type="secondary" style={{ fontSize: 9, marginLeft: 4 }}>活跃成员 {chActivity.active_members}</Text>
-                        </div>
-                      )
-                    })()}
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      </Modal>
-
-      {/* Create Channel Modal */}
-      <Modal
-        title="创建协作频道"
-        open={channelCreateOpen}
-        onCancel={() => setChannelCreateOpen(false)}
-        onOk={createChannel}
-      >
-        <Form layout="vertical">
-          <Form.Item label="频道名称" required>
-            <Input value={channelForm.name} onChange={e => setChannelForm({ ...channelForm, name: e.target.value })} placeholder="例如：代码审查讨论" />
-          </Form.Item>
-          <Form.Item label="描述">
-            <Input.TextArea value={channelForm.description} onChange={e => setChannelForm({ ...channelForm, description: e.target.value })} placeholder="频道用途说明" rows={2} />
-          </Form.Item>
-          <Form.Item label="初始成员（Agent）">
-            <Select
-              mode="multiple"
-              value={channelForm.agent_ids}
-              onChange={v => setChannelForm({ ...channelForm, agent_ids: v })}
-              style={{ width: '100%' }}
-              options={agents.map(a => ({ value: a.id, label: `${a.name} (${a.kind})` }))}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Chat Modal */}
-      <Modal
-        title={`频道: ${chatChannel?.name || ''}`}
-        open={chatOpen}
-        onCancel={() => { setChatOpen(false); setChatChannel(null); setChatMessages([]) }}
-        footer={null}
-        width={700}
-      >
-        <div style={{ maxHeight: 400, overflowY: 'auto', marginBottom: 12, padding: 8, background: '#fafafa', borderRadius: 8 }}>
-          {chatMessages.length === 0 ? (
-            <Empty description="暂无消息" />
-          ) : (
-            chatMessages.map((msg: any) => (
-              <div key={msg.id} style={{ marginBottom: 8, padding: '6px 10px', background: msg.sender_type === 'human' ? '#e6f7ff' : '#fff', borderRadius: 6, border: '1px solid #f0f0f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                  <Text strong style={{ fontSize: 12 }}>{msg.sender_name || '未知'}</Text>
-                  <Text type="secondary" style={{ fontSize: 11 }}>{msg.created_at ? new Date(msg.created_at).toLocaleString() : ''}</Text>
-                </div>
-                <div style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-              </div>
-            ))
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Input
-            value={chatInput}
-            onChange={e => setChatInput(e.target.value)}
-            onPressEnter={sendChatMessage}
-            placeholder="输入消息..."
-            disabled={chatSending}
-          />
-          <Button type="primary" onClick={sendChatMessage} loading={chatSending} icon={<SendOutlined />}>发送</Button>
-        </div>
-      </Modal>
+        channels={channels}
+        agents={agents}
+        activityTrend={channelActivityTrend}
+        createOpen={channelCreateOpen}
+        createForm={channelForm}
+        chatOpen={chatOpen}
+        chatChannel={chatChannel}
+        chatMessages={chatMessages}
+        chatInput={chatInput}
+        chatSending={chatSending}
+        onClose={() => setChannelsOpen(false)}
+        onCreateOpenChange={setChannelCreateOpen}
+        onCreateFormChange={setChannelForm}
+        onCreate={createChannel}
+        onOpenChat={openChat}
+        onDeleteChannel={async (channelId: number) => {
+          try { await agentsApi.deleteChannel(channelId); message.success('已删除'); loadChannels() }
+          catch { message.error('删除失败') }
+        }}
+        onChatInputChange={setChatInput}
+        onSendChatMessage={sendChatMessage}
+        onCloseChat={() => { setChatOpen(false); setChatChannel(null); setChatMessages([]) }}
+      />
 
       {/* Collaboration Templates Modal */}
       <Modal
@@ -3305,132 +3202,23 @@ const Agents: React.FC = () => {
         setResolveForm={setConflictResolveForm}
       />
 
-      {/* Experience Create Modal */}
-      <Modal
-        title="添加经验"
-        open={experienceCreateOpen}
-        onCancel={() => setExperienceCreateOpen(false)}
-        onOk={createExperience}
-        okText="创建"
-        cancelText="取消"
-        width={600}
-      >
-        <Form layout="vertical">
-          <Form.Item label="经验类型" required>
-            <Select value={experienceForm.experience_type} onChange={v => setExperienceForm({ ...experienceForm, experience_type: v })}>
-              <Option value="success_pattern">成功模式</Option>
-              <Option value="failure_pattern">失败模式</Option>
-              <Option value="strategy">策略</Option>
-              <Option value="optimization">优化</Option>
-              <Option value="anti_pattern">反模式</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="领域">
-            <Input value={experienceForm.domain} onChange={e => setExperienceForm({ ...experienceForm, domain: e.target.value })} placeholder="e.g. python, frontend, devops" />
-          </Form.Item>
-          <Form.Item label="任务类型">
-            <Input value={experienceForm.task_type} onChange={e => setExperienceForm({ ...experienceForm, task_type: e.target.value })} placeholder="e.g. code_review, bug_fix" />
-          </Form.Item>
-          <Form.Item label="策略描述" required>
-            <Input.TextArea value={experienceForm.strategy} onChange={e => setExperienceForm({ ...experienceForm, strategy: e.target.value })} placeholder="使用了什么策略/方法" rows={3} />
-          </Form.Item>
-          <Form.Item label="结果模式">
-            <Input.TextArea value={experienceForm.outcome_pattern} onChange={e => setExperienceForm({ ...experienceForm, outcome_pattern: e.target.value })} placeholder="发生了什么 — 成功因素或失败原因" rows={2} />
-          </Form.Item>
-          <Form.Item label="关键学习">
-            <Input.TextArea value={experienceForm.key_learnings} onChange={e => setExperienceForm({ ...experienceForm, key_learnings: e.target.value })} placeholder="对未来类似任务的精简建议" rows={2} />
-          </Form.Item>
-          <Form.Item label="置信度">
-            <InputNumber value={experienceForm.confidence} onChange={v => setExperienceForm({ ...experienceForm, confidence: v ?? 0.7 })} min={0} max={1} step={0.1} style={{ width: 120 }} />
-          </Form.Item>
-          <Form.Item label="分享给其他 Agent">
-            <Select value={experienceForm.is_shared ? 'true' : 'false'} onChange={v => setExperienceForm({ ...experienceForm, is_shared: v === 'true' })}>
-              <Option value="false">否</Option>
-              <Option value="true">是</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Experience Detail Modal */}
-      <Modal
-        title={`经验详情 #${experienceDetail?.id || ''}`}
-        open={experienceDetailOpen}
-        onCancel={() => setExperienceDetailOpen(false)}
-        footer={null}
-        width={600}
-      >
-        {experienceDetail && (
-          <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="类型">
-              <Tag color={experienceDetail.experience_type === 'success_pattern' ? 'green' : experienceDetail.experience_type === 'failure_pattern' ? 'red' : 'blue'}>
-                {experienceDetail.experience_type}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="领域">{experienceDetail.domain || '-'}</Descriptions.Item>
-            <Descriptions.Item label="任务类型">{experienceDetail.task_type || '-'}</Descriptions.Item>
-            <Descriptions.Item label="能力">{(experienceDetail.capabilities_used || []).map((c: string, i: number) => <Tag key={i} style={{ fontSize: 10 }}>{c}</Tag>)}</Descriptions.Item>
-            <Descriptions.Item label="策略">{experienceDetail.strategy || '-'}</Descriptions.Item>
-            <Descriptions.Item label="结果模式">{experienceDetail.outcome_pattern || '-'}</Descriptions.Item>
-            <Descriptions.Item label="关键学习">{experienceDetail.key_learnings || '-'}</Descriptions.Item>
-            <Descriptions.Item label="置信度">{experienceDetail.confidence}</Descriptions.Item>
-            <Descriptions.Item label="适用性">{experienceDetail.applicability_score}</Descriptions.Item>
-            <Descriptions.Item label="复用次数">{experienceDetail.times_reused || 0}</Descriptions.Item>
-            <Descriptions.Item label="已分享">{experienceDetail.is_shared ? '是' : '否'}</Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
-
-      {/* Shared Experiences (Collective Learning) Modal */}
-      <Modal
-        title="群体学习 — 从其他 Agent 的共享经验中学习"
-        open={sharedExperiencesOpen}
-        onCancel={() => setSharedExperiencesOpen(false)}
-        footer={null}
-        width={700}
-      >
-        <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-          以下是其他 Agent 分享的经验，{selectedAgent?.name} 可以选择学习并内化为自己的经验。
-        </Text>
-        {sharedExperiences.length === 0 ? (
-          <Empty description="暂无可学习的共享经验" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        ) : (
-          <List
-            size="small"
-            dataSource={sharedExperiences}
-            style={{ maxHeight: 500, overflowY: 'auto' }}
-            renderItem={(exp: any) => (
-              <List.Item
-                actions={[
-                  <Button key="learn" size="small" type="primary" icon={<BulbOutlined />} onClick={() => learnFromExperience(exp.id)}>
-                    学习
-                  </Button>,
-                ]}
-              >
-                <List.Item.Meta
-                  title={
-                    <Space>
-                      <Tag color={exp.experience_type === 'success_pattern' ? 'green' : exp.experience_type === 'failure_pattern' ? 'red' : 'blue'}>
-                        {exp.experience_type === 'success_pattern' ? '成功' : exp.experience_type === 'failure_pattern' ? '失败' : '策略'}
-                      </Tag>
-                      {exp.domain && <Tag color="purple">{exp.domain}</Tag>}
-                      <Text type="secondary" style={{ fontSize: 11 }}>来自 Agent #{exp.agent_id}</Text>
-                    </Space>
-                  }
-                  description={
-                    <div>
-                      <div><Text style={{ fontSize: 12 }}>{exp.key_learnings || exp.strategy?.substring(0, 100)}</Text></div>
-                      <Space size={4} style={{ marginTop: 4 }}>
-                        <Text type="secondary" style={{ fontSize: 11 }}>置信度: {exp.confidence}</Text>
-                      </Space>
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        )}
-      </Modal>
+      {/* Experience Modals */}
+      <ExperienceDrawer
+        createOpen={experienceCreateOpen}
+        createForm={experienceForm}
+        detailOpen={experienceDetailOpen}
+        detail={experienceDetail}
+        sharedOpen={sharedExperiencesOpen}
+        sharedExperiences={sharedExperiences}
+        selectedAgent={selectedAgent}
+        onCreateOpenChange={setExperienceCreateOpen}
+        onCreateFormChange={setExperienceForm}
+        onCreate={createExperience}
+        onDetailOpenChange={setExperienceDetailOpen}
+        onOpenDetail={openExperienceDetail}
+        onSharedOpenChange={setSharedExperiencesOpen}
+        onLearnFromExperience={learnFromExperience}
+      />
 
       {/* Cross-Project Authorize Modal */}
       <Modal
