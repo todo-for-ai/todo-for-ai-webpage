@@ -88,7 +88,7 @@ import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
-import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer } from './agents/modals'
+import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal } from './agents/modals'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -2606,62 +2606,26 @@ const Agents: React.FC = () => {
         />
 
         {/* Knowledge Base */}
-        {selectedAgent && (
-          <>
-            <Divider orientation="left" style={{ margin: '16px 0 8px' }}>
-              <Space>
-                <BookOutlined />
-                <Text>知识库</Text>
-                <Tag color="blue">{knowledgeEntries.length}</Tag>
-              </Space>
-            </Divider>
-            <Space style={{ marginBottom: 8, width: '100%' }} wrap>
-              <Input.Search
-                placeholder="搜索知识..."
-                value={knowledgeSearch}
-                onChange={e => setKnowledgeSearch(e.target.value)}
-                onSearch={() => selectedAgent && loadKnowledge(selectedAgent)}
-                style={{ width: 200 }}
-                allowClear
-              />
-              <Button icon={<PlusOutlined />} onClick={() => setKnowledgeCreateOpen(true)}>添加知识</Button>
-              <Button icon={<ThunderboltOutlined />} onClick={autoExtractKnowledge}>自动提取</Button>
-            </Space>
-            <Spin spinning={knowledgeLoading}>
-              {knowledgeEntries.length === 0 && !knowledgeLoading ? (
-                <Empty description="暂无知识条目" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-              ) : (
-                <List
-                  size="small"
-                  dataSource={knowledgeEntries}
-                  style={{ maxHeight: 300, overflowY: 'auto' }}
-                  renderItem={(entry: any) => (
-                    <List.Item
-                      style={{ cursor: 'pointer', padding: '6px 8px' }}
-                      actions={[
-                        <Popconfirm key="del" title="确定删除？" onConfirm={() => deleteKnowledgeEntry(entry.id)}>
-                          <Button size="small" danger icon={<DeleteOutlined />} />
-                        </Popconfirm>,
-                      ]}
-                      onClick={() => openKnowledgeDetail(entry)}
-                    >
-                      <List.Item.Meta
-                        title={<Space><Text strong>{entry.title}</Text> {entry.entry_type && <Tag>{entry.entry_type}</Tag>} {entry.domain && <Tag color="blue">{entry.domain}</Tag>}</Space>}
-                        description={
-                          <Space size={4}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>置信度: {entry.confidence ?? 1.0}</Text>
-                            <Text type="secondary" style={{ fontSize: 11 }}>访问: {entry.access_count || 0}</Text>
-                            {entry.tags && (entry.tags as string[]).map((t, i) => <Tag key={i} style={{ fontSize: 10 }}>{t}</Tag>)}
-                          </Space>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              )}
-            </Spin>
-          </>
-        )}
+        <KnowledgeDrawer
+          selectedAgent={selectedAgent}
+          entries={knowledgeEntries}
+          loading={knowledgeLoading}
+          search={knowledgeSearch}
+          onSearchChange={setKnowledgeSearch}
+          onSearch={() => selectedAgent && loadKnowledge(selectedAgent)}
+          createOpen={knowledgeCreateOpen}
+          form={knowledgeForm}
+          onFormChange={setKnowledgeForm}
+          onCreateOpenChange={setKnowledgeCreateOpen}
+          onCreate={createKnowledgeEntry}
+          detailOpen={knowledgeDetailOpen}
+          detail={knowledgeDetail}
+          onDetailOpenChange={setKnowledgeDetailOpen}
+          onDetailChange={setKnowledgeDetail}
+          onDelete={deleteKnowledgeEntry}
+          onOpenDetail={openKnowledgeDetail}
+          onAutoExtract={autoExtractKnowledge}
+        />
 
         {/* Agent Experience (Collective Intelligence) */}
         {selectedAgent && (
@@ -3152,261 +3116,35 @@ const Agents: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* Knowledge Create Modal */}
-      <Modal
-        title="添加知识条目"
-        open={knowledgeCreateOpen}
-        onCancel={() => setKnowledgeCreateOpen(false)}
-        onOk={createKnowledgeEntry}
-        okText="创建"
-        width={600}
-      >
-        <Form layout="vertical">
-          <Form.Item label="标题" required>
-            <Input value={knowledgeForm.title} onChange={e => setKnowledgeForm({ ...knowledgeForm, title: e.target.value })} placeholder="简短描述这条知识" />
-          </Form.Item>
-          <Form.Item label="内容" required>
-            <Input.TextArea value={knowledgeForm.content} onChange={e => setKnowledgeForm({ ...knowledgeForm, content: e.target.value })} placeholder="知识内容（支持 Markdown）" rows={6} />
-          </Form.Item>
-          <Form.Item label="领域">
-            <Input value={knowledgeForm.domain} onChange={e => setKnowledgeForm({ ...knowledgeForm, domain: e.target.value })} placeholder="如: python, frontend, devops" />
-          </Form.Item>
-          <Form.Item label="类型">
-            <Select value={knowledgeForm.entry_type} onChange={v => setKnowledgeForm({ ...knowledgeForm, entry_type: v })} style={{ width: 160 }}>
-              <Select.Option value="insight">洞察</Select.Option>
-              <Select.Option value="pattern">模式</Select.Option>
-              <Select.Option value="solution">解决方案</Select.Option>
-              <Select.Option value="reference">参考</Select.Option>
-              <Select.Option value="rule">规则</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="标签">
-            <Select mode="tags" value={knowledgeForm.tags} onChange={v => setKnowledgeForm({ ...knowledgeForm, tags: v })} placeholder="添加标签" style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item label="置信度">
-            <InputNumber min={0} max={1} step={0.1} value={knowledgeForm.confidence} onChange={v => setKnowledgeForm({ ...knowledgeForm, confidence: v ?? 1.0 })} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Knowledge Detail Modal */}
-      <Modal
-        title={knowledgeDetail?.title || '知识详情'}
-        open={knowledgeDetailOpen}
-        onCancel={() => { setKnowledgeDetailOpen(false); setKnowledgeDetail(null) }}
-        footer={null}
-        width={700}
-      >
-        {knowledgeDetail && (
-          <div>
-            <Space style={{ marginBottom: 12 }} wrap>
-              {knowledgeDetail.entry_type && <Tag>{knowledgeDetail.entry_type}</Tag>}
-              {knowledgeDetail.domain && <Tag color="blue">{knowledgeDetail.domain}</Tag>}
-              <Tag>置信度: {knowledgeDetail.confidence ?? 1.0}</Tag>
-              <Tag>访问: {knowledgeDetail.access_count || 0}</Tag>
-              <Tag>来源: {knowledgeDetail.source_type || 'manual'}</Tag>
-              {knowledgeDetail.tags && (knowledgeDetail.tags as string[]).map((t: string, i: number) => <Tag key={i} color="geekblue">{t}</Tag>)}
-            </Space>
-            <div style={{ whiteSpace: 'pre-wrap', background: '#f5f5f5', padding: 16, borderRadius: 8, maxHeight: 400, overflowY: 'auto' }}>
-              {knowledgeDetail.content}
-            </div>
-            {knowledgeDetail.source_task_id && (
-              <Text type="secondary" style={{ marginTop: 8, display: 'block' }}>
-                来源任务: #{knowledgeDetail.source_task_id}
-              </Text>
-            )}
-          </div>
-        )}
-      </Modal>
-
       {/* Protocols Modal */}
-      <Modal
-        title="协作协议"
+      <ProtocolsModal
         open={protocolsOpen}
-        onCancel={() => setProtocolsOpen(false)}
-        footer={<Button type="primary" icon={<PlusOutlined />} onClick={() => setProtocolCreateOpen(true)}>创建协议</Button>}
-        width={800}
-      >
-        <Spin spinning={protocolsLoading}>
-          {protocols.length === 0 && !protocolsLoading ? (
-            <Empty description="暂无协议" />
-          ) : (
-            <List
-              dataSource={protocols}
-              renderItem={(p: any) => (
-                <List.Item
-                  style={{ cursor: 'pointer' }}
-                  actions={[
-                    p.status === 'open' || p.status === 'voting' ? (
-                      <Button key="respond" size="small" type="primary" onClick={(e) => { e.stopPropagation(); setProtocolRespondMsg({ ...protocolRespondMsg, protocol_id: p.id }); setProtocolRespondOpen(true) }}>响应</Button>
-                    ) : null,
-                    p.status === 'open' || p.status === 'voting' ? (
-                      <Popconfirm key="reject" title="确定拒绝此协议？" onConfirm={(e: any) => { e?.stopPropagation?.(); resolveProtocol(p.id, 'rejected') }}>
-                        <Button size="small" danger onClick={(e) => e.stopPropagation()}>拒绝</Button>
-                      </Popconfirm>
-                    ) : null,
-                  ].filter(Boolean)}
-                  onClick={() => openProtocolDetail(p.id)}
-                >
-                  <List.Item.Meta
-                    title={<Space>
-                      {p.title}
-                      <Tag color={p.status === 'accepted' ? 'green' : p.status === 'rejected' ? 'red' : p.status === 'open' ? 'blue' : 'default'}>{p.status}</Tag>
-                      <Tag>{p.protocol_type}</Tag>
-                    </Space>}
-                    description={<Text type="secondary">发起者: Agent #{p.initiator_agent_id} | {p.created_at ? new Date(p.created_at).toLocaleString() : ''}</Text>}
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </Spin>
-      </Modal>
-
-      {/* Create Protocol Modal */}
-      <Modal
-        title="创建协作协议"
-        open={protocolCreateOpen}
-        onCancel={() => setProtocolCreateOpen(false)}
-        onOk={createProtocol}
-        okText="创建"
-      >
-        <Form layout="vertical">
-          <Form.Item label="协议类型" required>
-            <Select value={protocolForm.protocol_type} onChange={v => setProtocolForm({ ...protocolForm, protocol_type: v })}>
-              <Select.Option value="proposal">提案</Select.Option>
-              <Select.Option value="vote">投票</Select.Option>
-              <Select.Option value="consensus">共识</Select.Option>
-              <Select.Option value="auction">竞标</Select.Option>
-              <Select.Option value="handoff">交接</Select.Option>
-              <Select.Option value="deliberation">审议</Select.Option>
-              <Select.Option value="ranked_vote">排名投票</Select.Option>
-              <Select.Option value="weighted_vote">加权投票</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="标题" required>
-            <Input value={protocolForm.title} onChange={e => setProtocolForm({ ...protocolForm, title: e.target.value })} placeholder="协议标题" />
-          </Form.Item>
-          <Form.Item label="描述">
-            <Input.TextArea value={protocolForm.description} onChange={e => setProtocolForm({ ...protocolForm, description: e.target.value })} placeholder="详细描述" rows={3} />
-          </Form.Item>
-          <Form.Item label="发起 Agent" required>
-            <Select value={protocolForm.initiator_agent_id} onChange={v => setProtocolForm({ ...protocolForm, initiator_agent_id: v })} placeholder="选择发起 Agent" style={{ width: '100%' }}>
-              {agents.map(a => <Select.Option key={a.id} value={a.id}>{a.name} ({a.kind})</Select.Option>)}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Protocol Detail Modal */}
-      <Modal
-        title={protocolDetail?.title || '协议详情'}
-        open={protocolDetailOpen}
-        onCancel={() => { setProtocolDetailOpen(false); setProtocolDetail(null) }}
-        footer={null}
-        width={700}
-      >
-        {protocolDetail && (
-          <div>
-            <Space style={{ marginBottom: 12 }} wrap>
-              <Tag color={protocolDetail.status === 'accepted' ? 'green' : protocolDetail.status === 'rejected' ? 'red' : 'blue'}>{protocolDetail.status}</Tag>
-              <Tag>{protocolDetail.protocol_type}</Tag>
-              {protocolDetail.description && <Text type="secondary">{protocolDetail.description}</Text>}
-            </Space>
-            {/* Show protocol result for resolved protocols */}
-            {protocolDetail.result && Object.keys(protocolDetail.result).length > 0 && (
-              <Card size="small" title="决议结果" style={{ marginBottom: 12 }}>
-                <Descriptions column={1} size="small">
-                  {protocolDetail.protocol_type === 'weighted_vote' && (
-                    <>
-                      <Descriptions.Item label="加权赞成">{protocolDetail.result.weighted_for}</Descriptions.Item>
-                      <Descriptions.Item label="加权反对">{protocolDetail.result.weighted_against}</Descriptions.Item>
-                      <Descriptions.Item label="总票数">{protocolDetail.result.total_votes}</Descriptions.Item>
-                    </>
-                  )}
-                  {protocolDetail.protocol_type === 'ranked_vote' && (
-                    <>
-                      <Descriptions.Item label="胜出选项"><Tag color="green">{protocolDetail.result.winner}</Tag></Descriptions.Item>
-                      <Descriptions.Item label="投票轮次">{protocolDetail.result.rounds?.length || 0}</Descriptions.Item>
-                      <Descriptions.Item label="总票数">{protocolDetail.result.total_votes}</Descriptions.Item>
-                    </>
-                  )}
-                  {protocolDetail.protocol_type === 'deliberation' && (
-                    <>
-                      <Descriptions.Item label="讨论消息数">{protocolDetail.result.discussion_count}</Descriptions.Item>
-                      <Descriptions.Item label="赞成票">{protocolDetail.result.votes_for}</Descriptions.Item>
-                      <Descriptions.Item label="反对票">{protocolDetail.result.votes_against}</Descriptions.Item>
-                    </>
-                  )}
-                  {protocolDetail.result.votes_for !== undefined && protocolDetail.protocol_type === 'vote' && (
-                    <>
-                      <Descriptions.Item label="赞成">{protocolDetail.result.votes_for}</Descriptions.Item>
-                      <Descriptions.Item label="反对">{protocolDetail.result.votes_against}</Descriptions.Item>
-                    </>
-                  )}
-                </Descriptions>
-              </Card>
-            )}
-            {(protocolDetail.messages || []).length > 0 ? (
-              <List
-                size="small"
-                dataSource={protocolDetail.messages}
-                renderItem={(m: any) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      title={<Space><Tag color={m.message_type === 'argument' ? 'orange' : m.message_type === 'evidence' ? 'blue' : 'default'}>{m.message_type}</Tag> Agent #{m.agent_id}</Space>}
-                      description={<div><div>{m.content || '无内容'}</div>{m.payload && Object.keys(m.payload).length > 0 && <Text type="secondary" style={{ fontSize: 11 }}>{JSON.stringify(m.payload)}</Text>}</div>}
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <Empty description="暂无响应" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            )}
-            {(protocolDetail.status === 'open' || protocolDetail.status === 'voting') && (
-              <Space style={{ marginTop: 12 }}>
-                <Button type="primary" onClick={() => { setProtocolRespondMsg({ ...protocolRespondMsg, protocol_id: protocolDetail.id }); setProtocolRespondOpen(true) }}>响应</Button>
-                {protocolDetail.protocol_type === 'deliberation' && (
-                  <Button icon={<MessageOutlined />} onClick={() => { setDeliberationForm({ protocol_id: protocolDetail.id, agent_id: undefined, message_type: 'comment', content: '' }); setDeliberationOpen(true) }}>审议发言</Button>
-                )}
-                <Popconfirm title="接受此协议？" onConfirm={() => resolveProtocol(protocolDetail.id, 'accepted')}>
-                  <Button>接受</Button>
-                </Popconfirm>
-                <Popconfirm title="拒绝此协议？" onConfirm={() => resolveProtocol(protocolDetail.id, 'rejected')}>
-                  <Button danger>拒绝</Button>
-                </Popconfirm>
-              </Space>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Deliberation Message Modal */}
-      <Modal
-        title="审议发言"
-        open={deliberationOpen}
-        onCancel={() => setDeliberationOpen(false)}
-        onOk={submitDeliberation}
-        okText="提交"
-      >
-        <Form layout="vertical">
-          <Form.Item label="Agent" required>
-            <Select value={deliberationForm.agent_id} onChange={v => setDeliberationForm({ ...deliberationForm, agent_id: v })} placeholder="选择发言 Agent" style={{ width: '100%' }}>
-              {agents.map(a => <Select.Option key={a.id} value={a.id}>{a.name}</Select.Option>)}
-            </Select>
-          </Form.Item>
-          <Form.Item label="消息类型" required>
-            <Select value={deliberationForm.message_type} onChange={v => setDeliberationForm({ ...deliberationForm, message_type: v })}>
-              <Select.Option value="comment">评论</Select.Option>
-              <Select.Option value="argument">论点</Select.Option>
-              <Select.Option value="evidence">证据</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="内容" required>
-            <Input.TextArea value={deliberationForm.content} onChange={e => setDeliberationForm({ ...deliberationForm, content: e.target.value })} placeholder="发言内容..." rows={4} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        loading={protocolsLoading}
+        protocols={protocols}
+        agents={agents}
+        createOpen={protocolCreateOpen}
+        createForm={protocolForm}
+        detailOpen={protocolDetailOpen}
+        detail={protocolDetail}
+        respondOpen={protocolRespondOpen}
+        respondForm={protocolRespondMsg}
+        deliberationOpen={deliberationOpen}
+        deliberationForm={deliberationForm}
+        onClose={() => setProtocolsOpen(false)}
+        onCreateOpenChange={setProtocolCreateOpen}
+        onCreateFormChange={setProtocolForm}
+        onCreate={createProtocol}
+        onOpenDetail={openProtocolDetail}
+        onDetailOpenChange={setProtocolDetailOpen}
+        onDetailChange={setProtocolDetail}
+        onRespondOpenChange={setProtocolRespondOpen}
+        onRespondFormChange={setProtocolRespondMsg}
+        onRespond={respondToProtocol}
+        onResolve={resolveProtocol}
+        onDeliberationOpenChange={setDeliberationOpen}
+        onDeliberationFormChange={setDeliberationForm}
+        onDeliberationSubmit={submitDeliberation}
+      />
 
       {/* Sandbox Management Drawer */}
       <SandboxDrawer
@@ -3566,37 +3304,6 @@ const Agents: React.FC = () => {
         setResolveOpen={setConflictResolveOpen}
         setResolveForm={setConflictResolveForm}
       />
-
-      {/* Protocol Respond Modal */}
-      <Modal
-        title="响应协议"
-        open={protocolRespondOpen}
-        onCancel={() => setProtocolRespondOpen(false)}
-        onOk={respondToProtocol}
-        okText="提交"
-      >
-        <Form layout="vertical">
-          <Form.Item label="Agent" required>
-            <Select value={protocolRespondMsg.agent_id} onChange={v => setProtocolRespondMsg({ ...protocolRespondMsg, agent_id: v })} placeholder="选择响应 Agent" style={{ width: '100%' }}>
-              {agents.map(a => <Select.Option key={a.id} value={a.id}>{a.name}</Select.Option>)}
-            </Select>
-          </Form.Item>
-          <Form.Item label="响应类型" required>
-            <Select value={protocolRespondMsg.message_type} onChange={v => setProtocolRespondMsg({ ...protocolRespondMsg, message_type: v })}>
-              <Select.Option value="accept">接受</Select.Option>
-              <Select.Option value="reject">拒绝</Select.Option>
-              <Select.Option value="vote">投票</Select.Option>
-              <Select.Option value="ranked_vote">排名投票</Select.Option>
-              <Select.Option value="bid">竞标</Select.Option>
-              <Select.Option value="comment">评论</Select.Option>
-              <Select.Option value="counter_proposal">反提案</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="内容">
-            <Input.TextArea value={protocolRespondMsg.content} onChange={e => setProtocolRespondMsg({ ...protocolRespondMsg, content: e.target.value })} placeholder="响应内容" rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* Experience Create Modal */}
       <Modal
@@ -3828,63 +3535,13 @@ const Agents: React.FC = () => {
       </Modal>
 
       {/* Cross-Project Tasks Modal */}
-      <Modal
-        title={`跨项目任务 — ${selectedAgent?.name || ''}`}
+      <CrossProjectModal
         open={crossTasksOpen}
-        onCancel={() => setCrossTasksOpen(false)}
-        footer={null}
-        width={700}
-      >
-        <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-          以下是 {selectedAgent?.name} 跨项目授权的项目中可领取的任务，按能力匹配度排序。
-        </Text>
-        {crossTasks.length === 0 ? (
-          <Empty description="暂无可领取的跨项目任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        ) : (
-          <List
-            size="small"
-            dataSource={crossTasks}
-            style={{ maxHeight: 500, overflowY: 'auto' }}
-            renderItem={(item: any) => (
-              <List.Item
-                actions={[
-                  <Button key="claim" size="small" type="primary" onClick={() => claimCrossTask(item.task.id)}>
-                    领取
-                  </Button>,
-                ]}
-              >
-                <List.Item.Meta
-                  title={
-                    <Space>
-                      <Tag color={item.match?.score >= 50 ? 'green' : item.match?.score >= 20 ? 'orange' : 'default'}>
-                        {item.match?.score || 0} 分
-                      </Tag>
-                      <Text strong>{item.task?.title}</Text>
-                    </Space>
-                  }
-                  description={
-                    <div>
-                      <Space size={4}>
-                        <Tag color="blue">{item.project?.name}</Tag>
-                        <Tag>{item.role_in_project}</Tag>
-                        {item.task?.priority && <Tag color="red">优先级 {item.task.priority}</Tag>}
-                      </Space>
-                      {item.match?.matched_capabilities?.length > 0 && (
-                        <div style={{ marginTop: 4 }}>
-                          <Text type="secondary" style={{ fontSize: 11 }}>匹配能力: </Text>
-                          {item.match.matched_capabilities.map((c: string, i: number) => (
-                            <Tag key={i} color="geekblue" style={{ fontSize: 10 }}>{c}</Tag>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        )}
-      </Modal>
+        selectedAgent={selectedAgent}
+        tasks={crossTasks}
+        onClose={() => setCrossTasksOpen(false)}
+        onClaim={claimCrossTask}
+      />
     </div>
   )
 }

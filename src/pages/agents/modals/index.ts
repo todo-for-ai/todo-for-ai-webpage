@@ -1,7 +1,13 @@
 export { default as DispatchPreviewModal } from './DispatchPreviewModal'
 export { default as SandboxDrawer } from './SandboxDrawer'
 export { default as ConflictDrawer } from './ConflictDrawer'
+export { default as KnowledgeDrawer } from './KnowledgeDrawer'
+export { default as ProtocolsModal } from './ProtocolsModal'
+export { default as CrossProjectModal } from './CrossProjectModal'
 
 export type { DispatchPreviewModalProps } from './DispatchPreviewModal'
 export type { SandboxDrawerProps, SandboxData, SandboxTemplate, SandboxExecution, SandboxFormData, SandboxCheckFormData, SandboxStartFormData, SandboxViolationFormData } from './SandboxDrawer'
 export type { ConflictDrawerProps, ConflictData, ConflictResolveFormData } from './ConflictDrawer'
+export type { KnowledgeDrawerProps, KnowledgeEntry, KnowledgeFormData } from './KnowledgeDrawer'
+export type { ProtocolsModalProps, Protocol, ProtocolMessage, ProtocolFormData, ProtocolRespondFormData, DeliberationFormData } from './ProtocolsModal'
+export type { CrossProjectModalProps, CrossProjectTask } from './CrossProjectModal'
