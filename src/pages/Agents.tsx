@@ -88,7 +88,7 @@ import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
-import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer, FeedbackModal, AgentFormModal } from './agents/modals'
+import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer, FeedbackModal, AgentFormModal, RecommendedTasksModal, DirectMessageModal, ReviewQueueSection } from './agents/modals'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -1667,82 +1667,6 @@ const Agents: React.FC = () => {
     }
   }
 
-  const reviewQueueColumns = [
-    {
-      title: '任务',
-      key: 'task',
-      render: (_: unknown, record: ReviewQueueItem) => (
-        <Space direction="vertical" size={2}>
-          <Text strong>#{record.assignment.task_id} {record.task?.title || record.assignment.task?.title || '未加载任务标题'}</Text>
-          <Text type="secondary">{record.task?.project?.name || record.assignment.task?.project?.name || '-'}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: 'Agent',
-      key: 'agent',
-      width: 180,
-      render: (_: unknown, record: ReviewQueueItem) => (
-        <Space direction="vertical" size={2}>
-          <Text>{record.agent?.name || record.assignment.agent?.name || `Agent #${record.assignment.agent_id}`}</Text>
-          <Text type="secondary">{record.agent?.model || record.agent?.kind || record.assignment.agent?.kind || '-'}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: '处理类型',
-      dataIndex: 'action',
-      key: 'action',
-      width: 130,
-      render: (action: ReviewQueueItem['action']) => (
-        <Tag color={reviewActionColor[action]}>{reviewActionLabel[action]}</Tag>
-      ),
-    },
-    {
-      title: '派发状态',
-      key: 'state',
-      width: 120,
-      render: (_: unknown, record: ReviewQueueItem) => (
-        <Tag color={stateColor[record.assignment.state]}>{record.assignment.state}</Tag>
-      ),
-    },
-    {
-      title: '进度',
-      key: 'progress',
-      width: 130,
-      render: (_: unknown, record: ReviewQueueItem) => (
-        <Progress percent={record.assignment.progress_rate || 0} size="small" />
-      ),
-    },
-    {
-      title: '更新时间',
-      key: 'updated_at',
-      width: 190,
-      render: (_: unknown, record: ReviewQueueItem) => formatDateTime(record.assignment.updated_at),
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 300,
-      render: (_: unknown, record: ReviewQueueItem) => (
-        <Space size="small" wrap>
-          <Button size="small" icon={<EyeOutlined />} href={`/todo-for-ai/pages/tasks/${record.assignment.task_id}`}>
-            详情
-          </Button>
-          <Button size="small" type="primary" icon={<CheckCircleOutlined />} onClick={() => updateReviewQueueItem(record, 'approve')}>
-            通过
-          </Button>
-          <Button size="small" onClick={() => updateReviewQueueItem(record, 'resume')}>
-            继续
-          </Button>
-          <Button size="small" danger onClick={() => updateReviewQueueItem(record, 'cancel')}>
-            取消
-          </Button>
-        </Space>
-      ),
-    },
-  ]
-
   const columns = [
     {
       title: 'Agent',
@@ -2239,29 +2163,14 @@ const Agents: React.FC = () => {
         </Card>
       )}
 
-      <Card
-        title="人工审核队列"
-        style={{ marginBottom: 16 }}
-        extra={(
-          <Space>
-            <Select
-              value={reviewActionFilter}
-              style={{ width: 140 }}
-              onChange={setReviewActionFilter}
-              options={reviewActionOptions}
-            />
-            <Button icon={<ReloadOutlined />} onClick={() => loadReviewQueue()}>刷新</Button>
-          </Space>
-        )}
-      >
-        <Table
-          columns={reviewQueueColumns}
-          dataSource={reviewQueue}
-          rowKey={record => record.assignment.id}
-          loading={reviewLoading}
-          pagination={{ pageSize: 5 }}
-        />
-      </Card>
+      <ReviewQueueSection
+        items={reviewQueue}
+        loading={reviewLoading}
+        actionFilter={reviewActionFilter}
+        onActionFilterChange={setReviewActionFilter}
+        onRefresh={() => loadReviewQueue()}
+        onUpdateItem={updateReviewQueueItem}
+      />
 
       <Card>
         <div style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -2690,102 +2599,28 @@ const Agents: React.FC = () => {
       />
 
       {/* Agent 直接消息 Modal */}
-      <Modal
-        title={`发送消息 — ${dmFrom?.name || ''}`}
+      <DirectMessageModal
         open={dmOpen}
+        from={dmFrom}
+        to={dmTo}
+        content={dmContent}
+        sending={dmSending}
+        agents={agents}
         onCancel={() => { setDmOpen(false); setDmFrom(null); setDmTo(null); setDmContent('') }}
         onOk={sendDirectMessage}
-        confirmLoading={dmSending}
-        okText="发送"
-        cancelText="取消"
-      >
-        <div style={{ marginBottom: 12 }}>
-          <Text type="secondary">
-            从 <Text strong>{dmFrom?.name}</Text> 向指定 Agent 发送直接消息。
-          </Text>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <Text style={{ display: 'block', marginBottom: 4 }}>接收方 Agent</Text>
-          <Select
-            style={{ width: '100%' }}
-            placeholder="选择接收方 Agent"
-            value={dmTo?.id}
-            onChange={id => setDmTo(agents.find(a => a.id === id) || null)}
-            options={agents.filter(a => a.id !== dmFrom?.id).map(a => ({
-              value: a.id,
-              label: `${a.name} (${a.kind})`,
-            }))}
-          />
-        </div>
-        <Input.TextArea
-          rows={4}
-          placeholder="请输入消息内容..."
-          value={dmContent}
-          onChange={e => setDmContent(e.target.value)}
-          maxLength={1000}
-          showCount
-        />
-      </Modal>
+        onToChange={setDmTo}
+        onContentChange={setDmContent}
+      />
 
       {/* Recommended tasks Modal */}
-      <Modal
-        title={`推荐任务 — ${recTasksAgent?.name || ''}`}
+      <RecommendedTasksModal
         open={recTasksOpen}
+        agent={recTasksAgent}
+        tasks={recTasks}
+        loading={recTasksLoading}
         onCancel={() => { setRecTasksOpen(false); setRecTasksAgent(null); setRecTasks([]) }}
-        footer={null}
-        width={700}
-      >
-        <Spin spinning={recTasksLoading}>
-          {recTasks.length === 0 && !recTasksLoading ? (
-            <Empty description="没有匹配的推荐任务" />
-          ) : (
-            <List
-              size="small"
-              dataSource={recTasks}
-              renderItem={(item: any, index: number) => {
-                const t = item.task
-                const matched = [...(item.matched_capabilities || []), ...(item.matched_tags || [])]
-                const missing = item.missing_required || []
-                return (
-                  <List.Item
-                    style={{ padding: '8px 0' }}
-                    actions={[
-                      <Button key="claim" size="small" type="primary" onClick={() => {
-                        if (recTasksAgent) { claimTask(recTasksAgent, t.id, true); setRecTasksOpen(false) }
-                      }}>领取</Button>
-                    ]}
-                  >
-                    <List.Item.Meta
-                      title={
-                        <Space>
-                          <span>#{t.id} {t.title}</span>
-                          <Tag color="blue">得分: {item.score}</Tag>
-                        </Space>
-                      }
-                      description={
-                        <div>
-                          {matched.length > 0 && (
-                            <div style={{ marginBottom: 4 }}>
-                              <Text type="success" style={{ fontSize: 12 }}>匹配: </Text>
-                              {matched.map((c: string) => <Tag key={c} color="green" style={{ fontSize: 11 }}>{c}</Tag>)}
-                            </div>
-                          )}
-                          {missing.length > 0 && (
-                            <div>
-                              <Text type="danger" style={{ fontSize: 12 }}>缺失: </Text>
-                              {missing.map((c: string) => <Tag key={c} color="red" style={{ fontSize: 11 }}>{c}</Tag>)}
-                            </div>
-                          )}
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )
-              }}
-            />
-          )}
-        </Spin>
-      </Modal>
+        onClaim={(agent, taskId) => { claimTask(agent, taskId, true); setRecTasksOpen(false) }}
+      />
 
       {/* Channels Drawer */}
       <ChannelsDrawer
