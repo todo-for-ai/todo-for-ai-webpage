@@ -12,6 +12,7 @@ import {
   ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
   HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
   SettingOutlined, LineChartOutlined, PieChartOutlined, RetweetOutlined, DotChartOutlined,
+  HeatMapOutlined, BarChartOutlined,
 } from '@ant-design/icons'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -57,7 +58,7 @@ const Workflows: React.FC = () => {
   const [stepHourlyDistribution, setStepHourlyDistribution] = useState<WorkflowStepHourlyDistribution | null>(null)
   const [stepDependencyBottleneck, setStepDependencyBottleneck] = useState<WorkflowStepDependencyBottleneck | null>(null)
   const [similarityMatrix, setSimilarityMatrix] = useState<WorkflowSimilarityMatrix | null>(null)
-  const [stepDurationHist, setStepDurationHist] = useState<StepDurationHistogramResult | null>(null)
+  const [stepDurationHist, setStepDurationHist] = useState<WorkflowStepDurationHistogram | null>(null)
   const [stepBottleneckTl, setStepBottleneckTl] = useState<WorkflowStepBottleneckTimeline | null>(null)
   const [structuralComplexity, setStructuralComplexity] = useState<WorkflowStructuralComplexity | null>(null)
   const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
@@ -144,7 +145,7 @@ const Workflows: React.FC = () => {
       agentsApi.getWorkflowStepHourlyDistribution(30, 10).then(setStepHourlyDistribution).catch(() => {})
       agentsApi.getWorkflowStepDependencyBottleneck(30, 10).then(setStepDependencyBottleneck).catch(() => {})
       agentsApi.getWorkflowSimilarityMatrix(30, 5, 20).then(setSimilarityMatrix).catch(() => {})
-      agentsApi.getWorkflowStepDurationHistogram(30, 10).then(setStepDurationHist).catch(() => {})
+      agentsApi.getWorkflowStepDurationHistogram(10).then(setStepDurationHist).catch(() => {})
       agentsApi.getWorkflowStepBottleneckTimeline(30, 8).then(setStepBottleneckTl).catch(() => {})
       agentsApi.getWorkflowStructuralComplexity(20).then(setStructuralComplexity).catch(() => {})
       agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
@@ -1166,7 +1167,9 @@ const Workflows: React.FC = () => {
                     {hours.map(h => {
                       const v = s.hours[String(h)] || 0
                       return (
-                        <rect key={`c-${h}`} x={labelW + h * cellSize} y={18 + i * (cellSize + 1)} width={cellSize - 1} height={cellSize - 1} rx={1.5} fill={cellColor(v)} title={`${s.step_key} ${h}时: ${v}`} />
+                        <rect key={`c-${h}`} x={labelW + h * cellSize} y={18 + i * (cellSize + 1)} width={cellSize - 1} height={cellSize - 1} rx={1.5} fill={cellColor(v)}>
+                          <title>{`${s.step_key} ${h}时: ${v}`}</title>
+                        </rect>
                       )
                     })}
                   </g>
@@ -1299,15 +1302,16 @@ const Workflows: React.FC = () => {
       )}
 
       {/* Step Duration Histogram */}
-      {stepDurationHist && stepDurationHist.steps.length > 0 && (
+      {stepDurationHist && stepDurationHist.items.length > 0 && (
         <Card
           title={<Space><BarChartOutlined /> 步骤耗时分布直方图</Space>}
           style={{ marginBottom: 24 }}
-          extra={<Text type="secondary" style={{ fontSize: 12 }}>近 {stepDurationHist.days} 天</Text>}
+          extra={<Text type="secondary" style={{ fontSize: 12 }}>样本数: {stepDurationHist.items.reduce((sum, item) => sum + item.sample_size, 0)}</Text>}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {stepDurationHist.steps.map((s, si) => {
-              const maxCount = Math.max(1, ...s.buckets.map(b => b.count))
+            {stepDurationHist.items.slice(0, 5).map((s, si) => {
+              const binEntries = Object.entries(s.bins)
+              const maxCount = Math.max(1, ...binEntries.map(([, count]) => count))
               const barW = 32
               const barGap = 4
               const svgH = 60
@@ -1315,18 +1319,18 @@ const Workflows: React.FC = () => {
                 <div key={si} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <Text strong style={{ fontSize: 12 }}>{s.step_key}</Text>
-                    <Text type="secondary" style={{ fontSize: 10 }}>{s.total} 次完成</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>样本: {s.sample_size}, 中位数: {s.median_seconds}s</Text>
                   </div>
                   <div style={{ overflowX: 'auto' }}>
-                    <svg width={s.buckets.length * (barW + barGap)} height={svgH} style={{ display: 'block' }}>
-                      {s.buckets.map((b, bi) => {
-                        const h = maxCount > 0 ? (b.count / maxCount) * (svgH - 16) : 0
+                    <svg width={binEntries.length * (barW + barGap)} height={svgH} style={{ display: 'block' }}>
+                      {binEntries.map(([range, count], bi) => {
+                        const h = maxCount > 0 ? (count / maxCount) * (svgH - 16) : 0
                         return (
                           <g key={bi}>
                             <rect x={bi * (barW + barGap)} y={svgH - 12 - h} width={barW} height={Math.max(h, 1)} fill="#1890ff" rx={2} />
-                            <text x={bi * (barW + barGap) + barW / 2} y={svgH - 2} fontSize={7} fill="#8c8c8c" textAnchor="middle">{b.range}</text>
-                            {b.count > 0 && (
-                              <text x={bi * (barW + barGap) + barW / 2} y={svgH - 14 - h} fontSize={7} fill="#595959" textAnchor="middle">{b.count}</text>
+                            <text x={bi * (barW + barGap) + barW / 2} y={svgH - 2} fontSize={7} fill="#8c8c8c" textAnchor="middle">{range}</text>
+                            {count > 0 && (
+                              <text x={bi * (barW + barGap) + barW / 2} y={svgH - 14 - h} fontSize={7} fill="#595959" textAnchor="middle">{count}</text>
                             )}
                           </g>
                         )
