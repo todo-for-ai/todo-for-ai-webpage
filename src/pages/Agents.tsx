@@ -88,7 +88,7 @@ import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
-import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer } from './agents/modals'
+import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer, FeedbackModal, AgentFormModal } from './agents/modals'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -2290,119 +2290,26 @@ const Agents: React.FC = () => {
         />
       </Card>
 
-      <Modal
-        title={editingAgent ? '编辑 Agent' : '注册 Agent'}
+      <AgentFormModal
         open={modalOpen}
+        editingAgent={editingAgent}
+        form={form}
         onOk={saveAgent}
         onCancel={() => setModalOpen(false)}
-        okText="保存"
-        cancelText="取消"
-        width={720}
-      >
-        {!editingAgent && (
-          <div style={{ marginBottom: 16 }}>
-            <Text type="secondary" style={{ marginBottom: 8, display: 'block' }}>从模板快速创建：</Text>
-            <Space wrap>
-              {Object.entries(AGENT_TEMPLATES).map(([key, tpl]) => (
-                <Button
-                  key={key}
-                  size="small"
-                  onClick={() => {
-                    form.setFieldsValue({
-                      name: tpl.name,
-                      description: tpl.description,
-                      kind: tpl.kind,
-                      provider: tpl.provider,
-                      model: tpl.model,
-                      capabilitiesText: tpl.capabilities.join('\n'),
-                    })
-                  }}
-                >
-                  {tpl.label}
-                </Button>
-              ))}
-            </Space>
-            <Divider style={{ margin: '12px 0' }} />
-          </div>
-        )}
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="例如 Claude Code Worker" />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} />
-          </Form.Item>
-          <Space style={{ width: '100%' }} size="middle">
-            <Form.Item name="kind" label="类型" style={{ width: 180 }}>
-              <Select options={kindOptions} />
-            </Form.Item>
-            <Form.Item name="status" label="状态" style={{ width: 180 }}>
-              <Select options={statusOptions} />
-            </Form.Item>
-            <Form.Item name="collaboration_role" label="协作角色" style={{ width: 180 }}>
-              <Select
-                placeholder="选择协作角色"
-                allowClear
-                options={[
-                  { value: 'standalone', label: '独立' },
-                  { value: 'leader', label: '领导者（协调分配）' },
-                  { value: 'follower', label: '跟随者（执行任务）' },
-                ]}
-              />
-            </Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} size="middle">
-            <Form.Item name="provider" label="提供方" style={{ width: 140 }}>
-              <Input placeholder="openai" />
-            </Form.Item>
-            <Form.Item name="model" label="模型/运行时" style={{ width: 180 }}>
-              <Input placeholder="gpt-5-codex" />
-            </Form.Item>
-          </Space>
-          <Form.Item name="capabilitiesText" label="能力标签">
-            <TextArea rows={3} placeholder={'每行一个能力，例如：\ncode_review\nfrontend\npython'} />
-          </Form.Item>
-          <Form.Item name="configText" label="运行配置 JSON">
-            <TextArea rows={5} />
-          </Form.Item>
-        </Form>
-      </Modal>
+      />
 
-      <Modal
-        title="提交人工反馈"
+      <FeedbackModal
         open={feedbackModalOpen}
+        submitting={feedbackSubmitting}
+        reviewItem={feedbackReviewItem}
+        form={feedbackForm}
         onOk={submitHumanFeedback}
         onCancel={() => {
           setFeedbackModalOpen(false)
           setFeedbackReviewItem(null)
           feedbackForm.resetFields()
         }}
-        confirmLoading={feedbackSubmitting}
-        okText="提交并继续"
-        cancelText="取消"
-      >
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
-          {feedbackReviewItem && (
-            <Space direction="vertical" size={2}>
-              <Text strong>
-                #{feedbackReviewItem.assignment.task_id} {feedbackReviewItem.task?.title || feedbackReviewItem.assignment.task?.title || '未加载任务标题'}
-              </Text>
-              <Text type="secondary">
-                {feedbackReviewItem.agent?.name || feedbackReviewItem.assignment.agent?.name || `Agent #${feedbackReviewItem.assignment.agent_id}`}
-              </Text>
-            </Space>
-          )}
-          <Form form={feedbackForm} layout="vertical">
-            <Form.Item
-              name="feedback_content"
-              label="反馈内容"
-              rules={[{ required: true, message: '请输入要交给 Agent 的反馈或补充信息' }]}
-            >
-              <TextArea rows={5} placeholder="说明需要调整的方向、补充约束或继续执行所需的信息" />
-            </Form.Item>
-          </Form>
-        </Space>
-      </Modal>
+      />
 
       <Drawer
         title={selectedAgent ? `${selectedAgent.name} 的派发记录` : '派发记录'}
