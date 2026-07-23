@@ -6,16 +6,12 @@ import {
   Card,
   Col,
   Divider,
-  Drawer,
   Form,
   Input,
-  InputNumber,
-  Modal,
   Progress,
   Row,
   Select,
   Space,
-  Statistic,
   Switch,
   Table,
   Tag,
@@ -24,44 +20,28 @@ import {
   message,
   Popover,
   Badge,
-  Empty,
-  List,
-  Spin,
   Popconfirm,
-  Descriptions,
-  Alert,
-  Checkbox,
   notification,
 } from 'antd'
 import {
   ApiOutlined,
   BellOutlined,
+  BulbOutlined,
   CheckCircleOutlined,
   DashboardOutlined,
-  DeleteOutlined,
   DeploymentUnitOutlined,
   EditOutlined,
-  EyeOutlined,
-  FieldTimeOutlined,
   PlayCircleOutlined,
-  PlusOutlined,
   ReloadOutlined,
+  SettingOutlined,
   SoundOutlined,
+  TeamOutlined,
   ThunderboltOutlined,
   SendOutlined,
-  BulbOutlined,
-  TeamOutlined,
   AppstoreOutlined,
-  RocketOutlined,
-  BookOutlined,
   SwapOutlined,
-  ShareAltOutlined,
-  ApartmentOutlined,
-  CloseCircleOutlined,
   SearchOutlined,
-  MessageOutlined,
   SafetyOutlined,
-  SettingOutlined,
   WarningOutlined,
 } from '@ant-design/icons'
 import {
@@ -74,25 +54,19 @@ import {
   type TaskAssignment,
   type TaskAssignmentState,
   type TaskEvent,
-  type NotificationItem,
-  type CollaborationGraph,
-  type ReputationHistory,
   type DispatchTasksData,
-  type DispatchPolicy,
   type DispatchPreviewResult,
   type ChannelActivityTrend,
+  type ReputationHistory,
+  type CollaborationGraph,
 } from '../api/agents'
 import CapabilityRadar from '../components/Agent/CapabilityRadar'
-import CollaborationGraphView from '../components/CollaborationGraphView'
-import ReputationSparkline from '../components/ReputationSparkline'
 import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
-import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, kindOptions, statusOptions, reviewActionOptions, reviewActionLabel, reviewActionColor, formatDateTime, parseLines, stringifyConfig, isRecord, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities, AGENT_TEMPLATES } from './agents/utils'
-import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer, FeedbackModal, AgentFormModal, RecommendedTasksModal, DirectMessageModal, ReviewQueueSection } from './agents/modals'
+import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, statusOptions, formatDateTime, parseLines, stringifyConfig, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities } from './agents/utils'
+import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer, FeedbackModal, AgentFormModal, RecommendedTasksModal, DirectMessageModal, ReviewQueueSection, AgentDetailDrawer, CollaborationTemplatesModal, InstantiateCollabTemplateModal, StepOverrideModal, CrossProjectAuthorizeModal, AdaptiveCapabilitiesModal } from './agents/modals'
 
 const { Title, Text } = Typography
-const { TextArea } = Input
-const { Option } = Select
 
 const Agents: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -2220,349 +2194,93 @@ const Agents: React.FC = () => {
         }}
       />
 
-      <Drawer
-        title={selectedAgent ? `${selectedAgent.name} 的派发记录` : '派发记录'}
-        width={980}
+      <AgentDetailDrawer
         open={drawerOpen}
+        selectedAgent={selectedAgent}
+        agents={agents}
+        assignments={assignments}
+        assignmentLoading={assignmentLoading}
+        assignmentColumns={assignmentColumns}
+        inboxItems={inboxItems}
+        claimTaskId={claimTaskId}
+        agentReputation={agentReputation}
+        agentSandbox={agentSandbox}
+        reputationHistory={reputationHistory}
+        collaborators={collaborators}
+        collaboratorsLoading={collaboratorsLoading}
+        collabSubgraph={collabSubgraph}
+        experiences={experiences}
+        experiencesLoading={experiencesLoading}
+        experienceCreateOpen={experienceCreateOpen}
+        experienceForm={experienceForm}
+        experienceDetailOpen={experienceDetailOpen}
+        experienceDetail={experienceDetail}
+        sharedExperiencesOpen={sharedExperiencesOpen}
+        sharedExperiences={sharedExperiences}
+        crossProjects={crossProjects}
+        crossProjectLoading={crossProjectLoading}
+        knowledgeProps={{
+          selectedAgent,
+          entries: knowledgeEntries,
+          loading: knowledgeLoading,
+          search: knowledgeSearch,
+          onSearchChange: setKnowledgeSearch,
+          onSearch: () => selectedAgent && loadKnowledge(selectedAgent),
+          createOpen: knowledgeCreateOpen,
+          form: knowledgeForm,
+          onFormChange: setKnowledgeForm,
+          onCreateOpenChange: setKnowledgeCreateOpen,
+          onCreate: createKnowledgeEntry,
+          detailOpen: knowledgeDetailOpen,
+          detail: knowledgeDetail,
+          onDetailOpenChange: setKnowledgeDetailOpen,
+          onDetailChange: setKnowledgeDetail,
+          onDelete: deleteKnowledgeEntry,
+          onOpenDetail: openKnowledgeDetail,
+          onAutoExtract: autoExtractKnowledge,
+        }}
+        experienceProps={{
+          createOpen: experienceCreateOpen,
+          createForm: experienceForm,
+          detailOpen: experienceDetailOpen,
+          detail: experienceDetail,
+          sharedOpen: sharedExperiencesOpen,
+          sharedExperiences,
+          selectedAgent,
+          onCreateOpenChange: setExperienceCreateOpen,
+          onCreateFormChange: setExperienceForm,
+          onCreate: createExperience,
+          onDetailOpenChange: setExperienceDetailOpen,
+          onOpenDetail: openExperienceDetail,
+          onSharedOpenChange: setSharedExperiencesOpen,
+          onLearnFromExperience: learnFromExperience,
+        }}
         onClose={() => setDrawerOpen(false)}
-      >
-        {selectedAgent && (
-          <Space direction="vertical" size={12} style={{ marginBottom: 16, width: '100%' }}>
-            {/* Agent status & capabilities overview */}
-            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <Space wrap style={{ marginBottom: 8 }}>
-                  <Tag color={selectedAgent.status === 'active' ? 'green' : selectedAgent.status === 'paused' ? 'orange' : 'default'}>
-                    {selectedAgent.status}
-                  </Tag>
-                  <Tag>{selectedAgent.kind}</Tag>
-                  {selectedAgent.collaboration_role && selectedAgent.collaboration_role !== 'standalone' && (
-                    <Tag color={selectedAgent.collaboration_role === 'leader' ? 'gold' : 'cyan'}>
-                      {selectedAgent.collaboration_role === 'leader' ? '领导者' : '跟随者'}
-                    </Tag>
-                  )}
-                  {selectedAgent.last_seen_at && (
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      最近心跳: {new Date(selectedAgent.last_seen_at).toLocaleString()}
-                    </Text>
-                  )}
-                  {agentReputation && (
-                    <Tag color={agentReputation.score >= 70 ? 'green' : agentReputation.score >= 40 ? 'orange' : 'red'} style={{ cursor: 'pointer' }} onClick={recalculateReputation}>
-                      声誉: {agentReputation.score.toFixed(1)} ({agentReputation.completed_tasks || 0}✓ {agentReputation.failed_tasks || 0}✗)
-                    </Tag>
-                  )}
-                  {agentSandbox ? (
-                    <Tag color={agentSandbox.security_level === 'strict' ? 'red' : agentSandbox.security_level === 'permissive' ? 'green' : 'orange'} icon={<SafetyOutlined />} style={{ cursor: 'pointer' }} onClick={openSandboxes}>
-                      沙盒: {agentSandbox.name} [{agentSandbox.security_level}] 执行={agentSandbox.stats?.total_executions || 0} 违规={agentSandbox.stats?.violations || 0}
-                    </Tag>
-                  ) : (
-                    <Tag onClick={openSandboxes} style={{ cursor: 'pointer' }}>未绑定沙盒</Tag>
-                  )}
-                </Space>
-                {reputationHistory && reputationHistory.points.length > 0 && (
-                  <div style={{ marginTop: 4 }}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>声誉趋势（{reputationHistory.points.length} 次变化，点击点跳转任务）</Text>
-                    <ReputationSparkline
-                      points={reputationHistory.points}
-                      currentScore={agentReputation?.score}
-                      width={240}
-                      height={56}
-                      onPointClick={(p) => {
-                        if (p.task_id) {
-                          navigate(`/todo-for-ai/pages/tasks/${p.task_id}`)
-                        } else if (p.workflow_run_id) {
-                          message.info(`工作流运行 #${p.workflow_run_id}（暂无独立详情页）`)
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {renderCapabilities(selectedAgent.capabilities, 12)}
-                </div>
-              </div>
-              {(selectedAgent.capabilities || []).length >= 3 && (
-                <CapabilityRadar capabilities={selectedAgent.capabilities || []} size={140} />
-              )}
-            </div>
-            {/* 协作伙伴排行（基于直接消息审计聚合） */}
-            <div style={{ marginBottom: 8 }}>
-              <Text type="secondary">协作伙伴</Text>
-              <Spin spinning={collaboratorsLoading} size="small">
-                {collaborators.length > 0 ? (
-                  <List
-                    size="small"
-                    dataSource={collaborators.slice(0, 5)}
-                    renderItem={(c: any) => (
-                      <List.Item style={{ padding: '4px 0' }}>
-                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                          <Text
-                            ellipsis
-                            style={{ maxWidth: 160, color: '#1890ff', cursor: 'pointer' }}
-                            onClick={() => {
-                              setDrawerOpen(false)
-                              const target = agents.find((a) => a.id === c.agent_id)
-                              if (target) {
-                                setTimeout(() => loadAssignments(target), 100)
-                              } else {
-                                navigate(`/todo-for-ai/pages/agents?agent_id=${c.agent_id}`)
-                              }
-                            }}
-                          >
-                            {c.name}
-                          </Text>
-                          <Space size={4}>
-                            <Tag>发 {c.sent}</Tag>
-                            <Tag>收 {c.received}</Tag>
-                            <Tag color="blue">合计 {c.total}</Tag>
-                          </Space>
-                        </Space>
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Text type="secondary" style={{ fontSize: 12 }}>暂无协作伙伴记录</Text>
-                )}
-              </Spin>
-            </div>
-            {/* 协作关系子图：以当前 Agent 为中心 */}
-            {collabSubgraph && (
-              <div style={{ marginBottom: 8 }}>
-                <Text type="secondary">协作关系图</Text>
-                <div style={{ marginTop: 4 }}>
-                  <CollaborationGraphView
-                    data={collabSubgraph}
-                    size={300}
-                    layout="grid"
-                    centerNodeId={selectedAgent?.id}
-                    storageKey={selectedAgent ? `agentsCollabGraphDetail_${selectedAgent.id}` : undefined}
-                    onNodeClick={(agentId) => {
-                      if (agentId === selectedAgent?.id) return
-                      setDrawerOpen(false)
-                      const target = agents.find((a) => a.id === agentId)
-                      if (target) {
-                        setTimeout(() => loadAssignments(target), 100)
-                      } else {
-                        navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-            <Space wrap>
-              <Text type="secondary">能力</Text>
-              {renderCapabilities(selectedAgent.capabilities, 8)}
-              <Button size="small" icon={<BulbOutlined />} onClick={() => loadAdaptSuggestions(selectedAgent)} loading={adaptLoading}>自适应</Button>
-            </Space>
-            <Space wrap>
-              <InputNumber
-                placeholder="指定任务 ID"
-                value={claimTaskId}
-                onChange={value => setClaimTaskId(value)}
-                min={1}
-                style={{ width: 160 }}
-              />
-              <Button
-                type="primary"
-                icon={<PlayCircleOutlined />}
-                disabled={!claimTaskId}
-                onClick={() => claimTask(selectedAgent, claimTaskId)}
-              >
-                指定领取
-              </Button>
-              <Button icon={<PlayCircleOutlined />} onClick={() => claimTask(selectedAgent, null, true)}>
-                智能领取
-              </Button>
-              <Button onClick={() => claimTask(selectedAgent, null, false)}>
-                优先级领取
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => loadAssignments(selectedAgent)}>
-                刷新
-              </Button>
-            </Space>
-          </Space>
-        )}
-        {selectedAgent && inboxItems.length > 0 && (
-          <>
-            <Divider orientation="left" style={{ margin: '16px 0 8px' }}>
-              <Space>
-                <BellOutlined />
-                <Text>收件箱（@提及）</Text>
-                <Tag color="blue">{inboxItems.length}</Tag>
-              </Space>
-            </Divider>
-            <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 12 }}>
-              {inboxItems.map(event => (
-                <div key={event.id} style={{ padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
-                  <Space size={8} wrap>
-                    <Tag color="geekblue">{event.event_type}</Tag>
-                    <Text type="secondary">
-                      {event.actor_agent?.name || event.actor_user?.name || event.actor_type}
-                    </Text>
-                    {event.payload?.content && <Text>{String(event.payload.content).slice(0, 120)}</Text>}
-                    {(event.payload as Record<string, any>)?.task?.title && <Tag>任务 #{event.task_id} {String((event.payload as Record<string, any>).task.title).slice(0, 30)}</Tag>}
-                  </Space>
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      {new Date(event.created_at).toLocaleString()}
-                    </Text>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        <Table
-          columns={assignmentColumns}
-          dataSource={assignments}
-          rowKey="id"
-          loading={assignmentLoading}
-          pagination={{ pageSize: 10 }}
-        />
-
-        {/* Knowledge Base */}
-        <KnowledgeDrawer
-          selectedAgent={selectedAgent}
-          entries={knowledgeEntries}
-          loading={knowledgeLoading}
-          search={knowledgeSearch}
-          onSearchChange={setKnowledgeSearch}
-          onSearch={() => selectedAgent && loadKnowledge(selectedAgent)}
-          createOpen={knowledgeCreateOpen}
-          form={knowledgeForm}
-          onFormChange={setKnowledgeForm}
-          onCreateOpenChange={setKnowledgeCreateOpen}
-          onCreate={createKnowledgeEntry}
-          detailOpen={knowledgeDetailOpen}
-          detail={knowledgeDetail}
-          onDetailOpenChange={setKnowledgeDetailOpen}
-          onDetailChange={setKnowledgeDetail}
-          onDelete={deleteKnowledgeEntry}
-          onOpenDetail={openKnowledgeDetail}
-          onAutoExtract={autoExtractKnowledge}
-        />
-
-        {/* Agent Experience (Collective Intelligence) */}
-        {selectedAgent && (
-          <>
-            <Divider orientation="left" style={{ margin: '16px 0 8px' }}>
-              <Space>
-                <BulbOutlined />
-                <Text>经验与学习</Text>
-                <Tag color="purple">{experiences.length}</Tag>
-              </Space>
-            </Divider>
-            <Space style={{ marginBottom: 8, width: '100%' }} wrap>
-              <Button icon={<PlusOutlined />} onClick={() => setExperienceCreateOpen(true)}>添加经验</Button>
-              <Button icon={<ThunderboltOutlined />} onClick={autoExtractExperiences}>自动提取</Button>
-              <Button icon={<TeamOutlined />} onClick={loadSharedExperiences} loading={sharedExperiencesLoading}>群体学习</Button>
-              <Button icon={<FieldTimeOutlined />} onClick={applyDecay}>衰减</Button>
-            </Space>
-            <Spin spinning={experiencesLoading}>
-              {experiences.length === 0 && !experiencesLoading ? (
-                <Empty description="暂无经验记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-              ) : (
-                <List
-                  size="small"
-                  dataSource={experiences}
-                  style={{ maxHeight: 300, overflowY: 'auto' }}
-                  renderItem={(exp: any) => (
-                    <List.Item
-                      style={{ cursor: 'pointer', padding: '6px 8px' }}
-                      actions={[
-                        <Tooltip key="validate" title="验证准确">
-                          <Button size="small" icon={<CheckCircleOutlined />} onClick={(e) => { e.stopPropagation(); validateExperience(exp.id, true) }} />
-                        </Tooltip>,
-                        <Tooltip key="refute" title="反驳">
-                          <Button size="small" danger icon={<CloseCircleOutlined />} onClick={(e) => { e.stopPropagation(); validateExperience(exp.id, false) }} />
-                        </Tooltip>,
-                        exp.is_shared
-                          ? <Tag key="shared" color="green" style={{ fontSize: 10 }}>已分享</Tag>
-                          : <Button key="share" size="small" icon={<ShareAltOutlined />} onClick={(e) => { e.stopPropagation(); shareExperience(exp.id) }} />,
-                        <Popconfirm key="del" title="确定删除？" onConfirm={() => deleteExperience(exp.id)}>
-                          <Button size="small" danger icon={<DeleteOutlined />} />
-                        </Popconfirm>,
-                      ]}
-                      onClick={() => openExperienceDetail(exp)}
-                    >
-                      <List.Item.Meta
-                        title={
-                          <Space>
-                            <Tag color={exp.experience_type === 'success_pattern' ? 'green' : exp.experience_type === 'failure_pattern' ? 'red' : 'blue'} style={{ fontSize: 10 }}>
-                              {exp.experience_type === 'success_pattern' ? '成功' : exp.experience_type === 'failure_pattern' ? '失败' : exp.experience_type === 'strategy' ? '策略' : exp.experience_type === 'optimization' ? '优化' : '反模式'}
-                            </Tag>
-                            {exp.domain && <Tag color="purple" style={{ fontSize: 10 }}>{exp.domain}</Tag>}
-                            <Text strong style={{ fontSize: 12 }}>{exp.strategy?.substring(0, 40) || '无策略'}</Text>
-                          </Space>
-                        }
-                        description={
-                          <Space size={4}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>置信度: {exp.confidence ?? 0.7}</Text>
-                            <Text type="secondary" style={{ fontSize: 11 }}>复用: {exp.times_reused || 0}</Text>
-                          </Space>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              )}
-            </Spin>
-          </>
-        )}
-
-        {/* Cross-Project Agent Collaboration */}
-        {selectedAgent && (
-          <>
-            <Divider orientation="left" style={{ margin: '16px 0 8px' }}>
-              <Space>
-                <ApartmentOutlined />
-                <Text>跨项目协作</Text>
-                <Tag color="cyan">{crossProjects.length}</Tag>
-              </Space>
-            </Divider>
-            <Space style={{ marginBottom: 8, width: '100%' }} wrap>
-              <Button icon={<PlusOutlined />} onClick={() => setAuthorizeOpen(true)}>授权到项目</Button>
-              <Button icon={<ReloadOutlined />} onClick={openCrossProject} loading={crossProjectLoading}>刷新</Button>
-              <Button icon={<SearchOutlined />} onClick={loadCrossProjectTasks} loading={crossTasksLoading}>发现跨项目任务</Button>
-            </Space>
-            {crossProjects.length === 0 && !crossProjectLoading ? (
-              <Empty description="暂无跨项目授权" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            ) : (
-              <List
-                size="small"
-                dataSource={crossProjects}
-                style={{ maxHeight: 200, overflowY: 'auto' }}
-                renderItem={(auth: any) => (
-                  <List.Item
-                    actions={[
-                      <Popconfirm key="revoke" title="确定撤销授权？" onConfirm={() => revokeCrossProject(auth.project_id)}>
-                        <Button size="small" danger>撤销</Button>
-                      </Popconfirm>,
-                    ]}
-                  >
-                    <List.Item.Meta
-                      title={
-                        <Space>
-                          <Text strong>{auth.project_name || `项目 #${auth.project_id}`}</Text>
-                          <Tag color="blue">{auth.role_in_project}</Tag>
-                          {auth.is_active ? <Tag color="green">活跃</Tag> : <Tag color="default">停用</Tag>}
-                        </Space>
-                      }
-                      description={
-                        <Space size={4}>
-                          <Text type="secondary" style={{ fontSize: 11 }}>最大并发: {auth.max_concurrent_tasks || 3}</Text>
-                          {auth.expires_at && <Text type="secondary" style={{ fontSize: 11 }}>到期: {new Date(auth.expires_at).toLocaleDateString()}</Text>}
-                        </Space>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            )}
-          </>
-        )}
-      </Drawer>
+        onClaimTaskIdChange={setClaimTaskId}
+        onClaimTask={claimTask}
+        onRefreshAssignments={loadAssignments}
+        onNavigate={navigate}
+        onOpenAgent={(agent) => { setTimeout(() => loadAssignments(agent), 100) }}
+        onRecalculateReputation={recalculateReputation}
+        onOpenSandboxes={openSandboxes}
+        onLoadAdaptSuggestions={loadAdaptSuggestions}
+        adaptLoading={adaptLoading}
+        onSetDrawerOpen={setDrawerOpen}
+        onSetExperienceCreateOpen={setExperienceCreateOpen}
+        onAutoExtractExperiences={autoExtractExperiences}
+        onLoadSharedExperiences={loadSharedExperiences}
+        sharedExperiencesLoading={sharedExperiencesLoading}
+        onApplyDecay={applyDecay}
+        onValidateExperience={validateExperience}
+        onShareExperience={shareExperience}
+        onDeleteExperience={deleteExperience}
+        onOpenExperienceDetail={openExperienceDetail}
+        onSetAuthorizeOpen={setAuthorizeOpen}
+        onOpenCrossProject={openCrossProject}
+        onLoadCrossProjectTasks={loadCrossProjectTasks}
+        crossTasksLoading={crossTasksLoading}
+        onRevokeCrossProject={revokeCrossProject}
+      />
 
       {/* 广播消息 Modal */}
       <BroadcastModal
@@ -2650,110 +2368,25 @@ const Agents: React.FC = () => {
       />
 
       {/* Collaboration Templates Modal */}
-      <Modal
-        title="协作模板"
+      <CollaborationTemplatesModal
         open={collabTemplatesOpen}
-        onCancel={() => setCollabTemplatesOpen(false)}
-        footer={null}
-        width={800}
-      >
-        <Spin spinning={collabTemplatesLoading}>
-          {collabTemplates.length === 0 && !collabTemplatesLoading ? (
-            <Empty description="暂无协作模板" />
-          ) : (
-            <List
-              dataSource={collabTemplates}
-              renderItem={(tpl: any) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      key="instantiate"
-                      type="primary"
-                      size="small"
-                      icon={<RocketOutlined />}
-                      onClick={() => openCollabInstantiate(tpl.id, tpl.name)}
-                    >
-                      实例化
-                    </Button>,
-                    !tpl.is_builtin ? (
-                      <Popconfirm
-                        key="delete"
-                        title="确定删除此模板？"
-                        onConfirm={async () => {
-                          try {
-                            await agentsApi.deleteCollaborationTemplate(parseInt(String(tpl.id).replace('builtin:', ''), 10))
-                            message.success('模板已删除')
-                            loadCollabTemplates()
-                          } catch { message.error('删除失败') }
-                        }}
-                      >
-                        <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
-                      </Popconfirm>
-                    ) : null,
-                  ].filter(Boolean)}
-                >
-                  <List.Item.Meta
-                    title={<Space>{tpl.name} {tpl.is_builtin && <Tag color="blue">内置</Tag>} {tpl.category && <Tag>{tpl.category}</Tag>}</Space>}
-                    description={
-                      <div>
-                        <div>{tpl.description || '无描述'}</div>
-                        {tpl.agent_specs && (
-                          <div style={{ marginTop: 4 }}>
-                            {(tpl.agent_specs as any[]).map((spec: any, idx: number) => (
-                              <Tag key={idx} color="geekblue" style={{ marginBottom: 2 }}>
-                                {spec.name} ({spec.kind || 'autonomous'})
-                                {spec.collaboration_role && ` · ${spec.collaboration_role}`}
-                              </Tag>
-                            ))}
-                          </div>
-                        )}
-                        {tpl.workflow_steps && (tpl.workflow_steps as any[]).length > 0 && (
-                          <div style={{ marginTop: 6 }}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>工作流步骤 ({(tpl.workflow_steps as any[]).length}):</Text>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
-                              {(tpl.workflow_steps as any[]).map((step: any, idx: number) => (
-                                <Tag
-                                  key={idx}
-                                  color={step.condition ? 'orange' : 'blue'}
-                                  style={{ fontSize: 10 }}
-                                >
-                                  {step.name || step.step_key}
-                                  {step.condition && ` [${step.condition.operator === 'succeeded' ? '✓' : step.condition.operator === 'failed' ? '✗' : '?'}→${step.condition.step_key}]`}
-                                </Tag>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </Spin>
-      </Modal>
+        templates={collabTemplates}
+        loading={collabTemplatesLoading}
+        onClose={() => setCollabTemplatesOpen(false)}
+        onOpenInstantiate={openCollabInstantiate}
+        onReload={loadCollabTemplates}
+      />
 
       {/* Instantiate Collaboration Template Modal */}
-      <Modal
-        title={`实例化模板: ${collabInstantiateName}`}
+      <InstantiateCollabTemplateModal
         open={collabInstantiateOpen}
+        templateName={collabInstantiateName}
+        projectId={collabInstantiateProjectId}
+        instantiating={collabInstantiating}
         onCancel={() => setCollabInstantiateOpen(false)}
         onOk={instantiateCollabTemplate}
-        confirmLoading={collabInstantiating}
-        okText="实例化"
-      >
-        <Form layout="vertical">
-          <Form.Item label="项目 ID（可选）">
-            <InputNumber
-              value={collabInstantiateProjectId}
-              onChange={v => setCollabInstantiateProjectId(v ?? undefined)}
-              placeholder="输入项目 ID"
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onProjectIdChange={setCollabInstantiateProjectId}
+      />
 
       {/* Protocols Modal */}
       <ProtocolsModal
@@ -2840,87 +2473,17 @@ const Agents: React.FC = () => {
       />
 
       {/* Workflow Step Dynamic Reconfiguration Modal */}
-      <Modal
-        title={<Space><SettingOutlined /> 工作流步骤动态重配置</Space>}
+      <StepOverrideModal
         open={stepOverrideOpen}
+        form={stepOverrideForm}
+        effective={stepEffective}
+        agents={agents}
         onCancel={() => setStepOverrideOpen(false)}
-        footer={[
-          <Button key="clear" danger onClick={clearStepOverride} disabled={!stepOverrideForm.run_id || !stepOverrideForm.step_key}>清除覆盖</Button>,
-          <Button key="cancel" onClick={() => setStepOverrideOpen(false)}>取消</Button>,
-          <Button key="submit" type="primary" onClick={submitStepOverride}>应用覆盖</Button>,
-        ]}
-        width={680}
-      >
-        <Alert
-          message="运行时动态重配置"
-          description="为运行中工作流的某个步骤设置运行时覆盖，无需修改工作流定义。未启动步骤可改全部参数；运行中步骤仅可改超时/重试。"
-          type="info"
-          style={{ marginBottom: 16 }}
-          showIcon
-        />
-        <Form layout="vertical">
-          <Row gutter={12}>
-            <Col span={8}>
-              <Form.Item label="运行 ID" required>
-                <InputNumber value={stepOverrideForm.run_id} onChange={v => setStepOverrideForm({ ...stepOverrideForm, run_id: v || undefined })} placeholder="WorkflowRun ID" style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={16}>
-              <Form.Item label="步骤 key" required>
-                <Input value={stepOverrideForm.step_key} onChange={e => setStepOverrideForm({ ...stepOverrideForm, step_key: e.target.value })} placeholder="如 review, build, deploy" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Button size="small" icon={<SearchOutlined />} onClick={() => stepOverrideForm.run_id && stepOverrideForm.step_key && loadStepEffective(Number(stepOverrideForm.run_id), String(stepOverrideForm.step_key))} disabled={!stepOverrideForm.run_id || !stepOverrideForm.step_key} style={{ marginBottom: 16 }}>加载当前有效参数</Button>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item label="指定 Agent">
-                <Select value={stepOverrideForm.agent_id} onChange={v => setStepOverrideForm({ ...stepOverrideForm, agent_id: v })} allowClear placeholder="覆盖能力匹配" style={{ width: '100%' }}>
-                  {agents.map(a => <Select.Option key={a.id} value={a.id}>{a.name}</Select.Option>)}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="所需能力 (逗号分隔)">
-                <Input value={stepOverrideForm.required_capabilities} onChange={e => setStepOverrideForm({ ...stepOverrideForm, required_capabilities: e.target.value })} placeholder="code_review, python" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={8}><Form.Item label="超时(秒)"><InputNumber value={stepOverrideForm.timeout_seconds} onChange={v => setStepOverrideForm({ ...stepOverrideForm, timeout_seconds: v || undefined })} min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={8}><Form.Item label="重试次数"><InputNumber value={stepOverrideForm.retry_count} onChange={v => setStepOverrideForm({ ...stepOverrideForm, retry_count: v || undefined })} min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={8}>
-              <Form.Item label="失败策略">
-                <Select value={stepOverrideForm.on_failure} onChange={v => setStepOverrideForm({ ...stepOverrideForm, on_failure: v })} allowClear placeholder="abort">
-                  <Select.Option value="abort">中止</Select.Option>
-                  <Select.Option value="skip">跳过</Select.Option>
-                  <Select.Option value="continue">继续</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={12}><Form.Item label="任务模板 ID"><InputNumber value={stepOverrideForm.task_template_id} onChange={v => setStepOverrideForm({ ...stepOverrideForm, task_template_id: v || undefined })} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={12}><Form.Item label="子工作流 ID"><InputNumber value={stepOverrideForm.sub_workflow_id} onChange={v => setStepOverrideForm({ ...stepOverrideForm, sub_workflow_id: v || undefined })} style={{ width: '100%' }} /></Form.Item></Col>
-          </Row>
-          <Form.Item label="条件 (JSON)">
-            <Input.TextArea value={stepOverrideForm.condition} onChange={e => setStepOverrideForm({ ...stepOverrideForm, condition: e.target.value })} placeholder='{"step_key":"review","operator":"succeeded","value":true}' rows={2} />
-          </Form.Item>
-        </Form>
-        {stepEffective && (
-          <Card size="small" title="当前有效参数" style={{ marginTop: 8 }}>
-            <Descriptions column={2} size="small">
-              <Descriptions.Item label="Agent">{String(stepEffective.effective_params?.agent_id ?? '-')}</Descriptions.Item>
-              <Descriptions.Item label="超时">{stepEffective.effective_params?.timeout_seconds ?? '-'}s</Descriptions.Item>
-              <Descriptions.Item label="重试">{stepEffective.effective_params?.retry_count ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label="失败策略">{stepEffective.effective_params?.on_failure ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label="能力" span={2}>{(stepEffective.effective_params?.required_capabilities || []).join(', ') || '-'}</Descriptions.Item>
-              <Descriptions.Item label="运行状态">{stepEffective.step_run?.status || '-'}</Descriptions.Item>
-              <Descriptions.Item label="覆盖数">{Object.keys(stepEffective.overrides || {}).length}</Descriptions.Item>
-            </Descriptions>
-          </Card>
-        )}
-      </Modal>
+        onSubmit={submitStepOverride}
+        onClear={clearStepOverride}
+        onFormChange={setStepOverrideForm}
+        onLoadEffective={loadStepEffective}
+      />
 
       {/* Conflict Management Drawer */}
       <ConflictDrawer
@@ -2963,106 +2526,23 @@ const Agents: React.FC = () => {
       />
 
       {/* Cross-Project Authorize Modal */}
-      <Modal
-        title={`跨项目授权 — ${selectedAgent?.name || ''}`}
+      <CrossProjectAuthorizeModal
         open={authorizeOpen}
+        agentName={selectedAgent?.name || ''}
+        form={authorizeForm}
         onCancel={() => setAuthorizeOpen(false)}
         onOk={authorizeAgent}
-        okText="授权"
-        cancelText="取消"
-      >
-        <Form layout="vertical">
-          <Form.Item label="目标项目" required>
-            <Select
-              value={authorizeForm.project_id || undefined}
-              onChange={v => setAuthorizeForm({ ...authorizeForm, project_id: v })}
-              placeholder="选择要授权的项目"
-              style={{ width: '100%' }}
-            >
-              {/* Projects will be loaded dynamically */}
-              <Option value="">请选择项目</Option>
-            </Select>
-            <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
-              输入项目 ID 或从列表中选择（需要是项目的 ADMIN 或 OWNER）
-            </Text>
-            <InputNumber
-              value={authorizeForm.project_id || undefined}
-              onChange={v => setAuthorizeForm({ ...authorizeForm, project_id: v })}
-              placeholder="项目 ID"
-              style={{ width: '100%', marginTop: 4 }}
-              min={1}
-            />
-          </Form.Item>
-          <Form.Item label="项目角色">
-            <Select value={authorizeForm.role_in_project} onChange={v => setAuthorizeForm({ ...authorizeForm, role_in_project: v })}>
-              <Option value="contributor">贡献者 (contributor)</Option>
-              <Option value="reviewer">审查者 (reviewer)</Option>
-              <Option value="observer">观察者 (observer)</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="最大并发任务数">
-            <InputNumber value={authorizeForm.max_concurrent_tasks} onChange={v => setAuthorizeForm({ ...authorizeForm, max_concurrent_tasks: v ?? 3 })} min={1} max={20} style={{ width: 120 }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onFormChange={setAuthorizeForm}
+      />
 
       {/* Adaptive Capabilities Modal */}
-      <Modal
-        title={`能力自适应建议 — ${selectedAgent?.name || ''}`}
+      <AdaptiveCapabilitiesModal
         open={adaptOpen}
+        agentName={selectedAgent?.name || ''}
+        suggestions={adaptSuggestions}
         onCancel={() => { setAdaptOpen(false); setAdaptSuggestions(null) }}
-        footer={null}
-        width={600}
-      >
-        {adaptSuggestions ? (
-          <div>
-            <div style={{ marginBottom: 12 }}>
-              <Text type="secondary">基于 Agent 的成功/失败经验模式，以下能力调整建议可优化任务匹配效果。</Text>
-            </div>
-            <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label="当前能力">
-                <Space wrap>{(adaptSuggestions.current_capabilities || []).map((c: string) => <Tag key={c}>{c}</Tag>)}</Space>
-              </Descriptions.Item>
-            </Descriptions>
-            {Object.keys(adaptSuggestions.suggested_additions || {}).length > 0 && (
-              <Card size="small" title="建议添加" style={{ marginTop: 12 }} extra={<Button size="small" type="primary" onClick={() => applyAdaptation(Object.keys(adaptSuggestions.suggested_additions), [])}>全部添加</Button>}>
-                <List size="small" dataSource={Object.entries(adaptSuggestions.suggested_additions)} renderItem={entry => {
-                  const [cap, info] = entry as [string, any]
-                  return (
-                    <List.Item extra={<Button size="small" onClick={() => applyAdaptation([cap], [])}>添加</Button>}>
-                      <Tag color="green">{cap}</Tag>
-                      <Text type="secondary" style={{ fontSize: 11 }}>{info.reason}</Text>
-                      <Text type="secondary" style={{ fontSize: 10 }}>置信度: {info.confidence}</Text>
-                    </List.Item>
-                  )
-                }} />
-              </Card>
-            )}
-            {Object.keys(adaptSuggestions.suggested_removals || {}).length > 0 && (
-              <Card size="small" title="建议移除" style={{ marginTop: 12 }} type="inner" extra={<Button size="small" danger onClick={() => applyAdaptation([], Object.keys(adaptSuggestions.suggested_removals))}>全部移除</Button>}>
-                <List size="small" dataSource={Object.entries(adaptSuggestions.suggested_removals)} renderItem={entry => {
-                  const [cap, info] = entry as [string, any]
-                  return (
-                    <List.Item extra={<Button size="small" danger onClick={() => applyAdaptation([], [cap])}>移除</Button>}>
-                      <Tag color="red">{cap}</Tag>
-                      <Text type="secondary" style={{ fontSize: 11 }}>{info.reason}</Text>
-                      <Text type="secondary" style={{ fontSize: 10 }}>置信度: {info.confidence}</Text>
-                    </List.Item>
-                  )
-                }} />
-              </Card>
-            )}
-            {Object.keys(adaptSuggestions.suggested_additions || {}).length === 0 && Object.keys(adaptSuggestions.suggested_removals || {}).length === 0 && (
-              <Empty description="当前没有需要调整的能力" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ marginTop: 20 }} />
-            )}
-            <div style={{ marginTop: 12 }}>
-              <Text type="secondary" style={{ fontSize: 11 }}>净变化: {adaptSuggestions.net_change || 0}</Text>
-            </div>
-          </div>
-        ) : (
-          <Spin />
-        )}
-      </Modal>
+        onApplyAdaptation={applyAdaptation}
+      />
 
       {/* Cross-Project Tasks Modal */}
       <CrossProjectModal
