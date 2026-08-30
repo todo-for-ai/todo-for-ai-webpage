@@ -364,6 +364,26 @@ export interface TaskEvidenceResult {
   evidence: TaskEvidenceItem[]
 }
 
+// L0/L1 PR 审批（Phase 2 事件化审批队列）
+export interface PendingPrApproval {
+  interaction_id: string
+  interaction_type: 'pr_create' | 'pr_merge'
+  task_id: number
+  task_title?: string | null
+  project_id?: number | null
+  pr_number?: number | null
+  repo_full_name?: string | null
+  head_branch?: string | null
+  requested_at?: string | null
+}
+
+export interface PrApprovalDecision {
+  interaction_id: string
+  decision: 'approved' | 'rejected'
+  reason?: string
+  merge_method?: 'merge' | 'squash' | 'rebase'
+}
+
 export interface TaskAttachment {
   id: number
   task_id: number
@@ -435,6 +455,16 @@ export class TasksApi {
   // 获取任务的 DoD 与验证证据（P1.2 验证门）
   async getTaskEvidence(id: number): Promise<TaskEvidenceResult> {
     return apiClient.get<TaskEvidenceResult>(`/tasks/${id}/evidence`)
+  }
+
+  // 待审批的 PR 交互请求（L0 审批队列）
+  async getPendingPrApprovals(): Promise<PendingPrApproval[]> {
+    return apiClient.get<PendingPrApproval[]>(`/tasks/pull-request/approvals/pending`)
+  }
+
+  // 审批决定：批准执行（pr_create/pr_merge）或拒绝
+  async approvePrInteraction(taskId: number, decision: PrApprovalDecision) {
+    return apiClient.post(`/tasks/${taskId}/pull-request/approve`, decision)
   }
 
   async getTaskAttachments(id: number) {

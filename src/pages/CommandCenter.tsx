@@ -29,7 +29,7 @@ import PlatformActivityTrendSection from '../components/PlatformActivityTrendSec
 import ConflictsTrendChart from '../components/ConflictsTrendChart'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
-import { CommandCenterStatsRow, SecurityEventTrendAlert, QuickActionsCard, AgentMonitorCard, SecurityEventsCard, OrchestratorStatusCard } from './command-center'
+import { CommandCenterStatsRow, SecurityEventTrendAlert, QuickActionsCard, AgentMonitorCard, SecurityEventsCard, OrchestratorStatusCard, PRApprovalsCard } from './command-center'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -714,6 +714,11 @@ const CommandCenter: React.FC = () => {
           {/* 全局编排状态 */}
           <Col xs={24} lg={12}>
             <OrchestratorStatusCard orchestratorStatus={orchestratorStatus} />
+          </Col>
+
+          {/* L0/L1 PR 审批队列（自主等级渐进审批） */}
+          <Col xs={24} lg={12}>
+            <PRApprovalsCard />
           </Col>
         </Row>
 
