@@ -8,6 +8,7 @@ import { tasksApi, type TaskAttachment } from '../api/tasks'
 import { TaskDetailHeader } from './components/TaskDetail/TaskDetailHeader'
 import { TaskDetailContent } from './components/TaskDetail/TaskDetailContent'
 import { TaskDetailNavigation } from './components/TaskDetail/TaskDetailNavigation'
+import { TaskEvidenceCard } from './components/TaskDetail/TaskEvidenceCard'
 
 const TaskDetail: React.FC = () => {
   const { message } = App.useApp()
@@ -123,6 +124,8 @@ const TaskDetail: React.FC = () => {
         handleCopyTask={() => {}}
         tp={tp}
       />
+
+      <TaskEvidenceCard taskId={task.id} />
 
       <Card title="Attachments" style={{ marginTop: 16 }}>
         <Space direction="vertical" style={{ width: '100%' }}>

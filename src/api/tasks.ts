@@ -339,6 +339,31 @@ export interface TaskLog {
   created_by?: string
 }
 
+// DoD 验证门相关类型（P1.2）
+export interface TaskDodCriterion {
+  type: 'test' | 'build' | 'lint' | 'command' | 'pr' | 'manual'
+  value: string
+}
+
+export interface TaskEvidenceItem {
+  id: number
+  task_id: number
+  attempt_id?: string | null
+  agent_id?: number | null
+  evidence_type: 'test' | 'build' | 'lint' | 'command' | 'pr' | 'manual'
+  status: 'passed' | 'failed' | 'unknown'
+  summary?: string | null
+  detail?: Record<string, any> | null
+  url?: string | null
+  verified_at?: string | null
+  created_at?: string
+}
+
+export interface TaskEvidenceResult {
+  dod: TaskDodCriterion[]
+  evidence: TaskEvidenceItem[]
+}
+
 export interface TaskAttachment {
   id: number
   task_id: number
@@ -407,6 +432,11 @@ export class TasksApi {
   }
 
   // 获取任务附件
+  // 获取任务的 DoD 与验证证据（P1.2 验证门）
+  async getTaskEvidence(id: number): Promise<TaskEvidenceResult> {
+    return apiClient.get<TaskEvidenceResult>(`/tasks/${id}/evidence`)
+  }
+
   async getTaskAttachments(id: number) {
     return apiClient.get<TaskAttachment[]>(`/tasks/${id}/attachments`)
   }
