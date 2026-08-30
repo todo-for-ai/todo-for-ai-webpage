@@ -65,6 +65,12 @@ import { dashboardApi, type DashboardStats } from '../api/dashboard'
 
 import { DEFAULT_DISPATCH_PREVIEW_OPTIONS, statusColor, stateColor, statusOptions, formatDateTime, parseLines, stringifyConfig, toStringList, matchStrategyLabel, normalizeDispatchOptions, normalizeDispatchPolicyPayload, getAgentDispatchPolicy, withAgentDispatchPolicy, getClaimMatch, renderCapabilities } from './agents/utils'
 import { DispatchPreviewModal, SandboxDrawer, ConflictDrawer, KnowledgeDrawer, ProtocolsModal, CrossProjectModal, BroadcastModal, ChannelsDrawer, ExperienceDrawer, FeedbackModal, AgentFormModal, RecommendedTasksModal, DirectMessageModal, ReviewQueueSection, AgentDetailDrawer, CollaborationTemplatesModal, InstantiateCollabTemplateModal, StepOverrideModal, CrossProjectAuthorizeModal, AdaptiveCapabilitiesModal } from './agents/modals'
+import AgentStatsBar from './agents/AgentStatsBar'
+import CapabilityMapCard from './agents/CapabilityMapCard'
+import TaskDistributionCard from './agents/TaskDistributionCard'
+import MaintenanceActionsCard from './agents/MaintenanceActionsCard'
+import LiveEventFeedCard from './agents/LiveEventFeedCard'
+import NotificationPopover from './agents/NotificationPopover'
 
 const { Title, Text } = Typography
 
@@ -1845,55 +1851,13 @@ const Agents: React.FC = () => {
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2} style={{ margin: 0 }}>Agent 协作</Title>
         <Space>
-          <Popover
-            title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>协作通知</span>
-                {unreadCount > 0 && (
-                  <Button size="small" type="link" onClick={markAllRead}>全部已读</Button>
-                )}
-              </div>
-            }
-            content={
-              <div style={{ maxWidth: 360, maxHeight: 400, overflow: 'auto' }}>
-                {notificationsLoading && <Text type="secondary">加载中…</Text>}
-                {!notificationsLoading && notifications.length === 0 && (
-                  <Text type="secondary">暂无通知</Text>
-                )}
-                {notifications.map(n => (
-                  <div
-                    key={n.id}
-                    style={{
-                      padding: '6px 8px',
-                      borderBottom: '1px solid #f0f0f0',
-                      background: n.is_read ? 'transparent' : '#f6ffed',
-                      borderRadius: 4,
-                      marginBottom: 2,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Tag color="blue" style={{ margin: 0 }}>{n.event_type}</Tag>
-                      {!n.is_read && <Tag color="green" style={{ margin: 0, fontSize: 10 }}>新</Tag>}
-                    </div>
-                    <div style={{ marginTop: 4, fontSize: 13 }}>
-                      {n.agent_name && <Text strong>{n.agent_name}</Text>}
-                      {n.task_title && <Text type="secondary"> — {n.task_title}</Text>}
-                      {!n.task_title && n.task_id && <Text type="secondary"> — 任务 #{n.task_id}</Text>}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                      {new Date(n.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            }
-            trigger="click"
-            onOpenChange={(open) => { if (open) loadNotifications() }}
-          >
-            <Badge count={unreadCount} size="small" offset={[-4, 4]}>
-              <Button icon={<BellOutlined />} shape="circle" size="small" />
-            </Badge>
-          </Popover>
+          <NotificationPopover
+            unreadCount={unreadCount}
+            notifications={notifications}
+            loading={notificationsLoading}
+            onMarkAllRead={markAllRead}
+            onOpen={loadNotifications}
+          />
           <Tooltip title={liveMode ? '实时刷新已开启（每 10 秒）' : '实时刷新已关闭'}>
             <Space size={4}>
               <Switch size="small" checked={liveMode} onChange={setLiveMode} />
@@ -1918,224 +1882,18 @@ const Agents: React.FC = () => {
         </Space>
       </div>
 
-      <Card style={{ marginBottom: 16 }} size="small">
-        <Row gutter={16}>
-          <Col span={4}>
-            <div style={{ textAlign: 'center' }}>
-              <DashboardOutlined style={{ fontSize: 20, color: '#1890ff' }} />
-              <div style={{ marginTop: 4, fontSize: 24, fontWeight: 600 }}>{agents.length}</div>
-              <Text type="secondary">Agent 总数</Text>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div style={{ textAlign: 'center' }}>
-              <CheckCircleOutlined style={{ fontSize: 20, color: '#52c41a' }} />
-              <div style={{ marginTop: 4, fontSize: 24, fontWeight: 600, color: '#52c41a' }}>
-                {agents.filter(a => a.status === 'active').length}
-              </div>
-              <Text type="secondary">在线</Text>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div style={{ textAlign: 'center' }}>
-              <DeploymentUnitOutlined style={{ fontSize: 20, color: '#722ed1' }} />
-              <div style={{ marginTop: 4, fontSize: 24, fontWeight: 600, color: '#722ed1' }}>
-                {agents.filter(a => a.kind === 'coordinator' && a.status === 'active').length}
-              </div>
-              <Text type="secondary">协调器</Text>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div style={{ textAlign: 'center' }}>
-              <PlayCircleOutlined style={{ fontSize: 20, color: '#fa8c16' }} />
-              <div style={{ marginTop: 4, fontSize: 24, fontWeight: 600, color: '#fa8c16' }}>
-                {agents.filter(a => a.stats?.active_assignments && a.stats.active_assignments > 0).length}
-              </div>
-              <Text type="secondary">执行中</Text>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div style={{ textAlign: 'center' }}>
-              <BellOutlined style={{ fontSize: 20, color: '#eb2f96' }} />
-              <div style={{ marginTop: 4, fontSize: 24, fontWeight: 600, color: '#eb2f96' }}>
-                {reviewQueue.length}
-              </div>
-              <Text type="secondary">待审核</Text>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div style={{ textAlign: 'center' }}>
-              <ThunderboltOutlined style={{ fontSize: 20, color: '#13c2c2' }} />
-              <div style={{ marginTop: 4, fontSize: 24, fontWeight: 600, color: '#13c2c2' }}>
-                {agents.filter(a => a.status === 'offline').length}
-              </div>
-              <Text type="secondary">离线</Text>
-            </div>
-          </Col>
-        </Row>
-      </Card>
+      <AgentStatsBar agents={agents} reviewQueue={reviewQueue} />
 
-      {(() => {
-        // 能力图谱：聚合所有 Agent 的能力标签，统计每个能力有多少 Agent 具备
-        const capMap = new Map<string, { count: number; agents: string[] }>()
-        agents.forEach(agent => {
-          (agent.capabilities || []).forEach(cap => {
-            const key = cap.trim().toLowerCase()
-            if (!key) return
-            const entry = capMap.get(key) || { count: 0, agents: [] }
-            entry.count++
-            if (entry.agents.length < 3) entry.agents.push(agent.name)
-            capMap.set(key, entry)
-          })
-        })
-        const sorted = [...capMap.entries()].sort((a, b) => b[1].count - a[1].count)
-        if (sorted.length === 0) return null
-        return (
-          <Card title="能力图谱" size="small" style={{ marginBottom: 16 }}>
-            <Space size={[8, 8]} wrap>
-              {sorted.map(([cap, info]) => (
-                <Tag
-                  key={cap}
-                  color={info.count >= 3 ? 'green' : info.count >= 2 ? 'blue' : 'default'}
-                  style={{ fontSize: 13, padding: '2px 8px' }}
-                >
-                  {cap} <Text type="secondary" style={{ fontSize: 11 }}>(×{info.count})</Text>
-                </Tag>
-              ))}
-            </Space>
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                共 {sorted.length} 项能力，{agents.filter(a => (a.capabilities || []).length > 0).length}/{agents.length} 个 Agent 已标注能力
-              </Text>
-            </div>
-          </Card>
-        )
-      })()}
+      <CapabilityMapCard agents={agents} />
 
       {/* 任务分布统计 */}
-      {dashboardStats && (
-        <Card title="任务分布" size="small" style={{ marginBottom: 16 }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 28, fontWeight: 600 }}>{dashboardStats.tasks.total}</div>
-                <Text type="secondary">任务总数</Text>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 28, fontWeight: 600, color: '#52c41a' }}>{dashboardStats.tasks.done}</div>
-                <Text type="secondary">已完成</Text>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 28, fontWeight: 600, color: '#1890ff' }}>
-                  {dashboardStats.tasks.total > 0
-                    ? Math.round((dashboardStats.tasks.done / dashboardStats.tasks.total) * 100)
-                    : 0}%
-                </div>
-                <Text type="secondary">完成率</Text>
-              </div>
-            </Col>
-          </Row>
-          <Divider style={{ margin: '12px 0' }} />
-          <Space size={[8, 8]} wrap>
-            <Tag color="default">待办 {dashboardStats.tasks.todo}</Tag>
-            <Tag color="blue">进行中 {dashboardStats.tasks.in_progress}</Tag>
-            <Tag color="purple">待审核 {dashboardStats.tasks.review}</Tag>
-            <Tag color="green">已完成 {dashboardStats.tasks.done}</Tag>
-            {dashboardStats.tasks.ai_executing > 0 && (
-              <Tag color="geekblue">AI 执行中 {dashboardStats.tasks.ai_executing}</Tag>
-            )}
-          </Space>
-          {dashboardStats.agent_collaboration && (
-            <>
-              <Divider style={{ margin: '12px 0' }} />
-              <Text type="secondary" style={{ fontSize: 12 }}>协作派发：</Text>
-              <Space size={[8, 8]} wrap style={{ marginTop: 4 }}>
-                <Tag color="processing">活跃 {dashboardStats.agent_collaboration.assignments.active}</Tag>
-                <Tag color="gold">等人工 {dashboardStats.agent_collaboration.assignments.waiting_human}</Tag>
-                <Tag color="purple">审核 {dashboardStats.agent_collaboration.assignments.review}</Tag>
-                {dashboardStats.agent_collaboration.assignments.expired_leases > 0 && (
-                  <Tag color="red">过期 {dashboardStats.agent_collaboration.assignments.expired_leases}</Tag>
-                )}
-              </Space>
-            </>
-          )}
-        </Card>
-      )}
+      {dashboardStats && <TaskDistributionCard stats={dashboardStats} />}
 
       {/* 维护操作 */}
-      <Card title="维护操作" size="small" style={{ marginBottom: 16 }}>
-        <Space>
-          <Button
-            size="small"
-            icon={<ThunderboltOutlined />}
-            onClick={async () => {
-              try {
-                const result = await agentsApi.escalateOverdueTasks()
-                message.success(`已提升 ${result.escalated_count} 个逾期任务优先级`)
-              } catch {
-                message.error('提升逾期任务优先级失败')
-              }
-            }}
-          >
-            提升逾期任务优先级
-          </Button>
-          <Button
-            size="small"
-            icon={<ReloadOutlined />}
-            onClick={async () => {
-              try {
-                const result = await agentsApi.healthCheck()
-                message.success(
-                  `健康检查完成: ${result.stale_agents} 个离线 Agent, ${result.expired_leases} 个过期租约, ${result.escalated_tasks} 个提升任务`
-                )
-                loadDashboardStats()
-              } catch {
-                message.error('健康检查失败')
-              }
-            }}
-          >
-            执行健康检查
-          </Button>
-        </Space>
-      </Card>
+      <MaintenanceActionsCard onRefreshStats={loadDashboardStats} />
 
       {/* 实时协作事件流 */}
-      {liveMode && liveEvents.length > 0 && (
-        <Card
-          title={
-            <Space>
-              <Badge dot color="#52c41a" />
-              实时协作事件
-            </Space>
-          }
-          size="small"
-          style={{ marginBottom: 16 }}
-          extra={<Button size="small" onClick={() => setLiveEvents([])}>清空</Button>}
-        >
-          <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-            {liveEvents.map((ev, i) => (
-              <div key={i} style={{ padding: '4px 0', borderBottom: '1px solid #f5f5f5', display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                <Space size={4}>
-                  <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>{ev.type}</Tag>
-                  <span>
-                    {ev.payload?.from_agent?.name && <Text type="secondary">{ev.payload.from_agent.name}</Text>}
-                    {ev.payload?.to_agent?.name && <Text type="secondary"> → {ev.payload.to_agent.name}</Text>}
-                    {ev.payload?.content && <Text>{String(ev.payload.content).slice(0, 60)}</Text>}
-                    {ev.payload?.task_id && <Tag style={{ fontSize: 10, margin: 0 }}>#{ev.payload.task_id}</Tag>}
-                  </span>
-                </Space>
-                <Text type="secondary" style={{ fontSize: 10, flexShrink: 0 }}>
-                  {new Date(ev.time).toLocaleTimeString()}
-                </Text>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      {liveMode && <LiveEventFeedCard events={liveEvents} onClear={() => setLiveEvents([])} />}
 
       <ReviewQueueSection
         items={reviewQueue}

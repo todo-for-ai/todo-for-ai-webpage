@@ -34,6 +34,9 @@ import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import WorkflowFormModal from './workflows/WorkflowFormModal'
 import WorkflowRunConsole from './workflows/WorkflowRunConsole'
 import WorkflowAnalyticsCards from './workflows/WorkflowAnalyticsCards'
+import ScheduledTriggersCard from './workflows/ScheduledTriggersCard'
+import WorkflowRunsCard from './workflows/WorkflowRunsCard'
+import WorkflowTemplatesCard from './workflows/WorkflowTemplatesCard'
 
 const { Option } = Select
 const { TextArea } = Input
@@ -450,31 +453,11 @@ const Workflows: React.FC = () => {
       </div>
 
       {/* Template marketplace */}
-      {templates.length > 0 && (
-        <Card title="工作流模板" style={{ marginBottom: 24 }} size="small" extra={<Spin spinning={templateLoading} size="small" />}>
-          <Row gutter={[12, 12]}>
-            {templates.map(tpl => (
-              <Col key={tpl.key} xs={24} sm={12} md={8} lg={6}>
-                <Card
-                  size="small"
-                  hoverable
-                  onClick={() => instantiateTemplate(tpl.key, tpl.name)}
-                  style={{ height: '100%' }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 13 }}>{tpl.name}</div>
-                  <div style={{ color: '#8c8c8c', fontSize: 11, marginBottom: 4 }}>
-                    {tpl.description.length > 60 ? tpl.description.slice(0, 60) + '…' : tpl.description}
-                  </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <Tag color="blue" style={{ fontSize: 10 }}>{tpl.category}</Tag>
-                    <Tag style={{ fontSize: 10 }}>{tpl.step_count} 步骤</Tag>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-      )}
+      <WorkflowTemplatesCard
+        templates={templates}
+        templateLoading={templateLoading}
+        onInstantiate={instantiateTemplate}
+      />
 
       {/* Workflow definitions */}
       <Card title="工作流定义" style={{ marginBottom: 24 }} extra={<Button size="small" onClick={loadData}>刷新</Button>}>
@@ -573,160 +556,33 @@ const Workflows: React.FC = () => {
       />
 
       {/* Workflow runs */}
-      <Card title="运行记录" style={{ marginBottom: 24 }} extra={<Button size="small" onClick={loadRuns}>刷新</Button>}>
-        <Spin spinning={runsLoading}>
-          {runs.length === 0 ? (
-            <Empty description="暂无运行记录" />
-          ) : (
-            <div>
-              {runs.map(run => {
-                const done = (run.step_runs || []).filter(sr => sr.status === 'succeeded').length
-                const total = (run.step_runs || []).length
-                return (
-                  <Card
-                    key={run.id}
-                    size="small"
-                    style={{ marginBottom: 8, cursor: 'pointer' }}
-                    onClick={() => viewRun(run.id)}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Space>
-                        <Tag color={WORKFLOW_STATUS_COLORS[run.status] || 'default'}>{run.status}</Tag>
-                        <span>运行 #{run.id}</span>
-                        <span style={{ color: '#8c8c8c', fontSize: 12 }}>
-                          步骤 {done}/{total}
-                        </span>
-                      </Space>
-                      <Space>
-                        <span style={{ fontSize: 12, color: '#8c8c8c' }}>
-                          {new Date(run.created_at).toLocaleString()}
-                        </span>
-                        {run.status === 'running' && (
-                          <Button size="small" icon={<PauseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handlePauseRun(run.id) }}>
-                            暂停
-                          </Button>
-                        )}
-                        {run.status === 'paused' && (
-                          <Button size="small" type="primary" icon={<PlayCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleResumeRun(run.id) }}>
-                            恢复
-                          </Button>
-                        )}
-                        {run.status === 'failed' && (
-                          <Button size="small" type="primary" icon={<ReloadOutlined />} onClick={(e) => { e.stopPropagation(); handleRetryRun(run.id) }}>
-                            重试
-                          </Button>
-                        )}
-                        {['running', 'paused', 'pending'].includes(run.status) && (
-                          <Popconfirm title="确定取消此运行？" onConfirm={(e) => { e?.stopPropagation(); handleCancelRun(run.id) }} onCancel={(e) => e?.stopPropagation()}>
-                            <Button size="small" danger icon={<StopOutlined />} onClick={(e) => e.stopPropagation()}>
-                              取消
-                            </Button>
-                          </Popconfirm>
-                        )}
-                      </Space>
-                    </div>
-                  </Card>
-                )
-              })}
-            </div>
-          )}
-        </Spin>
-      </Card>
+      <WorkflowRunsCard
+        runs={runs}
+        runsLoading={runsLoading}
+        onRefresh={loadRuns}
+        onViewRun={viewRun}
+        onPauseRun={handlePauseRun}
+        onResumeRun={handleResumeRun}
+        onRetryRun={handleRetryRun}
+        onCancelRun={handleCancelRun}
+      />
 
       {/* Scheduled Triggers */}
-      <Card
-        title={
-          <Space>
-            <ClockCircleOutlined />
-            定时触发器
-          </Space>
-        }
-        extra={
-          <Space>
-            <Button size="small" onClick={loadTriggers}>刷新</Button>
-            <Button
-              size="small"
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                if (workflows.length === 0) {
-                  message.warning('请先创建工作流')
-                  return
-                }
-                openTriggerModal(workflows[0].id)
-              }}
-            >
-              添加触发器
-            </Button>
-          </Space>
-        }
-      >
-        <Spin spinning={triggerLoading}>
-          {triggers.length === 0 ? (
-            <Empty description="暂无触发器。添加一个 Cron 或一次性触发器来自动执行工作流" />
-          ) : (
-            <Table
-              size="small"
-              dataSource={triggers}
-              rowKey="id"
-              pagination={false}
-              columns={[
-                {
-                  title: '名称',
-                  dataIndex: 'name',
-                  render: (name: string, r: any) => (
-                    <Space>
-                      <span>{name}</span>
-                      <Tag color={r.is_active ? 'green' : 'default'}>{r.is_active ? '启用' : '停用'}</Tag>
-                    </Space>
-                  ),
-                },
-                {
-                  title: '工作流',
-                  dataIndex: 'workflow_id',
-                  render: (id: number) => {
-                    const wf = workflows.find(w => w.id === id)
-                    return wf ? wf.name : `#${id}`
-                  },
-                },
-                {
-                  title: '调度',
-                  render: (_: any, r: any) => (
-                    r.cron_expr
-                      ? <Tooltip title="Cron 表达式"><Tag color="blue">{r.cron_expr}</Tag></Tooltip>
-                      : r.one_shot_at
-                        ? <Tooltip title="一次性触发"><Tag color="orange">{new Date(r.one_shot_at).toLocaleString()}</Tag></Tooltip>
-                        : <Tag>未设置</Tag>
-                  ),
-                },
-                {
-                  title: '下次触发',
-                  dataIndex: 'next_fire_at',
-                  render: (v: string) => v ? new Date(v).toLocaleString() : '-',
-                },
-                {
-                  title: '已触发',
-                  dataIndex: 'fire_count',
-                  render: (v: number) => v ?? 0,
-                },
-                {
-                  title: '操作',
-                  render: (_: any, r: any) => (
-                    <Space>
-                      <Button size="small" onClick={() => handleToggleTrigger(r)}>
-                        {r.is_active ? '停用' : '启用'}
-                      </Button>
-                      <Popconfirm title="确定删除此触发器？" onConfirm={() => handleDeleteTrigger(r.id)}>
-                        <Button size="small" danger icon={<DeleteOutlined />} />
-                      </Popconfirm>
-                    </Space>
-                  ),
-                },
-              ]}
-            />
-          )}
-        </Spin>
-      </Card>
+      <ScheduledTriggersCard
+        triggers={triggers}
+        triggerLoading={triggerLoading}
+        workflows={workflows}
+        onRefresh={loadTriggers}
+        onAddTrigger={() => {
+          if (workflows.length === 0) {
+            message.warning('请先创建工作流')
+            return
+          }
+          openTriggerModal(workflows[0].id)
+        }}
+        onToggleTrigger={handleToggleTrigger}
+        onDeleteTrigger={handleDeleteTrigger}
+      />
 
       {/* Trigger creation modal */}
       <Modal

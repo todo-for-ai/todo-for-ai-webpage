@@ -29,6 +29,7 @@ import PlatformActivityTrendSection from '../components/PlatformActivityTrendSec
 import ConflictsTrendChart from '../components/ConflictsTrendChart'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
+import { CommandCenterStatsRow, SecurityEventTrendAlert, QuickActionsCard, AgentMonitorCard, SecurityEventsCard, OrchestratorStatusCard } from './command-center'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -465,102 +466,27 @@ const CommandCenter: React.FC = () => {
       </Card>
 
       {/* 快捷操作 */}
-      <Card variant="borderless" style={{ marginBottom: 16 }}>
-        <Space wrap>
-          <Popconfirm
-            title="立即执行全局编排？"
-            description="健康检查 + 工作流超时 + 触发器 + 冲突自动解决"
-            onConfirm={runOrchestration}
-          >
-            <Button type="primary" icon={<ThunderboltOutlined />} loading={actionLoading === 'orchestrate'}>
-              立即编排
-            </Button>
-          </Popconfirm>
-          <Popconfirm
-            title="自动解决低严重度冲突？"
-            description="仅处理非 CRITICAL 且策略安全的冲突"
-            onConfirm={autoResolveConflicts}
-          >
-            <Button icon={<CheckCircleOutlined />} loading={actionLoading === 'resolve'} disabled={conflictActive === 0}>
-              自动解决冲突
-            </Button>
-          </Popconfirm>
-          <Button icon={<DownloadOutlined />} onClick={exportSecurityEvents} loading={actionLoading === 'export'}>
-            导出安全事件
-          </Button>
-        </Space>
-      </Card>
+      <QuickActionsCard
+        conflictActive={conflictActive}
+        actionLoading={actionLoading}
+        onOrchestrate={runOrchestration}
+        onAutoResolve={autoResolveConflicts}
+        onExport={exportSecurityEvents}
+      />
 
       <Spin spinning={loading}>
         {/* 顶部总览统计 */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={12} sm={6}>
-            <Card variant="borderless">
-              <Statistic
-                title="活跃 Agent"
-                value={activeAgents}
-                suffix={totalAgents ? `/ ${totalAgents}` : ''}
-                valueStyle={{ color: '#52c41a' }}
-                prefix={<ApiOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card variant="borderless">
-              <Statistic
-                title="繁忙 / 离线"
-                value={busyAgents}
-                suffix={`/ ${offlineAgents}`}
-                prefix={<ThunderboltOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card variant="borderless">
-              <Statistic
-                title="活跃冲突"
-                value={conflictActive}
-                valueStyle={{ color: conflictActive > 0 ? '#ff4d4f' : undefined }}
-                prefix={conflictActive > 0 ? <WarningOutlined /> : undefined}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card variant="borderless">
-              <Statistic
-                title="高危安全事件"
-                value={criticalEvents}
-                valueStyle={{ color: criticalEvents > 0 ? '#ff4d4f' : undefined }}
-                prefix={<SafetyOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <CommandCenterStatsRow
+          totalAgents={totalAgents}
+          activeAgents={activeAgents}
+          busyAgents={busyAgents}
+          offlineAgents={offlineAgents}
+          conflictActive={conflictActive}
+          criticalEvents={criticalEvents}
+        />
 
         {/* 安全事件环比提示 */}
-        {trendDays.length > 0 && (
-          <Alert
-            style={{ marginBottom: 16 }}
-            type={dayDelta > 0 ? 'warning' : dayDelta < 0 ? 'success' : 'info'}
-            showIcon
-            icon={dayDelta > 0 ? <ArrowUpOutlined /> : dayDelta < 0 ? <ArrowDownOutlined /> : undefined}
-            message={
-              <span style={{ fontSize: 13 }}>
-                近 {trendDays.length} 天累计安全事件 <Text strong>{trendTotal}</Text> 起
-                {trendDays.length > 1 && (
-                  <>，最近一日 <Text strong>{lastDay}</Text> 起
-                    {dayDelta !== 0 && (
-                      <Text type={dayDelta > 0 ? 'danger' : 'success'}>
-                        {' '}{dayDelta > 0 ? '↑' : '↓'} {Math.abs(dayDelta)}（{Math.abs(dayDeltaPct)}%）
-                      </Text>
-                    )}
-                    {dayDelta === 0 && <Text type="secondary"> · 与前日持平</Text>}
-                  </>
-                )}
-              </span>
-            }
-          />
-        )}
+        <SecurityEventTrendAlert trend={securityTrend} />
 
         {/* 平台活动统一趋势：编排活动 + 安全事件同时间轴 */}
         <Card
@@ -613,80 +539,23 @@ const CommandCenter: React.FC = () => {
         <Row gutter={[16, 16]}>
           {/* Agent 监控 */}
           <Col xs={24} lg={12}>
-            <Card
-              title={<Space><ApiOutlined /> Agent 监控（24h）</Space>}
-              variant="borderless"
-              extra={<Badge status={activeAgents > 0 ? 'success' : 'default'} text={activeAgents > 0 ? `${activeAgents} 在线` : '无在线'} />}
-            >
-              {monitorData ? (
-                <>
-                  <Row gutter={16}>
-                    <Col span={8}><Statistic title="在线" value={activeAgents} valueStyle={{ fontSize: 16, color: '#52c41a' }} /></Col>
-                    <Col span={8}><Statistic title="繁忙" value={busyAgents} valueStyle={{ fontSize: 16, color: '#faad14' }} /></Col>
-                    <Col span={8}><Statistic title="离线" value={offlineAgents} valueStyle={{ fontSize: 16, color: '#ff4d4f' }} /></Col>
-                  </Row>
-                  {monitorData.agents && monitorData.agents.length > 0 ? (
-                    <List
-                      size="small"
-                      style={{ marginTop: 12 }}
-                      dataSource={monitorData.agents.slice(0, 6)}
-                      renderItem={(a: any) => (
-                        <List.Item
-                          style={{ cursor: 'pointer', padding: '6px 8px', borderRadius: 4 }}
-                          onClick={() => navigate(`/todo-for-ai/pages/agents?agent_id=${a.id}`)}
-                        >
-                          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                            <Text ellipsis style={{ maxWidth: 160, color: '#1890ff' }}>{a.name || `Agent#${a.id}`}</Text>
-                            <Space size={4}>
-                              <Tag color={a.status === 'active' ? 'green' : a.status === 'busy' ? 'orange' : 'default'}>
-                                {a.status || 'unknown'}
-                              </Tag>
-                              {a.current_task && <Tag color="blue">任务#{a.current_task}</Tag>}
-                            </Space>
-                          </Space>
-                        </List.Item>
-                      )}
-                    />
-                  ) : (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无 Agent" style={{ marginTop: 12 }} />
-                  )}
-                </>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无监控数据" />
-              )}
-            </Card>
+            <AgentMonitorCard
+              monitorData={monitorData}
+              activeAgents={activeAgents}
+              busyAgents={busyAgents}
+              offlineAgents={offlineAgents}
+            />
           </Col>
 
           {/* 安全事件近况 */}
           <Col xs={24} lg={12}>
-            <Card
-              title={<Space><SafetyOutlined /> 安全事件近况</Space>}
-              variant="borderless"
-              extra={criticalEvents > 0 ? <Tag color="error">{criticalEvents} 高危</Tag> : <Tag>正常</Tag>}
-            >
-              {/* 按天趋势 + Agent 排行（公共组件，Agent 可点击跳转详情） */}
-              <SecurityTrendSection
-                trend={securityTrend}
-                byAgent={securityByAgent}
-                onAgentClick={(agentId) => agentId && navigate(`/todo-for-ai/pages/agents?agent_id=${agentId}`)}
-              />
-              {securityEvents.length > 0 ? (
-                <List
-                  size="small"
-                  dataSource={securityEvents.slice(0, 8)}
-                  renderItem={(e: any) => (
-                    <SecurityEventListItem
-                      event={e}
-                      variant="compact"
-                      onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
-                      onShowDetail={(ev) => setEventDetail(ev)}
-                    />
-                  )}
-                />
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无安全事件" />
-              )}
-            </Card>
+            <SecurityEventsCard
+              securityEvents={securityEvents}
+              securityTrend={securityTrend}
+              securityByAgent={securityByAgent}
+              criticalEvents={criticalEvents}
+              onShowDetail={(ev) => setEventDetail(ev)}
+            />
           </Col>
 
           {/* 协作冲突 */}
@@ -844,63 +713,7 @@ const CommandCenter: React.FC = () => {
 
           {/* 全局编排状态 */}
           <Col xs={24} lg={12}>
-            <Card
-              title={<Space><ThunderboltOutlined /> 全局编排状态</Space>}
-              variant="borderless"
-              extra={orchestratorStatus ? (
-                <Badge status={orchestratorStatus.enabled ? 'success' : 'default'} text={orchestratorStatus.enabled ? '自动调度' : '手动'} />
-              ) : null}
-            >
-              {orchestratorStatus ? (
-                <>
-                  <Row gutter={16}>
-                    <Col span={12}><Statistic title="调度模式" value={orchestratorStatus.enabled ? '自动' : '手动'} valueStyle={{ fontSize: 16 }} /></Col>
-                    <Col span={12}>
-                      <Statistic
-                        title="运行间隔"
-                        value={orchestratorStatus.interval_seconds || 0}
-                        suffix="s"
-                        valueStyle={{ fontSize: 16 }}
-                      />
-                    </Col>
-                  </Row>
-                  {orchestratorStatus.last_run ? (
-                    <Alert
-                      style={{ marginTop: 12 }}
-                      type={orchestratorStatus.last_run.error_count > 0 ? 'warning' : 'info'}
-                      showIcon
-                      message="上次运行"
-                      description={
-                        <span style={{ fontSize: 12 }}>
-                          {orchestratorStatus.last_run.summary}
-                          <Text type="secondary"> · 耗时 {orchestratorStatus.last_run.duration_seconds}s</Text>
-                          {orchestratorStatus.last_run.error_count > 0 && (
-                            <Text type="danger"> · {orchestratorStatus.last_run.error_count} 错误</Text>
-                          )}
-                          {orchestratorStatus.last_run.trigger_run_ids && orchestratorStatus.last_run.trigger_run_ids.length > 0 && (
-                            <>
-                              <Text type="secondary"> · </Text>
-                              <Dropdown
-                                menu={{
-                                  items: orchestratorStatus.last_run.trigger_run_ids.map((rid: number) => ({ key: String(rid), label: `Run #${rid}` })),
-                                  onClick: ({ key }) => navigate(`/todo-for-ai/pages/workflows?run_id=${key}`),
-                                }}
-                              >
-                                <Tag color="purple" style={{ cursor: 'pointer' }}>查看运行 →</Tag>
-                              </Dropdown>
-                            </>
-                          )}
-                        </span>
-                      }
-                    />
-                  ) : (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="尚未运行编排" style={{ marginTop: 12 }} />
-                  )}
-                </>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无编排状态" />
-              )}
-            </Card>
+            <OrchestratorStatusCard orchestratorStatus={orchestratorStatus} />
           </Col>
         </Row>
 

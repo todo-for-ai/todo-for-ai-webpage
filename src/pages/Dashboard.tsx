@@ -43,6 +43,12 @@ import ExperiencesSection from './dashboard/ExperiencesSection'
 import TaskAnalyticsSection from './dashboard/TaskAnalyticsSection'
 import AgentAnalyticsSection from './dashboard/AgentAnalyticsSection'
 import ConflictSection from './dashboard/ConflictSection'
+import CollaborationMetricsCard from './dashboard/CollaborationMetricsCard'
+import AgentMonitorCard from './dashboard/AgentMonitorCard'
+import SandboxMonitorCard from './dashboard/SandboxMonitorCard'
+import OrchestrationCard from './dashboard/OrchestrationCard'
+import SecurityEventsCard from './dashboard/SecurityEventsCard'
+import CollaborationGraphCard from './dashboard/CollaborationGraphCard'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
@@ -757,181 +763,13 @@ const Dashboard = () => {
       </Row>
 
       {/* 协作指标 */}
-      <Card
-        title={
-          <span>
-            <DashboardOutlined style={{ marginRight: 8 }} />
-            多 Agent 协作指标
-          </span>
-        }
-        extra={
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <Select
-              size="small"
-              value={collabDays}
-              onChange={setCollabDays}
-              style={{ width: 120 }}
-              options={[
-                { value: 1, label: '最近 1 天' },
-                { value: 7, label: '最近 7 天' },
-                { value: 30, label: '最近 30 天' },
-                { value: 90, label: '最近 90 天' },
-              ]}
-            />
-            <Tooltip title="刷新">
-              <ReloadOutlined spin={collabLoading} onClick={loadCollabMetrics} style={{ cursor: 'pointer' }} />
-            </Tooltip>
-          </div>
-        }
-        style={{ marginBottom: 24 }}
-      >
-        <Spin spinning={collabLoading}>
-          {collabMetrics ? (
-            <>
-              {/* Core stats row */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col xs={12} sm={6}>
-                  <Statistic
-                    title="任务完成率"
-                    value={collabMetrics.tasks?.completion_rate ?? 0}
-                    suffix="%"
-                    prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                    valueStyle={{ color: (collabMetrics.tasks?.completion_rate ?? 0) >= 70 ? '#52c41a' : '#faad14', fontSize: 20 }}
-                  />
-                </Col>
-                <Col xs={12} sm={6}>
-                  <Statistic
-                    title="Agent 利用率"
-                    value={collabMetrics.agents?.utilization_pct ?? 0}
-                    suffix="%"
-                    prefix={<TeamOutlined style={{ color: '#1890ff' }} />}
-                    valueStyle={{ color: (collabMetrics.agents?.utilization_pct ?? 0) >= 60 ? '#1890ff' : '#faad14', fontSize: 20 }}
-                  />
-                </Col>
-                <Col xs={12} sm={6}>
-                  <Statistic
-                    title="工作流成功率"
-                    value={collabMetrics.workflows?.success_rate ?? 0}
-                    suffix="%"
-                    prefix={<ApartmentOutlined style={{ color: '#722ed1' }} />}
-                    valueStyle={{ color: (collabMetrics.workflows?.success_rate ?? 0) >= 80 ? '#52c41a' : '#faad14', fontSize: 20 }}
-                  />
-                </Col>
-                <Col xs={12} sm={6}>
-                  <Statistic
-                    title="任务交接"
-                    value={collabMetrics.handoffs ?? 0}
-                    prefix={<SwapOutlined style={{ color: '#fa8c16' }} />}
-                    valueStyle={{ fontSize: 20 }}
-                  />
-                </Col>
-              </Row>
-
-              {/* Task breakdown + Agent status */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col xs={24} sm={12}>
-                  <Card size="small" title="任务状态" extra={<Tag>共 {collabMetrics.tasks?.total ?? 0} 个</Tag>}>
-                    <Row gutter={8}>
-                      <Col span={8}><Statistic title="进行中" value={collabMetrics.tasks?.in_progress ?? 0} valueStyle={{ fontSize: 16, color: '#1890ff' }} /></Col>
-                      <Col span={8}><Statistic title="已阻塞" value={collabMetrics.tasks?.blocked ?? 0} valueStyle={{ fontSize: 16, color: '#ff4d4f' }} /></Col>
-                      <Col span={8}><Statistic title="待审查" value={collabMetrics.tasks?.review ?? 0} valueStyle={{ fontSize: 16, color: '#faad14' }} /></Col>
-                    </Row>
-                    <div style={{ marginTop: 4, fontSize: 11, color: '#8c8c8c' }}>
-                      平均完成时间: {_formatDuration(collabMetrics.tasks?.avg_completion_seconds ?? 0)}
-                    </div>
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Card size="small" title="Agent 状态" extra={<Tag>共 {collabMetrics.agents?.total ?? 0} 个</Tag>}>
-                    <Row gutter={8}>
-                      <Col span={8}><Statistic title="活跃" value={collabMetrics.agents?.active ?? 0} valueStyle={{ fontSize: 16, color: '#52c41a' }} prefix={<ThunderboltOutlined />} /></Col>
-                      <Col span={8}><Statistic title="暂停" value={collabMetrics.agents?.paused ?? 0} valueStyle={{ fontSize: 16, color: '#faad14' }} /></Col>
-                      <Col span={8}><Statistic title="离线" value={collabMetrics.agents?.offline ?? 0} valueStyle={{ fontSize: 16, color: '#8c8c8c' }} /></Col>
-                    </Row>
-                    {collabMetrics.agents?.kind_distribution && (
-                      <div style={{ marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {Object.entries(collabMetrics.agents.kind_distribution).map(([k, v]) => (
-                          <Tag key={k} color="blue" style={{ fontSize: 11 }}>{_KIND_LABELS[k] || k}: {v as number}</Tag>
-                        ))}
-                      </div>
-                    )}
-                  </Card>
-                </Col>
-              </Row>
-
-              {/* Trend chart */}
-              {collabMetrics.trend?.length > 0 && (
-                <Card size="small" title="任务趋势" style={{ marginBottom: 16 }} extra={<span style={{ fontSize: 11, color: '#8c8c8c' }}><span style={{ color: '#1890ff' }}>■</span> 创建 <span style={{ color: '#52c41a' }}>■</span> 完成</span>}>
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 80, padding: '0 4px' }}>
-                    {collabMetrics.trend.map((t: any, i: number) => {
-                      const maxVal = Math.max(...collabMetrics.trend.map((x: any) => Math.max(x.created, x.completed)), 1)
-                      return (
-                        <Tooltip key={i} title={`${t.date}: 创建 ${t.created}, 完成 ${t.completed}`}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 16 }}>
-                            <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 60 }}>
-                              <div style={{ width: 8, height: Math.max(2, (t.created / maxVal) * 56), background: '#1890ff', borderRadius: 2 }} />
-                              <div style={{ width: 8, height: Math.max(2, (t.completed / maxVal) * 56), background: '#52c41a', borderRadius: 2 }} />
-                            </div>
-                            <span style={{ fontSize: 9, color: '#8c8c8c', marginTop: 2 }}>{t.date.slice(5)}</span>
-                          </div>
-                        </Tooltip>
-                      )
-                    })}
-                  </div>
-                </Card>
-              )}
-
-              {/* Top agents */}
-              {collabMetrics.top_agents?.length > 0 && (
-                <Card size="small" title="Top Agent（完成任务数）">
-                  <Table
-                    size="small"
-                    dataSource={collabMetrics.top_agents}
-                    rowKey="id"
-                    pagination={false}
-                    columns={[
-                      { title: '排名', width: 60, render: (_: any, __: any, i: number) => <Tag color={i < 3 ? 'gold' : 'default'}>{i + 1}</Tag> },
-                      { title: 'Agent', dataIndex: 'name', render: (name: string, r: any) => <>{name} <Tag>{_KIND_LABELS[r.kind] || r.kind}</Tag></> },
-                      { title: '完成任务', dataIndex: 'completed_count', sorter: (a: any, b: any) => a.completed_count - b.completed_count },
-                    ]}
-                  />
-                </Card>
-              )}
-
-              {/* Agent performance analysis */}
-              {collabMetrics.agent_performance?.length > 0 && (
-                <Card size="small" title="Agent 性能分析" style={{ marginTop: 16 }}>
-                  <Table
-                    size="small"
-                    dataSource={collabMetrics.agent_performance}
-                    rowKey="id"
-                    pagination={false}
-                    columns={[
-                      { title: 'Agent', dataIndex: 'name' },
-                      { title: '总分配', dataIndex: 'total_assignments', width: 80 },
-                      { title: '完成', dataIndex: 'done', width: 60 },
-                      { title: '失败', dataIndex: 'failed', width: 60, render: (v: number) => v > 0 ? <span style={{ color: '#ff4d4f' }}>{v}</span> : v },
-                      {
-                        title: '成功率',
-                        dataIndex: 'success_rate',
-                        width: 100,
-                        sorter: (a: any, b: any) => a.success_rate - b.success_rate,
-                        render: (rate: number) => (
-                          <span style={{ color: rate >= 80 ? '#52c41a' : rate >= 50 ? '#faad14' : '#ff4d4f' }}>
-                            {rate}%
-                          </span>
-                        ),
-                      },
-                    ]}
-                  />
-                </Card>
-              )}
-            </>
-          ) : (
-            <Empty description="暂无协作数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
-        </Spin>
-      </Card>
+      <CollaborationMetricsCard
+        collabMetrics={collabMetrics}
+        collabLoading={collabLoading}
+        collabDays={collabDays}
+        onDaysChange={setCollabDays}
+        onRefresh={loadCollabMetrics}
+      />
 
       {/* Agent 协作关系图 */}
       <Card
@@ -1146,207 +984,23 @@ const Dashboard = () => {
       </Card>
 
       {/* Agent Real-time Monitor */}
-      <Card
-        title={<Space><DashboardOutlined /> Agent 实时监控</Space>}
-        style={{ marginBottom: 24 }}
-        extra={<Space><Select size="small" value={monitorHours} onChange={setMonitorHours} style={{ width: 100 }} options={[{ value: 6, label: '6小时' }, { value: 24, label: '24小时' }, { value: 72, label: '3天' }, { value: 168, label: '7天' }]} /><Button size="small" icon={<ReloadOutlined />} onClick={loadMonitorData} loading={monitorLoading} /></Space>}
-      >
-        <Spin spinning={monitorLoading}>
-          {monitorData ? (
-            <>
-              <Row gutter={[8, 8]} style={{ marginBottom: 12 }}>
-                <Col span={6}><Statistic title="总 Agent" value={monitorData.summary?.total_agents || 0} valueStyle={{ fontSize: 16 }} /></Col>
-                <Col span={6}><Statistic title="活跃" value={monitorData.summary?.active || 0} valueStyle={{ fontSize: 16, color: '#52c41a' }} prefix={<ThunderboltOutlined />} /></Col>
-                <Col span={6}><Statistic title="离线" value={monitorData.summary?.offline || 0} valueStyle={{ fontSize: 16, color: '#8c8c8c' }} /></Col>
-                <Col span={6}><Statistic title="活跃任务" value={monitorData.summary?.total_active_tasks || 0} valueStyle={{ fontSize: 16 }} /></Col>
-              </Row>
-              <Table
-                size="small"
-                dataSource={monitorData.agents || []}
-                rowKey="agent_id"
-                pagination={monitorData.agents?.length > 10 ? { pageSize: 10 } : false}
-                scroll={{ x: 800 }}
-                columns={[
-                  {
-                    title: 'Agent',
-                    width: 160,
-                    render: (_: any, r: any) => (
-                      <Space>
-                        <Tag color={r.real_status === 'active' ? 'green' : r.real_status === 'offline' ? 'default' : 'orange'}>{r.real_status}</Tag>
-                        <span>{r.agent_name}</span>
-                      </Space>
-                    ),
-                  },
-                  { title: '类型', dataIndex: 'agent_kind', width: 70, render: (v: string) => _KIND_LABELS[v] || v },
-                  { title: '角色', dataIndex: 'collaboration_role', width: 80, render: (v: string) => <Tag color="blue" style={{ fontSize: 10 }}>{v}</Tag> },
-                  {
-                    title: '任务',
-                    dataIndex: 'active_task_count',
-                    width: 60,
-                    render: (v: number) => v > 0 ? <span style={{ color: '#1890ff', fontWeight: 600 }}>{v}</span> : <span style={{ color: '#8c8c8c' }}>0</span>,
-                  },
-                  {
-                    title: '声誉',
-                    width: 80,
-                    render: (_: any, r: any) => r.reputation ? (
-                      <ReputationTrendPopover agentId={r.agent_id} score={r.reputation.score}>
-                        <span style={{ color: r.reputation.score >= 70 ? '#52c41a' : r.reputation.score >= 40 ? '#faad14' : '#ff4d4f', cursor: 'help', textDecoration: 'underline dotted' }}>
-                          {r.reputation.score?.toFixed(0)}
-                        </span>
-                      </ReputationTrendPopover>
-                    ) : '-',
-                  },
-                  {
-                    title: '经验',
-                    width: 70,
-                    render: (_: any, r: any) => <span>{r.experience_count || 0}<Text type="secondary" style={{ fontSize: 10 }}>({r.shared_experience_count || 0}共享)</Text></span>,
-                  },
-                  {
-                    title: '跨项目',
-                    dataIndex: 'cross_project_count',
-                    width: 70,
-                    render: (v: number) => v > 0 ? <Tag color="cyan" style={{ fontSize: 10 }}>{v}</Tag> : '-',
-                  },
-                  {
-                    title: '活动趋势',
-                    dataIndex: 'activity_trend',
-                    width: 120,
-                    render: (trend: any[]) => {
-                      if (!trend || trend.length === 0) return <Text type="secondary" style={{ fontSize: 10 }}>无数据</Text>
-                      const maxCount = Math.max(...trend.map((t: any) => t.count), 1)
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1, height: 24 }}>
-                          {trend.slice(-24).map((t: any, i: number) => (
-                            <div key={i} style={{ width: 4, height: Math.max(1, (t.count / maxCount) * 20), background: '#1890ff', borderRadius: 1, opacity: 0.4 + (t.count / maxCount) * 0.6 }} />
-                          ))}
-                        </div>
-                      )
-                    },
-                  },
-                  {
-                    title: '最后在线',
-                    dataIndex: 'last_seen_at',
-                    width: 100,
-                    render: (v: string) => {
-                      if (!v) return '-'
-                      const diff = Math.floor((Date.now() - new Date(v).getTime()) / 60000)
-                      if (diff < 1) return <span style={{ color: '#52c41a' }}>刚刚</span>
-                      if (diff < 60) return <span style={{ color: '#52c41a' }}>{diff}分钟前</span>
-                      if (diff < 1440) return `${Math.floor(diff / 60)}小时前`
-                      return `${Math.floor(diff / 1440)}天前`
-                    },
-                  },
-                ]}
-              />
-            </>
-          ) : (
-            <Empty description="暂无监控数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
-        </Spin>
-      </Card>
+      <AgentMonitorCard
+        monitorData={monitorData}
+        monitorLoading={monitorLoading}
+        monitorHours={monitorHours}
+        onHoursChange={setMonitorHours}
+        onRefresh={loadMonitorData}
+      />
 
       {/* Sandbox Security Monitor */}
-      <Card
-        title={<Space><SafetyOutlined /> 沙盒安全监控</Space>}
-        style={{ marginBottom: 24 }}
-        extra={<Space><Button size="small" icon={<ReloadOutlined />} onClick={loadSandboxData} loading={sandboxLoading} /></Space>}
-      >
-        <Spin spinning={sandboxLoading}>
-          {sandboxData ? (
-            <>
-              <Row gutter={16} style={{ marginBottom: 16 }}>
-                <Col span={4}><Statistic title="沙盒策略" value={sandboxData.total_sandboxes || 0} valueStyle={{ fontSize: 16 }} /></Col>
-                <Col span={4}><Statistic title="执行总数" value={sandboxData.total_executions || 0} valueStyle={{ fontSize: 16 }} /></Col>
-                <Col span={4}><Statistic title="运行中" value={sandboxData.running_executions || 0} valueStyle={{ fontSize: 16, color: '#1890ff' }} /></Col>
-                <Col span={4}><Statistic title="违规总数" value={sandboxData.total_violations || 0} valueStyle={{ fontSize: 16, color: (sandboxData.total_violations || 0) > 0 ? '#ff4d4f' : undefined }} prefix={(sandboxData.total_violations || 0) > 0 ? <WarningOutlined /> : undefined} /></Col>
-                <Col span={12}>
-                  <Space size={[8, 8]} wrap>
-                    <Text type="secondary" style={{ fontSize: 12 }}>按级别:</Text>
-                    {Object.entries(sandboxData.by_level || {}).map(([k, v]: any) => (
-                      <Tag key={k} color={k === 'strict' ? 'red' : k === 'permissive' ? 'green' : 'orange'} style={{ fontSize: 11 }}>{k}: {v}</Tag>
-                    ))}
-                  </Space>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>执行状态分布:</Text>
-                  <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
-                    {Object.entries(sandboxData.by_status || {}).map(([k, v]: any) => (
-                      <Tag key={k} color={k === 'completed' ? 'green' : k === 'running' ? 'blue' : k === 'violated' ? 'red' : k === 'revoked' ? 'orange' : k === 'failed' ? 'volcano' : 'default'} style={{ fontSize: 11 }}>
-                        {k}: {v}
-                      </Tag>
-                    ))}
-                  </Space>
-                </Col>
-              </Row>
-              {sandboxViolationTrend && sandboxViolationTrend.trend.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    近 {sandboxViolationTrend.days} 天违规趋势（累计 {sandboxViolationTrend.trend.reduce((s, t) => s + t.count, 0)}）
-                  </Text>
-                  <div style={{ marginTop: 8 }}>
-                    <MiniTrendChart
-                      height={100}
-                      labels={sandboxViolationTrend.trend.map((t) => t.date)}
-                      series={[{ key: 'violations', label: '违规', color: '#ff4d4f', values: sandboxViolationTrend.trend.map((t) => t.count) }]}
-                    />
-                  </div>
-                  <Space size={[4, 4]} wrap style={{ marginTop: 4 }}>
-                    {Object.entries(sandboxViolationTrend.by_type || {}).filter(([, v]) => (v as number) > 0).map(([k, v]: any) => (
-                      <Tag key={k} style={{ fontSize: 10 }}>{k}: {v}</Tag>
-                    ))}
-                  </Space>
-                </div>
-              )}
-              {sandboxViolationsByAgent && sandboxViolationsByAgent.items.length > 0 ? (() => {
-                const items = sandboxViolationsByAgent.items
-                const maxTotal = Math.max(1, ...items.map((it) => it.total))
-                return (
-                  <div style={{ marginTop: 12 }}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>违规最多的 Agent（近 {sandboxViolationsByAgent.days} 天）</Text>
-                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {items.slice(0, 6).map((it) => (
-                        <div key={it.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                          <span style={{ width: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${it.name} #${it.agent_id}`}>
-                            {it.name || `#${it.agent_id}`}
-                          </span>
-                          <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ width: `${(it.total / maxTotal) * 100}%`, height: '100%', background: '#ff4d4f', borderRadius: 3 }} />
-                          </div>
-                          <span style={{ color: '#8c8c8c', minWidth: 40, textAlign: 'right' }}>{it.total}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })() : null}
-              {sandboxTemplateUsage && sandboxTemplateUsage.items.length > 0 ? (() => {
-                const items = sandboxTemplateUsage.items
-                const maxUses = Math.max(1, ...items.map((it) => it.uses))
-                return (
-                  <div style={{ marginTop: 12 }}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>沙盒模板使用（实例化/绑定 Agent）</Text>
-                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {items.slice(0, 6).map((it) => (
-                        <div key={it.template_key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                          <span style={{ width: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={it.template_key}>{it.template_key}</span>
-                          <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ width: `${(it.uses / maxUses) * 100}%`, height: '100%', background: '#722ed1', borderRadius: 3 }} />
-                          </div>
-                          <span style={{ color: '#8c8c8c', minWidth: 70, textAlign: 'right' }}>{it.uses}次 · 绑{it.bound_to_agent}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })() : null}
-            </>
-          ) : (
-            <Empty description="暂无沙盒数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
-        </Spin>
-      </Card>
+      <SandboxMonitorCard
+        sandboxData={sandboxData}
+        sandboxLoading={sandboxLoading}
+        sandboxViolationTrend={sandboxViolationTrend}
+        sandboxViolationsByAgent={sandboxViolationsByAgent}
+        sandboxTemplateUsage={sandboxTemplateUsage}
+        onRefresh={loadSandboxData}
+      />
 
       {/* Experience Library Stats */}
       <ExperiencesSection />
@@ -1358,178 +1012,32 @@ const Dashboard = () => {
       <ConflictSection />
 
       {/* Security Event Aggregation */}
-      <Card
-        title={<Space><SafetyOutlined /> 安全审计事件聚合</Space>}
-        style={{ marginBottom: 24 }}
-        extra={
-          <Space wrap size={[8, 4]}>
-            <Segmented
-              size="small"
-              value={securitySeverity || 'all'}
-              onChange={(v) => {
-                const val = v === 'all' ? '' : String(v)
-                setSecuritySeverity(val)
-                // loadSecurityEvents 因依赖 buildSecurityParams(severity) 变化而重建，触发 effect 自动加载
-              }}
-              options={[
-                { value: 'all', label: '全部' },
-                { value: 'CRITICAL', label: '高危' },
-                { value: 'WARNING', label: '警告' },
-                { value: 'INFO', label: '普通' },
-              ]}
-            />
-            <Input.Search
-              size="small"
-              allowClear
-              placeholder="搜索标题/详情"
-              style={{ width: 180 }}
-              onSearch={(v) => setSecuritySearch(v || '')}
-              onChange={(e) => { if (!e.target.value) setSecuritySearch('') }}
-            />
-            <Select
-              size="small"
-              style={{ width: 130 }}
-              allowClear
-              placeholder="事件类型"
-              value={securityFilter || undefined}
-              onChange={(v) => { setSecurityFilter(v || ''); loadSecurityEvents(v || undefined) }}
-              options={[
-                { value: 'sandbox_violation', label: '沙盒违规' },
-                { value: 'conflict', label: '协作冲突' },
-                { value: 'audit', label: '审计日志' },
-              ]}
-            />
-            <DatePicker.RangePicker
-              size="small"
-              showTime
-              style={{ width: 340 }}
-              onChange={(range) => {
-                setSecuritySince(range?.[0]?.toISOString() || '')
-                setSecurityUntil(range?.[1]?.toISOString() || '')
-              }}
-            />
-            <Dropdown
-              menu={{
-                items: [
-                  { key: 'csv', label: '导出为 CSV' },
-                  { key: 'json', label: '导出为 JSON' },
-                ],
-                onClick: ({ key }) => exportSecurityEvents(key as 'csv' | 'json'),
-              }}
-            >
-              <Button size="small" icon={<DownloadOutlined />} loading={exporting}>
-                导出 <DownOutlined />
-              </Button>
-            </Dropdown>
-            <Button size="small" icon={<ReloadOutlined />} onClick={() => loadSecurityEvents(securityFilter || undefined)} loading={securityLoading} />
-          </Space>
-        }
-      >
-        <Spin spinning={securityLoading}>
-          {/* 按天趋势 + Agent 排行（公共组件） */}
-          <SecurityTrendSection trend={securityTrend} byAgent={securityByAgent} />
-          {securityEvents.length > 0 ? (
-            <List
-              size="small"
-              dataSource={securityEvents}
-              renderItem={(e: any) => (
-                <SecurityEventListItem
-                  event={e}
-                  onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
-                  onShowDetail={(ev) => setEventDetail(ev)}
-                />
-              )}
-            />
-          ) : (
-            <Empty description="暂无安全事件" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
-        </Spin>
-      </Card>
+      <SecurityEventsCard
+        securityEvents={securityEvents}
+        securityLoading={securityLoading}
+        securityTrend={securityTrend}
+        securityByAgent={securityByAgent}
+        securityFilter={securityFilter}
+        securitySeverity={securitySeverity}
+        securitySearch={securitySearch}
+        exporting={exporting}
+        onFilterChange={(filter) => { setSecurityFilter(filter || ''); loadSecurityEvents(filter) }}
+        onSeverityChange={(severity) => setSecuritySeverity(severity)}
+        onSearch={(search) => setSecuritySearch(search)}
+        onDateRangeChange={(since, until) => { setSecuritySince(since); setSecurityUntil(until) }}
+        onExport={exportSecurityEvents}
+        onRefresh={() => loadSecurityEvents(securityFilter || undefined)}
+        onShowDetail={(ev) => setEventDetail(ev)}
+      />
 
       {/* Global Collaboration Orchestrator */}
-      <Card
-        title={
-          <Space>
-            <ThunderboltOutlined /> 全局协作编排
-            {orchestratorStatus && (
-              <Tooltip title={orchestratorStatus.enabled ? '内置调度器运行中（后台自动编排）' : '内置调度器未启用（需手动编排或外部 cron）'}>
-                <Badge status={orchestratorStatus.enabled ? 'success' : 'default'} text={orchestratorStatus.enabled ? '自动' : '手动'} />
-              </Tooltip>
-            )}
-          </Space>
-        }
-        style={{ marginBottom: 24 }}
-        extra={
-          <Space>
-            <Button size="small" icon={<HistoryOutlined />} onClick={openHistory}>
-              历史
-            </Button>
-            <Popconfirm
-              title="立即执行全局编排？"
-              description="将依次执行：健康检查、工作流超时、触发器触发、冲突自动解决。"
-              onConfirm={runOrchestration}
-            >
-              <Button type="primary" size="small" icon={<ThunderboltOutlined />} loading={orchestrationLoading}>
-                立即编排
-              </Button>
-            </Popconfirm>
-          </Space>
-        }
-      >
-        {orchestration ? (
-          <>
-            <Row gutter={16} style={{ marginBottom: 12 }}>
-              <Col span={4}><Statistic title="离线 Agent" value={orchestration.stale_agents} valueStyle={{ fontSize: 16 }} /></Col>
-              <Col span={4}><Statistic title="过期租约" value={orchestration.expired_leases} valueStyle={{ fontSize: 16 }} /></Col>
-              <Col span={4}><Statistic title="升级任务" value={orchestration.escalated_tasks} valueStyle={{ fontSize: 16 }} /></Col>
-              <Col span={4}><Statistic title="超时步骤" value={orchestration.timed_out_steps} valueStyle={{ fontSize: 16 }} /></Col>
-              <Col span={4}><Statistic title="触发器触发" value={orchestration.triggers_fired} valueStyle={{ fontSize: 16, color: '#1890ff' }} /></Col>
-              <Col span={4}><Statistic title="冲突自动解决" value={orchestration.conflicts_auto_resolved} valueStyle={{ fontSize: 16, color: '#52c41a' }} /></Col>
-            </Row>
-            <Space wrap size={[8, 4]}>
-              <Tag>检测冲突 {orchestration.conflicts_detected}</Tag>
-              <Tag>跳过冲突 {orchestration.conflicts_skipped}</Tag>
-              <Tag color="blue">耗时 {orchestration.duration_seconds}s</Tag>
-              {orchestration.trigger_run_ids.length > 0 && (
-                <Tag color="purple">新 Run: {orchestration.trigger_run_ids.join(', ')}</Tag>
-              )}
-              {orchestration.errors.length > 0 && (
-                <Tag color="error">错误 {orchestration.errors.length}</Tag>
-              )}
-            </Space>
-            {orchestration.errors.length > 0 && (
-              <Alert
-                style={{ marginTop: 12 }}
-                type="warning"
-                showIcon
-                message="部分阶段出错"
-                description={<ul style={{ margin: 0, paddingLeft: 18 }}>{orchestration.errors.map((e, i) => <li key={i} style={{ fontSize: 12 }}>{e}</li>)}</ul>}
-              />
-            )}
-          </>
-        ) : (
-          <Empty description="尚未执行编排。点击「立即编排」运行完整协作维护周期。" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-
-        {/* Scheduler last-run summary (informational) */}
-        {orchestratorStatus?.last_run && (
-          <Alert
-            style={{ marginTop: 12 }}
-            type="info"
-            showIcon
-            message="调度器上次自动运行"
-            description={
-              <span style={{ fontSize: 12 }}>
-                {orchestratorStatus.last_run.summary}
-                <Text type="secondary"> · 耗时 {orchestratorStatus.last_run.duration_seconds}s</Text>
-                {orchestratorStatus.last_run.error_count > 0 && (
-                  <Text type="danger"> · {orchestratorStatus.last_run.error_count} 个错误</Text>
-                )}
-              </span>
-            }
-          />
-        )}
-      </Card>
+      <OrchestrationCard
+        orchestration={orchestration}
+        orchestratorStatus={orchestratorStatus}
+        orchestrationLoading={orchestrationLoading}
+        onRun={runOrchestration}
+        onOpenHistory={openHistory}
+      />
 
       {/* 编排运行历史 */}
       <Modal

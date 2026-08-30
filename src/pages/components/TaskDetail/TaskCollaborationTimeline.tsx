@@ -1,6 +1,11 @@
+/**
+ * 任务协作时间线组件
+ *
+ * 展示任务分配、事件时间线、流转链路，支持实时更新。
+ */
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Card, Divider, Empty, Form, Input, InputNumber, List, Modal, Progress, Select, Space, Spin, Switch, Tag, Timeline, Tooltip, Typography, message } from 'antd'
-import { ApiOutlined, ClockCircleOutlined, CodeOutlined, ReloadOutlined, RobotOutlined, SendOutlined, SwapOutlined, UserOutlined } from '@ant-design/icons'
+import { ReloadOutlined, SendOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useCollaborationSSE } from '../../../hooks/useCollaborationSSE'
 import {
@@ -9,10 +14,16 @@ import {
   type PostableTaskEventType,
   type RunLogEntry,
   type TaskAssignment,
-  type TaskAssignmentState,
   type TaskEvent,
   type UpdateAssignmentData,
 } from '../../../api/agents'
+import {
+  actorIcon,
+  eventColor,
+  lineageColor,
+  stateColor,
+} from './collaborationUtils'
+import EventPayloadRenderer from './EventPayloadRenderer'
 
 const { Text } = Typography
 const { TextArea } = Input
@@ -21,74 +32,6 @@ interface TaskCollaborationTimelineProps {
   taskId: number
   tp: (key: string, options?: any) => string
 }
-
-const eventColor: Record<string, string> = {
-  task_claimed: 'blue',
-  task_dispatched: 'geekblue',
-  subtask_created: 'cyan',
-  assignment_updated: 'green',
-  assignment_expired: 'red',
-  message: 'gray',
-  note: 'gray',
-  question: 'gold',
-  answer: 'cyan',
-  handoff: 'purple',
-  blocker: 'red',
-  decision: 'green',
-  info: 'blue',
-}
-
-const lineageColor: Record<string, string> = {
-  claim: 'blue',
-  manual_dispatch: 'purple',
-  dispatch: 'geekblue',
-  handoff: 'purple',
-}
-
-const stateColor: Record<TaskAssignmentState, string> = {
-  assigned: 'blue',
-  claimed: 'cyan',
-  running: 'processing',
-  waiting_human: 'gold',
-  review: 'purple',
-  done: 'green',
-  failed: 'red',
-  cancelled: 'default',
-  expired: 'default',
-}
-
-const actorIcon = (event: TaskEvent) => {
-  if (event.actor_type === 'agent') {
-    return <RobotOutlined />
-  }
-  if (event.actor_type === 'human') {
-    return <UserOutlined />
-  }
-  return <ApiOutlined />
-}
-
-const toDisplayValue = (value: unknown) => {
-  if (value === undefined || value === null || value === '') {
-    return '-'
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'yes' : 'no'
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value)
-  }
-  return String(value)
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> => (
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-)
-
-const toStringList = (value: unknown) => (
-  Array.isArray(value)
-    ? value.filter(item => item !== undefined && item !== null && item !== '').map(item => String(item))
-    : []
-)
 
 export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps> = ({ taskId, tp }) => {
   const [events, setEvents] = useState<TaskEvent[]>([])
@@ -399,7 +342,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
       <Space size={4} wrap>
         <Button
           size="small"
-          icon={<SwapOutlined />}
           loading={updating}
           onClick={() => openHandoffModal(assignment)}
         >
@@ -425,7 +367,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
         )}
         <Button
           size="small"
-          icon={<ClockCircleOutlined />}
           loading={updating}
           onClick={() => updateAssignment(assignment, { lease_seconds: 1800 })}
         >
@@ -483,7 +424,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
                       <Button
                         size="small"
                         type="link"
-                        icon={<CodeOutlined />}
                         onClick={() => setExpandedRunId(null)}
                       >
                         {tp('collaboration.runLogs.hide') || '收起日志'}
@@ -511,7 +451,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
                     <Button
                       size="small"
                       type="link"
-                      icon={<CodeOutlined />}
                       onClick={() => {
                         setExpandedRunId(assignment.runs[0].id)
                         loadRunLogs(assignment.runs[0].id)
@@ -527,175 +466,7 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
         )}
       />
     )
-  }, [assignments, renderAssignmentActions, renderState, tp])
-
-  const renderPayload = useCallback((event: TaskEvent) => {
-    const payload = event.payload || {}
-
-    if (event.event_type === 'task_claimed') {
-      const capabilityMatch = isRecord(payload.capability_match) ? payload.capability_match : null
-      const score = typeof capabilityMatch?.score === 'number' ? capabilityMatch.score : 0
-      const matchedCapabilities = toStringList(capabilityMatch?.matched_capabilities)
-      const matchedTags = toStringList(capabilityMatch?.matched_tags)
-      const matchedText = toStringList(capabilityMatch?.matched_text)
-
-      return (
-        <Space size={[4, 4]} wrap>
-          {'assignment_id' in payload && <Tag>{tp('collaboration.fields.assignment')} #{toDisplayValue(payload.assignment_id)}</Tag>}
-          {'agent_id' in payload && <Tag>{tp('collaboration.fields.agent')} #{toDisplayValue(payload.agent_id)}</Tag>}
-          {'run_id' in payload && <Tag>{tp('collaboration.fields.run')} #{toDisplayValue(payload.run_id)}</Tag>}
-          {'lease_seconds' in payload && <Tag>{tp('collaboration.fields.lease')} {toDisplayValue(payload.lease_seconds)}s</Tag>}
-          {'claim_mode' in payload && (
-            <Tag color={payload.claim_mode === 'manual_dispatch' ? 'purple' : 'blue'}>
-              {renderClaimMode(payload.claim_mode)}
-            </Tag>
-          )}
-          {capabilityMatch && (
-            <Tag color={score > 0 ? 'green' : 'default'}>
-              {tp('collaboration.fields.matchStrategy')} {renderMatchStrategy(capabilityMatch.strategy)}
-            </Tag>
-          )}
-          {capabilityMatch && (
-            <Tag color={score > 0 ? 'green' : 'default'}>
-              {tp('collaboration.fields.matchScore')} {score}
-            </Tag>
-          )}
-          {matchedCapabilities.length > 0 && (
-            <Tag color="cyan">
-              {tp('collaboration.fields.matchedCapabilities')} {matchedCapabilities.slice(0, 4).join(', ')}
-            </Tag>
-          )}
-          {matchedTags.length > 0 && (
-            <Tag color="blue">
-              {tp('collaboration.fields.matchedTags')} {matchedTags.slice(0, 4).join(', ')}
-            </Tag>
-          )}
-          {matchedText.length > 0 && (
-            <Tag color="geekblue">
-              {tp('collaboration.fields.matchedText')} {matchedText.slice(0, 4).join(', ')}
-            </Tag>
-          )}
-        </Space>
-      )
-    }
-
-    if (event.event_type === 'task_dispatched') {
-      const score = typeof payload.score === 'number' ? payload.score : 0
-      const matchedCapabilities = toStringList(payload.matched_capabilities)
-
-      return (
-        <Space size={[4, 4]} wrap>
-          {'to_agent_id' in payload && <Tag color="geekblue">@{payload.to_agent_name ? String(payload.to_agent_name) : `Agent #${toDisplayValue(payload.to_agent_id)}`}</Tag>}
-          {'assignment_id' in payload && <Tag>{tp('collaboration.fields.assignment')} #{toDisplayValue(payload.assignment_id)}</Tag>}
-          {'run_id' in payload && <Tag>{tp('collaboration.fields.run')} #{toDisplayValue(payload.run_id)}</Tag>}
-          {'lease_seconds' in payload && <Tag>{tp('collaboration.fields.lease')} {toDisplayValue(payload.lease_seconds)}s</Tag>}
-          {'strategy' in payload && (
-            <Tag color={score > 0 ? 'green' : 'default'}>
-              {tp('collaboration.fields.matchStrategy')} {renderMatchStrategy(payload.strategy)}
-            </Tag>
-          )}
-          <Tag color={score > 0 ? 'green' : 'default'}>{tp('collaboration.fields.matchScore')} {score}</Tag>
-          {matchedCapabilities.length > 0 && (
-            <Tag color="cyan">
-              {tp('collaboration.fields.matchedCapabilities')} {matchedCapabilities.slice(0, 4).join(', ')}
-            </Tag>
-          )}
-        </Space>
-      )
-    }
-
-    if (event.event_type === 'subtask_created') {
-      return (
-        <Space size={[4, 4]} wrap>
-          <Tag color="cyan">{tp('collaboration.events.subtask_created')}</Tag>
-          {'subtask_id' in payload && <Tag>#{toDisplayValue(payload.subtask_id)}</Tag>}
-          {'subtask_title' in payload && <Text strong>{String(payload.subtask_title)}</Text>}
-        </Space>
-      )
-    }
-
-    if (event.event_type === 'assignment_updated') {
-      return (
-        <Space size={[4, 4]} wrap>
-          <Tag>
-            {renderState(payload.old_state)} {'->'} {renderState(payload.new_state)}
-          </Tag>
-          {'progress_rate' in payload && <Tag>{tp('collaboration.fields.progress')} {toDisplayValue(payload.progress_rate)}%</Tag>}
-          {payload.has_feedback === true && <Tag color="purple">{tp('collaboration.fields.feedback')}</Tag>}
-          {payload.feedback_excerpt && <Tag color="purple">{toDisplayValue(payload.feedback_excerpt)}</Tag>}
-        </Space>
-      )
-    }
-
-    if (event.event_type === 'assignment_expired') {
-      return (
-        <Space size={[4, 4]} wrap>
-          {'assignment_id' in payload && <Tag>{tp('collaboration.fields.assignment')} #{toDisplayValue(payload.assignment_id)}</Tag>}
-          {'run_id' in payload && payload.run_id && <Tag>{tp('collaboration.fields.run')} #{toDisplayValue(payload.run_id)}</Tag>}
-          <Tag color="red">
-            {renderState(payload.old_state)} {'->'} {renderState(payload.new_state)}
-          </Tag>
-          {'lease_expires_at' in payload && <Tag>{tp('collaboration.fields.leaseExpires')} {toDisplayValue(payload.lease_expires_at)}</Tag>}
-        </Space>
-      )
-    }
-
-    // question/answer protocol: show awaiting status and reply linkage
-    if (event.event_type === 'question') {
-      const awaiting = payload.awaiting_answer !== false
-      return (
-        <Space direction="vertical" size={4} style={{ width: '100%' }}>
-          {typeof payload.content === 'string' && payload.content.trim() && (
-            <Text style={{ whiteSpace: 'pre-wrap' }}>{String(payload.content)}</Text>
-          )}
-          <Space size={[4, 4]} wrap>
-            {payload.to_agent_id != null && <Tag color="geekblue">@{payload.to_agent_name ? String(payload.to_agent_name) : `Agent #${payload.to_agent_id}`}</Tag>}
-            <Tag color={awaiting ? 'orange' : 'green'}>{awaiting ? tp('collaboration.protocol.awaitingAnswer') : tp('collaboration.protocol.answered')}</Tag>
-            {payload.answered_by_event_id != null && <Tag color="cyan">{tp('collaboration.protocol.answerEvent')} #{toDisplayValue(payload.answered_by_event_id)}</Tag>}
-          </Space>
-        </Space>
-      )
-    }
-
-    if (event.event_type === 'answer') {
-      return (
-        <Space direction="vertical" size={4} style={{ width: '100%' }}>
-          {typeof payload.content === 'string' && payload.content.trim() && (
-            <Text style={{ whiteSpace: 'pre-wrap' }}>{String(payload.content)}</Text>
-          )}
-          <Space size={[4, 4]} wrap>
-            {payload.reply_to_event_id != null && <Tag color="purple">{tp('collaboration.protocol.replyTo')} #{toDisplayValue(payload.reply_to_event_id)}</Tag>}
-            {payload.to_agent_id != null && <Tag color="geekblue">@{payload.to_agent_name ? String(payload.to_agent_name) : `Agent #${payload.to_agent_id}`}</Tag>}
-          </Space>
-        </Space>
-      )
-    }
-
-    const hasContent = typeof payload.content === 'string' && payload.content.trim() !== ''
-    const hiddenKeys = new Set(['content', 'to_agent_id', 'to_agent_name'])
-    const otherEntries = Object.entries(payload).filter(
-      ([key, value]) => !hiddenKeys.has(key) && value !== undefined && value !== null
-    )
-
-    if (!hasContent && otherEntries.length === 0) {
-      return null
-    }
-
-    return (
-      <Space direction="vertical" size={4} style={{ width: '100%' }}>
-        {hasContent && (
-          <Text style={{ whiteSpace: 'pre-wrap' }}>{String(payload.content)}</Text>
-        )}
-        {otherEntries.length > 0 && (
-          <Space size={[4, 4]} wrap>
-            {otherEntries.slice(0, 4).map(([key, value]) => (
-              <Tag key={key}>{key}: {toDisplayValue(value)}</Tag>
-            ))}
-          </Space>
-        )}
-      </Space>
-    )
-  }, [renderClaimMode, renderMatchStrategy, renderState, tp])
+  }, [assignments, loadRunLogs, renderAssignmentActions, renderState, runLogs, runLogsLoading, expandedRunId, tp])
 
   const agentNames = useMemo(() => {
     const map = new Map<number, string>()
@@ -745,13 +516,19 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
           <Text strong>{renderEventTitle(event)}</Text>
           <Text type="secondary">{actorLabel(event)}</Text>
         </Space>
-        {renderPayload(event)}
+        <EventPayloadRenderer
+          event={event}
+          tp={tp}
+          renderClaimMode={renderClaimMode}
+          renderMatchStrategy={renderMatchStrategy}
+          renderState={renderState}
+        />
         <Text type="secondary" style={{ fontSize: 12 }}>
           {dayjs(event.created_at).format('YYYY-MM-DD HH:mm')}
         </Text>
       </Space>
     ),
-  })), [actorLabel, events, renderEventTitle, renderPayload])
+  })), [actorLabel, events, renderClaimMode, renderEventTitle, renderMatchStrategy, renderState, tp])
 
   return (
     <>

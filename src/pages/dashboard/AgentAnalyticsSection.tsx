@@ -27,6 +27,10 @@ import { agentsApi, type AgentHealth, type AgentHealthTrend, type AgentHealthAle
 import { tasksApi, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../../api/tasks'
 import MiniTrendChart from '../../components/MiniTrendChart'
 import WorkflowRunTrendChart from '../../components/WorkflowRunTrendChart'
+import AgentHealthCard from './AgentHealthCard'
+import AgentProductivityCard from './AgentProductivityCard'
+import AgentFailureReasonsCard from './AgentFailureReasonsCard'
+import AgentErrorPatternsCard from './AgentErrorPatternsCard'
 
 const { Text } = Typography
 
@@ -579,114 +583,10 @@ const AgentAnalyticsSection = () => {
       </Card>
 
       {/* Agent Productivity */}
-      <Card
-        title={<Space><ThunderboltOutlined /> Agent 产出效率</Space>}
-        style={{ marginBottom: 24 }}
-      >
-        {agentProductivity && agentProductivity.items.length > 0 ? (() => {
-          const items = agentProductivity.items
-          const maxDone = Math.max(1, ...items.map((a) => a.done))
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>近 {agentProductivity.days} 天（按完成数降序）</Text>
-              {items.map((a) => {
-                const rate = a.completion_rate
-                const rateColor = rate >= 80 ? '#52c41a' : rate >= 50 ? '#faad14' : '#ff4d4f'
-                return (
-                  <div key={a.agent_id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                    <span style={{ width: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={`${a.name} #${a.agent_id}`}>{a.name}</span>
-                    <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ width: `${(a.done / maxDone) * 100}%`, height: '100%', background: rateColor, borderRadius: 3 }} />
-                    </div>
-                    <Tag style={{ fontSize: 10 }}>分配 {a.total}</Tag>
-                    <Tag color="green" style={{ fontSize: 10 }}>完成 {a.done}</Tag>
-                    {a.failed > 0 && <Tag color="red" style={{ fontSize: 10 }}>失败 {a.failed}</Tag>}
-                    {a.in_progress > 0 && <Tag color="blue" style={{ fontSize: 10 }}>进行 {a.in_progress}</Tag>}
-                    <span style={{ color: rateColor, minWidth: 56, textAlign: 'right' }}>率 {rate}%</span>
-                    <span style={{ color: '#8c8c8c', minWidth: 60, textAlign: 'right' }}>{a.avg_completion_hours != null ? `${a.avg_completion_hours}h` : '—'}</span>
-                  </div>
-                )
-              })}
-              <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>完成率色阶 ≥80% 绿 / ≥50% 橙 / &lt;50% 红；右侧为平均完成时长</Text>
-            </div>
-          )
-        })() : (
-          <Empty description="暂无分配数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-        {productivityTrend && productivityTrend.trend.length > 0 && (
-          <div style={{ marginTop: 12 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              近 {productivityTrend.days} 天产出趋势（累计完成 {productivityTrend.total_done} / 失败 {productivityTrend.total_failed}）
-            </Text>
-            <div style={{ marginTop: 4 }}>
-              <WorkflowRunTrendChart
-                buckets={productivityTrend.trend.map((b) => ({ date: b.date, succeeded: b.done, failed: b.failed, failed_steps: b.failed }))}
-                width={520}
-                height={84}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 2 }}>
-              <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#52c41a' }}>●</span> 完成</Text>
-              <Text type="secondary" style={{ fontSize: 11 }}><span style={{ color: '#ff4d4f' }}>●</span> 失败</Text>
-            </div>
-            {(() => {
-              const kindTotals = productivityTrend.by_kind_totals || {}
-              const kinds = Object.keys(kindTotals).slice(0, 6)
-              if (kinds.length === 0) return null
-              const kindColor: Record<string, string> = { assistant: '#1677ff', worker: '#52c41a', orchestrator: '#722ed1', reviewer: '#13c2c2', planner: '#fa8c16', observer: '#8c8c8c' }
-              const W = 520, H = 70, padL = 4, padR = 4, padT = 6, padB = 14
-              const trend = productivityTrend.trend
-              const n = trend.length
-              if (n < 2) return null
-              const allDone = trend.flatMap((b) => Object.entries(b.by_kind || {}).map(([, v]) => (v as { done: number }).done))
-              const maxDone = Math.max(1, ...allDone)
-              const xStep = (W - padL - padR) / Math.max(1, n - 1)
-              const palette = ['#1677ff', '#52c41a', '#722ed1', '#13c2c2', '#fa8c16', '#8c8c8c']
-              const lineFor = (kind: string) => {
-                const pts = trend.map((b, i) => {
-                  const v = (b.by_kind?.[kind]?.done) ?? 0
-                  const x = padL + i * xStep
-                  const y = H - padB - (v / maxDone) * (H - padT - padB)
-                  return `${x.toFixed(1)},${y.toFixed(1)}`
-                })
-                return pts.join(' ')
-              }
-              return (
-                <div style={{ marginTop: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>按 kind 分层完成趋势:</Text>
-                  <svg width={W} height={H} style={{ display: 'block' }}>
-                    {kinds.map((k, idx) => {
-                      const c = kindColor[k] || palette[idx % palette.length]
-                      return (
-                        <g key={k}>
-                          <polyline
-                            points={lineFor(k)}
-                            fill="none"
-                            stroke={c}
-                            strokeWidth={1.6}
-                            opacity={0.85}
-                          />
-                        </g>
-                      )
-                    })}
-                  </svg>
-                  <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
-                    {kinds.map((k, idx) => {
-                      const c = kindColor[k] || palette[idx % palette.length]
-                      const t = kindTotals[k] as { done: number; failed: number }
-                      return (
-                        <Text key={k} type="secondary" style={{ fontSize: 10 }}>
-                          <span style={{ color: c }}>●</span> {k} ({t.done})
-                        </Text>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })()}
-          </div>
-        )}
-      </Card>
+      <AgentProductivityCard
+        agentProductivity={agentProductivity}
+        productivityTrend={productivityTrend}
+      />
 
       {/* Productivity by Kind Comparison */}
       <Card
@@ -951,80 +851,10 @@ const AgentAnalyticsSection = () => {
       })()}
 
       {/* Agent Failure Reasons */}
-      <Card
-        title={<Space><BugOutlined /> Agent 失败原因分布</Space>}
-        style={{ marginBottom: 24 }}
-      >
-        {agentFailureReasons && agentFailureReasons.items.length > 0 ? (() => {
-          const items = agentFailureReasons.items
-          const maxCount = Math.max(1, ...items.map((i) => i.count))
-          return (
-            <div>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                近 {agentFailureReasons.days} 天失败原因分布（共 {agentFailureReasons.total_failed_runs} 次失败，top{items.length}）
-              </Text>
-              <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {items.map((it, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                    <span style={{ width: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#595959' }} title={it.reason}>{it.reason}</span>
-                    <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 14, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ width: `${(it.count / maxCount) * 100}%`, height: '100%', background: '#ff4d4f', borderRadius: 3 }} />
-                    </div>
-                    <Tooltip title={`涉及: ${(it.affected_agent_names || []).join(', ') || '无'}`}>
-                      <span style={{ color: '#8c8c8c', minWidth: 70, textAlign: 'right' }}>{it.count}次 · {it.affected_agent_names.length} Agent</span>
-                    </Tooltip>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })() : (
-          <Empty description="暂无失败记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-      </Card>
+      <AgentFailureReasonsCard agentFailureReasons={agentFailureReasons} />
 
       {/* Agent Failure Error Pattern Clustering */}
-      <Card
-        title={<Space><ClusterOutlined /> Agent 错误模式聚类</Space>}
-        style={{ marginBottom: 24 }}
-      >
-        {agentFailureErrorPatterns && agentFailureErrorPatterns.patterns.length > 0 ? (() => {
-          const patterns = agentFailureErrorPatterns.patterns
-          const maxCount = Math.max(1, ...patterns.map((p) => p.count))
-          return (
-            <div>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                近 {agentFailureErrorPatterns.days} 天错误模式聚类（共 {patterns.length} 个模式）
-              </Text>
-              <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {patterns.map((p, idx) => (
-                  <div key={idx} style={{ background: '#fafafa', borderRadius: 4, padding: '6px 8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <Text code style={{ fontSize: 11, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.pattern}>{p.pattern}</Text>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ flex: 1, background: '#f0f0f0', borderRadius: 3, height: 12, position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ width: `${(p.count / maxCount) * 100}%`, height: '100%', background: '#fa8c16', borderRadius: 3 }} />
-                      </div>
-                      <span style={{ color: '#8c8c8c', fontSize: 11, minWidth: 50, textAlign: 'right' }}>{p.count}次</span>
-                      <Tooltip title={p.affected_agents.map((a) => a.name).join(', ') || '无'}>
-                        <span style={{ color: '#595959', fontSize: 11, minWidth: 70, textAlign: 'right' }}>{p.affected_agents.length} Agent</span>
-                      </Tooltip>
-                      {p.peak_hour !== null && p.peak_hour !== undefined && (
-                        <Tooltip title={`时段分布: ${Object.entries(p.hour_distribution || {}).map(([h, v]) => h + ':00 → ' + v).join(', ')}`}>
-                          <span style={{ color: '#1890ff', fontSize: 11 }}>峰值 {p.peak_hour}:00</span>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })() : (
-          <Empty description="暂无错误模式数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-      </Card>
+      <AgentErrorPatternsCard agentFailureErrorPatterns={agentFailureErrorPatterns} />
 
       {/* Agent Capability Gap Analysis */}
       <Card
