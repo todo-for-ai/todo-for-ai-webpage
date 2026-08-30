@@ -48,7 +48,7 @@ const UnsavedChangesAlert: React.FC<UnsavedChangesAlertProps> = ({
               fontWeight: 500
             }}
           >
-            立即保存
+            {tp('editStatus.saveNow')}
           </span>
         ) : undefined
       }

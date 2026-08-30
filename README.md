@@ -49,12 +49,23 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. **Start development server**
+4. **Start development server (PM2 recommended for keep-alive)**
 ```bash
-npm run dev
+npm run pm2:start
 ```
 
 The application will be available at `http://localhost:50111`
+
+Useful PM2 commands:
+
+```bash
+npm run pm2:logs
+npm run pm2:restart
+npm run pm2:stop
+npm run pm2:delete
+```
+
+Note: scripts default to project-local `PM2_HOME=.pm2` to avoid system PM2 permission issues.
 
 ## 🔧 Configuration
 
@@ -195,6 +206,11 @@ todo-for-ai-webpage/
 ```bash
 # Development
 npm run dev              # Start development server
+npm run pm2:start        # Start dev server with PM2 (keep-alive)
+npm run pm2:logs         # View PM2 logs
+npm run pm2:restart      # Restart PM2 dev process
+npm run pm2:stop         # Stop PM2 dev process
+npm run pm2:delete       # Delete PM2 dev process
 npm run build           # Build for production
 npm run build:no-check  # Build without TypeScript checking
 npm run preview         # Preview production build

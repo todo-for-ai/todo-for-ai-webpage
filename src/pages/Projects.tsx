@@ -1,140 +1,227 @@
-import React, { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { message } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { Card, Table, Button, Space, Tag, Input, Select, message, Spin } from 'antd'
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { useProjectStore } from '../stores'
 import type { Project } from '../api/projects'
+import { useTranslation } from '../i18n/hooks/useTranslation'
+import { useProjectStore } from '../stores'
+import { ProjectsCardView } from './projects/ProjectsCardView'
+import { ProjectsFiltersCard } from './projects/ProjectsFiltersCard'
+import { ProjectsHeader } from './projects/ProjectsHeader'
+import { ProjectsListView } from './projects/ProjectsListView'
+import { createProjectTableColumns } from './projects/createProjectTableColumns'
+import { defaultFilters, type ProjectFilters } from './projects/types'
+import {
+  loadFiltersFromStorage,
+  loadViewModeFromStorage,
+  saveFiltersToStorage,
+  saveViewModeToStorage,
+} from './projects/storage'
 
-const Search = Input.Search
-
-const Projects: React.FC = () => {
+const Projects = () => {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [statusFilter, setStatusFilter] = useState('active')
+  const { t, i18n } = useTranslation('projects')
 
-  const { projects, fetchProjects } = useProjectStore()
+  const locale = i18n.language?.startsWith('zh') ? 'zh-CN' : 'en-US'
+
+  const [viewMode, setViewMode] = useState<'list' | 'card'>(() => loadViewModeFromStorage())
+  const [filters, setFilters] = useState<ProjectFilters>(loadFiltersFromStorage)
+  const [searchValue, setSearchValue] = useState(filters.search || '')
+
+  const {
+    projects,
+    loading,
+    error,
+    pagination,
+    fetchProjects,
+    deleteProject,
+    archiveProject,
+    setQueryParams,
+    clearError,
+  } = useProjectStore()
+
+  const handleFilterChange = useCallback(
+    (key: keyof ProjectFilters, value: string) => {
+      const newFilters = {
+        ...filters,
+        [key]: value,
+      }
+      setFilters(newFilters)
+      saveFiltersToStorage(newFilters)
+    },
+    [filters]
+  )
+
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId: ReturnType<typeof setTimeout>
+      return (searchTerm: string) => {
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+          handleFilterChange('search', searchTerm)
+        }, 500)
+      }
+    })(),
+    [handleFilterChange]
+  )
 
   useEffect(() => {
-    loadProjects()
-  }, [statusFilter])
-
-  const loadProjects = async () => {
-    setLoading(true)
-    try {
-      await fetchProjects({ status: statusFilter === 'all' ? undefined : statusFilter })
-    } catch (error) {
-      message.error('加载项目失败')
-    } finally {
-      setLoading(false)
+    const paramsWithPagination = {
+      ...filters,
+      per_page: viewMode === 'card' ? 100 : 20,
     }
+    setQueryParams(paramsWithPagination)
+    fetchProjects()
+  }, [filters, viewMode, setQueryParams, fetchProjects])
+
+  useEffect(() => {
+    if (error) {
+      message.error(error)
+      clearError()
+    }
+  }, [error, clearError])
+
+  useEffect(() => {
+    document.title = t('pageTitle')
+    return () => {
+      document.title = 'Todo for AI'
+    }
+  }, [t])
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
+    setSearchValue(value)
+    debouncedSearch(value)
   }
 
-  const handleCreateProject = () => {
+  const handleSearchSubmit = (value: string) => {
+    setSearchValue(value)
+    handleFilterChange('search', value)
+  }
+
+  const handleSearchClear = () => {
+    setSearchValue('')
+    handleFilterChange('search', '')
+  }
+
+  const handleViewModeChange = (mode: 'list' | 'card') => {
+    setViewMode(mode)
+    saveViewModeToStorage(mode)
+  }
+
+  const handleCreate = () => {
     navigate('/todo-for-ai/pages/projects/create')
   }
 
-  const handleProjectClick = (project: Project) => {
-    navigate(`/todo-for-ai/pages/projects/${project.id}`)
+  const handleEdit = (project: Project) => {
+    navigate(`/todo-for-ai/pages/projects/${project.id}/edit`)
   }
 
-  const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-    },
-    {
-      title: '项目名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string, record: Project) => (
-        <a onClick={() => handleProjectClick(record)}>{text}</a>
-      ),
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'default'}>
-          {status === 'active' ? '活跃' : '归档'}
-        </Tag>
-      ),
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-    },
-  ]
-
-  const filteredProjects = projects.filter(project => {
-    const matchSearch = !searchText || 
-      project.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      (project.description && project.description.toLowerCase().includes(searchText.toLowerCase()))
-    
-    const matchStatus = statusFilter === 'all' || project.status === statusFilter
-    
-    return matchSearch && matchStatus
-  })
-
-  if (loading && projects.length === 0) {
-    return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
-        <Spin size="large" />
-      </div>
-    )
+  const handleDelete = async (project: Project) => {
+    const success = await deleteProject(project.id)
+    if (success) {
+      message.success(t('messages.deleteSuccess'))
+    }
   }
+
+  const handleArchive = async (project: Project) => {
+    const success = await archiveProject(project.id)
+    if (success) {
+      message.success(t('messages.archiveSuccess'))
+    }
+  }
+
+  const handleTableChange = (tablePagination: any, _filters: any, sorter: any) => {
+    const newParams: any = {
+      page: tablePagination.current,
+      per_page: tablePagination.pageSize,
+    }
+
+    if (sorter.field) {
+      newParams.sort_by = sorter.field
+      newParams.sort_order = sorter.order === 'ascend' ? 'asc' : 'desc'
+    }
+
+    setQueryParams(newParams)
+    fetchProjects()
+  }
+
+  const handleResetFilters = () => {
+    setFilters(defaultFilters)
+    setSearchValue('')
+    saveFiltersToStorage(defaultFilters)
+  }
+
+  const columns = useMemo(
+    () =>
+      createProjectTableColumns({
+        t,
+        locale,
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+        onArchive: handleArchive,
+      }),
+    [t, locale, handleEdit, handleDelete, handleArchive]
+  )
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>项目列表</h1>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={loadProjects}>
-            刷新
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateProject}>
-            创建项目
-          </Button>
-        </Space>
-      </div>
+    <div className="page-container">
+      <ProjectsHeader
+        t={t}
+        viewMode={viewMode}
+        filters={filters}
+        searchValue={searchValue}
+        loading={loading}
+        total={pagination?.total || 0}
+        onViewModeChange={handleViewModeChange}
+        onRefresh={() => fetchProjects()}
+        onCreate={handleCreate}
+        onSearchChange={handleSearchChange}
+        onSearchSubmit={handleSearchSubmit}
+        onSearchClear={handleSearchClear}
+      />
 
-      <Card>
-        <div style={{ marginBottom: '16px', display: 'flex', gap: '16px' }}>
-          <Search
-            placeholder="搜索项目"
-            style={{ width: 300 }}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          <Select
-            style={{ width: 150 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          >
-            <Select.Option value="all">所有状态</Select.Option>
-            <Select.Option value="active">活跃</Select.Option>
-            <Select.Option value="archived">已归档</Select.Option>
-          </Select>
-        </div>
+      <ProjectsFiltersCard
+        t={t}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
+      />
 
-        <Table
+      {viewMode === 'list' ? (
+        <ProjectsListView
+          t={t}
           columns={columns}
-          dataSource={filteredProjects}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
+          projects={projects}
+          loading={loading}
+          pagination={pagination}
+          searchKeyword={filters.search}
+          onSearchClear={handleSearchClear}
+          onCreate={handleCreate}
+          onTableChange={handleTableChange}
         />
-      </Card>
+      ) : (
+        <ProjectsCardView
+          t={t}
+          projects={projects}
+          filters={filters}
+          pagination={pagination}
+          loading={loading}
+          onOpenProject={(projectId) => navigate(`/todo-for-ai/pages/projects/${projectId}`)}
+          onEditProject={handleEdit}
+          onSearchClear={handleSearchClear}
+          onCreate={handleCreate}
+          onPrevPage={() => {
+            const newParams = { ...filters, page: (pagination?.page || 1) - 1 }
+            setQueryParams(newParams)
+            fetchProjects()
+          }}
+          onNextPage={() => {
+            const newParams = { ...filters, page: (pagination?.page || 1) + 1 }
+            setQueryParams(newParams)
+            fetchProjects()
+          }}
+        />
+      )}
     </div>
   )
 }

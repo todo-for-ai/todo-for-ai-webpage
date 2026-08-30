@@ -1,0 +1,50 @@
+{
+  "title": "User Profile",
+  "subtitle": "View member profile and shared organization context",
+  "actions": {
+    "back": "Back"
+  },
+  "labels": {
+    "self": "You",
+    "public": "Public Profile"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "suspended": "Suspended"
+  },
+  "fields": {
+    "title": "Profile Facts",
+    "locale": "Locale",
+    "timezone": "Timezone",
+    "noBio": "No bio provided",
+    "createdAt": "Registered At",
+    "lastActiveAt": "Last Active",
+    "sharedOrganizations": "Shared Organizations",
+    "viewMode": "View Mode"
+  },
+  "viewMode": {
+    "self": "Self",
+    "admin": "Admin",
+    "public": "Public"
+  },
+  "selfView": {
+    "title": "This is your own profile",
+    "description": "You are viewing the profile page entry used by organization member links.",
+    "goProfile": "Go to Personal Center"
+  },
+  "sharedOrganizations": {
+    "title": "Shared Organizations",
+    "count": "{{count}} organizations",
+    "slug": "Slug",
+    "targetRoles": "Their roles",
+    "viewerRoles": "Your roles",
+    "empty": "No shared organizations"
+  },
+  "messages": {
+    "invalidUserId": "Invalid user id",
+    "noPermission": "You do not have permission to view this profile",
+    "notFound": "User not found",
+    "loadFailed": "Failed to load user profile"
+  }
+}

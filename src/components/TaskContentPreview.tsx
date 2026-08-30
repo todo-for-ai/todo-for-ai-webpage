@@ -2,6 +2,7 @@ import React from 'react'
 import { Popover, Card, Typography, Empty } from 'antd'
 import { FileTextOutlined, EyeOutlined } from '@ant-design/icons'
 import { MarkdownEditor } from './MarkdownEditor'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Text } = Typography
 
@@ -14,10 +15,13 @@ interface TaskContentPreviewProps {
 
 const TaskContentPreview: React.FC<TaskContentPreviewProps> = ({
   content,
-  title = '任务内容',
+  title,
   children,
   placement = 'right'
 }) => {
+  const { tp } = usePageTranslation('taskDetail')
+  const resolvedTitle = title || tp('taskContent.title')
+
   // 如果没有内容，不显示预览
   if (!content || content.trim() === '') {
     return <>{children}</>
@@ -28,7 +32,7 @@ const TaskContentPreview: React.FC<TaskContentPreviewProps> = ({
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <FileTextOutlined />
-          <span>{title}</span>
+          <span>{resolvedTitle}</span>
         </div>
       }
       style={{
@@ -52,7 +56,7 @@ const TaskContentPreview: React.FC<TaskContentPreviewProps> = ({
       ) : (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="暂无内容"
+          description={tp('taskContent.empty.title')}
           style={{ margin: '20px 0' }}
         />
       )}
@@ -86,10 +90,12 @@ export const TaskContentSummary: React.FC<TaskContentSummaryProps> = ({
   maxLength = 50,
   showPreview = true
 }) => {
+  const { tp } = usePageTranslation('taskDetail')
+
   if (!content || content.trim() === '') {
     return (
       <Text type="secondary" style={{ fontSize: '12px' }}>
-        暂无内容
+        {tp('taskContent.empty.title')}
       </Text>
     )
   }
@@ -143,7 +149,7 @@ export const TaskContentSummary: React.FC<TaskContentSummaryProps> = ({
 
   if (showPreview && content.trim()) {
     return (
-      <TaskContentPreview content={content} title="任务内容预览">
+      <TaskContentPreview content={content} title={tp('taskContent.previewTitle')}>
         {summaryElement}
       </TaskContentPreview>
     )

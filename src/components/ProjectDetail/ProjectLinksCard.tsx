@@ -10,16 +10,14 @@ interface ProjectLinksCardProps {
 export const ProjectLinksCard: React.FC<ProjectLinksCardProps> = ({ project }) => {
   const { tp } = usePageTranslation('projectDetail')
 
-  const LinkItem = ({ icon, label, url }: any) => (
+  const LinkItem = ({ icon, label, url, actionLabel }: any) => (
     <div style={{ marginBottom: '16px' }}>
       <strong>{label}：</strong>
       {url ? (
         <div style={{ marginTop: '4px' }}>
           <a href={url} target="_blank" rel="noopener noreferrer" style={{ padding: 0 }}>
             {icon}
-            {label.includes('GitHub') ? tp('overview.projectLinks.viewRepo') :
-             label.includes('本地') ? tp('overview.projectLinks.visitLocal') :
-             tp('overview.projectLinks.visitOnline')}
+            {actionLabel}
           </a>
         </div>
       ) : (
@@ -36,6 +34,7 @@ export const ProjectLinksCard: React.FC<ProjectLinksCardProps> = ({ project }) =
             icon={<GithubOutlined style={{ marginRight: '4px' }} />}
             label={tp('overview.projectLinks.githubRepo')}
             url={project.github_url}
+            actionLabel={tp('overview.projectLinks.viewRepo')}
           />
         </Col>
         <Col span={8}>
@@ -43,6 +42,7 @@ export const ProjectLinksCard: React.FC<ProjectLinksCardProps> = ({ project }) =
             icon={<DesktopOutlined style={{ marginRight: '4px' }} />}
             label={tp('overview.projectLinks.localEnv')}
             url={project.local_url}
+            actionLabel={tp('overview.projectLinks.visitLocal')}
           />
         </Col>
         <Col span={8}>
@@ -50,6 +50,7 @@ export const ProjectLinksCard: React.FC<ProjectLinksCardProps> = ({ project }) =
             icon={<CloudOutlined style={{ marginRight: '4px' }} />}
             label={tp('overview.projectLinks.productionEnv')}
             url={project.production_url}
+            actionLabel={tp('overview.projectLinks.visitOnline')}
           />
         </Col>
       </Row>

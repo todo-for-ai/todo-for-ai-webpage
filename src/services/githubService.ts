@@ -21,8 +21,13 @@ interface CacheItem {
 
 class GitHubService {
   private cache = new Map<string, CacheItem>()
+  private inFlightRequests = new Map<string, Promise<GitHubRepoInfo>>()
+  private lastRefreshAttempt = new Map<string, number>()
+  private rateLimitBlockedUntil = new Map<string, number>()
   private readonly CACHE_DURATION = 30 * 60 * 1000 // 30分钟缓存
   private readonly PERSISTENT_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000 // 7天持久化缓存
+  private readonly STALE_REFRESH_THROTTLE = 5 * 60 * 1000 // 过期数据刷新节流: 5分钟
+  private readonly RATE_LIMIT_COOLDOWN = 10 * 60 * 1000 // 限流后冷却时间: 10分钟
   private readonly STORAGE_KEY_PREFIX = 'github_repo_'
 
   constructor() {
@@ -72,39 +77,45 @@ class GitHubService {
   }
 
   /**
-   * 获取GitHub仓库信息
-   * @param owner 仓库所有者
-   * @param repo 仓库名称
-   * @param retries 重试次数
-   * @returns Promise<GitHubRepoInfo>
+   * 读取缓存数据
    */
-  async getRepoInfo(owner: string, repo: string, retries: number = 2): Promise<GitHubRepoInfo> {
+  getCachedRepoInfo(owner: string, repo: string, includeExpired: boolean = true): GitHubRepoInfo | null {
     const cacheKey = `${owner}/${repo}`
-    
-    // 检查内存缓存
     const cached = this.cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      console.log(`[GitHubService] 使用内存缓存数据: ${cacheKey}`)
+    if (!cached) return null
+
+    if (includeExpired || Date.now() - cached.timestamp < this.CACHE_DURATION) {
       return cached.data
     }
+    return null
+  }
 
+  private shouldThrottleRefresh(cacheKey: string): boolean {
+    const lastAttempt = this.lastRefreshAttempt.get(cacheKey) || 0
+    return Date.now() - lastAttempt < this.STALE_REFRESH_THROTTLE
+  }
+
+  private isRateLimitBlocked(cacheKey: string): boolean {
+    const blockedUntil = this.rateLimitBlockedUntil.get(cacheKey) || 0
+    return Date.now() < blockedUntil
+  }
+
+  private async fetchAndCacheRepoInfo(owner: string, repo: string, retries: number): Promise<GitHubRepoInfo> {
+    const cacheKey = `${owner}/${repo}`
     let lastError: Error | null = null
-    let isRateLimitError = false
-    
-    // 重试机制
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         if (attempt > 0) {
           console.log(`[GitHubService] 重试获取数据 (${attempt}/${retries}): ${cacheKey}`)
-          // 重试前等待一段时间
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
         } else {
           console.log(`[GitHubService] 从GitHub API获取数据: ${cacheKey}`)
         }
-        
+
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
-        
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
+
         const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
           headers: {
             'Accept': 'application/vnd.github.v3+json',
@@ -112,16 +123,15 @@ class GitHubService {
           },
           signal: controller.signal
         })
-        
+
         clearTimeout(timeoutId)
 
-        // 检查是否是速率限制错误
         if (response.status === 403 || response.status === 429) {
           const errorData = await response.json().catch(() => ({}))
-          if (errorData.message && errorData.message.includes('rate limit')) {
-            isRateLimitError = true
-            console.warn(`[GitHubService] GitHub API 速率限制: ${errorData.message}`)
-            throw new Error(`GitHub API 速率限制`)
+          const msg = typeof errorData?.message === 'string' ? errorData.message.toLowerCase() : ''
+          if (msg.includes('rate limit')) {
+            this.rateLimitBlockedUntil.set(cacheKey, Date.now() + this.RATE_LIMIT_COOLDOWN)
+            throw new Error('GitHub API 速率限制')
           }
         }
 
@@ -131,56 +141,91 @@ class GitHubService {
         }
 
         const data: GitHubRepoInfo = await response.json()
-        
-        // 缓存数据到内存和 localStorage
-        const cacheItem: CacheItem = {
-          data,
-          timestamp: Date.now()
-        }
+        const cacheItem: CacheItem = { data, timestamp: Date.now() }
         this.cache.set(cacheKey, cacheItem)
         this.saveToLocalStorage(cacheKey, cacheItem)
+        this.rateLimitBlockedUntil.delete(cacheKey)
 
         console.log(`[GitHubService] 成功获取仓库信息: ${data.stargazers_count} stars`)
         return data
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error))
+        const isRateLimit = lastError.message.includes('速率限制')
         console.error(`[GitHubService] 获取仓库信息失败 (尝试 ${attempt + 1}/${retries + 1}):`, lastError.message)
-        
-        // 如果是速率限制错误，不再重试
-        if (isRateLimitError) {
-          break
-        }
-        
-        // 如果不是最后一次尝试，继续重试
-        if (attempt < retries) {
-          continue
-        }
+        if (isRateLimit) break
       }
     }
-    
-    // 所有重试都失败后，检查是否有缓存数据（包括过期的）
-    if (cached) {
-      console.log(`[GitHubService] API 请求失败，使用过期的内存缓存数据: ${cacheKey}`)
+
+    throw lastError || new Error('获取仓库信息失败')
+  }
+
+  /**
+   * 获取GitHub仓库信息
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param retries 重试次数
+   * @returns Promise<GitHubRepoInfo>
+   */
+  async getRepoInfo(owner: string, repo: string, retries: number = 2): Promise<GitHubRepoInfo> {
+    const cacheKey = `${owner}/${repo}`
+    const cached = this.cache.get(cacheKey)
+
+    // 新鲜缓存，直接返回
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      console.log(`[GitHubService] 使用内存缓存数据: ${cacheKey}`)
       return cached.data
     }
-    
-    // 如果内存中没有，尝试从 localStorage 读取
-    try {
-      const storageKey = `${this.STORAGE_KEY_PREFIX}${cacheKey}`
-      const storedCache = localStorage.getItem(storageKey)
-      if (storedCache) {
-        const cacheItem: CacheItem = JSON.parse(storedCache)
-        console.log(`[GitHubService] API 请求失败，使用 localStorage 缓存数据: ${cacheKey}`)
-        // 更新内存缓存
-        this.cache.set(cacheKey, cacheItem)
-        return cacheItem.data
+
+    // 过期缓存优先返回，降低首屏抖动；后台节流刷新
+    if (cached) {
+      if (!this.shouldThrottleRefresh(cacheKey) && !this.inFlightRequests.has(cacheKey) && !this.isRateLimitBlocked(cacheKey)) {
+        this.lastRefreshAttempt.set(cacheKey, Date.now())
+        const refreshPromise = this.fetchAndCacheRepoInfo(owner, repo, retries)
+          .catch((err) => {
+            console.warn(`[GitHubService] 后台刷新失败，继续使用缓存: ${cacheKey}`, err)
+            return cached.data
+          })
+          .finally(() => {
+            this.inFlightRequests.delete(cacheKey)
+          })
+        this.inFlightRequests.set(cacheKey, refreshPromise)
       }
-    } catch (error) {
-      console.warn('[GitHubService] 从 localStorage 读取缓存失败:', error)
+      console.log(`[GitHubService] 使用过期缓存并后台刷新: ${cacheKey}`)
+      return cached.data
     }
-    
-    // 抛出最后一次的错误
-    throw lastError || new Error('获取仓库信息失败')
+
+    // 限流冷却期间不触发外部请求，直接尝试读取持久化缓存
+    if (this.isRateLimitBlocked(cacheKey)) {
+      const stale = this.getCachedRepoInfo(owner, repo, true)
+      if (stale) {
+        console.log(`[GitHubService] 处于限流冷却期，使用缓存数据: ${cacheKey}`)
+        return stale
+      }
+    }
+
+    // 并发请求去重
+    const inFlight = this.inFlightRequests.get(cacheKey)
+    if (inFlight) {
+      return inFlight
+    }
+
+    this.lastRefreshAttempt.set(cacheKey, Date.now())
+    const fetchPromise = this.fetchAndCacheRepoInfo(owner, repo, retries)
+      .catch((error) => {
+        // 请求失败时，回退到任何可用缓存（包括过期缓存）
+        const stale = this.getCachedRepoInfo(owner, repo, true)
+        if (stale) {
+          console.log(`[GitHubService] API 请求失败，回退缓存数据: ${cacheKey}`)
+          return stale
+        }
+        throw error
+      })
+      .finally(() => {
+        this.inFlightRequests.delete(cacheKey)
+      })
+
+    this.inFlightRequests.set(cacheKey, fetchPromise)
+    return fetchPromise
   }
 
   /**

@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Table, Button, Space, Tag, Modal, Form, Input, message, Popconfirm, Tooltip } from 'antd'
+import { Card, Table, Button, Space, Tag, Modal, Form, Input, message, Popconfirm } from 'antd'
 import { PlusOutlined, DeleteOutlined, EyeOutlined, CopyOutlined } from '@ant-design/icons'
 import { apiTokensApi } from '../api/apiTokens'
 import type { ApiToken } from '../api/apiTokens'
+import { useTranslation } from '../i18n/hooks/useTranslation'
 
 const APITokenManager: React.FC = () => {
+  const { tc } = useTranslation()
   const [tokens, setTokens] = useState<ApiToken[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [form] = Form.useForm()
   const [visibleTokens, setVisibleTokens] = useState<Set<number>>(new Set())
+  const [revealedTokens, setRevealedTokens] = useState<Record<number, string>>({})
+  const [revealingTokenIds, setRevealingTokenIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     loadTokens()
@@ -21,7 +25,7 @@ const APITokenManager: React.FC = () => {
       const result = await apiTokensApi.list()
       setTokens(result)
     } catch (error) {
-      message.error('加载API Token失败')
+      message.error(tc('apiTokenManager.messages.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -30,96 +34,140 @@ const APITokenManager: React.FC = () => {
   const handleCreateToken = async (values: any) => {
     try {
       await apiTokensApi.create(values)
-      message.success('创建成功')
+      message.success(tc('apiTokenManager.messages.createSuccess'))
       setModalVisible(false)
       form.resetFields()
       loadTokens()
     } catch (error) {
-      message.error('创建失败')
+      message.error(tc('apiTokenManager.messages.createFailed'))
     }
   }
 
   const handleDeleteToken = async (tokenId: number) => {
     try {
       await apiTokensApi.delete(tokenId)
-      message.success('删除成功')
+      message.success(tc('apiTokenManager.messages.deleteSuccess'))
       loadTokens()
     } catch (error) {
-      message.error('删除失败')
+      message.error(tc('apiTokenManager.messages.deleteFailed'))
     }
   }
 
-  const toggleTokenVisibility = (tokenId: number) => {
-    const newVisible = new Set(visibleTokens)
-    if (newVisible.has(tokenId)) {
-      newVisible.delete(tokenId)
-    } else {
-      newVisible.add(tokenId)
+  const toggleTokenVisibility = async (record: ApiToken) => {
+    const tokenId = record.id
+
+    if (visibleTokens.has(tokenId)) {
+      setVisibleTokens((prev) => {
+        const next = new Set(prev)
+        next.delete(tokenId)
+        return next
+      })
+      return
     }
-    setVisibleTokens(newVisible)
+
+    if (!revealedTokens[tokenId]) {
+      setRevealingTokenIds((prev) => {
+        const next = new Set(prev)
+        next.add(tokenId)
+        return next
+      })
+      try {
+        const token = await apiTokensApi.reveal(tokenId)
+        setRevealedTokens((prev) => ({ ...prev, [tokenId]: token }))
+      } catch (error) {
+        message.error(tc('apiTokenManager.messages.loadFailed'))
+        return
+      } finally {
+        setRevealingTokenIds((prev) => {
+          const next = new Set(prev)
+          next.delete(tokenId)
+          return next
+        })
+      }
+    }
+
+    setVisibleTokens((prev) => {
+      const next = new Set(prev)
+      next.add(tokenId)
+      return next
+    })
   }
 
   const copyToClipboard = (text: string) => {
+    if (!text) {
+      message.error(tc('apiTokenManager.messages.copyFailed'))
+      return
+    }
     navigator.clipboard.writeText(text).then(() => {
-      message.success('已复制到剪贴板')
+      message.success(tc('apiTokenManager.messages.copySuccess'))
     }).catch(() => {
-      message.error('复制失败')
+      message.error(tc('apiTokenManager.messages.copyFailed'))
     })
   }
 
   const columns = [
     {
-      title: '名称',
+      title: tc('apiTokenManager.table.name'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Token',
+      title: tc('apiTokenManager.table.token'),
       dataIndex: 'token',
       key: 'token',
       render: (token: string, record: ApiToken) => (
-        <Space>
+        <Space align="center">
           <code>
-            {visibleTokens.has(record.id) ? token : '*'.repeat(20)}
+            {(() => {
+              const revealedToken = revealedTokens[record.id]
+              const copyableToken = revealedToken || (token && !token.includes('*') ? token : '')
+              const maskedToken = record.prefix ? `${record.prefix}${'*'.repeat(12)}` : '*'.repeat(20)
+              return visibleTokens.has(record.id) && copyableToken ? copyableToken : maskedToken
+            })()}
           </code>
           <Button
             type="text"
             size="small"
             icon={<EyeOutlined />}
-            onClick={() => toggleTokenVisibility(record.id)}
+            loading={revealingTokenIds.has(record.id)}
+            onClick={() => { void toggleTokenVisibility(record) }}
           />
           <Button
             type="text"
             size="small"
             icon={<CopyOutlined />}
-            onClick={() => copyToClipboard(token)}
+            onClick={() => {
+              const revealedToken = revealedTokens[record.id]
+              const copyableToken = revealedToken || (token && !token.includes('*') ? token : '')
+              copyToClipboard(copyableToken)
+            }}
           />
         </Space>
       ),
     },
     {
-      title: '状态',
+      title: tc('apiTokenManager.table.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
         <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? '活跃' : '已禁用'}
+          {status === 'active' ? tc('status.active') : tc('status.disabled')}
         </Tag>
       ),
     },
     {
-      title: '创建时间',
+      title: tc('apiTokenManager.table.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
-      title: '操作',
+      title: tc('apiTokenManager.table.actions'),
       key: 'actions',
       render: (_, record: ApiToken) => (
         <Space>
           <Popconfirm
-            title="确定要删除这个Token吗？"
+            title={tc('apiTokenManager.confirmDelete')}
             onConfirm={() => handleDeleteToken(record.id)}
           >
             <Button danger size="small" icon={<DeleteOutlined />} />
@@ -132,13 +180,13 @@ const APITokenManager: React.FC = () => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>API Token 管理</h1>
+        <h1>{tc('apiTokenManager.title')}</h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setModalVisible(true)}
         >
-          创建 Token
+          {tc('apiTokenManager.create')}
         </Button>
       </div>
 
@@ -153,7 +201,7 @@ const APITokenManager: React.FC = () => {
       </Card>
 
       <Modal
-        title="创建 API Token"
+        title={tc('apiTokenManager.modalTitle')}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false)
@@ -164,10 +212,10 @@ const APITokenManager: React.FC = () => {
         <Form form={form} layout="vertical" onFinish={handleCreateToken}>
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入名称' }]}
+            label={tc('apiTokenManager.table.name')}
+            rules={[{ required: true, message: tc('apiTokenManager.validation.nameRequired') }]}
           >
-            <Input placeholder="给这个Token起个名字" />
+            <Input placeholder={tc('apiTokenManager.namePlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>

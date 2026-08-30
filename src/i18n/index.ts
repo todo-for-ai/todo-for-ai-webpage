@@ -1,6 +1,12 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
+
+const normalizeLanguageCode = (lang?: string): 'zh-CN' | 'en' => {
+  if (!lang) return 'en'
+  if (lang.startsWith('zh')) return 'zh-CN'
+  if (lang.startsWith('en')) return 'en'
+  return 'en'
+}
 
 // 自定义语言检测器
 const customLanguageDetector = {
@@ -8,21 +14,13 @@ const customLanguageDetector = {
   async: true,
   detect: (callback: (lng: string) => void) => {
     // 获取浏览器语言
-    let detectedLang = navigator.language
-
-    // 规范化语言代码
-    if (detectedLang.startsWith('zh')) {
-      detectedLang = 'zh-CN'
-    } else if (detectedLang.startsWith('en')) {
-      detectedLang = 'en'
-    } else {
-      detectedLang = 'en' // 默认英语
-    }
+    const detectedLang = normalizeLanguageCode(navigator.language)
 
     // 检查localStorage
     const savedLang = localStorage.getItem('i18nextLng')
-    if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang as SupportedLanguage)) {
-      callback(savedLang)
+    const normalizedSavedLang = normalizeLanguageCode(savedLang || undefined)
+    if (savedLang && SUPPORTED_LANGUAGES.includes(normalizedSavedLang as SupportedLanguage)) {
+      callback(normalizedSavedLang)
       return
     }
 
@@ -36,7 +34,7 @@ const customLanguageDetector = {
   init: () => {},
   cacheUserLanguage: (lng: string) => {
     // 存储规范化后的语言代码
-    localStorage.setItem('i18nextLng', lng)
+    localStorage.setItem('i18nextLng', normalizeLanguageCode(lng))
   }
 }
 
@@ -46,6 +44,7 @@ import zhCNNavigation from './resources/zh-CN/navigation.json'
 import zhCNDashboard from './resources/zh-CN/pages/dashboard.json'
 import zhCNSettings from './resources/zh-CN/pages/settings.json'
 import zhCNProjects from './resources/zh-CN/pages/projects.json'
+import zhCNOrganizations from './resources/zh-CN/pages/organizations.json'
 import zhCNCreateProject from './resources/zh-CN/pages/createProject.json'
 import zhCNProfile from './resources/zh-CN/pages/profile.json'
 import zhCNContextRules from './resources/zh-CN/pages/contextRules.json'
@@ -60,15 +59,22 @@ import zhCNCreateTask from './resources/zh-CN/pages/createTask.json'
 import zhCNPinManager from './resources/zh-CN/components/pinManager.json'
 import zhCNWeChatGroup from './resources/zh-CN/components/wechatGroup.json'
 import zhCNTelegramGroup from './resources/zh-CN/components/telegramGroup.json'
+import zhCNResizableContainer from './resources/zh-CN/components/resizableContainer.json'
 import zhCNUserManagement from './resources/zh-CN/pages/userManagement.json'
+import zhCNUserProfile from './resources/zh-CN/pages/userProfile.json'
 import zhCNCustomPrompts from './resources/zh-CN/pages/customPrompts.json'
 import zhCNVariableDocs from './resources/zh-CN/pages/variableDocs.json'
+import zhCNApiDocumentation from './resources/zh-CN/pages/apiDocumentation.json'
+import zhCNMcpInstallation from './resources/zh-CN/pages/mcpInstallation.json'
+import zhCNKanban from './resources/zh-CN/pages/kanban.json'
+import zhCNAgents from './resources/zh-CN/pages/agents.json'
 
 import enCommon from './resources/en/common.json'
 import enNavigation from './resources/en/navigation.json'
 import enDashboard from './resources/en/pages/dashboard.json'
 import enSettings from './resources/en/pages/settings.json'
 import enProjects from './resources/en/pages/projects.json'
+import enOrganizations from './resources/en/pages/organizations.json'
 import enCreateProject from './resources/en/pages/createProject.json'
 import enProfile from './resources/en/pages/profile.json'
 import enContextRules from './resources/en/pages/contextRules.json'
@@ -83,9 +89,15 @@ import enCreateTask from './resources/en/pages/createTask.json'
 import enPinManager from './resources/en/components/pinManager.json'
 import enWeChatGroup from './resources/en/components/wechatGroup.json'
 import enTelegramGroup from './resources/en/components/telegramGroup.json'
+import enResizableContainer from './resources/en/components/resizableContainer.json'
 import enUserManagement from './resources/en/pages/userManagement.json'
+import enUserProfile from './resources/en/pages/userProfile.json'
 import enCustomPrompts from './resources/en/pages/customPrompts.json'
 import enVariableDocs from './resources/en/pages/variableDocs.json'
+import enApiDocumentation from './resources/en/pages/apiDocumentation.json'
+import enMcpInstallation from './resources/en/pages/mcpInstallation.json'
+import enKanban from './resources/en/pages/kanban.json'
+import enAgents from './resources/en/pages/agents.json'
 
 // 支持的语言
 export const SUPPORTED_LANGUAGES = ['zh-CN', 'en'] as const
@@ -99,6 +111,7 @@ const resources = {
     dashboard: zhCNDashboard,
     settings: zhCNSettings,
     projects: zhCNProjects,
+    organizations: zhCNOrganizations,
     createProject: zhCNCreateProject,
     profile: zhCNProfile,
     contextRules: zhCNContextRules,
@@ -113,9 +126,15 @@ const resources = {
     pinManager: zhCNPinManager,
     wechatGroup: zhCNWeChatGroup,
     telegramGroup: zhCNTelegramGroup,
+    resizableContainer: zhCNResizableContainer,
     userManagement: zhCNUserManagement,
+    userProfile: zhCNUserProfile,
     customPrompts: zhCNCustomPrompts,
     variableDocs: zhCNVariableDocs,
+    apiDocumentation: zhCNApiDocumentation,
+    mcpInstallation: zhCNMcpInstallation,
+    kanban: zhCNKanban,
+    agents: zhCNAgents,
   },
   en: {
     common: enCommon,
@@ -123,6 +142,7 @@ const resources = {
     dashboard: enDashboard,
     settings: enSettings,
     projects: enProjects,
+    organizations: enOrganizations,
     createProject: enCreateProject,
     profile: enProfile,
     contextRules: enContextRules,
@@ -137,9 +157,15 @@ const resources = {
     pinManager: enPinManager,
     wechatGroup: enWeChatGroup,
     telegramGroup: enTelegramGroup,
+    resizableContainer: enResizableContainer,
     userManagement: enUserManagement,
+    userProfile: enUserProfile,
     customPrompts: enCustomPrompts,
     variableDocs: enVariableDocs,
+    apiDocumentation: enApiDocumentation,
+    mcpInstallation: enMcpInstallation,
+    kanban: enKanban,
+    agents: enAgents,
   },
 }
 
@@ -156,8 +182,12 @@ i18n
     // 支持的语言白名单
     supportedLngs: SUPPORTED_LANGUAGES,
 
-    // 严格模式，不允许不支持的语言
+    // i18next@25 与非显式语言匹配在 zh-CN 场景下会错误回退到英文
+    // 保持 strict 模式，仅允许白名单中的语言码，避免语言切换失效
     nonExplicitSupportedLngs: false,
+
+    // 仅加载当前语言，避免额外回退层级（例如 zh）触发噪音告警
+    load: 'currentOnly',
     
     // 调试模式（生产环境应设为false）
     debug: import.meta.env.DEV,

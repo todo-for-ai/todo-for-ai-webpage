@@ -82,8 +82,10 @@ export const useAuthStore = create<AuthState>()(
           set({ token, isAuthenticated: !!token })
           if (token) {
             localStorage.setItem('auth_token', token)
+            localStorage.setItem('access_token', token)
           } else {
             localStorage.removeItem('auth_token')
+            localStorage.removeItem('access_token')
           }
         },
         setRefreshToken: (refreshToken) => {
@@ -102,8 +104,10 @@ export const useAuthStore = create<AuthState>()(
           })
           if (accessToken) {
             localStorage.setItem('auth_token', accessToken)
+            localStorage.setItem('access_token', accessToken)
           } else {
             localStorage.removeItem('auth_token')
+            localStorage.removeItem('access_token')
           }
           if (refreshToken) {
             localStorage.setItem('refresh_token', refreshToken)
@@ -167,28 +171,26 @@ export const useAuthStore = create<AuthState>()(
             })
           } catch (error: any) {
             console.error('Failed to fetch current user:', error)
-            if (error.response?.status === 401) {
+            if (error?.status === 401) {
               get().clearAuth()
             }
             set({
-              error: error.response?.data?.error?.message || '获取用户信息失败',
+              error: error?.message || '获取用户信息失败',
               isLoading: false
             })
           }
         },
         updateUser: async (userData) => {
           try {
-            set({ isLoading: true, error: null })
+            set({ error: null })
             const response = await apiClient.put<User>('/auth/me', userData)
             const updatedUser = response
-            set({ 
-              user: updatedUser,
-              isLoading: false 
+            set({
+              user: updatedUser
             })
           } catch (error: any) {
-            set({ 
-              error: error.response?.data?.error?.message || '更新用户信息失败',
-              isLoading: false 
+            set({
+              error: error.response?.data?.error?.message || '更新用户信息失败'
             })
             throw error
           }
@@ -215,6 +217,7 @@ export const useAuthStore = create<AuthState>()(
         },
         clearAuth: () => {
           localStorage.removeItem('auth_token')
+          localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
           set({
             ...initialState
@@ -240,7 +243,7 @@ export const useAuthStore = create<AuthState>()(
             return false
           }
           try {
-            set({ isLoading: true, error: null })
+            set({ error: null })
             const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
               method: 'POST',
               headers: {
@@ -248,30 +251,39 @@ export const useAuthStore = create<AuthState>()(
                 'Content-Type': 'application/json'
               }
             })
-            if (!response.ok) {
-              throw new Error(`Refresh failed: ${response.status}`)
+
+            let payload: any = null
+            try {
+              payload = await response.json()
+            } catch {
+              payload = null
             }
-            const data = await response.json()
-            const { access_token, refresh_token } = data
+
+            if (!response.ok) {
+              const backendMessage = payload?.message ? `: ${payload.message}` : ''
+              throw new Error(`Refresh failed: ${response.status}${backendMessage}`)
+            }
+
+            const tokenPayload = payload && typeof payload === 'object' && 'data' in payload
+              ? payload.data
+              : payload
+            const { access_token, refresh_token } = tokenPayload || {}
             if (access_token && refresh_token) {
               get().setTokens(access_token, refresh_token)
               console.log('[AuthStore] Token刷新成功')
               return true
-            } else {
-              throw new Error('刷新响应中没有新token')
             }
+
+            throw new Error('刷新响应中没有新token')
           } catch (error: any) {
             console.error('[AuthStore] Token刷新失败:', error)
-            if (error.response?.status === 401 || (error.message && error.message.includes('401'))) {
+            if (error?.message && error.message.includes('401')) {
               get().clearAuth()
             }
             set({
-              error: error.response?.data?.error?.message || error.message || 'Token刷新失败',
-              isLoading: false
+              error: error?.message || 'Token刷新失败'
             })
             return false
-          } finally {
-            set({ isLoading: false })
           }
         },
         checkTokenExpiration: () => {

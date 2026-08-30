@@ -1,0 +1,50 @@
+{
+  "title": "用户资料",
+  "subtitle": "查看成员资料与共享组织上下文",
+  "actions": {
+    "back": "返回"
+  },
+  "labels": {
+    "self": "你自己",
+    "public": "公开资料"
+  },
+  "status": {
+    "active": "活跃",
+    "inactive": "非活跃",
+    "suspended": "已停用"
+  },
+  "fields": {
+    "title": "资料信息",
+    "locale": "语言",
+    "timezone": "时区",
+    "noBio": "暂无个人简介",
+    "createdAt": "注册时间",
+    "lastActiveAt": "最近活跃",
+    "sharedOrganizations": "共享组织数",
+    "viewMode": "视图模式"
+  },
+  "viewMode": {
+    "self": "本人视角",
+    "admin": "管理员视角",
+    "public": "公开视角"
+  },
+  "selfView": {
+    "title": "这是你自己的资料页",
+    "description": "当前页面是组织成员列表的资料入口视图。",
+    "goProfile": "前往个人中心编辑"
+  },
+  "sharedOrganizations": {
+    "title": "共享组织",
+    "count": "共 {{count}} 个组织",
+    "slug": "Slug",
+    "targetRoles": "对方角色",
+    "viewerRoles": "你的角色",
+    "empty": "暂无共享组织"
+  },
+  "messages": {
+    "invalidUserId": "无效的用户ID",
+    "noPermission": "你无权查看该用户资料",
+    "notFound": "用户不存在",
+    "loadFailed": "加载用户资料失败"
+  }
+}

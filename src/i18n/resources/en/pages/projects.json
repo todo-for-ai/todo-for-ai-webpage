@@ -21,6 +21,7 @@
   "table": {
     "columns": {
       "name": "Project Name",
+      "description": "Description",
       "status": "Status",
       "stats": "Task Statistics",
       "lastActivity": "Last Activity",
@@ -85,7 +86,8 @@
   },
   "messages": {
     "deleteSuccess": "Project deleted successfully",
-    "archiveSuccess": "Project archived successfully"
+    "archiveSuccess": "Project archived successfully",
+    "loadFailed": "Failed to load projects"
   },
   "empty": {
     "noData": "No project data",

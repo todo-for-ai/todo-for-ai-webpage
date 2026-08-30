@@ -13,11 +13,16 @@ import {
   Projects,
   Agents,
   Workflows,
+  Organizations,
+  OrganizationDetail,
+  OrganizationRoles,
   ProjectDetail,
   CreateProject,
   TaskDetail,
+  TaskLogs,
   CreateTask,
   Kanban,
+  Notifications,
   Settings,
   ContextRules,
   CreateContextRule,
@@ -25,7 +30,12 @@ import {
   MCPInstallation,
   APIDocumentation,
   CustomPrompts,
-  VariableDocs
+  VariableDocs,
+  AgentsPage,
+  AgentCreatePage,
+  AgentDetailPage,
+  AgentEditPage,
+  UserProfilePage
 } from './pages'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
@@ -33,6 +43,7 @@ import UserManagement from './pages/UserManagement'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TestTelegramGroup from './pages/TestTelegramGroup'
+import CommandLineDemo from './pages/CommandLineDemo'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -89,15 +100,19 @@ function App() {
               </AuthGuard>
             }>
               <Route index element={<Dashboard />} />
-              <Route path="agents" element={<Agents />} />
+              <Route path="agent-collaboration" element={<Agents />} />
               <Route path="workflows" element={<Workflows />} />
               <Route path="command-center" element={<CommandCenter />} />
               <Route path="projects" element={<Projects />} />
+              <Route path="organizations" element={<Organizations />} />
+              <Route path="organizations/:organizationId" element={<OrganizationDetail />} />
+              <Route path="organizations/:organizationId/roles" element={<OrganizationRoles />} />
               <Route path="projects/create" element={<CreateProject />} />
               <Route path="projects/:id" element={<ProjectDetail />} />
               <Route path="projects/:id/edit" element={<CreateProject />} />
               <Route path="tasks/create" element={<CreateTask />} />
               <Route path="tasks/:id" element={<TaskDetail />} />
+              <Route path="tasks/:id/logs" element={<TaskLogs />} />
               <Route path="tasks/:id/edit" element={<CreateTask />} />
               <Route path="kanban" element={<Kanban />} />
               <Route path="context-rules" element={<ContextRules />} />
@@ -106,12 +121,20 @@ function App() {
               <Route path="rule-marketplace" element={<RuleMarketplace />} />
               <Route path="mcp-installation" element={<MCPInstallation />} />
               <Route path="api-documentation" element={<APIDocumentation />} />
+              <Route path="command-line-demo" element={<CommandLineDemo />} />
+              <Route path="agents" element={<AgentsPage />} />
+              <Route path="agents/create" element={<AgentCreatePage />} />
+              <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
+              <Route path="agents/:agentId/:tabKey" element={<AgentDetailPage />} />
+              <Route path="agents/:agentId" element={<AgentDetailPage />} />
+              <Route path="users/:userId" element={<UserProfilePage />} />
               <Route path="custom-prompts" element={<CustomPrompts />}>
                 <Route index element={<Navigate to="project-prompts" replace />} />
                 <Route path="project-prompts" element={<CustomPrompts />} />
                 <Route path="task-prompts" element={<CustomPrompts />} />
               </Route>
               <Route path="variable-docs" element={<VariableDocs />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />
               <Route path="user-management" element={<UserManagement />} />

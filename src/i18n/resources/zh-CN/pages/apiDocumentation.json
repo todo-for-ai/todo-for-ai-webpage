@@ -1,0 +1,26 @@
+{
+  "title": "API 文档",
+  "pageTitle": "API 文档 - Todo for AI",
+  "sections": {
+    "overview": {
+      "title": "概述",
+      "description": "Todo for AI 提供完整的 RESTful API，支持任务管理、项目管理等核心功能。"
+    },
+    "auth": {
+      "title": "认证",
+      "description": "使用 API Token 进行认证："
+    },
+    "listTasks": {
+      "title": "获取任务列表",
+      "description": "获取项目的任务列表："
+    },
+    "createTask": {
+      "title": "创建任务",
+      "description": "创建新任务：",
+      "example": {
+        "title": "任务标题",
+        "content": "任务内容"
+      }
+    }
+  }
+}

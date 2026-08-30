@@ -4,6 +4,7 @@ import { Form, message } from 'antd'
 import dayjs from 'dayjs'
 import { useTaskStore } from '../stores'
 import type { CreateTaskData } from '../api/tasks'
+import { tasksApi } from '../api/tasks'
 import { generateMcpConfig } from '../utils/mcpConfig'
 
 interface CreateTaskHook {
@@ -17,16 +18,38 @@ originalTaskContent: string
 isAutoSaving: boolean
 lastSavedTime: string | undefined
 defaultProjectId: string | null
-handleSubmit: () => Promise<void>
-handleSubmitAndEdit: () => Promise<void>
+handleSubmit: (attachments?: File[]) => Promise<void>
+handleSubmitAndEdit: (attachments?: File[]) => Promise<void>
 handleCancel: () => void
-handleCreateAndContinue: () => Promise<void>
+handleCreateAndContinue: (attachments?: File[]) => Promise<void>
 debouncedSaveDraft: (content: string) => void
 debouncedSaveEditDraft: (content: string) => void
 debouncedAutoSave: () => void
 performAutoSave: () => Promise<void>
 clearDraft: (projectId: number) => void
 clearEditDraft: (taskId: number) => void
+}
+
+const parseParticipants = (raw: any): Array<{ type: 'human' | 'agent'; id: number }> => {
+if (!Array.isArray(raw)) return []
+return raw
+  .map((item) => {
+    if (typeof item === 'object' && item?.type && item?.id) {
+      return { type: item.type, id: Number(item.id) }
+    }
+    if (typeof item !== 'string' || !item.includes(':')) return null
+    const [type, idStr] = item.split(':')
+    const normalizedType = type === 'agent' ? 'agent' : type === 'human' ? 'human' : null
+    const id = Number(idStr)
+    if (!normalizedType || Number.isNaN(id)) return null
+    return { type: normalizedType, id }
+  })
+  .filter((item): item is { type: 'human' | 'agent'; id: number } => Boolean(item))
+}
+
+const formatParticipantsForForm = (raw: any): string[] => {
+const parsed = parseParticipants(raw)
+return parsed.map((item) => `${item.type}:${item.id}`)
 }
 
 export const useCreateTask = (tp: (key: string) => string): CreateTaskHook => {
@@ -123,6 +146,12 @@ console.warn('Failed to clear edit draft:', error)
 }
 }
 
+const uploadAttachments = async (taskId: number, attachments: File[] = []) => {
+if (!taskId || !attachments.length) return
+const uploadJobs = attachments.map((file) => tasksApi.uploadTaskAttachment(taskId, file))
+await Promise.all(uploadJobs)
+}
+
 const debouncedSaveDraft = useCallback((content: string) => {
 if (saveDraftTimeoutRef.current) {
 clearTimeout(saveDraftTimeoutRef.current)
@@ -138,7 +167,9 @@ status: currentValues.status,
 priority: currentValues.priority,
 due_date: currentValues.due_date,
 tags: currentValues.tags,
-is_ai_task: currentValues.is_ai_task
+is_ai_task: currentValues.is_ai_task,
+assignees: parseParticipants(currentValues.assignees),
+mentions: parseParticipants(currentValues.mentions)
 }
 saveDraft(projectId, draftData, false)
 }
@@ -161,6 +192,8 @@ priority: currentValues.priority,
 due_date: currentValues.due_date,
 tags: currentValues.tags,
 is_ai_task: currentValues.is_ai_task,
+assignees: parseParticipants(currentValues.assignees),
+mentions: parseParticipants(currentValues.mentions),
 }
 saveEditDraft(taskId, draftData)
 }, 500)
@@ -180,7 +213,10 @@ status: formValues.status,
 priority: formValues.priority,
 due_date: formValues.due_date,
 tags: formValues.tags || [],
-is_ai_task: formValues.is_ai_task
+is_ai_task: formValues.is_ai_task,
+assignees: parseParticipants(formValues.assignees),
+mentions: parseParticipants(formValues.mentions),
+expected_revision: formValues.revision
 }
 await updateTask(parseInt(id), taskData)
 setLastSavedTime(new Date().toISOString())
@@ -217,6 +253,9 @@ tags: task.tags,
 is_ai_task: task.is_ai_task,
 id: task.id,
 required_capabilities: task.required_capabilities || [],
+assignees: formatParticipantsForForm(task.assignees),
+mentions: formatParticipantsForForm(task.mentions),
+revision: task.revision || 1,
 }
 form.setFieldsValue(formData)
 setOriginalTaskContent(task.content || '')
@@ -234,6 +273,9 @@ tags: editDraft.tags || task.tags,
 is_ai_task: editDraft.is_ai_task !== undefined ? editDraft.is_ai_task : task.is_ai_task,
 id: task.id,
 required_capabilities: editDraft.required_capabilities || task.required_capabilities || [],
+assignees: formatParticipantsForForm(editDraft.assignees || task.assignees || []),
+mentions: formatParticipantsForForm(editDraft.mentions || task.mentions || []),
+revision: task.revision || 1,
 }
 form.setFieldsValue(draftFormData)
 setEditorContent(editDraft.content || '')
@@ -252,7 +294,7 @@ setLoading(false)
 }
 }
 
-const handleSubmit = async () => {
+const handleSubmit = async (attachments: File[] = []) => {
 try {
 setLoading(true)
 const values = await form.validateFields()
@@ -266,11 +308,15 @@ due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
 tags: values.tags || [],
 is_ai_task: values.is_ai_task || false,
 required_capabilities: values.required_capabilities || [],
+assignees: parseParticipants(values.assignees),
+mentions: parseParticipants(values.mentions),
+expected_revision: values.revision,
 }
 let result
 if (isEditMode && id) {
 result = await updateTask(parseInt(id, 10), taskData)
 if (result) {
+await uploadAttachments(result.id, attachments)
 clearEditDraft(parseInt(id, 10))
 setLastSavedTime(new Date().toISOString())
 setOriginalTaskContent(editorContent)
@@ -279,6 +325,7 @@ navigate(`/todo-for-ai/pages/tasks/${id}`)
 } else {
 result = await createTask(taskData as CreateTaskData)
 if (result) {
+await uploadAttachments(result.id, attachments)
 if (taskData.project_id) {
 clearDraft(taskData.project_id)
 }
@@ -292,7 +339,7 @@ setLoading(false)
 }
 }
 
-const handleSubmitAndEdit = async () => {
+const handleSubmitAndEdit = async (attachments: File[] = []) => {
 try {
 setLoading(true)
 const values = await form.validateFields()
@@ -306,17 +353,22 @@ due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
 tags: values.tags || [],
 is_ai_task: values.is_ai_task || false,
 required_capabilities: values.required_capabilities || [],
+assignees: parseParticipants(values.assignees),
+mentions: parseParticipants(values.mentions),
+expected_revision: values.revision,
 }
 let result
 if (isEditMode && id) {
 result = await updateTask(parseInt(id, 10), taskData)
 if (result) {
+await uploadAttachments(result.id, attachments)
 clearEditDraft(parseInt(id, 10))
 setOriginalTaskContent(taskData.content || '')
 }
 } else {
 result = await createTask(taskData as CreateTaskData)
 if (result) {
+await uploadAttachments(result.id, attachments)
 if (taskData.project_id) {
 clearDraft(taskData.project_id)
 }
@@ -334,7 +386,7 @@ const handleCancel = () => {
 navigate(-1)
 }
 
-const handleCreateAndContinue = async () => {
+const handleCreateAndContinue = async (attachments: File[] = []) => {
 try {
 setLoading(true)
 const values = await form.validateFields()
@@ -348,9 +400,12 @@ due_date: values.due_date ? values.due_date.format('YYYY-MM-DD') : undefined,
 tags: values.tags || [],
 is_ai_task: values.is_ai_task || false,
 required_capabilities: values.required_capabilities || [],
+assignees: parseParticipants(values.assignees),
+mentions: parseParticipants(values.mentions),
 }
 const result = await createTask(taskData as CreateTaskData)
 if (result) {
+await uploadAttachments(result.id, attachments)
 if (taskData.project_id) {
 clearDraft(taskData.project_id)
 }
@@ -388,7 +443,9 @@ content: copyData.content,
 priority: copyData.priority || 'medium',
 due_date: copyData.due_date ? dayjs(copyData.due_date) : null,
 tags: copyData.tags || [],
-is_ai_task: copyData.is_ai_task !== undefined ? copyData.is_ai_task : true
+is_ai_task: copyData.is_ai_task !== undefined ? copyData.is_ai_task : true,
+assignees: formatParticipantsForForm(copyData.assignees || []),
+mentions: formatParticipantsForForm(copyData.mentions || [])
 })
 // 设置编辑器内容
 setEditorContent(copyData.content || '')

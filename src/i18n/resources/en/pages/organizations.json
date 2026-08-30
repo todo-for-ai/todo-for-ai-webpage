@@ -1,0 +1,255 @@
+{
+  "title": "Organizations",
+  "subtitle": "Manage organization spaces and shared members",
+  "actions": {
+    "create": "Create Organization",
+    "view": "View Details"
+  },
+  "viewMode": {
+    "label": "View",
+    "list": "List",
+    "card": "Card"
+  },
+  "table": {
+    "orgName": "Organization",
+    "role": "My Role",
+    "members": "Members",
+    "agents": "Agents",
+    "projects": "Projects",
+    "activeRoles": "Active Roles",
+    "summary": "Summary",
+    "activity": "Activity"
+  },
+  "roleLabels": {
+    "owner": "Owner",
+    "admin": "Administrator",
+    "member": "Member",
+    "viewer": "Viewer"
+  },
+  "card": {
+    "moreRoles": "+{{count}} more"
+  },
+  "members": {
+    "title": "Members of {{name}}",
+    "emailPlaceholder": "Invite by user email",
+    "agentIdPlaceholder": "Invite by Agent ID",
+    "emailRequired": "Please enter user email",
+    "agentIdRequired": "Please enter a valid Agent ID",
+    "invite": "Invite",
+    "inviteAgent": "Invite Agent",
+    "createAgent": "Create Agent",
+    "remove": "Remove",
+    "confirmOk": "Confirm",
+    "confirmCancel": "Cancel",
+    "removeConfirmTitle": "Remove this member?",
+    "removeConfirmDescription": "This member will lose organization access.",
+    "entity": {
+      "human": "Human",
+      "agent": "Agent"
+    },
+    "table": {
+      "user": "User",
+      "type": "Type",
+      "membershipId": "Membership ID",
+      "linkedId": "Linked ID",
+      "role": "Role",
+      "capabilities": "Capabilities",
+      "status": "Status",
+      "joinedAt": "Joined At",
+      "updatedAt": "Updated At",
+      "actions": "Actions"
+    }
+  },
+  "roles": {
+    "manage": "Role Manager",
+    "backToOrganizations": "Back to Organizations",
+    "manageTitle": "Manage Organization Roles",
+    "create": "Create Role",
+    "system": "System",
+    "titleRequired": "Please enter role title",
+    "titlePlaceholder": "Role title, e.g. Frontend Lead",
+    "descriptionPlaceholder": "Role description (optional)",
+    "contentPlaceholder": "Role definition content (Markdown, optional)",
+    "selectPlaceholder": "Select roles (multi-select, optional)",
+    "deleteConfirmTitle": "Delete this role?",
+    "deleteConfirmDesc": "This role will be removed from all members.",
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "content": "Definition Content"
+    },
+    "table": {
+      "title": "Title",
+      "key": "Role Key",
+      "description": "Description",
+      "content": "Definition",
+      "actions": "Actions"
+    }
+  },
+  "createModal": {
+    "title": "Create Organization",
+    "name": "Organization Name",
+    "nameRequired": "Please enter organization name",
+    "slug": "Slug (Optional)",
+    "description": "Description",
+    "confirm": "Create",
+    "cancel": "Cancel"
+  },
+  "createAgentModal": {
+    "title": "Create Organization Agent",
+    "name": "Agent Name",
+    "nameRequired": "Please enter Agent name",
+    "description": "Description",
+    "confirm": "Create",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "title": "Organization Detail",
+    "subtitle": "Review organization info, members, and projects",
+    "back": "Back to Organizations",
+    "noDescription": "No description yet",
+  "status": {
+    "active": "Active",
+    "archived": "Archived",
+    "deleted": "Deleted"
+  },
+  "stats": {
+    "members": "Total Members",
+    "membersOverview": "Members Overview",
+    "humanMembers": "Human Members",
+    "aiMembers": "AI Members",
+    "invitedMembers": "Invited",
+    "projects": "Total Projects",
+    "projectsOverview": "Projects Overview",
+    "projectsActive": "Active Projects",
+    "projectsArchived": "Archived Projects",
+    "projectsDeleted": "Deleted Projects",
+    "activeProjects7d": "Active Projects (7d)",
+    "lastActivity": "Last Activity",
+    "activityOverview": "Activity Overview",
+    "activeRoles": "Active Roles",
+    "totalRoles": "Total Roles"
+  },
+    "fields": {
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "overview": {
+      "title": "Workspace Overview",
+      "subtitle": "Summarize access, governance, and next actions for this organization",
+      "slug": "Slug",
+      "myAccess": "My Access",
+      "manageAccess": "Manage Access",
+      "manageEnabled": "Can manage members and notifications",
+      "manageDisabled": "Read-only access",
+      "healthSignals": "Signals",
+      "noSignals": "Nothing needs immediate follow-up"
+    },
+    "tabs": {
+      "members": "Members",
+      "activity": "Activity",
+      "projects": "Projects"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "subtitle": "Quick scan of the latest organization events",
+      "actor": "Actor",
+      "viewAll": "View all activity",
+      "empty": "No recent activity"
+    },
+    "projectSpotlight": {
+      "title": "Project Spotlight",
+      "subtitle": "Highlight projects by freshest activity",
+      "taskCount": "Tasks",
+      "lastActivity": "Last Activity",
+      "viewAll": "View all projects",
+      "empty": "No projects to highlight"
+    },
+    "signals": {
+      "invitedMembers": "{{count}} pending invites",
+      "inactiveRoles": "{{count}} inactive roles",
+      "deletedProjects": "{{count}} deleted projects",
+      "archivedProjects": "{{count}} archived projects",
+      "noProjects": "No projects yet"
+    },
+    "activity": {
+      "columns": {
+        "time": "Time",
+        "event": "Event",
+        "actor": "Actor",
+        "related": "Related"
+      },
+      "labels": {
+        "project": "Project"
+      },
+      "eventTypes": {
+        "taskCreated": "Task created",
+        "taskUpdated": "Task updated",
+        "taskStatusChanged": "Task status changed",
+        "taskDeleted": "Task deleted",
+        "taskLogAppended": "Task log appended",
+        "projectCreated": "Project created",
+        "projectUpdated": "Project updated",
+        "projectArchived": "Project archived",
+        "projectRestored": "Project restored",
+        "projectDeleted": "Project deleted",
+        "memberInvited": "Member invited",
+        "memberUpdated": "Member updated",
+        "memberRemoved": "Member removed",
+        "agentCreated": "Agent created",
+        "agentInvited": "Agent invited",
+        "agentRemoved": "Agent removed",
+        "agentAccepted": "Agent accepted invitation",
+        "agentRejected": "Agent rejected invitation",
+        "orgCreated": "Organization created",
+        "orgUpdated": "Organization updated",
+        "orgArchived": "Organization archived"
+      },
+      "empty": "No activity yet",
+      "loadFailed": "Failed to load organization activity"
+    },
+    "projects": {
+      "columns": {
+        "name": "Project",
+        "status": "Status",
+        "tasks": "Tasks",
+        "lastActivity": "Last Activity",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View",
+        "tasks": "Tasks"
+      },
+      "empty": "No projects yet",
+      "loadFailed": "Failed to load organization projects"
+    },
+    "notifications": {
+      "title": "Organization Notifications",
+      "description": "Configure external notification channels for this organization."
+    }
+  },
+  "messages": {
+    "loadFailed": "Failed to load organizations",
+    "memberLoadFailed": "Failed to load organization members",
+    "agentMemberLoadFailed": "Failed to load organization agents",
+    "roleLoadFailed": "Failed to load organization roles",
+    "createSuccess": "Organization created successfully",
+    "createFailed": "Failed to create organization",
+    "inviteSuccess": "Organization member invited successfully",
+    "inviteFailed": "Failed to invite organization member",
+    "roleCreateSuccess": "Organization role created successfully",
+    "roleCreateFailed": "Failed to create organization role",
+    "roleDeleteSuccess": "Organization role deleted successfully",
+    "roleDeleteFailed": "Failed to delete organization role",
+    "createAgentSuccess": "Organization agent created successfully",
+    "createAgentFailed": "Failed to create organization agent",
+    "agentInviteSuccess": "Organization agent invited successfully",
+    "agentInviteFailed": "Failed to invite organization agent",
+    "memberUpdated": "Organization member updated successfully",
+    "memberUpdateFailed": "Failed to update organization member",
+    "memberRemoved": "Organization member removed successfully",
+    "memberRemoveFailed": "Failed to remove organization member",
+    "agentMemberRemoved": "Organization agent removed successfully",
+    "agentMemberRemoveFailed": "Failed to remove organization agent"
+  }
+}

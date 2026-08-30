@@ -64,7 +64,33 @@
       },
       "tags": {
         "label": "Tags",
-        "placeholder": "Please enter tags"
+        "placeholder": "Select existing labels or type custom tags"
+      },
+      "assignees": {
+        "label": "Assignees",
+        "placeholder": "Select humans or agents"
+      },
+      "mentions": {
+        "label": "Mentions",
+        "placeholder": "Select members to @mention"
+      },
+      "attachments": {
+        "title": "Attachments",
+        "hint": "Drag files here or click to select files",
+        "subHint": "Files will be uploaded after task is saved"
+      }
+    },
+    "simple": {
+      "title": {
+        "label": "Task Title",
+        "placeholder": "Please enter task title"
+      },
+      "description": {
+        "label": "Task Description",
+        "placeholder": "Please enter task description"
+      },
+      "estimatedHours": {
+        "label": "Estimated Hours"
       }
     }
   },
@@ -87,6 +113,7 @@
     }
   },
   "messages": {
+    "titleRequired": "Please enter task title",
     "draftSaved": "📝 Draft saved (debounced):",
     "draftLoaded": "Loaded previously saved draft",
     "editDraftLoaded": "Unsaved edit draft loaded",
@@ -108,4 +135,16 @@
     "formValidationError": "Please check form: {error}"
   },
   "unknownProject": "Unknown Project"
+  ,
+  "editStatus": {
+    "unknown": "Unknown",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "autoSave": "Auto save",
+    "lastSaved": "Last saved",
+    "unsavedWarning": "There are unsaved changes, please save in time",
+    "saveNow": "Save now (Ctrl+S)",
+    "saving": "Saving..."
+  }
 }

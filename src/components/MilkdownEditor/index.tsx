@@ -34,6 +34,7 @@ import Toolbar from './Toolbar'
 import { useKeyboardShortcuts } from './hooks'
 import { useThemeContext } from '../../contexts/ThemeContext'
 import { initTypewriterEffects, cleanupTypewriterEffects } from '../../themes/typewriter/effects'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 import '@milkdown/theme-nord/style.css'
 import '@milkdown/kit/prose/view/style/prosemirror.css' // ProseMirror基础样式 - 所见即所得必需
 import './themes.css'
@@ -88,8 +89,10 @@ export interface MilkdownEditorProps {
 const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
   value = '',
   onChange,
-  placeholder = '请输入任务内容...'
+  placeholder
 }) => {
+  const { tc } = useTranslation()
+  const resolvedPlaceholder = placeholder || tc('markdownEditor.placeholder')
   const { currentTheme, isTypewriterTheme } = useThemeContext()
   const containerRef = useRef<HTMLDivElement>(null)
   const currentValueRef = useRef(value)
@@ -121,8 +124,8 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
         ctx.set(defaultValueCtx, value || '')
 
         // 设置placeholder - 提升用户体验
-        if (placeholder) {
-          root.setAttribute('data-placeholder', placeholder)
+        if (resolvedPlaceholder) {
+          root.setAttribute('data-placeholder', resolvedPlaceholder)
         }
       })
       .use(commonmark) // 基础Markdown支持 - 所见即所得的核心
@@ -199,21 +202,23 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
 
   // 应用主题类名和打字机效果
   useEffect(() => {
-    if (containerRef.current) {
-      // 清除之前的主题类名
-      containerRef.current.className = containerRef.current.className
-        .replace(/theme-[\w-]+/g, '')
+    if (!containerRef.current || !currentTheme) {
+      return
+    }
 
-      // 添加当前主题类名
-      containerRef.current.classList.add(`theme-${currentTheme.id}`)
+    // 清除之前的主题类名
+    containerRef.current.className = containerRef.current.className
+      .replace(/theme-[\w-]+/g, '')
 
-      // 如果是打字机主题，初始化特效
-      if (isTypewriterTheme(currentTheme.id)) {
-        const effectsManager = initTypewriterEffects(containerRef.current, currentTheme)
+    // 添加当前主题类名
+    containerRef.current.classList.add(`theme-${currentTheme.id}`)
 
-        return () => {
-          effectsManager.destroy()
-        }
+    // 如果是打字机主题，初始化特效
+    if (isTypewriterTheme(currentTheme.id)) {
+      const effectsManager = initTypewriterEffects(containerRef.current, currentTheme)
+
+      return () => {
+        effectsManager.destroy()
       }
     }
   }, [currentTheme, isTypewriterTheme])

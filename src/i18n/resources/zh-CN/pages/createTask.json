@@ -64,7 +64,33 @@
       },
       "tags": {
         "label": "标签",
-        "placeholder": "请输入标签"
+        "placeholder": "可选择已有标签或直接输入自定义标签"
+      },
+      "assignees": {
+        "label": "指派对象",
+        "placeholder": "选择人类成员或Agent"
+      },
+      "mentions": {
+        "label": "@提及",
+        "placeholder": "选择要提及的成员"
+      },
+      "attachments": {
+        "title": "附件",
+        "hint": "拖拽文件到此处，或点击选择文件",
+        "subHint": "任务保存成功后会自动上传这些附件"
+      }
+    },
+    "simple": {
+      "title": {
+        "label": "任务标题",
+        "placeholder": "请输入任务标题"
+      },
+      "description": {
+        "label": "任务描述",
+        "placeholder": "请输入任务描述"
+      },
+      "estimatedHours": {
+        "label": "预计工时"
       }
     }
   },
@@ -87,6 +113,7 @@
     }
   },
   "messages": {
+    "titleRequired": "请输入任务标题",
     "draftSaved": "📝 草稿已保存 (防抖):",
     "draftLoaded": "已加载上次保存的草稿",
     "editDraftLoaded": "已加载未提交的编辑草稿",
@@ -108,4 +135,16 @@
     "formValidationError": "请检查表单：{error}"
   },
   "unknownProject": "未知项目"
+  ,
+  "editStatus": {
+    "unknown": "未知",
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "autoSave": "自动保存",
+    "lastSaved": "上次保存",
+    "unsavedWarning": "有未保存的内容，请及时保存",
+    "saveNow": "立即保存 (Ctrl+S)",
+    "saving": "正在保存..."
+  }
 }

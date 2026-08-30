@@ -1,0 +1,24 @@
+.agent-editor-form__header {
+  margin-bottom: 16px;
+}
+
+.agent-editor-form__header-space {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.agent-editor-form__title {
+  margin-bottom: 8px;
+}
+
+.agent-editor-form__description {
+  color: #666;
+}
+
+.agent-editor-form__workspace {
+  min-width: 260px;
+}
+
+.agent-editor-form__number {
+  width: 100%;
+}

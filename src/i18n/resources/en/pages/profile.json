@@ -20,6 +20,22 @@
     "profile": "Personal Info",
     "tokens": "API Tokens"
   },
+  "avatar": {
+    "title": "Built-in Avatars",
+    "description": "Only built-in avatars are supported. Custom image upload is disabled.",
+    "randomButton": "Randomize Avatar",
+    "preview": "Built-in avatar library preview",
+    "messages": {
+      "randomSuccess": "Avatar switched successfully",
+      "randomFailed": "Failed to switch avatar",
+      "selectSuccess": "Avatar updated successfully",
+      "selectFailed": "Failed to update avatar"
+    },
+    "selectButton": "Choose Avatar",
+    "modalTitle": "Choose Built-in Avatar",
+    "pageInfo": "Page {{current}} of {{total}}",
+    "totalCount": "{{total}} avatars available"
+  },
   "basicInfo": {
     "title": "Basic Information",
     "username": "Username",

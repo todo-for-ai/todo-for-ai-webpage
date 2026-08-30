@@ -66,24 +66,24 @@ const VariableDocs: React.FC = () => {
   ]
 
   const contextRulesVariables: VariableInfo[] = [
-    { variable: '${context_rules.global.all}', description: '所有全局上下文规则的内容', example: '### 规则1\n内容1\n\n### 规则2\n内容2', type: 'string' },
-    { variable: '${context_rules.global.count}', description: '全局上下文规则数量', example: '3', type: 'number' },
-    { variable: '${context_rules.global.names}', description: '全局上下文规则名称列表', example: '规则1, 规则2, 规则3', type: 'array' },
-    { variable: '${context_rules.global.by_name.规则名}', description: '按名称获取特定全局规则', example: '具体规则的内容', type: 'string' },
-    { variable: '${context_rules.project.all}', description: '当前项目所有上下文规则的内容', example: '### 项目规则1\n内容1', type: 'string' },
-    { variable: '${context_rules.project.count}', description: '项目上下文规则数量', example: '2', type: 'number' },
-    { variable: '${context_rules.project.names}', description: '项目上下文规则名称列表', example: '项目规则1, 项目规则2', type: 'array' },
-    { variable: '${context_rules.project.by_name.规则名}', description: '按名称获取特定项目规则', example: '具体项目规则的内容', type: 'string' },
-    { variable: '${context_rules.merged.all}', description: '全局和项目规则合并后的内容', example: '### 规则1\n内容1\n\n### 项目规则1\n内容2', type: 'string' },
-    { variable: '${context_rules.merged.count}', description: '合并后的规则总数', example: '5', type: 'number' },
-    { variable: '${context_rules.merged.names}', description: '合并后的规则名称列表', example: '规则1, 规则2, 项目规则1', type: 'array' },
-    { variable: '${context_rules.merged.by_name.规则名}', description: '按名称获取合并后的特定规则', example: '具体规则的内容', type: 'string' },
+    { variable: '${context_rules.global.all}', description: tp('variables.contextRules.global.all'), example: tp('examplesData.contextRules.global.all'), type: 'string' },
+    { variable: '${context_rules.global.count}', description: tp('variables.contextRules.global.count'), example: tp('examplesData.contextRules.global.count'), type: 'number' },
+    { variable: '${context_rules.global.names}', description: tp('variables.contextRules.global.names'), example: tp('examplesData.contextRules.global.names'), type: 'array' },
+    { variable: '${context_rules.global.by_name.rule_name}', description: tp('variables.contextRules.global.byName'), example: tp('examplesData.contextRules.global.byName'), type: 'string' },
+    { variable: '${context_rules.project.all}', description: tp('variables.contextRules.project.all'), example: tp('examplesData.contextRules.project.all'), type: 'string' },
+    { variable: '${context_rules.project.count}', description: tp('variables.contextRules.project.count'), example: tp('examplesData.contextRules.project.count'), type: 'number' },
+    { variable: '${context_rules.project.names}', description: tp('variables.contextRules.project.names'), example: tp('examplesData.contextRules.project.names'), type: 'array' },
+    { variable: '${context_rules.project.by_name.rule_name}', description: tp('variables.contextRules.project.byName'), example: tp('examplesData.contextRules.project.byName'), type: 'string' },
+    { variable: '${context_rules.merged.all}', description: tp('variables.contextRules.merged.all'), example: tp('examplesData.contextRules.merged.all'), type: 'string' },
+    { variable: '${context_rules.merged.count}', description: tp('variables.contextRules.merged.count'), example: tp('examplesData.contextRules.merged.count'), type: 'number' },
+    { variable: '${context_rules.merged.names}', description: tp('variables.contextRules.merged.names'), example: tp('examplesData.contextRules.merged.names'), type: 'array' },
+    { variable: '${context_rules.merged.by_name.rule_name}', description: tp('variables.contextRules.merged.byName'), example: tp('examplesData.contextRules.merged.byName'), type: 'string' },
   ]
 
   // 复制变量
   const handleCopyVariable = (variable: string) => {
     navigator.clipboard.writeText(variable)
-    message.success('已复制到剪贴板')
+    message.success(tp('messages.copySuccess'))
   }
 
   // 表格列定义
@@ -301,12 +301,12 @@ const VariableDocs: React.FC = () => {
             </div>
 
             <div>
-              <Title level={4}>注意事项</Title>
+              <Title level={4}>{tp('usage.extraNotes.title')}</Title>
               <ul>
-                <li>变量名区分大小写</li>
-                <li>如果变量值不存在，会显示默认占位符</li>
-                <li>时间类型的变量会自动格式化为本地时间</li>
-                <li>数组类型的变量会自动转换为逗号分隔的字符串</li>
+                <li>{tp('usage.extraNotes.item1')}</li>
+                <li>{tp('usage.extraNotes.item2')}</li>
+                <li>{tp('usage.extraNotes.item3')}</li>
+                <li>{tp('usage.extraNotes.item4')}</li>
               </ul>
             </div>
 

@@ -1,12 +1,17 @@
-import React, { useEffect, useCallback } from 'react'
-import { Form, Input, DatePicker, Select, Button, Space, Card, Row, Col, Checkbox, Breadcrumb, message, Typography } from 'antd'
+import React, { useEffect, useCallback, useState } from 'react'
+import { Form, Input, DatePicker, Select, Button, Space, Card, Row, Col, Checkbox, Breadcrumb, message, Typography, Upload } from 'antd'
 import { SaveOutlined, ArrowLeftOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons'
+import type { UploadFile } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import MilkdownEditor from '../components/MilkdownEditor'
 import ResizableContainer from '../components/ResizableContainer'
 import { TaskEditStatus } from '../components/TaskEditStatus'
 import { useCreateTask } from '../hooks/useCreateTask'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { taskLabelsApi } from '../api/taskLabels'
+import { projectsApi } from '../api/projects'
+import { organizationsApi } from '../api/organizations'
+import { organizationAgentsApi } from '../api/organizationAgents'
 
 const { Title, Paragraph } = Typography
 const { Option } = Select
@@ -15,6 +20,12 @@ const CreateTask: React.FC = () => {
   const { t, tp } = usePageTranslation('createTask')
   const navigate = useNavigate()
   const hook = useCreateTask(tp)
+  const [labelOptions, setLabelOptions] = useState<{ label: string; value: string }[]>([])
+  const [memberOptions, setMemberOptions] = useState<{ label: string; value: string }[]>([])
+  const [attachmentFiles, setAttachmentFiles] = useState<UploadFile[]>([])
+  const attachmentRawFiles = attachmentFiles
+    .map((item) => item.originFileObj)
+    .filter(Boolean) as File[]
 
   const {
     form,
@@ -38,6 +49,7 @@ const CreateTask: React.FC = () => {
     clearDraft,
     clearEditDraft,
   } = hook
+  const selectedProjectId = Form.useWatch('project_id', form)
 
   useEffect(() => {
     const pageTitle = isEditMode ? tp('title.edit') : tp('title.create')
@@ -49,19 +61,79 @@ const CreateTask: React.FC = () => {
     // Ctrl+S (Windows) or Cmd+S (Mac) - 保存并编辑
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
       event.preventDefault()
-      handleSubmitAndEdit()
+      handleSubmitAndEdit(attachmentRawFiles)
     }
     // Ctrl+Enter (Windows) or Cmd+Enter (Mac) - 提交表单
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault()
-      handleSubmit()
+      handleSubmit(attachmentRawFiles)
     }
-  }, [handleSubmitAndEdit, handleSubmit])
+  }, [handleSubmitAndEdit, handleSubmit, attachmentRawFiles])
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  useEffect(() => {
+    const loadTaskLabels = async () => {
+      if (!selectedProjectId) {
+        setLabelOptions([])
+        return
+      }
+      try {
+        const data = await taskLabelsApi.getTaskLabels({ project_id: Number(selectedProjectId) })
+        const options = (data.items || []).map((item) => ({
+          label: item.name,
+          value: item.name
+        }))
+        setLabelOptions(options)
+      } catch (error) {
+        console.error('Failed to load task labels:', error)
+      }
+    }
+
+    loadTaskLabels()
+  }, [selectedProjectId])
+
+  useEffect(() => {
+    const loadAssignableMembers = async () => {
+      if (!selectedProjectId) {
+        setMemberOptions([])
+        return
+      }
+      try {
+        const project = await projectsApi.getProject(Number(selectedProjectId))
+        if (!project.organization_id) {
+          setMemberOptions([])
+          return
+        }
+
+        const [humanData, agentData] = await Promise.all([
+          organizationsApi.getOrganizationMembers(project.organization_id),
+          organizationAgentsApi.getOrganizationAgentMembers(project.organization_id)
+        ])
+
+        const humans = (humanData.items || []).map((item) => ({
+          label: `${item.user?.full_name || item.user?.nickname || item.user?.username || `#${item.user_id}`} (Human)`,
+          value: `human:${item.user_id}`
+        }))
+
+        const agents = (agentData.items || [])
+          .filter((item) => item.status === 'active' && item.agent)
+          .map((item) => ({
+            label: `${item.agent?.name || `Agent #${item.agent_id}`} (Agent)`,
+            value: `agent:${item.agent_id}`
+          }))
+
+        setMemberOptions([...humans, ...agents])
+      } catch (error) {
+        console.error('Failed to load assignable members:', error)
+        setMemberOptions([])
+      }
+    }
+    loadAssignableMembers()
+  }, [selectedProjectId])
 
   return (
     <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1600px' }}>
@@ -115,7 +187,7 @@ const CreateTask: React.FC = () => {
       />
 
       <Card>
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={() => handleSubmit(attachmentRawFiles)}>
           <ResizableContainer defaultWidth={1000} minWidth={600} maxWidth={1400} storageKey="taskEditor_contentWidth">
             <Card size="small" style={{ marginBottom: '16px' }}>
               <Row gutter={16}>
@@ -155,7 +227,7 @@ const CreateTask: React.FC = () => {
                         else { debouncedSaveEditDraft(newValue); debouncedAutoSave() }
                       }
                     }}
-                    onSave={handleSubmitAndEdit}
+                    onSave={() => handleSubmitAndEdit(attachmentRawFiles)}
                     autoHeight={true}
                     minHeight={300}
                     hideToolbar={false}
@@ -194,7 +266,12 @@ const CreateTask: React.FC = () => {
                 </Col>
                 <Col span={6}>
                   <Form.Item label={tp('form.settings.tags.label')} name="tags">
-                    <Select mode="tags" placeholder={tp('form.settings.tags.placeholder')} style={{ width: '100%' }} />
+                    <Select
+                      mode="tags"
+                      placeholder={tp('form.settings.tags.placeholder')}
+                      style={{ width: '100%' }}
+                      options={labelOptions}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
@@ -219,6 +296,47 @@ const CreateTask: React.FC = () => {
                   </Form.Item>
                 </Col>
               </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label={tp('form.settings.assignees.label')} name="assignees">
+                    <Select
+                      mode="multiple"
+                      placeholder={tp('form.settings.assignees.placeholder')}
+                      style={{ width: '100%' }}
+                      options={memberOptions}
+                      allowClear
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label={tp('form.settings.mentions.label')} name="mentions">
+                    <Select
+                      mode="multiple"
+                      placeholder={tp('form.settings.mentions.placeholder')}
+                      style={{ width: '100%' }}
+                      options={memberOptions}
+                      allowClear
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
+            <Card title={tp('form.attachments.title')} size="small" style={{ marginBottom: '24px' }}>
+              <Upload.Dragger
+                multiple
+                beforeUpload={(file) => {
+                  setAttachmentFiles((prev) => [...prev, file])
+                  return false
+                }}
+                onRemove={(file) => {
+                  setAttachmentFiles((prev) => prev.filter((item) => item.uid !== file.uid))
+                }}
+                fileList={attachmentFiles}
+              >
+                <p>{tp('form.attachments.hint')}</p>
+                <p>{tp('form.attachments.subHint')}</p>
+              </Upload.Dragger>
             </Card>
           </ResizableContainer>
 

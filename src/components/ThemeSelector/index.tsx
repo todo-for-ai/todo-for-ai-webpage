@@ -84,22 +84,22 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             <div 
               className="color-block" 
               style={{ backgroundColor: theme.colors.primary }}
-              title="主色"
+              title={t('themes.selector.primaryColor')}
             />
             <div 
               className="color-block" 
               style={{ backgroundColor: theme.colors.editorBackground }}
-              title="背景色"
+              title={t('themes.selector.backgroundColor')}
             />
             <div 
               className="color-block" 
               style={{ backgroundColor: theme.colors.textPrimary }}
-              title="文字色"
+              title={t('themes.selector.textColor')}
             />
             <div 
               className="color-block" 
               style={{ backgroundColor: theme.colors.codeText }}
-              title="代码色"
+              title={t('themes.selector.codeColor')}
             />
           </div>
         </div>
@@ -245,14 +245,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           <div className="theme-preview-modal">
             <div className="preview-info" style={{ marginBottom: '16px' }}>
               <Space direction="vertical" size="small">
-                <Text><strong>主题名称:</strong> {getThemeName(previewTheme)}</Text>
-                <Text><strong>主题描述:</strong> {previewTheme.description}</Text>
-                <Text><strong>主题类型:</strong> {previewTheme.isDark ? '深色主题' : '浅色主题'}</Text>
+                <Text><strong>{t('themes.selector.themeName')}:</strong> {getThemeName(previewTheme)}</Text>
+                <Text><strong>{t('themes.selector.themeDescription')}:</strong> {previewTheme.description}</Text>
+                <Text><strong>{t('themes.selector.themeType')}:</strong> {previewTheme.isDark ? t('themes.selector.darkTheme') : t('themes.selector.lightTheme')}</Text>
               </Space>
             </div>
             
             <div className="preview-colors">
-              <Title level={5}>色彩方案</Title>
+              <Title level={5}>{t('themes.selector.colorPalette')}</Title>
               <div className="color-palette">
                 {Object.entries(previewTheme.colors).slice(0, 8).map(([key, color]) => (
                   <div key={key} className="color-item">
@@ -267,7 +267,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             </div>
             
             <div className="preview-sample" style={{ marginTop: '16px' }}>
-              <Title level={5}>样式预览</Title>
+              <Title level={5}>{t('themes.selector.stylePreview')}</Title>
               <div 
                 className="sample-content"
                 style={{

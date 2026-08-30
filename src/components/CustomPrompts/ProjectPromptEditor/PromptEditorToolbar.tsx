@@ -25,17 +25,17 @@ export const PromptEditorToolbar: React.FC<PromptEditorToolbarProps> = ({
           icon={<SaveOutlined />}
           onClick={onSave}
         >
-          {tp('actions.save')}
+          {tp('buttons.save')}
         </Button>
         <Button icon={<ReloadOutlined />} onClick={onReset}>
-          {tp('actions.reset')}
+          {tp('buttons.reset')}
         </Button>
         <Button icon={<EyeOutlined />} onClick={onPreview}>
-          {tp('actions.preview')}
+          {tp('buttons.preview')}
         </Button>
         {onVariableDocsClick && (
           <Button icon={<PlusOutlined />} onClick={onVariableDocsClick}>
-            {tp('actions.variableDocs')}
+            {tp('variables.viewDocs')}
           </Button>
         )}
       </Space>

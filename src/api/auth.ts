@@ -43,6 +43,37 @@ export interface UpdateUserStatusRequest {
   status: 'active' | 'inactive' | 'suspended'
 }
 
+export interface SharedOrganizationSummary {
+  id: number
+  name: string
+  slug: string
+  status: 'active' | 'archived' | string
+  target_roles: string[]
+  viewer_roles: string[]
+}
+
+export interface UserProfilePayload {
+  id: number
+  username?: string
+  nickname?: string
+  full_name?: string
+  name?: string
+  avatar_url?: string
+  bio?: string
+  email?: string
+  role?: 'admin' | 'user' | 'viewer'
+  status?: 'active' | 'inactive' | 'suspended'
+  timezone?: string
+  locale?: string
+  created_at?: string
+  updated_at?: string
+  last_active_at?: string
+  is_self: boolean
+  view_mode: 'self' | 'admin' | 'public'
+  shared_organization_count: number
+  shared_organizations: SharedOrganizationSummary[]
+}
+
 export class AuthAPI {
   /**
    * 启动登录流程（默认GitHub）
@@ -129,6 +160,13 @@ export class AuthAPI {
    */
   static async getUser(userId: number): Promise<User> {
     return await apiClient.get<User>(`/auth/users/${userId}`)
+  }
+
+  /**
+   * 获取用户资料（自己/管理员为完整视图，其他人为公开视图）
+   */
+  static async getUserProfile(userId: number): Promise<UserProfilePayload> {
+    return await apiClient.get<UserProfilePayload>(`/auth/users/${userId}`)
   }
 
   /**

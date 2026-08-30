@@ -19,8 +19,9 @@ export interface CustomPromptsConfig {
   taskPromptButtons: TaskPromptButton[]
 }
 
-// 默认的项目提示词模板
-const DEFAULT_PROJECT_TEMPLATE = `请帮我执行项目"\${project.name}"中的所有待办任务：
+// 默认项目模板（仅作为i18n失效时兜底）
+const DEFAULT_PROJECT_TEMPLATE_FALLBACK: Record<'zh-CN' | 'en', string> = {
+  'zh-CN': `请帮我执行项目"\${project.name}"中的所有待办任务：
 
 **项目信息**:
 - 项目名称: \${project.name}
@@ -43,11 +44,54 @@ const DEFAULT_PROJECT_TEMPLATE = `请帮我执行项目"\${project.name}"中的�
 **任务概览**:
 \${tasks.list}
 
-请开始执行这个项目的任务，并在每个任务完成后提交反馈。`
+请开始执行这个项目的任务，并在每个任务完成后提交反馈。`,
+  'en': `Please help me execute all pending tasks in project "\${project.name}":
+
+**Project Information**:
+- Project Name: \${project.name}
+- Project Description: \${project.description}
+- GitHub Repository: \${project.github_repo}
+- Project Context: \${project.context}
+
+**Number of Tasks to Execute**: \${tasks.count}
+
+**Execution Guidelines**:
+1. Please use MCP tools to connect to Todo system: \${system.url}
+2. Use get_project_tasks_by_name tool to get project task list:
+   - Project Name: "\${project.name}"
+   - Status Filter: ["todo", "in_progress", "review"]
+3. Execute tasks one by one in order of creation time
+4. For each task, use get_task_by_id to get detailed information
+5. After completing a task, use submit_task_feedback to submit feedback
+6. Continue to the next task until all tasks are completed
+
+**Task Overview**:
+\${tasks.list}
+
+Please start executing the tasks in this project and submit feedback after each task is completed.`
+}
+
+const resolveLanguage = (language?: string): 'zh-CN' | 'en' => {
+  const raw = (language || i18n.language || 'zh-CN').toLowerCase()
+  return raw.startsWith('zh') ? 'zh-CN' : 'en'
+}
+
+const getDefaultProjectTemplate = (language?: string): string => {
+  const resolvedLanguage = resolveLanguage(language)
+  const translated = i18n.t('customPrompts:projectPrompts.defaultTemplate', {
+    lng: resolvedLanguage
+  })
+
+  if (typeof translated === 'string' && translated !== 'projectPrompts.defaultTemplate') {
+    return translated
+  }
+
+  return DEFAULT_PROJECT_TEMPLATE_FALLBACK[resolvedLanguage]
+}
 
 // 根据语言获取默认任务提示词按钮
 const getDefaultTaskButtons = (language?: string): TaskPromptButton[] => {
-  const currentLanguage = language || i18n.language || 'zh-CN'
+  const currentLanguage = resolveLanguage(language)
   
   if (currentLanguage === 'en') {
     return [
@@ -91,13 +135,16 @@ class CustomPromptsService {
    * 从本地存储加载配置
    */
   private loadConfig(): CustomPromptsConfig {
+    const defaultProjectTemplate = getDefaultProjectTemplate()
+    const defaultTaskButtons = getDefaultTaskButtons()
+
     try {
       const stored = localStorage.getItem('custom-prompts-config')
       if (stored) {
         const parsed = JSON.parse(stored)
         return {
-          projectPromptTemplate: parsed.projectPromptTemplate || DEFAULT_PROJECT_TEMPLATE,
-          taskPromptButtons: parsed.taskPromptButtons || getDefaultTaskButtons()
+          projectPromptTemplate: parsed.projectPromptTemplate || defaultProjectTemplate,
+          taskPromptButtons: parsed.taskPromptButtons || defaultTaskButtons
         }
       }
     } catch (error) {
@@ -105,8 +152,8 @@ class CustomPromptsService {
     }
 
     return {
-      projectPromptTemplate: DEFAULT_PROJECT_TEMPLATE,
-      taskPromptButtons: [...getDefaultTaskButtons()]
+      projectPromptTemplate: defaultProjectTemplate,
+      taskPromptButtons: [...defaultTaskButtons]
     }
   }
 
@@ -216,9 +263,10 @@ class CustomPromptsService {
    * 重置为默认配置
    */
   public async resetToDefaults(): Promise<void> {
+    const language = resolveLanguage()
     this.config = {
-      projectPromptTemplate: DEFAULT_PROJECT_TEMPLATE,
-      taskPromptButtons: [...getDefaultTaskButtons()]
+      projectPromptTemplate: getDefaultProjectTemplate(language),
+      taskPromptButtons: [...getDefaultTaskButtons(language)]
     }
     this.saveConfig()
 

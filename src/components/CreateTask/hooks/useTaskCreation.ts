@@ -4,6 +4,7 @@ import { message } from 'antd'
 import { useTaskStore } from '../../../stores/useTaskStore'
 import { useProjectStore } from '../../../stores/useProjectStore'
 import { analytics } from '../../../utils/analytics'
+import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 
 export interface TaskFormData {
   title: string
@@ -17,13 +18,14 @@ export interface TaskFormData {
 
 export const useTaskCreation = () => {
   const navigate = useNavigate()
+  const { tp } = usePageTranslation('createTask')
   const [loading, setLoading] = useState(false)
   const { createTask } = useTaskStore()
   const { currentProject } = useProjectStore()
 
   const handleSubmit = useCallback(async (formData: TaskFormData, projectId: number) => {
     if (!formData.title.trim()) {
-      message.error('请输入任务标题')
+      message.error(tp('messages.titleRequired'))
       return false
     }
 
@@ -42,7 +44,7 @@ export const useTaskCreation = () => {
       }
 
       await createTask(taskData)
-      message.success('任务创建成功')
+      message.success(tp('messages.createSuccess'))
 
       // 追踪创建任务事件
       analytics.task.create(projectId.toString())
@@ -51,12 +53,12 @@ export const useTaskCreation = () => {
       return true
     } catch (error) {
       console.error('Failed to create task:', error)
-      message.error('任务创建失败')
+      message.error(tp('messages.createFailed'))
       return false
     } finally {
       setLoading(false)
     }
-  }, [navigate, createTask])
+  }, [navigate, createTask, tp])
 
   return {
     loading,

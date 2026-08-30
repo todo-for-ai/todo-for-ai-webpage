@@ -49,12 +49,23 @@ cp .env.example .env
 # 编辑 .env 文件配置您的设置
 ```
 
-4. **启动开发服务器**
+4. **启动开发服务器（推荐 PM2 常驻）**
 ```bash
-npm run dev
+npm run pm2:start
 ```
 
 应用将在 `http://localhost:50111` 上运行
+
+常用 PM2 命令：
+
+```bash
+npm run pm2:logs
+npm run pm2:restart
+npm run pm2:stop
+npm run pm2:delete
+```
+
+说明：脚本已默认使用项目内 `PM2_HOME=.pm2`，可避免系统目录权限导致的 PM2 启动失败。
 
 ## 🔧 配置
 
@@ -195,6 +206,11 @@ todo-for-ai-webpage/
 ```bash
 # 开发
 npm run dev              # 启动开发服务器
+npm run pm2:start        # 使用 PM2 启动开发服务器（常驻）
+npm run pm2:logs         # 查看 PM2 日志
+npm run pm2:restart      # 重启 PM2 开发服务
+npm run pm2:stop         # 停止 PM2 开发服务
+npm run pm2:delete       # 删除 PM2 开发服务
 npm run build           # 生产构建
 npm run build:no-check  # 跳过 TypeScript 检查的构建
 npm run preview         # 预览生产构建

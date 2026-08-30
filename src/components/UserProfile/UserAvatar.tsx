@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Avatar, Dropdown, Button } from 'antd'
-import { UserOutlined, LogoutOutlined, SettingOutlined, UserSwitchOutlined, FileTextOutlined, PushpinOutlined, EditOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, SettingOutlined, UserSwitchOutlined, FileTextOutlined, PushpinOutlined, EditOutlined, TeamOutlined, ApiOutlined, AppstoreOutlined, BellOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { pinsApi } from '../../api/pins'
 import PinManager from '../PinManager'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
+import { getStoredAvatarToken, resolveUserAvatarSrc } from '../../utils/defaultAvatars'
 
 interface UserAvatarProps {
   size?: number | 'small' | 'default' | 'large'
@@ -21,11 +22,16 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   placement = 'bottomRight',
   onPinUpdate
 }) => {
+  const avatarBorderStyle = {
+    border: '1px solid #d9d9d9',
+    backgroundColor: '#fff',
+  }
+
   const { user, logout, isAuthenticated } = useAuthStore()
   const navigate = useNavigate()
   const [pinManagerVisible, setPinManagerVisible] = useState(false)
   const [hasPins, setHasPins] = useState(false)
-  const { tn } = useTranslation()
+  const { tn, tc } = useTranslation()
 
   // 检查是否有Pin项目
   useEffect(() => {
@@ -49,7 +55,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   if (!isAuthenticated || !user) {
     return (
       <Button type="primary" href="/todo-for-ai/pages/login">
-        登录
+        {tc('actions.login')}
       </Button>
     )
   }
@@ -128,12 +134,44 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
         navigate('/todo-for-ai/pages/custom-prompts')
       },
     },
+    {
+      key: 'rule-marketplace',
+      icon: <AppstoreOutlined />,
+      label: tn('userMenu.rules'),
+      onClick: () => {
+        navigate('/todo-for-ai/pages/rule-marketplace')
+      },
+    },
+    {
+      key: 'organizations',
+      icon: <TeamOutlined />,
+      label: tn('userMenu.organizations'),
+      onClick: () => {
+        navigate('/todo-for-ai/pages/organizations')
+      },
+    },
+    {
+      key: 'agents',
+      icon: <ApiOutlined />,
+      label: tn('userMenu.agents'),
+      onClick: () => {
+        navigate('/todo-for-ai/pages/agents')
+      },
+    },
     ...(hasPins ? [{
       key: 'pin-manager',
       icon: <PushpinOutlined />,
       label: tn('userMenu.pinManager'),
       onClick: handleOpenPinManager,
     }] : []),
+    {
+      key: 'notifications',
+      icon: <BellOutlined />,
+      label: tn('userMenu.notifications'),
+      onClick: () => {
+        navigate('/todo-for-ai/pages/notifications')
+      },
+    },
     {
       key: 'settings',
       icon: <UserSwitchOutlined />,
@@ -164,9 +202,14 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   const avatarElement = (
     <Avatar
       size={size}
-      src={user.avatar_url}
+      src={resolveUserAvatarSrc(
+        getStoredAvatarToken(user.id)
+          || (typeof user.preferences?.avatar_token === 'string' ? user.preferences.avatar_token : null)
+          || user.avatar_url,
+        `${user.id}-${user.username || user.email || 'user'}`
+      )}
       icon={<UserOutlined />}
-      style={{ cursor: 'pointer' }}
+      style={{ ...avatarBorderStyle, cursor: 'pointer' }}
     />
   )
 

@@ -3,6 +3,7 @@ import { Select, Spin } from 'antd'
 import { ProjectOutlined } from '@ant-design/icons'
 import { projectsApi } from '../../api/projects'
 import type { Project } from '../../api/projects'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 export interface ProjectSelectorProps {
   value?: number | null
@@ -31,7 +32,7 @@ interface ProjectOption {
 const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   value,
   onChange,
-  placeholder = '请选择项目',
+  placeholder,
   allowClear = true,
   style,
   size = 'middle',
@@ -41,11 +42,13 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   filterOption = false,
   simpleMode = false
 }) => {
+  const { tc } = useTranslation()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   // 用于存储额外加载的项目（当value不在当前项目列表中时）
   const [additionalProject, setAdditionalProject] = useState<Project | null>(null)
+  const resolvedPlaceholder = placeholder || tc('projectSelector.placeholder')
 
   // 加载项目列表
   const loadProjects = async () => {
@@ -56,8 +59,9 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     try {
       const response = await projectsApi.getProjects({
         page: 1,
-        per_page: 1000, // 加载更多项目以支持搜索
-        status: 'active' // 只加载活跃项目
+        per_page: 1000, // 后端会限制最大每页数量
+        status: 'active', // 只加载活跃项目
+        include_stats: false
       })
 
       let projectList: Project[] = []
@@ -247,7 +251,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
             borderRadius: '2px',
             marginLeft: '4px'
           }}>
-            已归档
+            {tc('projectSelector.archived')}
           </span>
         )}
       </div>
@@ -296,7 +300,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     <Select
       value={value}
       onChange={handleChange}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       allowClear={allowClear}
       style={style}
       size={size}
@@ -315,12 +319,12 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         loading || externalLoading ? (
           <div style={{ textAlign: 'center', padding: '8px' }}>
             <Spin size="small" />
-            <span style={{ marginLeft: '8px' }}>加载中...</span>
+            <span style={{ marginLeft: '8px' }}>{tc('status.loading')}</span>
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '8px', color: '#999' }}>
             <ProjectOutlined style={{ marginRight: '4px' }} />
-            {searchValue ? '未找到匹配的项目' : '暂无项目'}
+            {searchValue ? tc('projectSelector.noMatches') : tc('projectSelector.noOptions')}
           </div>
         )
       }

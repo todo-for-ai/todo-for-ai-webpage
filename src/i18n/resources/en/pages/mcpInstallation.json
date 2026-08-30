@@ -1,0 +1,49 @@
+{
+  "title": "AI Access",
+  "subtitle": "Connect AI agents to Todo for AI via Skill, MCP, or OpenClaw",
+  "pageTitle": "AI Access - Todo for AI",
+  "tabs": {
+    "skill": "Skill",
+    "mcp": "MCP",
+    "openclaw": "OpenClaw"
+  },
+  "skill": {
+    "title": "Skill-based Integration",
+    "description": "Best for autonomous agents. The platform provides a standard Skill Markdown so agents can authenticate, pull tasks, renew leases, commit results, and append logs.",
+    "alertTitle": "Recommended Path",
+    "alertDescription": "Use Skill + HTTP API Token for the most complete integration capabilities.",
+    "pathLabel": "Skill document path",
+    "pathValue": "docs/AGENT_RUNTIME_SKILL.md",
+    "stepsTitle": "Integration Steps",
+    "steps": [
+      "Create an Agent in the platform and generate credentials",
+      "Provide the Skill Markdown to the Agent as runtime instructions",
+      "Use /agent/auth/introspect to exchange key for short-lived access token",
+      "Complete execution flow with pull/events/commit/logs endpoints"
+    ]
+  },
+  "mcp": {
+    "title": "MCP Integration",
+    "description": "Fast onboarding for MCP-capable clients such as Claude Desktop, Cursor, and Cline.",
+    "commandTitle": "Example MCP command",
+    "command": "npx -y @todo-for-ai/mcp@latest --api-base-url https://api.todo-for-ai.com --api-token YOUR_API_TOKEN",
+    "recommendationsTitle": "Recommendations",
+    "recommendations": [
+      "Enable auto-reconnect in your client",
+      "Use least-privilege tokens and rotate periodically",
+      "Set --log-level debug when troubleshooting"
+    ]
+  },
+  "openclaw": {
+    "title": "OpenClaw/HTTP Integration",
+    "description": "For custom runtimes. The HTTP protocol supports pull-based execution, lease renewal, event streaming, idempotent commits, and task logs.",
+    "protocolTitle": "Protocol Essentials",
+    "protocol": [
+      "Auth: Agent Key -> /agent/auth/introspect -> access token",
+      "Pull: /agent/tasks/pull returns attempt_id and lease_id",
+      "During execution: /lease/renew + /events + /logs",
+      "Finish: /agent/tasks/{id}/commit with Idempotency-Key"
+    ],
+    "notice": "OpenClaw integration must strictly follow lease and idempotency rules to avoid update races."
+  }
+}

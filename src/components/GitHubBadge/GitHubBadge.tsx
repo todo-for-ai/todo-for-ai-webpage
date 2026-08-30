@@ -47,6 +47,11 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
   const loadRepoInfo = useCallback(async () => {
     if (!(showStars || showForks)) return
 
+    const cached = githubService.getCachedRepoInfo(finalOwner, finalRepo, true)
+    if (cached) {
+      setRepoInfo(cached)
+    }
+
     try {
       setLoading(true)
       setError(null)
@@ -55,10 +60,15 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
       setError(null) // 成功后清除错误
     } catch (err) {
       console.error('Failed to load GitHub repo info:', err)
-      // 注意：即使出错，githubService 可能已经返回了缓存数据
-      // 所以这里不一定要显示错误，只有在真的没有数据时才显示
-      const errorMessage = err instanceof Error ? err.message : '获取仓库信息失败'
-      setError(errorMessage)
+      // 失败时回退到最近缓存，避免出现空态错误文案
+      const fallback = githubService.getCachedRepoInfo(finalOwner, finalRepo, true)
+      if (fallback) {
+        setRepoInfo(fallback)
+        setError(null)
+      } else {
+        const errorMessage = err instanceof Error ? err.message : tc('github.fetchFailed')
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -96,7 +106,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     if (!repoInfo) return ''
     // 如果是todo-for-ai仓库，优先使用i18n翻译
     if (finalOwner === 'todo-for-ai' && finalRepo === 'todo-for-ai') {
-      return tc('login.repoDescription') || repoInfo.description
+      return tc('github.repoDescription') || repoInfo.description
     }
     return repoInfo.description
   }
@@ -166,7 +176,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
       return (
         <Space size="small">
           <LoadingOutlined />
-          <span>加载中...</span>
+          <span>{tc('status.loading')}</span>
         </Space>
       )
     }

@@ -1,5 +1,6 @@
 {
   "title": "Project Details",
+  "subtitle": "View project overview, tasks, members, and context rules",
   "pageTitle": "Project Details - Todo for AI",
   "breadcrumb": {
     "projectManagement": "Project Management"
@@ -45,6 +46,50 @@
     },
     "projectDescription": {
       "title": "Project Description"
+    },
+    "tabs": {
+      "tasks": "Task List",
+      "overview": "Overview",
+      "contextRules": "Context Rules",
+      "members": "Members"
+    }
+  },
+  "members": {
+    "table": {
+      "user": "User",
+      "type": "Type",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "entity": {
+      "human": "Human",
+      "agent": "Agent"
+    },
+    "form": {
+      "emailPlaceholder": "Invite by user email",
+      "emailRequired": "Please enter user email",
+      "humanOnly": "human only"
+    },
+    "actions": {
+      "invite": "Invite Member",
+      "remove": "Remove"
+    },
+    "confirm": {
+      "removeTitle": "Remove this member?",
+      "removeDescription": "This member will lose project access.",
+      "ok": "Confirm",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "loadFailed": "Failed to load project members",
+      "inviteSuccess": "Project member invited successfully",
+      "inviteFailed": "Failed to invite project member",
+      "updateSuccess": "Project member updated successfully",
+      "updateFailed": "Failed to update project member",
+      "removeSuccess": "Project member removed successfully",
+      "removeFailed": "Failed to remove project member",
+      "loadAgentsFailed": "Failed to load agents"
     }
   },
   "tasks": {
@@ -127,6 +172,14 @@
         "changePriority": "Change Priority", 
         "delete": "Batch Delete",
         "clearSelection": "Clear Selection",
+        "noSelectionForDelete": "Please select tasks to delete first",
+        "noSelectionForStatus": "Please select tasks to change first",
+        "deleteConfirmTitle": "Batch Delete Confirmation",
+        "deleteConfirmDescription": "Are you sure to delete {{count}} selected tasks? This action cannot be undone.",
+        "confirmDelete": "Delete",
+        "statusChangeConfirmTitle": "Batch Status Change Confirmation",
+        "statusChangeConfirmDescription": "Are you sure to change status of {{count}} selected tasks to \"{{status}}\"?",
+        "confirmStatusChange": "Confirm Change",
         "deleteConfirm": {
           "title": "Are you sure you want to delete these tasks?",
           "description": "{{count}} tasks will be deleted. This action cannot be undone"
@@ -157,7 +210,9 @@
     },
     "messages": {
       "refreshSuccess": "Task list and statistics refreshed",
-      "refreshError": "Refresh failed"
+      "refreshError": "Refresh failed",
+      "statusUpdateSuccess": "Task status updated successfully",
+      "deleteSuccess": "Task deleted successfully"
     },
     "autoRefresh": {
       "enable": "Auto Refresh",

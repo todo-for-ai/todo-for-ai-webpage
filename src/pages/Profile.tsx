@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Card,
   Tabs,
@@ -9,28 +9,51 @@ import {
   Typography,
   Space,
   Divider,
-  message,
+  App,
   Row,
-  Col
+  Col,
+  Modal,
+  Pagination,
 } from 'antd'
 import {
   UserOutlined,
   KeyOutlined,
   EditOutlined,
-  SaveOutlined
+  SaveOutlined,
+  ReloadOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../stores/useAuthStore'
 import APITokenManager from '../components/APITokenManager'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useSearchParams } from 'react-router-dom'
+import {
+  clearStoredAvatarToken,
+  getBuiltinAvatarOptions,
+  getStoredAvatarToken,
+  pickRandomBuiltinAvatar,
+  resolveUserAvatarSrc,
+  setStoredAvatarToken,
+} from '../utils/defaultAvatars'
 
 const { Title, Text, Paragraph } = Typography
 const { TabPane } = Tabs
+const AVATAR_PAGE_SIZE = 60
+const AVATAR_BORDER_STYLE = {
+  border: '1px solid #d9d9d9',
+  backgroundColor: '#fff',
+}
 
 const Profile = () => {
-  const { user, updateUser, isLoading } = useAuthStore()
+  const { user, updateUser } = useAuthStore()
+  const { message: messageApi } = App.useApp()
   const [form] = Form.useForm()
   const [isEditing, setIsEditing] = useState(false)
+  const [isAvatarUpdating, setIsAvatarUpdating] = useState(false)
+  const [isProfileSaving, setIsProfileSaving] = useState(false)
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false)
+  const [avatarPage, setAvatarPage] = useState(1)
+  const [localAvatarToken, setLocalAvatarToken] = useState<string | null>(null)
   const { tp } = usePageTranslation('profile')
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -44,7 +67,60 @@ const Profile = () => {
   }
 
   const [activeTab, setActiveTab] = useState(getInitialTab())
+  useEffect(() => {
+    if (!user?.id) {
+      setLocalAvatarToken(null)
+      return
+    }
+    setLocalAvatarToken(getStoredAvatarToken(user.id))
+  }, [user?.id])
 
+  const avatarIdentitySeed = user
+    ? `${user.id}-${user.username || user.email || 'user'}`
+    : 'guest-user'
+  const preferenceAvatarToken = typeof user?.preferences?.avatar_token === 'string'
+    ? user.preferences.avatar_token
+    : null
+  const currentAvatarValue = localAvatarToken || preferenceAvatarToken || user?.avatar_url
+  const builtinAvatarOptions = useMemo(
+    () => getBuiltinAvatarOptions(avatarIdentitySeed),
+    [avatarIdentitySeed]
+  )
+  const avatarSrc = useMemo(
+    () => resolveUserAvatarSrc(currentAvatarValue, avatarIdentitySeed),
+    [currentAvatarValue, avatarIdentitySeed]
+  )
+  const avatarPageCount = Math.max(1, Math.ceil(builtinAvatarOptions.length / AVATAR_PAGE_SIZE))
+  const avatarPreviewOptions = useMemo(
+    () => builtinAvatarOptions.slice(0, 12),
+    [builtinAvatarOptions]
+  )
+  const pagedAvatarOptions = useMemo(() => {
+    const start = (avatarPage - 1) * AVATAR_PAGE_SIZE
+    return builtinAvatarOptions.slice(start, start + AVATAR_PAGE_SIZE)
+  }, [avatarPage, builtinAvatarOptions])
+
+  useEffect(() => {
+    if (avatarPage > avatarPageCount) {
+      setAvatarPage(avatarPageCount)
+    }
+  }, [avatarPage, avatarPageCount])
+
+  useEffect(() => {
+    if (!isAvatarPickerOpen) {
+      return
+    }
+
+    const selectedIndex = builtinAvatarOptions.findIndex((option) => option.token === currentAvatarValue)
+    if (selectedIndex < 0) {
+      return
+    }
+
+    const selectedPage = Math.floor(selectedIndex / AVATAR_PAGE_SIZE) + 1
+    if (selectedPage !== avatarPage) {
+      setAvatarPage(selectedPage)
+    }
+  }, [avatarPage, builtinAvatarOptions, currentAvatarValue, isAvatarPickerOpen])
 
   useEffect(() => {
     if (user) {
@@ -96,15 +172,94 @@ const Profile = () => {
 
   const handleUpdateProfile = async (values: any) => {
     try {
+      setIsProfileSaving(true)
       await updateUser(values)
-      message.success(tp('messages.updateSuccess'))
+      messageApi.success(tp('messages.updateSuccess'))
       setIsEditing(false)
     } catch (error: any) {
-      message.error(error.response?.data?.error || tp('messages.updateFailed'))
+      messageApi.error(error.response?.data?.error || tp('messages.updateFailed'))
+    } finally {
+      setIsProfileSaving(false)
     }
   }
 
+  const updateAvatarToken = useCallback(async (
+    token: string,
+    successMessageKey: string,
+    failureMessageKey: string
+  ): Promise<boolean> => {
+    if (!user) {
+      return false
+    }
 
+    const previousLocalToken = localAvatarToken
+
+    try {
+      setIsAvatarUpdating(true)
+      if (user.id) {
+        setStoredAvatarToken(user.id, token)
+      }
+      setLocalAvatarToken(token)
+
+      await updateUser({
+        preferences: {
+          avatar_token: token,
+        },
+      })
+
+      messageApi.success(tp(successMessageKey))
+      return true
+    } catch (error) {
+      console.error('Failed to update avatar:', error)
+
+      if (user.id) {
+        if (previousLocalToken) {
+          setStoredAvatarToken(user.id, previousLocalToken)
+        } else {
+          clearStoredAvatarToken(user.id)
+        }
+      }
+      setLocalAvatarToken(previousLocalToken)
+
+      messageApi.error(tp(failureMessageKey))
+      return false
+    } finally {
+      setIsAvatarUpdating(false)
+    }
+  }, [clearStoredAvatarToken, localAvatarToken, messageApi, tp, updateUser, user])
+
+  const handleRandomAvatar = useCallback(async () => {
+    if (!user) {
+      return
+    }
+
+    const selected = pickRandomBuiltinAvatar(builtinAvatarOptions, currentAvatarValue)
+    if (!selected) {
+      return
+    }
+
+    await updateAvatarToken(
+      selected.token,
+      'avatar.messages.randomSuccess',
+      'avatar.messages.randomFailed'
+    )
+  }, [builtinAvatarOptions, currentAvatarValue, updateAvatarToken, user])
+
+  const handleSelectAvatar = useCallback(async (token: string) => {
+    if (token === currentAvatarValue) {
+      setIsAvatarPickerOpen(false)
+      return
+    }
+
+    const updated = await updateAvatarToken(
+      token,
+      'avatar.messages.selectSuccess',
+      'avatar.messages.selectFailed'
+    )
+    if (updated) {
+      setIsAvatarPickerOpen(false)
+    }
+  }, [currentAvatarValue, updateAvatarToken])
 
   if (!user) {
     return <div>{tp('messages.loading')}</div>
@@ -124,19 +279,74 @@ const Profile = () => {
             <div style={{ textAlign: 'center' }}>
               <Avatar
                 size={120}
-                src={user.avatar_url}
+                src={avatarSrc}
                 icon={<UserOutlined />}
-                style={{ marginBottom: 16 }}
+                style={{ ...AVATAR_BORDER_STYLE, marginBottom: 16 }}
               />
 
-              
+              <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 12 }}>
+                <Text strong>{tp('avatar.title')}</Text>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {tp('avatar.description')}
+                </Text>
+                <Space wrap size={8} style={{ justifyContent: 'center' }}>
+                  <Button
+                    icon={<AppstoreOutlined />}
+                    onClick={() => setIsAvatarPickerOpen(true)}
+                    disabled={isProfileSaving || isAvatarUpdating}
+                  >
+                    {tp('avatar.selectButton')}
+                  </Button>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleRandomAvatar}
+                    loading={isAvatarUpdating}
+                    disabled={isProfileSaving || isAvatarUpdating}
+                  >
+                    {tp('avatar.randomButton')}
+                  </Button>
+                </Space>
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {tp('avatar.preview')}
+                  </Text>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      display: 'flex',
+                      gap: 8,
+                      justifyContent: 'center',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    {avatarPreviewOptions.map((option) => {
+                      const isSelected = option.token === currentAvatarValue
+                      return (
+                        <Avatar
+                          key={option.token}
+                          size={28}
+                          src={resolveUserAvatarSrc(option.token, avatarIdentitySeed)}
+                          style={{
+                            ...AVATAR_BORDER_STYLE,
+                            ...(isSelected ? { boxShadow: '0 0 0 2px #1677ff' } : {}),
+                          }}
+                        />
+                      )
+                    })}
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                    {tp('avatar.totalCount', { total: builtinAvatarOptions.length })}
+                  </Text>
+                </div>
+              </Space>
+
               <Divider />
-              
+
               <Title level={4} style={{ marginBottom: 8 }}>
                 {user.full_name || user.nickname || user.username}
               </Title>
               <Text type="secondary">{user.email}</Text>
-              
+
               <div style={{ marginTop: 16 }}>
                 <Space direction="vertical" size="small">
                   <Text>
@@ -191,7 +401,7 @@ const Profile = () => {
                         setIsEditing(true)
                       }
                     }}
-                    loading={isLoading}
+                    loading={isProfileSaving}
                   >
                     {isEditing ? tp('buttons.save') : tp('buttons.edit')}
                   </Button>
@@ -267,7 +477,7 @@ const Profile = () => {
                   {isEditing && (
                     <Form.Item>
                       <Space>
-                        <Button type="primary" htmlType="submit" loading={isLoading}>
+                        <Button type="primary" htmlType="submit" loading={isProfileSaving}>
                           {tp('buttons.saveChanges')}
                         </Button>
                         <Button onClick={() => setIsEditing(false)}>
@@ -296,6 +506,80 @@ const Profile = () => {
           </Tabs>
         </Col>
       </Row>
+
+      <Modal
+        title={tp('avatar.modalTitle')}
+        open={isAvatarPickerOpen}
+        onCancel={() => setIsAvatarPickerOpen(false)}
+        footer={null}
+        width={760}
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <Text type="secondary">
+              {tp('avatar.pageInfo', { current: avatarPage, total: avatarPageCount })}
+            </Text>
+            <Text type="secondary">
+              {tp('avatar.totalCount', { total: builtinAvatarOptions.length })}
+            </Text>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+              gap: 10,
+              maxHeight: 420,
+              overflowY: 'auto',
+              paddingRight: 4,
+            }}
+          >
+            {pagedAvatarOptions.map((option) => {
+              const isSelected = option.token === currentAvatarValue
+              return (
+                <button
+                  key={option.token}
+                  type="button"
+                  title={option.label}
+                  onClick={() => {
+                    void handleSelectAvatar(option.token)
+                  }}
+                  disabled={isProfileSaving || isAvatarUpdating}
+                  style={{
+                    width: '100%',
+                    minHeight: 68,
+                    borderRadius: 10,
+                    border: isSelected ? '2px solid #1677ff' : '1px solid #d9d9d9',
+                    background: isSelected ? '#e6f4ff' : '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 8,
+                    cursor: isProfileSaving || isAvatarUpdating ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Avatar
+                    size={44}
+                    src={resolveUserAvatarSrc(option.token, avatarIdentitySeed)}
+                    style={AVATAR_BORDER_STYLE}
+                  />
+                </button>
+              )
+            })}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              current={avatarPage}
+              pageSize={AVATAR_PAGE_SIZE}
+              total={builtinAvatarOptions.length}
+              onChange={(page) => setAvatarPage(page)}
+              showSizeChanger={false}
+              size="small"
+            />
+          </div>
+        </Space>
+      </Modal>
     </div>
   )
 }

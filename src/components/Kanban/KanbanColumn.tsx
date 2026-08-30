@@ -1,6 +1,7 @@
 import { useDroppable } from '@dnd-kit/core'
 import { Card, Typography, Badge, Button, Spin } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
+import { useTranslation } from '../../i18n/hooks/useTranslation'
 
 const { Title } = Typography
 
@@ -23,6 +24,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   children,
   onAddTask,
 }) => {
+  const { tc } = useTranslation()
   const { setNodeRef, isOver } = useDroppable({
     id,
   })
@@ -132,7 +134,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
               fontWeight: 500,
               pointerEvents: 'none',
             }}>
-              放置任务到此列
+              {tc('kanban.dropHere')}
             </div>
           )}
         </div>

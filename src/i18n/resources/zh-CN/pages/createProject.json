@@ -35,6 +35,10 @@
       "label": "项目描述",
       "placeholder": "请输入项目描述"
     },
+    "organization": {
+      "label": "所属组织",
+      "placeholder": "选择组织（可选）"
+    },
     "githubUrl": {
       "label": "GitHub仓库链接",
       "placeholder": "https://github.com/username/repository",

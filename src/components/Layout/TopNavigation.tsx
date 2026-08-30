@@ -113,11 +113,6 @@ const TopNavigation: React.FC = () => {
       label: tn('menu.dashboard'),
     },
     {
-      key: '/todo-for-ai/pages/rule-marketplace',
-      icon: <AppstoreOutlined />,
-      label: tn('menu.rules'),
-    },
-    {
       key: '/todo-for-ai/pages/projects',
       icon: <ProjectOutlined />,
       label: tn('menu.projects'),

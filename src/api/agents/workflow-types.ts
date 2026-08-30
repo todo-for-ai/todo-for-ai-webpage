@@ -10,9 +10,11 @@ import type {
   Agent,
   TaskAssignment,
   AgentRun,
+} from './types'
+import type {
   ConflictItem,
   SandboxExecutionItem,
-} from './types'
+} from './sandbox-conflict-types'
 
 // ── Workflow definition ──────────────────────────────────────────────
 

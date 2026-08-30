@@ -1,0 +1,15 @@
+.agent-keys-card__empty {
+  margin-top: 12px;
+}
+
+.agent-keys-card__hide-cancel {
+  display: none;
+}
+
+.agent-keys-card__connect-body {
+  width: 100%;
+}
+
+.agent-keys-card__full-width {
+  width: 100%;
+}

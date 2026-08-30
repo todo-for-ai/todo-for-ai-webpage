@@ -17,10 +17,8 @@ import type {
   KnowledgePropagationNetwork,
   ProtocolDecisionLatency,
   AgentSpecializationEvolution,
-  AgentCrossProjectEfficiency,
   AgentCapabilitySupplyDemand,
   AgentIdleRanking,
-  ConflictsSandboxCorrelation,
   AgentHealth,
   AgentHealthTrend,
   AgentHealthStateTransitions,
@@ -39,6 +37,8 @@ import type {
   AgentCollaboratorsResult,
   CollaborationGraph,
 } from './analytics-types'
+import type { AgentCrossProjectEfficiency } from './experience-types'
+import type { ConflictsSandboxCorrelation } from './sandbox-conflict-types'
 import { unwrapData } from './helpers'
 
 export interface AnalyticsMethods {

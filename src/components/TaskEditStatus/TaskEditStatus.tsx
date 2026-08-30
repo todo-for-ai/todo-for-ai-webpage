@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Checkbox, Typography, Space, Button } from 'antd'
 import { SaveOutlined, ClockCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
-import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { usePageTranslation, useTranslation } from '../../i18n/hooks/useTranslation'
 import './TaskEditStatus.css'
 
 const { Text } = Typography
@@ -33,6 +33,7 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
   enabled = true
 }) => {
   const { tp } = usePageTranslation('createTask')
+  const { language } = useTranslation()
   
   // 自动保存开关状态（从localStorage读取）
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
@@ -84,7 +85,7 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
   
   // 格式化时间显示
   const formatTime = useCallback((timeString?: string) => {
-    if (!timeString) return '未知'
+    if (!timeString) return tp('editStatus.unknown')
     
     try {
       const date = new Date(timeString)
@@ -93,14 +94,14 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
       const diffMinutes = Math.floor(diffMs / (1000 * 60))
       
       if (diffMinutes < 1) {
-        return '刚刚'
+        return tp('editStatus.justNow')
       } else if (diffMinutes < 60) {
-        return `${diffMinutes}分钟前`
+        return tp('editStatus.minutesAgo', { count: diffMinutes })
       } else if (diffMinutes < 24 * 60) {
         const diffHours = Math.floor(diffMinutes / 60)
-        return `${diffHours}小时前`
+        return tp('editStatus.hoursAgo', { count: diffHours })
       } else {
-        return date.toLocaleString('zh-CN', {
+        return date.toLocaleString(language === 'zh-CN' ? 'zh-CN' : 'en-US', {
           month: '2-digit',
           day: '2-digit',
           hour: '2-digit',
@@ -108,9 +109,9 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
         })
       }
     } catch (error) {
-      return '未知'
+      return tp('editStatus.unknown')
     }
-  }, [])
+  }, [language, tp])
   
   // 如果未启用，不显示任何内容
   if (!enabled) {
@@ -126,14 +127,14 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
           onChange={(e) => handleAutoSaveChange(e.target.checked)}
           disabled={isSaving}
         >
-          <Text strong>自动保存</Text>
+          <Text strong>{tp('editStatus.autoSave')}</Text>
         </Checkbox>
         
         {/* 上次保存时间 */}
         <Space size="small" align="center">
           <ClockCircleOutlined style={{ color: '#666' }} />
           <Text type="secondary">
-            上次保存: {formatTime(lastSavedTime)}
+            {tp('editStatus.lastSaved')}: {formatTime(lastSavedTime)}
           </Text>
         </Space>
         
@@ -142,7 +143,7 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
           <Space size="small" align="center" className="unsaved-warning">
             <ExclamationCircleOutlined style={{ color: '#faad14' }} />
             <Text type="warning" strong>
-              有未保存的内容，请及时保存
+              {tp('editStatus.unsavedWarning')}
             </Text>
             {onSave && (
               <Button
@@ -153,7 +154,7 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
                 loading={isSaving}
                 style={{ padding: '0 4px', height: 'auto' }}
               >
-                立即保存 (Ctrl+S)
+                {tp('editStatus.saveNow')}
               </Button>
             )}
           </Space>
@@ -162,7 +163,7 @@ const TaskEditStatus: React.FC<TaskEditStatusProps> = ({
         {/* 保存状态指示 */}
         {isSaving && (
           <Text type="secondary">
-            正在保存...
+            {tp('editStatus.saving')}
           </Text>
         )}
       </Space>

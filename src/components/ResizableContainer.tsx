@@ -22,7 +22,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
   className = '',
   style = {}
 }) => {
-  const { tc } = useTranslation()
+  const { t } = useTranslation('resizableContainer')
   const [width, setWidth] = useState(defaultWidth)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
@@ -117,7 +117,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
       
       {/* 拖动手柄 - 仅在非移动端显示 */}
       {!isMobile && (
-        <Tooltip title={tc('resizableContainer.tooltip.dragToResize')} placement="left">
+        <Tooltip title={t('tooltip.dragToResize')} placement="left">
           <div
             ref={handleRef}
             className="resize-handle"
@@ -186,7 +186,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
             pointerEvents: 'none'
           }}
         >
-          {tc('resizableContainer.widthIndicator.label')}: {width}px
+          {t('widthIndicator.label')}: {width}px
         </div>
       )}
     </div>

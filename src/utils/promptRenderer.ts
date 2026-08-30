@@ -1,9 +1,5 @@
-/**
-/**
- * 提示词变量渲染工具
-/**
- * 支持 ${variable.property} 格式的变量替换
- */
+import i18n from '../i18n'
+
 export interface ProjectData {
   id: number
   name: string
@@ -15,6 +11,7 @@ export interface ProjectData {
   created_at: string
   updated_at: string
 }
+
 export interface TaskData {
   id: number
   title: string
@@ -30,11 +27,13 @@ export interface TaskData {
   assignee?: string
   project_id: number
 }
+
 export interface SystemData {
   url: string
   current_time: string
   version?: string
 }
+
 export interface TasksListData {
   count: number
   list: string
@@ -42,6 +41,7 @@ export interface TasksListData {
   in_progress_count: number
   review_count: number
 }
+
 export interface ContextRuleData {
   id: number
   name: string
@@ -52,6 +52,7 @@ export interface ContextRuleData {
   is_global: boolean
   project_id?: number
 }
+
 export interface ContextRulesData {
   global: {
     all: string
@@ -75,6 +76,7 @@ export interface ContextRulesData {
     by_name: Record<string, string>
   }
 }
+
 export interface RenderContext {
   project?: ProjectData
   task?: TaskData
@@ -82,52 +84,99 @@ export interface RenderContext {
   tasks?: TasksListData
   context_rules?: ContextRulesData
 }
-/**
- * 格式化任务列表为字符串
- */
-export const formatTasksList = (tasks: TaskData[]): string => {
-  return tasks.map((task, index) => {
-    const priorityMap: Record<string, string> = {
-      'high': '高',
-      'medium': '中', 
-      'low': '低',
-      'urgent': '紧急'
-    }
-    const priority = priorityMap[task.priority] || task.priority
-    return `${index + 1}. [${priority}] ${task.title} (ID: ${task.id})`
-  }).join('\n')
+
+type AppLanguage = 'zh-CN' | 'en'
+
+const resolveLanguage = (language?: string): AppLanguage => {
+  const raw = (language || i18n.language || 'zh-CN').toLowerCase()
+  return raw.startsWith('zh') ? 'zh-CN' : 'en'
 }
-/**
- * 格式化时间
- */
-export const formatDateTime = (dateString: string): string => {
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return dateString
+
+const getLocale = (language?: string): string => (
+  resolveLanguage(language) === 'zh-CN' ? 'zh-CN' : 'en-US'
+)
+
+const tr = (key: string, defaultValue: string, options: Record<string, unknown> = {}, language?: string): string => {
+  const value = i18n.t(key, {
+    ...options,
+    lng: resolveLanguage(language),
+    defaultValue,
+  })
+  return typeof value === 'string' ? value : defaultValue
+}
+
+const variableLabelKeyMap: Record<string, string> = {
+  'project.name': 'customPrompts:variables.project.name',
+  'project.description': 'customPrompts:variables.project.description',
+  'project.github_repo': 'customPrompts:variables.project.github_repo',
+  'project.context': 'customPrompts:variables.project.context',
+  'project.color': 'customPrompts:variables.project.color',
+  'task.id': 'customPrompts:variables.task.id',
+  'task.title': 'customPrompts:variables.task.title',
+  'task.content': 'customPrompts:variables.task.content',
+  'task.status': 'customPrompts:variables.task.status',
+  'task.priority': 'customPrompts:variables.task.priority',
+  'task.created_at': 'customPrompts:variables.task.created_at',
+  'task.due_date': 'customPrompts:variables.task.due_date',
+  'task.estimated_hours': 'customPrompts:variables.task.estimated_hours',
+  'task.tags': 'customPrompts:variables.task.tags',
+  'task.related_files': 'customPrompts:variables.task.related_files',
+  'system.url': 'customPrompts:variables.system.url',
+  'system.current_time': 'customPrompts:variables.system.current_time',
+  'tasks.count': 'customPrompts:variables.tasks.count',
+  'tasks.list': 'customPrompts:variables.tasks.list',
+  'context_rules.global.all': 'customPrompts:variables.contextRules.global.all',
+  'context_rules.global.count': 'customPrompts:variables.contextRules.global.count',
+  'context_rules.global.names': 'customPrompts:variables.contextRules.global.names',
+  'context_rules.project.all': 'customPrompts:variables.contextRules.project.all',
+  'context_rules.project.count': 'customPrompts:variables.contextRules.project.count',
+  'context_rules.project.names': 'customPrompts:variables.contextRules.project.names',
+  'context_rules.merged.all': 'customPrompts:variables.contextRules.merged.all',
+  'context_rules.merged.count': 'customPrompts:variables.contextRules.merged.count',
+  'context_rules.merged.names': 'customPrompts:variables.contextRules.merged.names',
+}
+
+const getVariableLabel = (variable: string, fallback: string, language?: string): string => {
+  const key = variableLabelKeyMap[variable]
+  if (!key) return fallback
+  return tr(key, fallback, {}, language)
+}
+
+const getMissingValueFallback = (variable: string, language?: string): string => {
+  switch (variable) {
+    case 'tasks.count':
+    case 'context_rules.global.count':
+    case 'context_rules.project.count':
+    case 'context_rules.merged.count':
+      return '0'
+    case 'tasks.list':
+      return tr('common:empty.noTasks', 'No tasks', {}, language)
+    case 'context_rules.global.all':
+    case 'context_rules.project.all':
+    case 'context_rules.merged.all':
+    case 'context_rules.global.names':
+    case 'context_rules.project.names':
+    case 'context_rules.merged.names':
+      return tr('common:empty.noRules', 'No rules', {}, language)
+    case 'system.url':
+      return 'https://todo4ai.org'
+    case 'system.current_time':
+      return new Date().toLocaleString(getLocale(language))
+    default:
+      return getVariableLabel(variable, variable, language)
   }
 }
-/**
- * 安全地获取嵌套对象属性
- */
-const getNestedProperty = (obj: any, path: string): any => {
-  return path.split('.').reduce((current, key) => {
+
+const getNestedProperty = (obj: unknown, path: string): unknown => {
+  return path.split('.').reduce((current: any, key: string) => {
     return current && current[key] !== undefined ? current[key] : undefined
-  }, obj)
+  }, obj as any)
 }
-/**
- * 渲染上下文规则变量
- */
-const renderContextRulesVariable = (contextRules: ContextRulesData, property: string): any => {
+
+const renderContextRulesVariable = (contextRules: ContextRulesData, property: string): unknown => {
   const [scope, ...propertyPath] = property.split('.')
   const subProperty = propertyPath.join('.')
+
   switch (scope) {
     case 'global':
       return getNestedProperty(contextRules.global, subProperty)
@@ -139,14 +188,35 @@ const renderContextRulesVariable = (contextRules: ContextRulesData, property: st
       return getNestedProperty(contextRules.merged, property)
   }
 }
-/**
- * 渲染单个变量
- */
-const renderVariable = (variable: string, context: RenderContext): string => {
+
+export const formatTasksList = (tasks: TaskData[], language?: string): string => {
+  return tasks.map((task, index) => {
+    const priority = tr(`common:kanban.priority.${task.priority}`, task.priority, {}, language)
+    return `${index + 1}. [${priority}] ${task.title} (ID: ${task.id})`
+  }).join('\n')
+}
+
+export const formatDateTime = (dateString: string, language?: string): string => {
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleString(getLocale(language), {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateString
+  }
+}
+
+const renderVariable = (variable: string, context: RenderContext, language?: string): string => {
   const cleanVariable = variable.replace(/^\$\{|\}$/g, '')
   const [category, ...propertyPath] = cleanVariable.split('.')
   const property = propertyPath.join('.')
-  let value: any
+
+  let value: unknown
   switch (category) {
     case 'project':
       value = context.project ? getNestedProperty(context.project, property) : undefined
@@ -164,137 +234,66 @@ const renderVariable = (variable: string, context: RenderContext): string => {
       value = context.context_rules ? renderContextRulesVariable(context.context_rules, property) : undefined
       break
     default:
-      return variable // 返回原始变量如果无法识别
+      return variable
   }
+
   if (value !== undefined) {
     if (property.includes('_at') || property === 'due_date') {
-      return formatDateTime(value)
+      return formatDateTime(String(value), language)
     }
+
     if (Array.isArray(value)) {
-      if (property === 'tags') {
-        return value.join(', ')
-      }
       if (property === 'related_files') {
         return value.join('\n')
       }
       return value.join(', ')
     }
+
     if (typeof value === 'boolean') {
-      return value ? '是' : '否'
+      return value
+        ? tr('common:boolean.true', 'Yes', {}, language)
+        : tr('common:boolean.false', 'No', {}, language)
     }
+
     if (typeof value === 'number') {
       return value.toString()
     }
+
     return String(value)
   }
-  const placeholders: Record<string, string> = {
-    'project.name': '项目名称',
-    'project.description': '项目描述',
-    'project.github_repo': 'GitHub仓库',
-    'project.context': '项目上下文',
-    'task.title': '任务标题',
-    'task.content': '任务内容',
-    'task.status': '任务状态',
-    'task.priority': '优先级',
-    'tasks.count': '0',
-    'tasks.list': '暂无任务',
-    'system.url': 'https://todo4ai.org',
-    'system.current_time': new Date().toLocaleString('zh-CN'),
-    'context_rules.global.all': '暂无全局规则',
-    'context_rules.global.count': '0',
-    'context_rules.global.names': '暂无规则',
-    'context_rules.project.all': '暂无项目规则',
-    'context_rules.project.count': '0',
-    'context_rules.project.names': '暂无规则',
-    'context_rules.merged.all': '暂无规则',
-    'context_rules.merged.count': '0',
-    'context_rules.merged.names': '暂无规则'
-  }
-  return placeholders[cleanVariable] || `[${cleanVariable}]`
+
+  const fallback = getMissingValueFallback(cleanVariable, language)
+  return fallback || `[${cleanVariable}]`
 }
-/**
- * 渲染提示词模板
-/**
- * @param template 包含变量的模板字符串
-/**
- * @param context 渲染上下文数据
-/**
- * @returns 渲染后的字符串
- */
+
 export const renderPromptTemplate = (template: string, context: RenderContext): string => {
+  const language = resolveLanguage()
   const variableRegex = /\$\{[^}]+\}/g
-  return template.replace(variableRegex, (match) => {
-    return renderVariable(match, context)
-  })
+  return template.replace(variableRegex, (match) => renderVariable(match, context, language))
 }
-/**
- * 获取模板中使用的所有变量
- */
+
 export const extractVariables = (template: string): string[] => {
   const variableRegex = /\$\{([^}]+)\}/g
   const variables: string[] = []
-  let match
+  let match: RegExpExecArray | null
+
   while ((match = variableRegex.exec(template)) !== null) {
     variables.push(match[1])
   }
-  return [...new Set(variables)] // 去重
+
+  return [...new Set(variables)]
 }
-/**
- * 验证变量是否有效
- */
+
 export const validateVariable = (variable: string): boolean => {
   const validCategories = ['project', 'task', 'system', 'tasks', 'context_rules']
   const [category] = variable.split('.')
   return validCategories.includes(category)
 }
-/**
- * 获取变量的描述信息
- */
+
 export const getVariableDescription = (variable: string): string => {
-  const descriptions: Record<string, string> = {
-    'project.name': '项目名称',
-    'project.description': '项目描述',
-    'project.github_repo': 'GitHub仓库地址',
-    'project.context': '项目上下文信息',
-    'project.color': '项目颜色',
-    'project.status': '项目状态',
-    'project.created_at': '项目创建时间',
-    'project.updated_at': '项目更新时间',
-    'task.id': '任务ID',
-    'task.title': '任务标题',
-    'task.content': '任务内容',
-    'task.status': '任务状态',
-    'task.priority': '任务优先级',
-    'task.created_at': '任务创建时间',
-    'task.updated_at': '任务更新时间',
-    'task.due_date': '任务截止时间',
-    'task.estimated_hours': '预估工时',
-    'task.tags': '任务标签',
-    'task.related_files': '相关文件',
-    'task.assignee': '任务负责人',
-    'system.url': '系统URL地址',
-    'system.current_time': '当前时间',
-    'system.version': '系统版本',
-    'tasks.count': '任务总数',
-    'tasks.list': '任务列表',
-    'tasks.pending_count': '待处理任务数',
-    'tasks.in_progress_count': '进行中任务数',
-    'tasks.review_count': '待审核任务数',
-    'context_rules.global.all': '所有全局上下文规则的内容',
-    'context_rules.global.count': '全局上下文规则数量',
-    'context_rules.global.names': '全局上下文规则名称列表',
-    'context_rules.project.all': '当前项目所有上下文规则的内容',
-    'context_rules.project.count': '项目上下文规则数量',
-    'context_rules.project.names': '项目上下文规则名称列表',
-    'context_rules.merged.all': '全局和项目规则合并后的内容',
-    'context_rules.merged.count': '合并后的规则总数',
-    'context_rules.merged.names': '合并后的规则名称列表'
-  }
-  return descriptions[variable] || variable
+  return getVariableLabel(variable, variable)
 }
-/**
- * 构建上下文规则数据
- */
+
 export const buildContextRulesData = (
   globalRules: ContextRuleData[] = [],
   projectRules: ContextRuleData[] = []
@@ -307,8 +306,9 @@ export const buildContextRulesData = (
     by_name: globalRules.reduce((acc, rule) => {
       acc[rule.name] = rule.content
       return acc
-    }, {} as Record<string, string>)
+    }, {} as Record<string, string>),
   }
+
   const projectData = {
     all: projectRules.map(rule => `### ${rule.name}\n${rule.content}`).join('\n\n'),
     count: projectRules.length,
@@ -317,8 +317,9 @@ export const buildContextRulesData = (
     by_name: projectRules.reduce((acc, rule) => {
       acc[rule.name] = rule.content
       return acc
-    }, {} as Record<string, string>)
+    }, {} as Record<string, string>),
   }
+
   const mergedRules = [...globalRules, ...projectRules].sort((a, b) => b.priority - a.priority)
   const mergedData = {
     all: mergedRules.map(rule => `### ${rule.name}\n${rule.content}`).join('\n\n'),
@@ -328,11 +329,12 @@ export const buildContextRulesData = (
     by_name: mergedRules.reduce((acc, rule) => {
       acc[rule.name] = rule.content
       return acc
-    }, {} as Record<string, string>)
+    }, {} as Record<string, string>),
   }
+
   return {
     global: globalData,
     project: projectData,
-    merged: mergedData
+    merged: mergedData,
   }
 }

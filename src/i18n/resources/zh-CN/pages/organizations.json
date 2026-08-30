@@ -1,0 +1,255 @@
+{
+  "title": "组织管理",
+  "subtitle": "管理组织空间与共享成员",
+  "actions": {
+    "create": "创建组织",
+    "view": "查看详情"
+  },
+  "viewMode": {
+    "label": "视图",
+    "list": "列表",
+    "card": "卡片"
+  },
+  "table": {
+    "orgName": "组织",
+    "role": "我的角色",
+    "members": "成员数",
+    "agents": "Agent 数",
+    "projects": "项目数",
+    "activeRoles": "启用角色",
+    "summary": "概览",
+    "activity": "活跃情况"
+  },
+  "roleLabels": {
+    "owner": "所有者",
+    "admin": "管理员",
+    "member": "成员",
+    "viewer": "查看者"
+  },
+  "card": {
+    "moreRoles": "+{{count}} 个角色"
+  },
+  "members": {
+    "title": "{{name}} 的成员",
+    "emailPlaceholder": "输入用户邮箱进行邀请",
+    "agentIdPlaceholder": "输入 Agent ID 邀请",
+    "emailRequired": "请输入用户邮箱",
+    "agentIdRequired": "请输入有效的 Agent ID",
+    "invite": "邀请",
+    "inviteAgent": "邀请Agent",
+    "createAgent": "创建Agent",
+    "remove": "移除",
+    "confirmOk": "确认",
+    "confirmCancel": "取消",
+    "removeConfirmTitle": "确认移除该成员？",
+    "removeConfirmDescription": "移除后该成员将失去组织访问权限。",
+    "entity": {
+      "human": "人类",
+      "agent": "Agent"
+    },
+    "table": {
+      "user": "成员",
+      "type": "类型",
+      "membershipId": "关系ID",
+      "linkedId": "对象ID",
+      "role": "角色",
+      "capabilities": "能力标签",
+      "status": "状态",
+      "joinedAt": "加入时间",
+      "updatedAt": "更新时间",
+      "actions": "操作"
+    }
+  },
+  "roles": {
+    "manage": "角色管理",
+    "backToOrganizations": "返回组织页",
+    "manageTitle": "管理组织角色",
+    "create": "创建角色",
+    "system": "系统",
+    "titleRequired": "请输入角色标题",
+    "titlePlaceholder": "角色标题，例如：前端负责人",
+    "descriptionPlaceholder": "角色描述（可选）",
+    "contentPlaceholder": "角色设定内容（支持 Markdown，可选）",
+    "selectPlaceholder": "选择角色（可多选，可为空）",
+    "deleteConfirmTitle": "确认删除该角色？",
+    "deleteConfirmDesc": "删除后，该角色会从所有成员上移除。",
+    "form": {
+      "title": "标题",
+      "description": "描述",
+      "content": "设定内容"
+    },
+    "table": {
+      "title": "标题",
+      "key": "角色键",
+      "description": "描述",
+      "content": "设定内容",
+      "actions": "操作"
+    }
+  },
+  "createModal": {
+    "title": "创建组织",
+    "name": "组织名称",
+    "nameRequired": "请输入组织名称",
+    "slug": "Slug（可选）",
+    "description": "描述",
+    "confirm": "创建",
+    "cancel": "取消"
+  },
+  "createAgentModal": {
+    "title": "创建组织Agent",
+    "name": "Agent 名称",
+    "nameRequired": "请输入Agent名称",
+    "description": "描述",
+    "confirm": "创建",
+    "cancel": "取消"
+  },
+  "detail": {
+    "title": "组织详情",
+    "subtitle": "查看组织信息、成员与项目",
+    "back": "返回组织列表",
+    "noDescription": "暂无组织描述",
+  "status": {
+    "active": "活跃",
+    "archived": "已归档",
+    "deleted": "已废弃"
+  },
+  "stats": {
+    "members": "成员总数",
+    "membersOverview": "成员概览",
+    "humanMembers": "人类成员",
+    "aiMembers": "AI 成员",
+    "invitedMembers": "邀请中",
+    "projects": "项目总数",
+    "projectsOverview": "项目概览",
+    "projectsActive": "进行中项目",
+    "projectsArchived": "已归档项目",
+    "projectsDeleted": "已废弃项目",
+    "activeProjects7d": "近 7 天活跃项目",
+    "lastActivity": "最近活跃时间",
+    "activityOverview": "活跃概览",
+    "activeRoles": "启用角色",
+    "totalRoles": "角色总数"
+  },
+    "fields": {
+      "createdAt": "创建时间",
+      "updatedAt": "更新时间"
+    },
+    "overview": {
+      "title": "空间概览",
+      "subtitle": "汇总当前组织的访问、治理与下一步操作",
+      "slug": "Slug",
+      "myAccess": "我的访问权限",
+      "manageAccess": "管理能力",
+      "manageEnabled": "可管理成员与通知",
+      "manageDisabled": "只读访问",
+      "healthSignals": "关注项",
+      "noSignals": "当前没有需要立即处理的提醒"
+    },
+    "tabs": {
+      "members": "成员",
+      "activity": "活跃动态",
+      "projects": "项目"
+    },
+    "recentActivity": {
+      "title": "近期动态",
+      "subtitle": "快速浏览最近发生的组织事件",
+      "actor": "操作者",
+      "viewAll": "查看全部动态",
+      "empty": "暂无近期动态"
+    },
+    "projectSpotlight": {
+      "title": "项目聚焦",
+      "subtitle": "按最近活跃度展示重点项目",
+      "taskCount": "任务数",
+      "lastActivity": "最近活跃",
+      "viewAll": "查看全部项目",
+      "empty": "暂无可展示的项目"
+    },
+    "signals": {
+      "invitedMembers": "{{count}} 个待处理邀请",
+      "inactiveRoles": "{{count}} 个未启用角色",
+      "deletedProjects": "{{count}} 个已废弃项目",
+      "archivedProjects": "{{count}} 个已归档项目",
+      "noProjects": "还没有项目"
+    },
+    "activity": {
+      "columns": {
+        "time": "时间",
+        "event": "事件",
+        "actor": "操作者",
+        "related": "关联对象"
+      },
+      "labels": {
+        "project": "项目"
+      },
+      "eventTypes": {
+        "taskCreated": "任务创建",
+        "taskUpdated": "任务更新",
+        "taskStatusChanged": "任务状态变化",
+        "taskDeleted": "任务删除",
+        "taskLogAppended": "任务日志追加",
+        "projectCreated": "项目创建",
+        "projectUpdated": "项目更新",
+        "projectArchived": "项目归档",
+        "projectRestored": "项目恢复",
+        "projectDeleted": "项目删除",
+        "memberInvited": "成员邀请",
+        "memberUpdated": "成员更新",
+        "memberRemoved": "成员移除",
+        "agentCreated": "Agent 创建",
+        "agentInvited": "Agent 邀请",
+        "agentRemoved": "Agent 移除",
+        "agentAccepted": "Agent 接受邀请",
+        "agentRejected": "Agent 拒绝邀请",
+        "orgCreated": "组织创建",
+        "orgUpdated": "组织更新",
+        "orgArchived": "组织归档"
+      },
+      "empty": "暂无组织活跃记录",
+      "loadFailed": "加载组织活跃记录失败"
+    },
+    "projects": {
+      "columns": {
+        "name": "项目",
+        "status": "状态",
+        "tasks": "任务数",
+        "lastActivity": "最近活动",
+        "actions": "操作"
+      },
+      "actions": {
+        "view": "查看",
+        "tasks": "任务"
+      },
+      "empty": "暂无项目",
+      "loadFailed": "加载组织项目失败"
+    },
+    "notifications": {
+      "title": "组织通知设置",
+      "description": "配置当前组织级别的外部通知同步渠道。"
+    }
+  },
+  "messages": {
+    "loadFailed": "加载组织列表失败",
+    "memberLoadFailed": "加载组织成员失败",
+    "agentMemberLoadFailed": "加载组织Agent失败",
+    "roleLoadFailed": "加载组织角色失败",
+    "createSuccess": "组织创建成功",
+    "createFailed": "组织创建失败",
+    "inviteSuccess": "邀请组织成员成功",
+    "inviteFailed": "邀请组织成员失败",
+    "roleCreateSuccess": "组织角色创建成功",
+    "roleCreateFailed": "组织角色创建失败",
+    "roleDeleteSuccess": "组织角色删除成功",
+    "roleDeleteFailed": "组织角色删除失败",
+    "createAgentSuccess": "组织Agent创建成功",
+    "createAgentFailed": "组织Agent创建失败",
+    "agentInviteSuccess": "邀请组织Agent成功",
+    "agentInviteFailed": "邀请组织Agent失败",
+    "memberUpdated": "更新组织成员成功",
+    "memberUpdateFailed": "更新组织成员失败",
+    "memberRemoved": "移除组织成员成功",
+    "memberRemoveFailed": "移除组织成员失败",
+    "agentMemberRemoved": "移除组织Agent成功",
+    "agentMemberRemoveFailed": "移除组织Agent失败"
+  }
+}

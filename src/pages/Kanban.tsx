@@ -6,11 +6,13 @@ import { KanbanBoard } from '../components/Kanban'
 import type { KanbanBoardRef } from '../components/Kanban/KanbanBoard'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import type { Task } from '../api/tasks'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Paragraph } = Typography
 const { Option } = Select
 
 const Kanban = () => {
+  const { tp } = usePageTranslation('kanban')
   const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>()
   const [viewingTask, setViewingTask] = useState<Task | null>(null)
   const [isDetailVisible, setIsDetailVisible] = useState(false)
@@ -22,24 +24,31 @@ const Kanban = () => {
   } = useProjectStore()
 
   useEffect(() => {
-    fetchProjects()
+    fetchProjects({
+      page: 1,
+      per_page: 100,
+      status: 'active',
+      sort_by: 'last_activity_at',
+      sort_order: 'desc',
+      include_stats: false
+    })
   }, [fetchProjects])
 
   // 设置网页标题
   useEffect(() => {
     if (selectedProjectId && projects.length > 0) {
       const project = projects.find(p => p.id === selectedProjectId)
-      const projectName = project?.name || '未知项目'
-      document.title = `${projectName} - 看板视图 - Todo for AI`
+      const projectName = project?.name || tp('unknownProject')
+      document.title = tp('pageTitleWithProject', { projectName })
     } else {
-      document.title = '看板视图 - Todo for AI'
+      document.title = tp('pageTitle')
     }
 
     // 组件卸载时恢复默认标题
     return () => {
       document.title = 'Todo for AI'
     }
-  }, [selectedProjectId, projects])
+  }, [selectedProjectId, projects, tp])
 
   const handleProjectChange = (projectId: number) => {
     setSelectedProjectId(projectId)
@@ -67,10 +76,10 @@ const Kanban = () => {
         <div className="flex-between">
           <div>
             <Title level={2} className="page-title" style={{ margin: 0 }}>
-              任务看板
+              {tp('title')}
             </Title>
             <Paragraph className="page-description" style={{ margin: '8px 0 0 0' }}>
-              拖拽式任务管理，可视化工作流程
+              {tp('subtitle')}
             </Paragraph>
           </div>
           <Space>
@@ -78,14 +87,14 @@ const Kanban = () => {
               icon={<ReloadOutlined />}
               onClick={handleRefresh}
             >
-              刷新
+              {tp('actions.refresh')}
             </Button>
             <Button 
               type="primary" 
               icon={<PlusOutlined />}
               disabled={!selectedProjectId}
             >
-              新建任务
+              {tp('actions.createTask')}
             </Button>
           </Space>
         </div>
@@ -93,9 +102,9 @@ const Kanban = () => {
         {/* 项目选择器 */}
         <div style={{ marginTop: '16px' }}>
           <Space>
-            <span style={{ fontWeight: 500 }}>选择项目：</span>
+            <span style={{ fontWeight: 500 }}>{tp('projectSelector.label')}</span>
             <Select
-              placeholder="请选择项目"
+              placeholder={tp('projectSelector.placeholder')}
               style={{ width: 300 }}
               value={selectedProjectId}
               onChange={handleProjectChange}
@@ -130,7 +139,7 @@ const Kanban = () => {
                 fontSize: '12px',
                 color: '#666'
               }}>
-                <span>当前项目：</span>
+                <span>{tp('projectSelector.currentProject')}</span>
                 <div 
                   style={{ 
                     width: '8px', 
@@ -164,15 +173,15 @@ const Kanban = () => {
             color: '#999'
           }}>
             <SettingOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
-            <div style={{ fontSize: '16px', marginBottom: '8px' }}>请选择一个项目</div>
-            <div style={{ fontSize: '14px' }}>选择项目后即可查看和管理任务看板</div>
+            <div style={{ fontSize: '16px', marginBottom: '8px' }}>{tp('empty.title')}</div>
+            <div style={{ fontSize: '14px' }}>{tp('empty.description')}</div>
           </div>
         )}
       </div>
 
       {/* 任务详情抽屉 */}
       <Drawer
-        title="任务详情"
+        title={tp('drawer.title')}
         placement="right"
         width={800}
         open={isDetailVisible}
@@ -190,7 +199,7 @@ const Kanban = () => {
             </div>
 
             <div>
-              <Title level={4}>任务内容</Title>
+              <Title level={4}>{tp('drawer.taskContent')}</Title>
               <MarkdownEditor
                 value={viewingTask.content || ''}
                 readOnly

@@ -2,6 +2,7 @@
  * 认证重定向工具
  * 处理登录跳转和登录后的重定向逻辑
  */
+import i18n from '../i18n'
 
 /**
  * 保存当前页面URL用于登录后跳转
@@ -144,12 +145,18 @@ export function isPublicPage(): boolean {
 export function getLoginMessage(reason?: string): string {
   switch (reason) {
     case 'expired':
-      return '您的登录已过期，请重新登录'
+      return i18n.t('common:auth.loginMessages.expired', {
+        defaultValue: 'Your login has expired, please sign in again'
+      })
     case 'unauthorized':
-      return '您没有访问权限，请登录'
+      return i18n.t('common:auth.loginMessages.unauthorized', {
+        defaultValue: 'You do not have access, please sign in'
+      })
     case 'required':
     default:
-      return '请登录以继续使用'
+      return i18n.t('common:auth.loginMessages.required', {
+        defaultValue: 'Please sign in to continue'
+      })
   }
 }
 

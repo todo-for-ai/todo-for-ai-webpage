@@ -105,11 +105,11 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({ onRefresh, loading }) 
               onChange={(e) => handleAutoRefreshChange(e.target.checked)}
               style={{ fontSize: '11px' }}
             >
-              自动刷新
+              {tp('tasks.autoRefresh.enable')}
             </Checkbox>
             {autoRefreshEnabled && (
               <Space size={4}>
-                <span style={{ fontSize: '11px' }}>间隔:</span>
+                <span style={{ fontSize: '11px' }}>{tp('tasks.autoRefresh.interval')}:</span>
                 <InputNumber
                   size="small"
                   min={1}
@@ -117,8 +117,8 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({ onRefresh, loading }) 
                   value={refreshInterval}
                   onChange={handleIntervalChange}
                   style={{ width: '60px' }}
-                  formatter={value => `${value}秒`}
-                  parser={value => parseInt(value?.replace('秒', '') || '5')}
+                  formatter={value => `${value}`}
+                  parser={value => parseInt((value || '').replace(/[^\d]/g, '') || '5', 10)}
                 />
               </Space>
             )}

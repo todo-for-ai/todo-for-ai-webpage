@@ -41,7 +41,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const loadUserLanguage = useCallback(async () => {
     try {
       const response = await apiClient.get('/user-settings') as any
-      const userLanguage = response.data?.language
+      // apiClient 已经解包后端标准结构，response 本体即 data
+      const userLanguage = response?.language || response?.data?.language
 
       if (userLanguage && (userLanguage === 'zh-CN' || userLanguage === 'en')) {
         await i18n.changeLanguage(userLanguage)
@@ -80,6 +81,15 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     console.log(`Changing language from ${language} to ${newLanguage}`)
     setIsLoading(true)
     try {
+      if (!['zh-CN', 'en'].includes(newLanguage)) {
+        throw new Error(`Unsupported language: ${newLanguage}`)
+      }
+
+      // 先写入本地存储，避免刷新后被探测器回退
+      localStorage.setItem('i18nextLng', newLanguage)
+      localStorage.setItem('user-language', newLanguage)
+      document.documentElement.lang = newLanguage
+
       // 1. 更新i18n语言
       await i18n.changeLanguage(newLanguage)
       console.log(`i18n language changed to ${newLanguage}`)
@@ -93,12 +103,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       await saveUserLanguage(newLanguage)
       console.log(`User language saved to API`)
 
-      // 4. 保存到本地存储
-      localStorage.setItem('i18nextLng', newLanguage)
       console.log(`Language saved to localStorage`)
 
     } catch (error) {
       console.error('Failed to change language:', error)
+      throw error
     } finally {
       setIsLoading(false)
     }

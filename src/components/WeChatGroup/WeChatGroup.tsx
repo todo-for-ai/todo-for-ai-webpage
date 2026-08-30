@@ -114,7 +114,7 @@ const WeChatGroup: React.FC<WeChatGroupProps> = ({ className }) => {
               <button
                 className="qr-popup-close"
                 onClick={handleClosePopup}
-                aria-label="关闭"
+                aria-label={t('close')}
               >
                 <CloseOutlined />
               </button>

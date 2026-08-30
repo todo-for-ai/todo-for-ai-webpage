@@ -1,62 +1,69 @@
 import React from 'react'
-import { Card, Divider, Space, Tag, Typography } from 'antd'
-import { CheckCircleOutlined, SettingOutlined } from '@ant-design/icons'
+import { Card, Divider, List, Space, Tag, Typography } from 'antd'
+import { CheckCircleOutlined, QuestionCircleOutlined, SettingOutlined, ToolOutlined } from '@ant-design/icons'
+import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 
 const { Title, Paragraph, Text } = Typography
 
 export const OverviewTab: React.FC = () => {
+  const { tp, t } = usePageTranslation('mcpInstallation')
+  const featuresRaw = t('overview.whatIsMcp.features', { returnObjects: true })
+  const features = Array.isArray(featuresRaw) ? featuresRaw : []
+
+  const tools = [
+    { name: 'get_project_tasks_by_name', color: 'blue', key: 'getProjectTasks' },
+    { name: 'get_task_by_id', color: 'purple', key: 'getTaskById' },
+    { name: 'create_task', color: 'green', key: 'createTask' },
+    { name: 'submit_task_feedback', color: 'orange', key: 'submitFeedback' },
+    { name: 'get_project_info', color: 'cyan', key: 'getProjectInfo' },
+    { name: 'list_user_projects', color: 'magenta', key: 'listUserProjects' },
+  ]
+
   return (
     <Card>
-      <Title level={3}>MCP 功能概述</Title>
-      <Paragraph>
-        Todo for AI 的 MCP 服务器提供以下核心功能：
-      </Paragraph>
-      <div style={{ marginBottom: '24px' }}>
-        <Title level={4}>
-          <CheckCircleOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
-          支持的工具
-        </Title>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <div>
-            <Tag color="blue">get_project_tasks_by_name</Tag>
-            <Text>获取项目的任务列表，支持状态筛选和排序</Text>
-          </div>
-          <div>
-            <Tag color="green">submit_task_feedback</Tag>
-            <Text>为任务提交AI反馈和进度更新</Text>
-          </div>
-          <div>
-            <Tag color="purple">get_task_by_id</Tag>
-            <Text>根据ID获取任务详细信息</Text>
-          </div>
-          <div>
-            <Tag color="cyan">list_agents</Tag>
-            <Text>查看当前用户可用的 Agent 身份</Text>
-          </div>
-          <div>
-            <Tag color="gold">list_review_queue</Tag>
-            <Text>查看等待人工反馈或最终审核的 Agent 派发</Text>
-          </div>
-          <div>
-            <Tag color="geekblue">claim_agent_task</Tag>
-            <Text>让 Agent 领取指定任务或下一个可执行任务</Text>
-          </div>
-          <div>
-            <Tag color="orange">update_agent_assignment</Tag>
-            <Text>更新 Agent 派发状态、进度和执行反馈</Text>
-          </div>
-        </Space>
-      </div>
+      <Title level={3}>{tp('overview.title')}</Title>
+      <Paragraph>{tp('overview.description')}</Paragraph>
+
+
       <Divider />
+
       <Title level={4}>
-        <SettingOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
-        配置要求
+        <QuestionCircleOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+        {tp('overview.whatIsMcp.title')}
+      </Title>
+      <Paragraph>{tp('overview.whatIsMcp.description')}</Paragraph>
+      <ul>
+        {features.map((feature, index) => (
+          <li key={index}>{feature}</li>
+        ))}
+      </ul>
+
+      <Divider />
+
+      <Title level={4}>
+        <ToolOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
+        {tp('overview.supportedTools.title')}
+      </Title>
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        {tools.map((tool) => (
+          <div key={tool.name}>
+            <Tag color={tool.color}>{tool.name}</Tag>
+            <Text>{tp(`overview.supportedTools.${tool.key}`)}</Text>
+          </div>
+        ))}
+      </Space>
+
+      <Divider />
+
+      <Title level={4}>
+        <SettingOutlined style={{ color: '#fa8c16', marginRight: '8px' }} />
+        {tp('overview.requirements.title')}
       </Title>
       <ul>
-        <li>Node.js 18+ 环境</li>
-        <li>Todo for AI 后端服务运行中</li>
-        <li>支持MCP协议的AI IDE（Claude Desktop、Cursor等）</li>
-        <li>网络连接到Todo API服务器</li>
+        <li>{tp('overview.requirements.node')}</li>
+        <li>{tp('overview.requirements.backend')}</li>
+        <li>{tp('overview.requirements.ide')}</li>
+        <li>{tp('overview.requirements.token')}</li>
       </ul>
     </Card>
   )

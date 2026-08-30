@@ -3,5 +3,6 @@
   "buttonText": "AI Group",
   "title": "Join AI Discussion Group",
   "qrAlt": "WeChat Group QR Code",
-  "description": "Scan QR code to join WeChat group for feedback and suggestions"
+  "description": "Scan QR code to join WeChat group for feedback and suggestions",
+  "close": "Close"
 }

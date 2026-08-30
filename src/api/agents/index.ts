@@ -531,3 +531,74 @@ class AgentsApiImpl implements AgentsApi {
 // ── Singleton export ────────────────────────────────────────────────
 
 export const agentsApi = new AgentsApiImpl()
+
+// ── Workspace-based agent APIs (from origin) ──────────────────────
+export { agentsApi as workspaceAgentsApi } from './agents'
+export { agentKeysApi } from './keys'
+export { agentSoulApi } from './soul'
+export { agentSecretsApi } from './secrets'
+export { agentAutomationApi } from './automation'
+export { agentInsightsApi } from './insights'
+
+// Workspace Agent types available as WorkspaceAgent (see types.ts)
+export type {
+  AgentSoulVersion,
+  AgentSoulVersionListResponse,
+  RollbackAgentSoulRequest,
+} from './soulTypes'
+export type {
+  AgentSecret,
+  AgentSecretType,
+  AgentSecretScopeType,
+  AgentSecretSource,
+  AgentSecretListResponse,
+  CreateAgentSecretRequest,
+  RevealAgentSecretResponse,
+  RotateAgentSecretRequest,
+  AgentSecretShare,
+  AgentSecretShareListResponse,
+  CreateAgentSecretShareRequest,
+  AgentSecretTargetSelector,
+  AgentSecretCollaborationStats,
+  AgentSecretCollaborator,
+  AgentSecretCollaborationEdge,
+  AgentSecretCollaborationResponse,
+  RevealSharedAgentSecretResponse,
+} from './secretTypes'
+
+export type {
+  AgentKey,
+  AgentKeyListResponse,
+  CreateAgentKeyRequest,
+  CreateAgentKeyResponse,
+  RevealAgentKeyResponse,
+  ConnectLinkResponse,
+} from './keyTypes'
+export type {
+  AgentRunnerConfig,
+  UpdateAgentRunnerConfigRequest,
+  AgentTrigger,
+  AgentTriggerListResponse,
+  CreateAgentTriggerRequest,
+  UpdateAgentTriggerRequest,
+  AgentRun as WorkspaceAgentRun,
+  AgentRunListResponse as WorkspaceAgentRunListResponse,
+  NotificationChannel,
+  NotificationChannelListResponse,
+  CreateNotificationChannelRequest,
+  UpdateNotificationChannelRequest,
+  EffectiveChannelsResponse,
+} from './automationTypes'
+export type {
+  AgentInsightsPagination,
+  AgentActivityItem,
+  AgentActivityListResponse,
+  AgentProjectInsightItem,
+  AgentProjectInsightListResponse,
+  AgentInteractionInsightItem,
+  AgentInteractionInsightListResponse,
+  AgentTaskInsightAttempt,
+  AgentTaskInsightItem,
+  AgentTaskInsightListResponse,
+  WorkspaceAgentActivityListResponse,
+} from './insightsTypes'
