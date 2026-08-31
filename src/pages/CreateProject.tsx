@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Card, Form, Input, message, Button, Space, Select } from 'antd'
@@ -6,6 +7,7 @@ import { useProjectStore } from '../stores'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { organizationsApi, type Organization } from '../api/organizations'
 import { projectsApi } from '../api/projects'
+import { getErrorMessage } from '../utils/errorUtils'
 
 const CreateProject: React.FC = () => {
   const { tp } = usePageTranslation('createProject')
@@ -47,7 +49,7 @@ const CreateProject: React.FC = () => {
           organization_id: project.organization_id ?? undefined,
         })
       } catch (error) {
-        message.error(tpRef.current('messages.loadFailed'))
+        message.error(getErrorMessage(error, tpRef.current('messages.loadFailed')))
       } finally {
         setLoading(false)
       }
@@ -61,7 +63,7 @@ const CreateProject: React.FC = () => {
       const projectData = {
         name: values.name,
         description: values.description,
-        color: values.color || '#1890ff',
+        color: values.color || '#00b96b',
         github_url: values.github_url,
         local_url: values.local_url,
         production_url: values.production_url,
@@ -82,7 +84,7 @@ const CreateProject: React.FC = () => {
       }
     } catch (error) {
       console.error('提交失败:', error)
-      message.error(tp('messages.loadFailed'))
+      message.error(getErrorMessage(error, tp('messages.loadFailed')))
     }
   }
 

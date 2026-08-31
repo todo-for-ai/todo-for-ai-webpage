@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Modal, Popconfirm, Space, Table, Tag } from 'antd'
 import { useState } from 'react'

@@ -110,19 +110,22 @@ class GitHubService {
           console.log(`[GitHubService] 重试获取数据 (${attempt}/${retries}): ${cacheKey}`)
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
         } else {
-          console.log(`[GitHubService] 从GitHub API获取数据: ${cacheKey}`)
+          console.log(`[GitHubService] 获取仓库数据: ${cacheKey}`)
         }
 
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-          headers: {
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'Todo-for-AI-App'
-          },
-          signal: controller.signal
-        })
+        // Try backend proxy first, fallback to direct GitHub API
+        let apiUrl: string
+        let fetchOptions: RequestInit
+        const baseUrl = typeof window !== 'undefined'
+          ? (window.__API_BASE_URL__ || '/todo-for-ai/api/v1')
+          : '/todo-for-ai/api/v1'
+        apiUrl = `${baseUrl}/github/repo/${owner}/${repo}`
+        fetchOptions = { signal: controller.signal }
+
+        const response = await fetch(apiUrl, fetchOptions)
 
         clearTimeout(timeoutId)
 
@@ -140,14 +143,16 @@ class GitHubService {
           throw new Error(`GitHub API请求失败: ${response.status} ${errorText}`)
         }
 
-        const data: GitHubRepoInfo = await response.json()
-        const cacheItem: CacheItem = { data, timestamp: Date.now() }
+        const json = await response.json()
+        // Backend proxy wraps data in ApiResponse { data: {...} }
+        const repoData: GitHubRepoInfo = json.data || json
+        const cacheItem: CacheItem = { data: repoData, timestamp: Date.now() }
         this.cache.set(cacheKey, cacheItem)
         this.saveToLocalStorage(cacheKey, cacheItem)
         this.rateLimitBlockedUntil.delete(cacheKey)
 
-        console.log(`[GitHubService] 成功获取仓库信息: ${data.stargazers_count} stars`)
-        return data
+        console.log(`[GitHubService] 成功获取仓库信息: ${repoData.stargazers_count} stars`)
+        return repoData
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error))
         const isRateLimit = lastError.message.includes('速率限制')

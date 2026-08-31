@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react'
 import { agentAutomationApi } from '../../../api/agents'
 import type { NotificationChannel, CreateNotificationChannelRequest, UpdateNotificationChannelRequest } from '../../../api/agents/automationTypes'

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { Card, Typography, Tag, Space } from 'antd'
 import type { Task } from '../../api/tasks'
@@ -10,7 +11,7 @@ interface TaskInfoSectionProps {
   onUpdate: (updates: any) => void
 }
 
-const TaskInfoSection: React.FC<TaskInfoSectionProps> = ({ task, onUpdate }) => {
+const TaskInfoSection: React.FC<TaskInfoSectionProps> = ({ task }) => {
   const { tp } = usePageTranslation('taskDetail')
 
   return (

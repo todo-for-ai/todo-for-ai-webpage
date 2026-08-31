@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button, Space, Tag, Popconfirm } from 'antd'
-import { EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons'
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import type { ContextRule } from '../../api/contextRules'
@@ -10,7 +10,7 @@ interface ContextRulesColumnsProps {
   onToggle: (rule: ContextRule) => Promise<void>
 }
 
-export const useContextRulesColumns = ({ onDelete, onToggle }: ContextRulesColumnsProps) => {
+export const useContextRulesColumns = ({ onDelete }: ContextRulesColumnsProps) => {
   const navigate = useNavigate()
   const { tp } = usePageTranslation('projectDetail')
 

@@ -1,0 +1,94 @@
+{
+  "storage": {
+    "page": {
+      "title": "Storage Configuration",
+      "description": "Configure file storage for agent avatars and uploaded files"
+    },
+    "form": {
+      "title": {
+        "create": "Create Storage Configuration",
+        "edit": "Edit Storage Configuration"
+      },
+      "fields": {
+        "provider": "Storage Provider",
+        "isActive": "Set as Default",
+        "localBasePath": "Local Path",
+        "localBaseUrl": "Access URL",
+        "accessKeyId": "Access Key ID",
+        "accessKeySecret": "Access Key Secret",
+        "bucketName": "Bucket Name",
+        "region": "Region",
+        "endpoint": "Endpoint (Optional)",
+        "customDomain": "Custom Domain (Optional)"
+      },
+      "hint": {
+        "activate": {
+          "title": "Activate Configuration",
+          "description": "Only one storage configuration can be active at a time. Files will be uploaded to the active storage."
+        }
+      },
+      "validation": {
+        "localBasePathRequired": "Please enter local path",
+        "localBaseUrlRequired": "Please enter access URL",
+        "accessKeyIdRequired": "Please enter Access Key ID",
+        "accessKeySecretRequired": "Please enter Access Key Secret",
+        "bucketNameRequired": "Please enter Bucket name",
+        "regionRequired": "Please enter region"
+      }
+    },
+    "list": {
+      "title": "Storage Configurations",
+      "columns": {
+        "provider": "Provider",
+        "status": "Status",
+        "config": "Configuration",
+        "updatedAt": "Updated At",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "currentActive": "Currently Active",
+      "actions": {
+        "add": "Add Configuration",
+        "activate": "Activate",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "confirmDelete": {
+        "title": "Delete Storage Configuration",
+        "description": "Are you sure you want to delete this storage configuration? This action cannot be undone."
+      }
+    },
+    "info": {
+      "local": {
+        "title": "Local Storage",
+        "description": "Store files on the server's local filesystem. Suitable for single-server deployments."
+      },
+      "cloud": {
+        "title": "Cloud Storage",
+        "description": "Use cloud object storage services for better scalability and CDN support.",
+        "oss": "Alibaba Cloud OSS",
+        "cos": "Tencent Cloud COS",
+        "s3": "AWS S3 / S3 Compatible"
+      },
+      "active": {
+        "title": "Active Configuration",
+        "description": "You can configure multiple storage backends, but only one can be active at a time."
+      }
+    },
+    "messages": {
+      "loadFailed": "Failed to load storage configurations",
+      "createSuccess": "Storage configuration created successfully",
+      "createFailed": "Failed to create storage configuration",
+      "updateSuccess": "Storage configuration updated successfully",
+      "updateFailed": "Failed to update storage configuration",
+      "deleteSuccess": "Storage configuration deleted successfully",
+      "deleteFailed": "Failed to delete storage configuration",
+      "activateSuccess": "Storage configuration activated successfully",
+      "activateFailed": "Failed to activate storage configuration",
+      "saveFailed": "Failed to save storage configuration"
+    }
+  }
+}

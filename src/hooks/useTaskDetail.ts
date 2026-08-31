@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { App } from 'antd'
-import dayjs from 'dayjs'
 import { useTaskStore, useProjectStore } from '../stores'
 import type { Task } from '../api/tasks'
 import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import { customPromptsService } from '../services/customPromptsService'
 import { analytics } from '../utils/analytics'
+import { getErrorMessage } from '../utils/errorUtils'
 
 interface TaskDetailFilters {
   status: string
@@ -115,7 +116,7 @@ export const useTaskDetail = (tp: (key: string) => string) => {
       navigate(`/todo-for-ai/pages/projects/${task.project_id}?tab=tasks`)
     } catch (error) {
       console.error('删除任务失败:', error)
-      message.error(tp('messages.deleteFailed'))
+      message.error(getErrorMessage(error, tp('messages.deleteFailed')))
     }
   }
 
@@ -140,6 +141,7 @@ export const useTaskDetail = (tp: (key: string) => string) => {
       loadTask(parseInt(id, 10))
       analytics.task.view(id)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   useEffect(() => {

@@ -46,7 +46,7 @@
 
 /* 编辑器焦点状态 */
 .milkdown-editor .milkdown .editor:focus-within {
-  background: rgba(24, 144, 255, 0.02);
+  background: rgba(0, 185, 107, 0.02);
   transform: translateY(-1px);
 }
 
@@ -154,12 +154,12 @@
 }
 
 .milkdown-editor .milkdown .editor ul li::marker {
-  color: #1890ff;
+  color: #00b96b;
   font-size: 1.2em;
 }
 
 .milkdown-editor .milkdown .editor ol li::marker {
-  color: #1890ff;
+  color: #00b96b;
   font-weight: 600;
 }
 
@@ -173,20 +173,20 @@
 .milkdown-editor .milkdown .editor li[data-task-list-item] input[type="checkbox"] {
   margin-right: 8px;
   transform: scale(1.1);
-  accent-color: #1890ff;
+  accent-color: #00b96b;
 }
 
 /* 引用块样式 */
 .milkdown-editor .milkdown .editor blockquote {
   margin: 24px 0;
   padding: 20px 24px;
-  border-left: 5px solid #1890ff;
+  border-left: 5px solid #00b96b;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   color: #475569;
   font-style: italic;
   border-radius: 0 8px 8px 0;
   position: relative;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 185, 107, 0.1);
 }
 
 .milkdown-editor .milkdown .editor blockquote::before {
@@ -195,7 +195,7 @@
   top: -5px;
   left: 15px;
   font-size: 48px;
-  color: #1890ff;
+  color: #00b96b;
   opacity: 0.3;
   font-family: Georgia, serif;
 }
@@ -271,7 +271,7 @@
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   font-weight: 700;
   color: #2d3748;
-  border-bottom: 2px solid #1890ff;
+  border-bottom: 2px solid #00b96b;
 }
 
 .milkdown-editor .milkdown .editor tr:hover td {
@@ -283,7 +283,7 @@
   margin: 32px 0;
   border: none;
   height: 3px;
-  background: linear-gradient(90deg, transparent 0%, #1890ff 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, #00b96b 50%, transparent 100%);
   border-radius: 2px;
 }
 
@@ -304,7 +304,7 @@
 
 /* 链接样式 */
 .milkdown-editor .milkdown .editor a {
-  color: #1890ff;
+  color: #00b96b;
   text-decoration: none;
   font-weight: 500;
   border-bottom: 1px solid transparent;
@@ -312,9 +312,9 @@
 }
 
 .milkdown-editor .milkdown .editor a:hover {
-  color: #0056b3;
-  border-bottom-color: #1890ff;
-  text-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+  color: #009957;
+  border-bottom-color: #00b96b;
+  text-shadow: 0 1px 2px rgba(0, 185, 107, 0.2);
 }
 
 /* 文本格式化样式 */
@@ -347,7 +347,7 @@
 
 /* 选中文本样式 */
 .milkdown-editor .milkdown .editor ::selection {
-  background: rgba(24, 144, 255, 0.2);
+  background: rgba(0, 185, 107, 0.2);
   color: inherit;
 }
 
@@ -368,16 +368,16 @@
 }
 
 .milkdown-editor .milkdown .editor .ProseMirror {
-  caret-color: #1890ff;
+  caret-color: #00b96b;
 }
 
 /* 打字动画效果 */
 @keyframes typing-glow {
   0%, 100% {
-    box-shadow: 0 0 0 rgba(24, 144, 255, 0);
+    box-shadow: 0 0 0 rgba(0, 185, 107, 0);
   }
   50% {
-    box-shadow: 0 0 8px rgba(24, 144, 255, 0.3);
+    box-shadow: 0 0 8px rgba(0, 185, 107, 0.3);
   }
 }
 
@@ -437,7 +437,7 @@
   }
 
   .milkdown-editor .milkdown .editor:focus-within {
-    background: rgba(24, 144, 255, 0.05);
+    background: rgba(0, 185, 107, 0.05);
   }
 
   .milkdown-editor .milkdown .editor p {
@@ -494,7 +494,7 @@
 .milkdown-editor .milkdown .editor h2:hover,
 .milkdown-editor .milkdown .editor h3:hover {
   transform: translateX(4px);
-  color: #1890ff;
+  color: #00b96b;
 }
 
 /* 代码块语言标签 */

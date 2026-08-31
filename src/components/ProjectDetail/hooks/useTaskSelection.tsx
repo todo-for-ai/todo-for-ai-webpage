@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 
 export const useTaskSelection = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+  const [selectedRowKeys] = useState<React.Key[]>([])
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([])
 
@@ -15,7 +15,7 @@ export const useTaskSelection = () => {
 
   const handleClearSelection = useCallback(() => {
     setSelectedTaskIds([])
-  }, []) as any
+  }, [])
 
   return {
     selectedTaskIds,

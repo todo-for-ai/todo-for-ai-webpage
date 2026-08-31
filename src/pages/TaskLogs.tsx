@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Card, Input, List, Space, Tag, Typography, message } from 'antd'
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons'
 import { tasksApi, type TaskLog } from '../api/tasks'
+import { getErrorMessage } from '../utils/errorUtils'
 
 const { TextArea } = Input
 const { Title, Text, Paragraph } = Typography
@@ -23,7 +25,7 @@ const TaskLogs = () => {
       const data = await tasksApi.getTaskLogs(taskId, { page: 1, per_page: 200 })
       setItems(data.items || [])
     } catch (error: any) {
-      message.error(error?.message || 'Failed to load task logs')
+      message.error(getErrorMessage(error, 'Failed to load task logs'))
     } finally {
       setLoading(false)
     }
@@ -31,7 +33,7 @@ const TaskLogs = () => {
 
   useEffect(() => {
     loadLogs()
-  }, [taskId])
+  }, [taskId]) // eslint-disable-line react-hooks/exhaustive-deps -- loadLogs is stable within this scope
 
   const appendLog = async () => {
     if (!taskId || !content.trim()) {
@@ -44,7 +46,7 @@ const TaskLogs = () => {
       await loadLogs()
       message.success('Task log appended')
     } catch (error: any) {
-      message.error(error?.message || 'Failed to append task log')
+      message.error(getErrorMessage(error, 'Failed to append task log'))
     } finally {
       setLoading(false)
     }
@@ -52,10 +54,10 @@ const TaskLogs = () => {
 
   return (
     <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1400px' }}>
-      <Card style={{ marginBottom: 16 }}>
+      <Card className="flat-card" style={{ marginBottom: 16 }}>
         <Space style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/todo-for-ai/pages/tasks/${taskId}`)}>
+            <Button type="text" className="flat-btn flat-btn--secondary" icon={<ArrowLeftOutlined />} onClick={() => navigate(`/todo-for-ai/pages/tasks/${taskId}`)}>
               Back to task
             </Button>
             <Title level={4} style={{ margin: 0 }}>Task Logs #{taskId}</Title>
@@ -63,7 +65,7 @@ const TaskLogs = () => {
         </Space>
       </Card>
 
-      <Card title="Append Log" style={{ marginBottom: 16 }}>
+      <Card className="flat-card" title="Append Log" style={{ marginBottom: 16 }}>
         <Space direction="vertical" style={{ width: '100%' }}>
           <TextArea
             rows={4}
@@ -71,13 +73,13 @@ const TaskLogs = () => {
             placeholder="Append a log line for this task"
             onChange={(event) => setContent(event.target.value)}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={appendLog} loading={loading}>
+          <Button type="text" className="flat-btn flat-btn--primary" icon={<PlusOutlined />} onClick={appendLog} loading={loading}>
             Append
           </Button>
         </Space>
       </Card>
 
-      <Card title="Log Stream">
+      <Card className="flat-card" title="Log Stream">
         <List
           loading={loading}
           dataSource={items}

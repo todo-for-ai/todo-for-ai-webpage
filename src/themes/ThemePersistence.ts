@@ -1,6 +1,6 @@
 // ThemePersistence 占位实现
 export class ThemePersistence {
-  saveTheme(themeId: string) {
+  saveTheme(_themeId: string) {
     // 占位
   }
   
@@ -8,7 +8,7 @@ export class ThemePersistence {
     return null
   }
   
-  persist(themeId: string) {
+  persist(_themeId: string) {
     // 占位
   }
   

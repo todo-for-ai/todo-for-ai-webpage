@@ -1,0 +1,82 @@
+.agent-avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.agent-avatar-upload__wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-avatar-upload__avatar {
+  transition: all 0.3s ease;
+}
+
+.agent-avatar-upload__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.agent-avatar-upload__wrapper:hover .agent-avatar-upload__overlay {
+  opacity: 1;
+}
+
+.agent-avatar-upload__overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  gap: 4px;
+}
+
+.agent-avatar-upload__icon {
+  font-size: 20px;
+}
+
+.agent-avatar-upload__text {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.agent-avatar-upload__delete {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  min-width: 24px !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.agent-avatar-upload__delete .anticon {
+  font-size: 12px;
+}
+
+.agent-avatar-upload__hint {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* 禁用状态 */
+.agent-avatar-upload__wrapper[data-disabled="true"] .agent-avatar-upload__overlay {
+  display: none;
+}

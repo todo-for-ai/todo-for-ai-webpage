@@ -1,0 +1,94 @@
+/**
+ * OrgOverviewPanel 组件样式
+ */
+
+.org-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.org-overview__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.org-overview__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.org-overview__slug {
+  font-size: 12px;
+  color: #595959;
+  background: #f5f5f5;
+  border: 1px solid #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.org-overview__card {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.org-overview__card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.org-overview__card-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-overview__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.org-overview__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.org-overview__fact-label {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-overview__fact-value {
+  font-size: 13px;
+  color: #1f1f1f;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.org-overview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.org-overview__section-title {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}

@@ -15,7 +15,11 @@
     "pm2:stop": "PM2_HOME=.pm2 pm2 stop todo-for-ai-web-dev",
     "pm2:restart": "PM2_HOME=.pm2 pm2 restart todo-for-ai-web-dev",
     "pm2:delete": "PM2_HOME=.pm2 pm2 delete todo-for-ai-web-dev",
-    "pm2:logs": "PM2_HOME=.pm2 pm2 logs todo-for-ai-web-dev"
+    "pm2:logs": "PM2_HOME=.pm2 pm2 logs todo-for-ai-web-dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
@@ -40,6 +44,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "antd": "^5.29.1",
     "axios": "^1.11.0",
+    "d3": "^7.9.0",
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "react": "^18.3.1",
@@ -47,16 +52,23 @@
     "react-i18next": "^15.6.1",
     "react-router-dom": "^7.7.1",
     "react-syntax-highlighter": "^15.6.1",
+    "socket.io-client": "^4.8.3",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.2.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/d3": "^7.4.3",
     "@types/node": "^24.2.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vitejs/plugin-react": "^4.6.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "@vitest/ui": "^1.2.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
@@ -64,9 +76,11 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "jsdom": "^24.0.0",
     "prettier": "^3.6.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vitest": "^1.2.0"
   }
 }

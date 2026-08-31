@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ThemeManagerCore 占位实现
 export class ThemeManagerCore {
-  constructor(config?: any) {
+  constructor(_config?: any) {
     // 占位
   }
   
@@ -8,15 +9,15 @@ export class ThemeManagerCore {
     return null
   }
   
-  setTheme(themeId: string) {
+  setTheme(_themeId: string) {
     // 占位
   }
   
-  loadTheme(id?: string, registry?: any): Promise<any> {
+  loadTheme(_id?: string, _registry?: any): Promise<any> {
     return Promise.resolve(null)
   }
   
-  applyTheme(theme: any, listeners?: any) {
+  applyTheme(_theme: any, _listeners?: any) {
     // 占位
   }
 }

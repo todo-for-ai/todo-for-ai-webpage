@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface AgentInsightsPagination {
   page: number
   per_page: number
@@ -132,4 +133,4 @@ export interface AgentTaskInsightListResponse {
 }
 
 
-export interface WorkspaceAgentActivityListResponse extends AgentActivityListResponse {}
+export type WorkspaceAgentActivityListResponse = AgentActivityListResponse

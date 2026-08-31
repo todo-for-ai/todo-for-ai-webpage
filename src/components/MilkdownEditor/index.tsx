@@ -239,9 +239,10 @@ const MilkdownEditorCore: React.FC<MilkdownEditorProps> = ({
 
 // 主编辑器组件 - 包装MilkdownProvider，实现完整的三大法则功能
 const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => {
+  const { onChange, onSave, value, hideToolbar } = props
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [lastSavedContent, setLastSavedContent] = useState(props.value || '')
+  const [lastSavedContent, setLastSavedContent] = useState(value || '')
 
   // 切换全屏
   const toggleFullscreen = () => {
@@ -254,41 +255,41 @@ const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => {
     setHasUnsavedChanges(newValue !== lastSavedContent)
 
     // 调用外部onChange回调 - 实现实时保存
-    if (props.onChange) {
-      props.onChange(newValue)
+    if (onChange) {
+      onChange(newValue)
     }
-  }, [props.onChange, lastSavedContent])
+  }, [onChange, lastSavedContent])
 
   // 保存功能 - 符合三大法则第一条：实时保存
   const handleSave = useCallback(() => {
-    if (props.onSave && props.value) {
-      props.onSave(props.value)
-      setLastSavedContent(props.value)
+    if (onSave && value) {
+      onSave(value)
+      setLastSavedContent(value)
       setHasUnsavedChanges(false)
     }
-  }, [props.onSave, props.value])
+  }, [onSave, value])
 
   // 复制功能
   const handleCopy = useCallback(() => {
-    if (props.value) {
-      navigator.clipboard.writeText(props.value).then(() => {
+    if (value) {
+      navigator.clipboard.writeText(value).then(() => {
         // 复制成功的处理在Toolbar组件中
       }).catch(() => {
         // 复制失败的处理在Toolbar组件中
       })
     }
-  }, [props.value])
+  }, [value])
 
   // 键盘快捷键 - 移除预览模式切换，因为Milkdown本身就是所见即所得
   useKeyboardShortcuts(handleSave, toggleFullscreen)
 
   // 监听外部value变化，更新保存状态
   useEffect(() => {
-    if (props.value !== undefined) {
-      setLastSavedContent(props.value)
+    if (value !== undefined) {
+      setLastSavedContent(value)
       setHasUnsavedChanges(false)
     }
-  }, [props.value])
+  }, [value])
 
   return (
     <div className="milkdown-editor-wrapper">
@@ -298,8 +299,8 @@ const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => {
         onCopy={handleCopy}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
-        hideToolbar={props.hideToolbar || false}
-        value={props.value || ''}
+        hideToolbar={hideToolbar || false}
+        value={value || ''}
       />
 
       <div className={`milkdown-editor-container ${isFullscreen ? 'fullscreen' : ''}`}>

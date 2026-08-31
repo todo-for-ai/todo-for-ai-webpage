@@ -1,12 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 import { Typography, Card, Form, Button, Select, message, Checkbox, Switch } from 'antd'
 import { SaveOutlined } from '@ant-design/icons'
 import { apiClient } from '../api'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { useLanguage } from '../contexts/LanguageContext'
+import { getErrorMessage } from '../utils/errorUtils'
 import type { SupportedLanguage } from '../i18n'
 import { useAuthStore } from '../stores/useAuthStore'
 import NotificationChannelManager from '../components/NotificationChannelManager'
+import AdminLLMConfig from '../components/AdminLLMConfig'
 import { useNotificationCatalog } from '../modules/notifications'
 
 const { Title, Paragraph } = Typography
@@ -36,6 +39,7 @@ const Settings = () => {
   // 加载用户设置
   useEffect(() => {
     loadUserSettings()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const inAppEventOptions = useMemo(
@@ -89,7 +93,7 @@ const Settings = () => {
       setSettings({ ...settings, ...values })
     } catch (error) {
       console.error('Failed to save settings:', error)
-      message.error(tp('messages.saveError'))
+      message.error(getErrorMessage(error, tp('messages.saveError')))
     } finally {
       setLoading(false)
     }
@@ -167,6 +171,11 @@ const Settings = () => {
           />
         </div>
       ) : null}
+
+      {/* 管理员大模型配置 */}
+      <div style={{ marginTop: 16 }}>
+        <AdminLLMConfig isAdmin={user?.role === 'admin'} />
+      </div>
     </div>
   )
 }

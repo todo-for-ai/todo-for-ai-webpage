@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { App as AntdApp } from 'antd'
 import { AppLayout } from './components/Layout'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthGuard } from './components/AuthGuard'
 import { tokenRefreshService } from './services/TokenRefreshService'
+import { wsService } from './services/websocketService'
 import { useAuthStore } from './stores/useAuthStore'
 import PageTracker from './components/PageTracker'
 import {
@@ -35,6 +36,7 @@ import {
   AgentCreatePage,
   AgentDetailPage,
   AgentEditPage,
+  StorageConfigPage,
   UserProfilePage
 } from './pages'
 import Login from './pages/Login'
@@ -47,21 +49,16 @@ import CommandLineDemo from './pages/CommandLineDemo'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
-  const [serviceStarted, setServiceStarted] = useState(false)
-
   // 初始化token刷新服务
   useEffect(() => {
-    // 使用token刷新服务自身状态，而不是本地状态
     const serviceStatus = tokenRefreshService.getStatus()
 
     if (isAuthenticated && !serviceStatus.isRunning) {
       console.log('[App] 启动token刷新服务')
       tokenRefreshService.start()
-      setServiceStarted(true)
     } else if (!isAuthenticated && serviceStatus.isRunning) {
       console.log('[App] 停止token刷新服务')
       tokenRefreshService.stop()
-      setServiceStarted(false)
     }
 
     // 清理函数 - 只在组件卸载时执行
@@ -70,6 +67,16 @@ function App() {
       if (currentStatus.isRunning) {
         tokenRefreshService.stop()
       }
+    }
+  }, [isAuthenticated])
+
+  // Initialize WebSocket connection when authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token')
+    if (isAuthenticated && token && !wsService.connected) {
+      wsService.connect(token)
+    } else if (!isAuthenticated && wsService.connected) {
+      wsService.disconnect()
     }
   }, [isAuthenticated])
 
@@ -124,6 +131,7 @@ function App() {
               <Route path="command-line-demo" element={<CommandLineDemo />} />
               <Route path="agents" element={<AgentsPage />} />
               <Route path="agents/create" element={<AgentCreatePage />} />
+              <Route path="agents/storage-config/:workspaceId" element={<StorageConfigPage />} />
               <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
               <Route path="agents/:agentId/:tabKey" element={<AgentDetailPage />} />
               <Route path="agents/:agentId" element={<AgentDetailPage />} />

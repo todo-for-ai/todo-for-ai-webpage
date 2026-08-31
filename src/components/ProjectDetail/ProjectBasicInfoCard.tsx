@@ -1,9 +1,10 @@
 import React from 'react'
 import { Card, Row, Col } from 'antd'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import type { Project } from '../../api/projects'
 
 interface ProjectBasicInfoCardProps {
-  project: any
+  project: Project
 }
 
 export const ProjectBasicInfoCard: React.FC<ProjectBasicInfoCardProps> = ({ project }) => {

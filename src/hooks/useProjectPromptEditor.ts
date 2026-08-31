@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react'
 import { message } from 'antd'
 import { customPromptsService } from '../services/customPromptsService'
 import { contextRulesApi } from '../api/contextRules'
 import { apiClient } from '../api'
 import type { Project, Task } from '../api'
+import { getErrorMessage } from '../utils/errorUtils'
 
 type ContextRuleData = any
 
@@ -71,7 +73,7 @@ export const useProjectPromptEditor = (tp: (key: string) => string) => {
       setProjectTasks(tasksResponse.data || [])
     } catch (error) {
       console.error('Failed to load project data:', error)
-      message.error(tp('messages.previewLoadFailed'))
+      message.error(getErrorMessage(error, tp('messages.previewLoadFailed')))
     } finally {
       setIsLoading(false)
     }
@@ -95,7 +97,7 @@ export const useProjectPromptEditor = (tp: (key: string) => string) => {
       message.success(tp('messages.saveSuccess'))
     } catch (error) {
       console.error('Failed to save prompt:', error)
-      message.error(tp('messages.saveFailed'))
+      message.error(getErrorMessage(error, tp('messages.saveFailed')))
     }
   }, [content, tp])
 

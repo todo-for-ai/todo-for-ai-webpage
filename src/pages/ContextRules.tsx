@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -25,6 +26,7 @@ import {
 import { useContextRuleStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { useTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 import type { ContextRule } from '../api/contextRules'
 const { Title, Paragraph } = Typography
 const ContextRules = () => {
@@ -50,7 +52,7 @@ const ContextRules = () => {
   }, [fetchContextRules, setQueryParams])
   useEffect(() => {
     if (error) {
-      message.error(error)
+      message.error(getErrorMessage(error, String(error)))
       clearError()
     }
   }, [error, clearError])

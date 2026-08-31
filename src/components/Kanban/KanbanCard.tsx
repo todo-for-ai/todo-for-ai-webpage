@@ -51,7 +51,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         boxShadow: isDragging 
           ? '0 8px 24px rgba(0, 0, 0, 0.15)' 
           : '0 2px 8px rgba(0, 0, 0, 0.06)',
-        border: isDragging ? '1px solid #1890ff' : '1px solid #d9d9d9',
+        border: isDragging ? '1px solid #00b96b' : '1px solid #d9d9d9',
       }}
       {...attributes}
       {...listeners}
@@ -140,8 +140,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
               fontSize: '11px',
               lineHeight: '16px',
               padding: '0 4px',
-              color: '#1890ff',
-              borderColor: '#1890ff'
+              color: '#00b96b',
+              borderColor: '#00b96b'
             }}
             icon={<FileTextOutlined />}
           >

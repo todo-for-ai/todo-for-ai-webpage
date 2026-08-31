@@ -68,6 +68,7 @@ import zhCNApiDocumentation from './resources/zh-CN/pages/apiDocumentation.json'
 import zhCNMcpInstallation from './resources/zh-CN/pages/mcpInstallation.json'
 import zhCNKanban from './resources/zh-CN/pages/kanban.json'
 import zhCNAgents from './resources/zh-CN/pages/agents.json'
+import zhCNStorage from './resources/zh-CN/pages/storage.json'
 
 import enCommon from './resources/en/common.json'
 import enNavigation from './resources/en/navigation.json'
@@ -98,6 +99,7 @@ import enApiDocumentation from './resources/en/pages/apiDocumentation.json'
 import enMcpInstallation from './resources/en/pages/mcpInstallation.json'
 import enKanban from './resources/en/pages/kanban.json'
 import enAgents from './resources/en/pages/agents.json'
+import enStorage from './resources/en/pages/storage.json'
 
 // 支持的语言
 export const SUPPORTED_LANGUAGES = ['zh-CN', 'en'] as const
@@ -135,6 +137,7 @@ const resources = {
     mcpInstallation: zhCNMcpInstallation,
     kanban: zhCNKanban,
     agents: zhCNAgents,
+    storage: zhCNStorage,
   },
   en: {
     common: enCommon,
@@ -166,6 +169,7 @@ const resources = {
     mcpInstallation: enMcpInstallation,
     kanban: enKanban,
     agents: enAgents,
+    storage: enStorage,
   },
 }
 

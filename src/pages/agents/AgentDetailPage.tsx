@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons'
 import { Button, Card, Result, Space, Spin, Tag, Typography, message } from 'antd'
@@ -222,6 +223,7 @@ export default function AgentDetailPage() {
     return () => {
       cancelled = true
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agent, agentId, loadAgentsFailedMessage, fetchWorkspaces, preferredWorkspaceId, syncWorkspaceQuery, workspaceId])
 
   useEffect(() => {
@@ -302,7 +304,11 @@ export default function AgentDetailPage() {
           subTitle={tp('messages.agentNotFoundDesc', {
             defaultValue: 'The agent does not exist in your accessible workspaces.',
           })}
-          extra={<Button onClick={backToList}>{tp('messages.backToAgents', { defaultValue: 'Back to Agents' })}</Button>}
+          extra={
+            <Button type="text" onClick={backToList} className="flat-btn flat-btn--secondary">
+              {tp('messages.backToAgents', { defaultValue: 'Back to Agents' })}
+            </Button>
+          }
         />
       </div>
     )
@@ -316,10 +322,15 @@ export default function AgentDetailPage() {
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>
             <Space align="center">
-              <Button icon={<ArrowLeftOutlined />} onClick={backToList}>
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={backToList}
+                className="flat-btn flat-btn--secondary"
+              >
                 {tp('messages.backToAgents', { defaultValue: 'Back to Agents' })}
               </Button>
-              <Tag>{tp('detailPage.workspace', { defaultValue: 'Workspace' })}: {workspaceName}</Tag>
+              <Tag className="flat-tag">{tp('detailPage.workspace', { defaultValue: 'Workspace' })}: {workspaceName}</Tag>
             </Space>
             <Title level={2} style={{ marginTop: 12, marginBottom: 0 }}>
               {agent.display_name || agent.name}
@@ -330,7 +341,12 @@ export default function AgentDetailPage() {
           </div>
 
           <Space>
-            <Button icon={<EditOutlined />} onClick={goToEdit}>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={goToEdit}
+              className="flat-btn flat-btn--primary"
+            >
               {tp('table.edit', { defaultValue: 'Edit' })}
             </Button>
           </Space>

@@ -10,6 +10,7 @@ module.exports = {
       },
       autorestart: true,
       watch: false,
+      max_size: '50M',
       max_restarts: 10,
       restart_delay: 1000,
       time: true
@@ -24,6 +25,7 @@ module.exports = {
       },
       autorestart: true,
       watch: false,
+      max_size: '50M',
       max_restarts: 10,
       restart_delay: 1000,
       time: true

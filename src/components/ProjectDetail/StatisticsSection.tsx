@@ -30,7 +30,7 @@ export const StatisticsSection: React.FC<StatisticsSectionProps> = ({ stats }) =
             title={tp('overview.stats.totalTasks')}
             value={stats.total_tasks}
             prefix={<CheckSquareOutlined style={{ fontSize: '14px' }} />}
-            valueStyle={{ color: '#1890ff', fontSize: '18px' }}
+            valueStyle={{ color: '#00b96b', fontSize: '18px' }}
             style={{ textAlign: 'center' }}
           />
         </Card>
@@ -52,7 +52,7 @@ export const StatisticsSection: React.FC<StatisticsSectionProps> = ({ stats }) =
             title={tp('overview.stats.inProgressTasks')}
             value={stats.in_progress_tasks}
             prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
-            valueStyle={{ color: '#1890ff', fontSize: '18px' }}
+            valueStyle={{ color: '#00b96b', fontSize: '18px' }}
             style={{ textAlign: 'center' }}
           />
         </Card>

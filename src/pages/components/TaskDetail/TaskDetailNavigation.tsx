@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { Card, Button, Space } from 'antd'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons'
@@ -17,9 +18,12 @@ export const TaskDetailNavigation: React.FC<TaskDetailNavigationProps> = ({
   onNext,
   tp
 }) => {
-  const currentIndex = projectTasks.findIndex(t => t.id === task?.id)
+  const tasks = projectTasks || []
+  const currentIndex = tasks.findIndex(t => t.id === task?.id)
   const hasPrevious = currentIndex > 0
-  const hasNext = currentIndex < projectTasks.length - 1
+  const hasNext = currentIndex >= 0 && currentIndex < tasks.length - 1
+
+  if (tasks.length === 0) return null
 
   return (
     <Card title={tp('navigation.title')} style={{ marginBottom: '16px' }}>
@@ -32,7 +36,7 @@ export const TaskDetailNavigation: React.FC<TaskDetailNavigationProps> = ({
           {tp('navigation.previous')}
         </Button>
         <span>
-          {currentIndex + 1} / {projectTasks.length}
+          {currentIndex + 1} / {tasks.length}
         </span>
         <Button
           icon={<RightOutlined />}

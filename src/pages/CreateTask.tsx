@@ -17,7 +17,7 @@ const { Title, Paragraph } = Typography
 const { Option } = Select
 
 const CreateTask: React.FC = () => {
-  const { t, tp } = usePageTranslation('createTask')
+  const { tp } = usePageTranslation('createTask')
   const navigate = useNavigate()
   const hook = useCreateTask(tp)
   const [labelOptions, setLabelOptions] = useState<{ label: string; value: string }[]>([])
@@ -41,13 +41,10 @@ const CreateTask: React.FC = () => {
     handleSubmit,
     handleSubmitAndEdit,
     handleCancel,
-    handleCreateAndContinue,
     debouncedSaveDraft,
     debouncedSaveEditDraft,
     debouncedAutoSave,
     performAutoSave,
-    clearDraft,
-    clearEditDraft,
   } = hook
   const selectedProjectId = Form.useWatch('project_id', form)
 
@@ -159,9 +156,9 @@ const CreateTask: React.FC = () => {
         <Breadcrumb.Item>{isEditMode ? tp('title.edit') : tp('title.create')}</Breadcrumb.Item>
       </Breadcrumb>
 
-      <Card style={{ marginBottom: '16px' }}>
+      <Card className="flat-card" style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Button type="default" icon={<ArrowLeftOutlined />} onClick={handleCancel}>
+          <Button type="text" className="flat-btn flat-btn--secondary" icon={<ArrowLeftOutlined />} onClick={handleCancel}>
             {tp('navigation.returnToProjectTaskList')}
           </Button>
           <div style={{ flex: 1 }}>
@@ -189,7 +186,7 @@ const CreateTask: React.FC = () => {
       <Card>
         <Form form={form} layout="vertical" onFinish={() => handleSubmit(attachmentRawFiles)}>
           <ResizableContainer defaultWidth={1000} minWidth={600} maxWidth={1400} storageKey="taskEditor_contentWidth">
-            <Card size="small" style={{ marginBottom: '16px' }}>
+            <Card className="flat-card" size="small" style={{ marginBottom: '16px' }}>
               <Row gutter={16}>
                 <Col span={8}>
                   <Form.Item label={tp('form.project.label')} name="project_id" rules={[{ required: true, message: tp('form.project.required') }]}>
@@ -209,7 +206,7 @@ const CreateTask: React.FC = () => {
               </Row>
             </Card>
 
-            <Card title={<div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>📝 {tp('form.content.title')}</div>} style={{ marginBottom: '16px' }}>
+            <Card className="flat-card" title={<div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00b96b' }}>📝 {tp('form.content.title')}</div>} style={{ marginBottom: '16px' }}>
               <Form.Item name="content" rules={[{ required: true, message: tp('form.content.required') }]}>
                 {(!isEditMode || taskLoaded) ? (
                   <MilkdownEditor
@@ -236,7 +233,7 @@ const CreateTask: React.FC = () => {
               </Form.Item>
             </Card>
 
-            <Card title={tp('form.settings.title')} size="small" style={{ marginBottom: '24px' }}>
+            <Card className="flat-card" title={tp('form.settings.title')} size="small" style={{ marginBottom: '24px' }}>
               <Row gutter={16}>
                 <Col span={6}>
                   <Form.Item label={tp('form.settings.status.label')} name="status">
@@ -322,10 +319,21 @@ const CreateTask: React.FC = () => {
               </Row>
             </Card>
 
-            <Card title={tp('form.attachments.title')} size="small" style={{ marginBottom: '24px' }}>
+            <Card className="flat-card" title={tp('form.attachments.title')} size="small" style={{ marginBottom: '24px' }}>
               <Upload.Dragger
                 multiple
                 beforeUpload={(file) => {
+                  const MAX_SIZE = 20 * 1024 * 1024
+                  const ALLOWED_EXT = ['.txt', '.md', '.json', '.csv', '.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.zip', '.tar', '.gz', '.py', '.js', '.ts', '.tsx', '.jsx', '.java', '.go', '.rs', '.sql', '.yaml', '.yml']
+                  const ext = '.' + (file.name.split('.').pop() || '').toLowerCase()
+                  if (!ALLOWED_EXT.includes(ext)) {
+                    message.error(`${file.name}: 不支持此文件类型`)
+                    return Upload.LIST_IGNORE
+                  }
+                  if (file.size > MAX_SIZE) {
+                    message.error(`${file.name}: 文件超过 20MB 限制`)
+                    return Upload.LIST_IGNORE
+                  }
                   setAttachmentFiles((prev) => [...prev, file])
                   return false
                 }}
@@ -342,10 +350,10 @@ const CreateTask: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <Space size="large">
-              <Button size="large" icon={<ArrowLeftOutlined />} onClick={handleCancel}>
+              <Button type="text" className="flat-btn flat-btn--secondary" size="large" icon={<ArrowLeftOutlined />} onClick={handleCancel}>
                 {tp('actions.common.return')}
               </Button>
-              <Button type="primary" size="large" icon={<SaveOutlined />} loading={loading} htmlType="submit">
+              <Button type="primary" className="flat-btn-solid flat-btn-solid--primary" size="large" icon={<SaveOutlined />} loading={loading} htmlType="submit">
                 {isEditMode ? tp('actions.common.update') : tp('actions.createMode.create')}
               </Button>
             </Space>

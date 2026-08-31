@@ -28,7 +28,7 @@ export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats, tp }) => 
             title={tp('stats.totalUsers')}
             value={stats.total}
             prefix={<TeamOutlined />}
-            valueStyle={{ color: '#1890ff' }}
+            valueStyle={{ color: '#00b96b' }}
           />
         </Card>
       </Col>

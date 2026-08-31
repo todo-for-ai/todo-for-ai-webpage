@@ -1,11 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Form, message } from 'antd'
+import { Form } from 'antd'
 import dayjs from 'dayjs'
 import { useTaskStore } from '../stores'
 import type { CreateTaskData } from '../api/tasks'
 import { tasksApi } from '../api/tasks'
-import { generateMcpConfig } from '../utils/mcpConfig'
 
 interface CreateTaskHook {
 form: any
@@ -52,7 +52,7 @@ const parsed = parseParticipants(raw)
 return parsed.map((item) => `${item.type}:${item.id}`)
 }
 
-export const useCreateTask = (tp: (key: string) => string): CreateTaskHook => {
+export const useCreateTask = (_tp: (key: string) => string): CreateTaskHook => {
 const navigate = useNavigate()
 const [searchParams] = useSearchParams()
 const { id } = useParams<{ id: string }>()
@@ -74,7 +74,7 @@ const { createTask, updateTask, getTask } = useTaskStore()
 const defaultProjectId = searchParams.get('project_id')
 
 const getDraftKey = (projectId: number, isEdit: boolean, taskId?: string) => {
-if (isEdit && taskId) return `task-edit-${taskId}`
+if (isEdit && taskId) return `task-edit-${projectId}`
 const sessionId = sessionStorage.getItem('newTaskSessionId') || Date.now().toString()
 if (!sessionStorage.getItem('newTaskSessionId')) {
 sessionStorage.setItem('newTaskSessionId', sessionId)
@@ -99,7 +99,7 @@ const draftKey = getDraftKey(projectId, isEdit, taskId)
 const saved = localStorage.getItem(draftKey)
 if (saved) {
 const draft = JSON.parse(saved)
-const { savedAt, ...formData } = draft
+const { savedAt: _savedAt, ...formData } = draft
 return formData
 }
 } catch (error) {
@@ -174,6 +174,7 @@ mentions: parseParticipants(currentValues.mentions)
 saveDraft(projectId, draftData, false)
 }
 }, 500)
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [form])
 
 const debouncedSaveEditDraft = useCallback((content: string) => {
@@ -197,6 +198,7 @@ mentions: parseParticipants(currentValues.mentions),
 }
 saveEditDraft(taskId, draftData)
 }, 500)
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [isEditMode, id, form])
 
 const performAutoSave = useCallback(async () => {
@@ -457,7 +459,11 @@ console.warn('Failed to load copy task data:', error)
 }
 }
 }
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [id, searchParams, form])
+
+// Suppress unused variable warnings for loadDraft
+void loadDraft
 
 return {
 form,

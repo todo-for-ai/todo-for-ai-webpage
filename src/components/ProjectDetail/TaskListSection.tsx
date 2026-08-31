@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
 import { Card, Modal, Select, Space, Button, Table, message } from 'antd'
 import { DeleteOutlined, EditOutlined, DeploymentUnitOutlined } from '@ant-design/icons'
 import { useProjectTasks } from '../../hooks/useProjectTasks'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../../utils/errorUtils'
 import { TaskFilters } from './TaskFilters'
 import { useTaskStore } from '../../stores'
 import { agentsApi, type Agent } from '../../api/agents'
@@ -50,7 +52,7 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
           handleClearSelection()
           await onRefresh()
         } catch (error) {
-          message.error(tp('tasks.table.bulkActions.deleteError'))
+          message.error(getErrorMessage(error, tp('tasks.table.bulkActions.deleteError')))
         }
       }
     })
@@ -75,7 +77,7 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
           handleClearSelection()
           await onRefresh()
         } catch (error) {
-          message.error(tp('tasks.table.bulkActions.statusChangeError'))
+          message.error(getErrorMessage(error, tp('tasks.table.bulkActions.statusChangeError')))
         }
       },
       onCancel: () => {
@@ -140,7 +142,7 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
       <TaskFilters onRefresh={onRefresh} loading={tasksLoading} />
       
       {selectedTaskIds.length > 0 && (
-        <div style={{ marginBottom: 16, padding: '12px', backgroundColor: '#e6f7ff', borderRadius: '4px' }}>
+        <div style={{ marginBottom: 16, padding: '12px', backgroundColor: '#f0faf5', borderRadius: '4px' }}>
           <Space>
             <span>{tp('tasks.table.bulkActions.selectedCount', { count: selectedTaskIds.length })}</span>
             <Button

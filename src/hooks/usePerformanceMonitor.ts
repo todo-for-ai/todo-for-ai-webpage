@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef } from 'react'
 
 /**
@@ -29,9 +30,10 @@ export function usePerformanceMonitor(componentName: string) {
     lastRenderTime.current = now
 
     // 组件卸载时输出统计信息
+    const mountedAt = mountedTime.current
     return () => {
       if (import.meta.env.DEV) {
-        const totalTime = Date.now() - mountedTime.current
+        const totalTime = Date.now() - mountedAt
         console.log(
           `[Performance] ${componentName} unmounted after ` +
           `${renderCount.current} renders over ${totalTime}ms`
@@ -51,7 +53,6 @@ export function usePerformanceMonitor(componentName: string) {
  * 用于监控多个组件的性能
  */
 export function useBatchPerformanceMonitor(components: string[]) {
-  const startTime = useRef<number>(Date.now())
   const results = useRef<Record<string, { count: number; lastRender: number }>>({})
 
   useEffect(() => {
@@ -100,9 +101,10 @@ export function useMemoryMonitor(label: string) {
       }
     }
 
+    const startedAt = startTime.current
     return () => {
       if (import.meta.env.DEV) {
-        const duration = Date.now() - startTime.current
+        const duration = Date.now() - startedAt
         console.log(`[Memory] ${label} mounted for ${duration}ms`)
       }
     }

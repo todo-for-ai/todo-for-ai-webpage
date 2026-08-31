@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from 'react'
 import { Card, Tabs } from 'antd'
 import type { Agent } from '../../../api/agents'
@@ -10,6 +11,7 @@ import { AgentInteractionsTab } from './detailTabs/AgentInteractionsTab'
 import { AgentOverviewTab } from './detailTabs/AgentOverviewTab'
 import { AgentProjectsTab } from './detailTabs/AgentProjectsTab'
 import { AgentRunsTab } from './detailTabs/AgentRunsTab'
+import { AgentRuntimeTab } from './detailTabs/AgentRuntimeTab'
 import { AgentTasksTab } from './detailTabs/AgentTasksTab'
 import './AgentDetailTabs.css'
 
@@ -22,15 +24,8 @@ interface AgentDetailTabsProps {
 }
 
 export const AGENT_DETAIL_TAB_KEYS = [
-  'overview',
-  'activity',
-  'projects',
-  'interactions',
-  'tasks',
-  'runs',
-  'keys',
-  'soul',
-  'secrets',
+  'overview', 'activity', 'projects', 'interactions', 'tasks', 'runs', 'runtime',
+  'keys', 'soul', 'secrets',
 ] as const
 
 export type AgentDetailTabKey = (typeof AGENT_DETAIL_TAB_KEYS)[number]
@@ -71,10 +66,11 @@ export function AgentDetailTabs({
   }
 
   return (
-    <Card title={tp('detail.title', { defaultValue: 'Agent Detail' })} className='agent-detail-tabs-card'>
+    <Card title={tp('detail.title', { defaultValue: 'Agent Detail' })} className='agent-detail-tabs-card flat-card'>
       <Tabs
         activeKey={activeTab}
         onChange={handleTabChange}
+        className='flat-tabs'
         items={[
           {
             key: 'overview',
@@ -114,6 +110,13 @@ export function AgentDetailTabs({
             label: tp('detail.tabs.runs', { defaultValue: 'Runs' }),
             children: isTabLoaded('runs') ? (
               <AgentRunsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'runs'} />
+            ) : null,
+          },
+          {
+            key: 'runtime',
+            label: tp('detail.tabs.runtime', { defaultValue: 'Runtime' }),
+            children: isTabLoaded('runtime') ? (
+              <AgentRuntimeTab workspaceId={workspaceId} agent={agent} active={activeTab === 'runtime'} />
             ) : null,
           },
           {

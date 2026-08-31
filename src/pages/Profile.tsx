@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Card,
@@ -58,7 +59,7 @@ const Profile = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // 定义所有有效的标签页key
-  const validTabs = ['profile', 'tokens']
+  const validTabs = useMemo(() => ['profile', 'tokens'], [])
 
   // 获取初始标签页，确保是有效的
   const getInitialTab = () => {
@@ -226,7 +227,7 @@ const Profile = () => {
     } finally {
       setIsAvatarUpdating(false)
     }
-  }, [clearStoredAvatarToken, localAvatarToken, messageApi, tp, updateUser, user])
+  }, [localAvatarToken, messageApi, tp, updateUser, user])
 
   const handleRandomAvatar = useCallback(async () => {
     if (!user) {
@@ -328,7 +329,7 @@ const Profile = () => {
                           src={resolveUserAvatarSrc(option.token, avatarIdentitySeed)}
                           style={{
                             ...AVATAR_BORDER_STYLE,
-                            ...(isSelected ? { boxShadow: '0 0 0 2px #1677ff' } : {}),
+                            ...(isSelected ? { boxShadow: '0 0 0 2px #00b96b' } : {}),
                           }}
                         />
                       )
@@ -549,8 +550,8 @@ const Profile = () => {
                     width: '100%',
                     minHeight: 68,
                     borderRadius: 10,
-                    border: isSelected ? '2px solid #1677ff' : '1px solid #d9d9d9',
-                    background: isSelected ? '#e6f4ff' : '#fff',
+                    border: isSelected ? '2px solid #00b96b' : '1px solid #d9d9d9',
+                    background: isSelected ? '#f0faf5' : '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

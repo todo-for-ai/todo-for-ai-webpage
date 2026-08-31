@@ -1,7 +1,6 @@
 import React from 'react'
 import { Select } from 'antd'
 import { GlobalOutlined } from '@ant-design/icons'
-import { useTranslation } from '../i18n/hooks/useTranslation'
 import { getLanguageDisplayName, type SupportedLanguage } from '../i18n'
 import { useLanguage } from '../contexts/LanguageContext'
 import { analytics } from '../utils/analytics'

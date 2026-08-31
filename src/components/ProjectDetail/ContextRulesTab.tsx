@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Table, Button, Space, message } from 'antd'
+import { Card, Table, Button, message } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { useContextRuleStore } from '../../stores'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { useContextRulesColumns } from './ContextRulesColumns'
+import type { ContextRule } from '../../api/contextRules'
 
 interface ContextRulesTabProps {
   projectId: number
@@ -18,8 +19,7 @@ export const ContextRulesTab: React.FC<ContextRulesTabProps> = ({ projectId }) =
     loading,
     fetchContextRules,
     setQueryParams,
-    deleteContextRule,
-    toggleContextRule
+    deleteContextRule
   } = useContextRuleStore()
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export const ContextRulesTab: React.FC<ContextRulesTabProps> = ({ projectId }) =
     fetchContextRules()
   }, [projectId, setQueryParams, fetchContextRules])
 
-  const handleDelete = async (rule: any) => {
+  const handleDelete = async (rule: ContextRule) => {
     const success = await deleteContextRule(rule.id)
     if (success) {
       message.success(tp('contextRules.messages.deleteSuccess'))

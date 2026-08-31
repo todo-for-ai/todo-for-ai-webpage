@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { Card, Tabs, Typography, Space } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useTranslation } from '../i18n/hooks/useTranslation'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { ProjectPromptEditor, TaskPromptButtons } from '../components/CustomPrompts'
 
 const { Title, Paragraph } = Typography
 
 const CustomPrompts: React.FC = () => {
-  const { t } = useTranslation()
   const { tp } = usePageTranslation('customPrompts')
   const navigate = useNavigate()
   const location = useLocation()
@@ -32,6 +30,7 @@ const CustomPrompts: React.FC = () => {
     if (newActiveTab !== activeTab) {
       setActiveTab(newActiveTab)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
 
   // 设置页面标题

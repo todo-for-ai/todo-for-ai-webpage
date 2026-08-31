@@ -2,9 +2,9 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { message } from 'antd'
 import { useTaskStore } from '../../../stores/useTaskStore'
-import { useProjectStore } from '../../../stores/useProjectStore'
 import { analytics } from '../../../utils/analytics'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../../../utils/errorUtils'
 
 export interface TaskFormData {
   title: string
@@ -21,7 +21,6 @@ export const useTaskCreation = () => {
   const { tp } = usePageTranslation('createTask')
   const [loading, setLoading] = useState(false)
   const { createTask } = useTaskStore()
-  const { currentProject } = useProjectStore()
 
   const handleSubmit = useCallback(async (formData: TaskFormData, projectId: number) => {
     if (!formData.title.trim()) {
@@ -53,7 +52,7 @@ export const useTaskCreation = () => {
       return true
     } catch (error) {
       console.error('Failed to create task:', error)
-      message.error(tp('messages.createFailed'))
+      message.error(getErrorMessage(error, tp('messages.createFailed')))
       return false
     } finally {
       setLoading(false)

@@ -51,7 +51,7 @@ export function SecretsCollaborationSection({
           onChange={(value) => onProjectIdChange(typeof value === 'number' ? value : null)}
           className='agent-secrets-collaboration__project-input'
         />
-        <Button icon={<ReloadOutlined />} onClick={onRefresh}>
+        <Button type="text" icon={<ReloadOutlined />} onClick={onRefresh} className="flat-btn flat-btn--secondary">
           Refresh
         </Button>
       </Space>

@@ -3,6 +3,7 @@ import { message } from 'antd'
 import AuthAPI, { type UserListParams } from '../api/auth'
 import { useAuthStore, type User } from '../stores/useAuthStore'
 import { useTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 
 interface UserStats {
   total: number
@@ -105,24 +106,25 @@ export const useUserManagement = (): UserManagementReturn => {
       setStats(newStats)
     } catch (error) {
       console.error('Failed to load users:', error)
-      message.error(t('messages.loadFailed'))
+      message.error(getErrorMessage(error, t('messages.loadFailed')))
     } finally {
       setLoading(false)
     }
-  }, [filters, pagination.current, pagination.pageSize, t])
+  }, [filters, pagination, t])
 
   useEffect(() => {
     if (isInitialLoad.current) {
       isInitialLoad.current = false
       loadUsers()
     }
-  }, [])
+  }, [loadUsers])
 
   useEffect(() => {
     if (!isInitialLoad.current && (pagination.current > 1 || pagination.pageSize !== 20)) {
       loadUsers()
     }
-  }, [pagination.current, pagination.pageSize, loadUsers])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: using pagination.current/pageSize to avoid infinite loop
+  }, [loadUsers, pagination.current, pagination.pageSize])
 
   const handleSearch = (value: string) => {
     setFilters(prev => ({ ...prev, search: value }))
@@ -149,7 +151,7 @@ export const useUserManagement = (): UserManagementReturn => {
       loadUsers()
     } catch (error) {
       console.error('Failed to update user status:', error)
-      message.error(t('messages.updateFailed'))
+      message.error(getErrorMessage(error, t('messages.updateFailed')))
     }
   }
 

@@ -3,7 +3,7 @@
  * 管理用户的自定义提示词模板和任务详情页按钮配置
  */
 
-import { renderPromptTemplate, type RenderContext, formatTasksList } from '../utils/promptRenderer'
+import { renderPromptTemplate, type RenderContext } from '../utils/promptRenderer'
 import { customPromptsApi } from '../api/customPrompts'
 import i18n from '../i18n'
 

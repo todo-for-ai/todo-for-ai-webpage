@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { apiClient } from './client/index.js'
 import { getApiBaseUrl } from '../utils/apiConfig'
 
@@ -389,7 +391,6 @@ export interface TaskAttachment {
   task_id: number
   filename: string
   original_filename: string
-  file_path: string
   file_size: number
   mime_type?: string
   is_image?: boolean
@@ -517,6 +518,14 @@ export class TasksApi {
     return apiClient.post('/tasks/batch/update-priority', {
       task_ids: taskIds,
       priority
+    })
+  }
+
+  // 批量指派任务
+  async batchAssignTasks(taskIds: number[], assignees: Array<{ type: 'human' | 'agent'; id: number }>) {
+    return apiClient.post('/tasks/batch/assign', {
+      task_ids: taskIds,
+      assignees
     })
   }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { projectsApi } from '../api/projects'

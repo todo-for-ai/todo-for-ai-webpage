@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * JWT工具函数
  * 用于解析、验证和检查JWT token

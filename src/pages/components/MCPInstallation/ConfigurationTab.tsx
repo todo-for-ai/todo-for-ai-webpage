@@ -1,10 +1,9 @@
 import React from 'react'
-import { Card, Typography, Alert, Table, List, Tag } from 'antd'
+import { Card, Typography, Alert, Table, Tag } from 'antd'
 import {
   SettingOutlined,
   SafetyOutlined,
   EnvironmentOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 
@@ -69,7 +68,7 @@ export const ConfigurationTab: React.FC = () => {
   return (
     <Card>
       <Title level={3}>
-        <SettingOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+        <SettingOutlined style={{ color: '#00b96b', marginRight: '8px' }} />
         {tp('configuration.title')}
       </Title>
       <Paragraph>{tp('configuration.description')}</Paragraph>

@@ -1,4 +1,5 @@
-import { buildTaskQuery, type TaskFilterParams } from './taskQueryBuilder'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { buildTaskQuery } from './taskQueryBuilder'
 
 export const toQueryParams = (filters: any, projectId: number, pagination: any) => {
   return buildTaskQuery({

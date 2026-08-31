@@ -1,6 +1,6 @@
 import React from 'react'
-import { Card, Divider, List, Space, Tag, Typography } from 'antd'
-import { CheckCircleOutlined, QuestionCircleOutlined, SettingOutlined, ToolOutlined } from '@ant-design/icons'
+import { Card, Divider, Space, Tag, Typography } from 'antd'
+import { QuestionCircleOutlined, SettingOutlined, ToolOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 
 const { Title, Paragraph, Text } = Typography
@@ -28,7 +28,7 @@ export const OverviewTab: React.FC = () => {
       <Divider />
 
       <Title level={4}>
-        <QuestionCircleOutlined style={{ color: '#1890ff', marginRight: '8px' }} />
+        <QuestionCircleOutlined style={{ color: '#00b96b', marginRight: '8px' }} />
         {tp('overview.whatIsMcp.title')}
       </Title>
       <Paragraph>{tp('overview.whatIsMcp.description')}</Paragraph>

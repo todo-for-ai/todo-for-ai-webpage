@@ -35,7 +35,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
 
   // 解析owner和repo从repositoryUrl（向后兼容）
   const parseRepoFromUrl = (url: string) => {
-    const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/)
+    const match = url.match(/github\.com\/([^/]+)\/([^/]+)/)
     return match ? { owner: match[1], repo: match[2] } : null
   }
 
@@ -72,7 +72,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
     } finally {
       setLoading(false)
     }
-  }, [finalOwner, finalRepo, showStars, showForks])
+  }, [finalOwner, finalRepo, showStars, showForks, tc])
 
   // 首次加载立即执行，避免延迟
   useEffect(() => {
@@ -135,7 +135,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
           }}
           onClick={handleClick}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(24, 144, 255, 0.12)'
+            e.currentTarget.style.background = 'rgba(0, 185, 107, 0.12)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(102, 102, 102, 0.08)'
@@ -159,7 +159,7 @@ const GitHubBadge: React.FC<GitHubBadgeProps> = ({
               marginLeft: '17px'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#1890ff'
+              e.currentTarget.style.color = '#00b96b'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = '#666'

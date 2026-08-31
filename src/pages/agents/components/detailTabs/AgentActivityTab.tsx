@@ -424,6 +424,7 @@ export function AgentActivityTab({ workspaceId, agentId, active }: AgentActivity
         onOk={() => setDetailItem(null)}
         okText={tp('detail.activity.close', { defaultValue: 'Close' })}
         cancelButtonProps={{ style: { display: 'none' } }}
+        className='flat-modal'
         width={900}
       >
         <Descriptions bordered size='small' column={2}>

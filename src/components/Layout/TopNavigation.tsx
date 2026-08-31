@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Layout, Menu, Typography, Badge } from 'antd'
+import { Layout, Menu, Typography } from 'antd'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   DashboardOutlined,
@@ -11,6 +12,7 @@ import {
   ControlOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
+import NotificationBell from '../NotificationBell'
 import { LinkButton } from '../SmartLink'
 import { GitHubBadge } from '../GitHubBadge'
 import { pinsApi, type UserProjectPin, type ProjectTaskCount } from '../../api/pins'
@@ -83,7 +85,7 @@ const TopNavigation: React.FC = () => {
     return () => {
       window.removeEventListener('pinUpdated', handlePinUpdate)
     }
-  }, [])
+  }, [loadPinnedProjects])
   useEffect(() => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
@@ -101,7 +103,7 @@ const TopNavigation: React.FC = () => {
         pollingIntervalRef.current = null
       }
     }
-  }, [pinnedProjects.length])
+  }, [pinnedProjects.length, loadTaskCounts])
   const getProjectTaskCount = (projectId: number): number => {
     const taskCount = taskCounts.find(tc => tc.project_id === projectId)
     return taskCount?.pending_tasks || 0
@@ -135,7 +137,7 @@ const TopNavigation: React.FC = () => {
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id
       const taskCount = getProjectTaskCount(projectId)
-      const projectColor = pin.project?.color || '#1890ff'
+      const projectColor = pin.project?.color || '#00b96b'
       return {
         key: `/todo-for-ai/pages/projects/${projectId}`,
         icon: <PushpinOutlined style={{ color: projectColor }} />,
@@ -230,7 +232,7 @@ const TopNavigation: React.FC = () => {
   }
   const reloadPinnedProjects = useCallback(async () => {
     await loadPinnedProjects()
-  }, [])
+  }, [loadPinnedProjects])
   return (
     <Header
       className="top-navigation"
@@ -268,7 +270,7 @@ const TopNavigation: React.FC = () => {
           level={4}
           style={{
             margin: 0,
-            color: '#1890ff',
+            color: '#00b96b',
             fontSize: '18px',
             fontWeight: 600
           }}
@@ -321,6 +323,7 @@ const TopNavigation: React.FC = () => {
       >
         {/* 文档链接 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <NotificationBell />
           <LinkButton
             to="/todo-for-ai/pages/mcp-installation"
             type="text"
@@ -329,7 +332,7 @@ const TopNavigation: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              color: location.pathname === '/todo-for-ai/pages/mcp-installation' ? '#1890ff' : '#666',
+              color: location.pathname === '/todo-for-ai/pages/mcp-installation' ? '#00b96b' : '#666',
               fontWeight: location.pathname === '/todo-for-ai/pages/mcp-installation' ? 500 : 400,
             }}
           >
@@ -349,7 +352,7 @@ const TopNavigation: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              color: location.pathname === '/todo-for-ai/pages/api-documentation' ? '#1890ff' : '#666',
+              color: location.pathname === '/todo-for-ai/pages/api-documentation' ? '#00b96b' : '#666',
               fontWeight: location.pathname === '/todo-for-ai/pages/api-documentation' ? 500 : 400,
             }}
           >

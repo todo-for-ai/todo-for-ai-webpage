@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Card, Form, Input, message, Modal, Segmented, Space, Typography } from 'antd'
@@ -121,14 +122,14 @@ const Organizations = () => {
                 ]}
               />
             </Space>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
+            <Button type="primary" className="flat-btn" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
               {tp('actions.create')}
             </Button>
           </Space>
         </div>
       </div>
 
-      <Card>
+      <Card className="flat-card">
         {viewMode === 'list' ? (
           <OrganizationsListView
             tp={tp}

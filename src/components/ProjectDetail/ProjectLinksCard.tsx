@@ -2,15 +2,16 @@ import React from 'react'
 import { Card, Row, Col } from 'antd'
 import { GithubOutlined, DesktopOutlined, CloudOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import type { Project } from '../../api/projects'
 
 interface ProjectLinksCardProps {
-  project: any
+  project: Project
 }
 
 export const ProjectLinksCard: React.FC<ProjectLinksCardProps> = ({ project }) => {
   const { tp } = usePageTranslation('projectDetail')
 
-  const LinkItem = ({ icon, label, url, actionLabel }: any) => (
+  const LinkItem = ({ icon, label, url, actionLabel }: { icon: React.ReactNode; label: string; url?: string; actionLabel: string }) => (
     <div style={{ marginBottom: '16px' }}>
       <strong>{label}：</strong>
       {url ? (

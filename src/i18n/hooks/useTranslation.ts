@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useTranslation as useI18nTranslation } from 'react-i18next'
 import { useCallback } from 'react'
 import type { SupportedLanguage } from '../index'
@@ -58,7 +59,7 @@ export const usePageTranslation = (page: string) => {
   const translation = useTranslation(page)
   const tp = useCallback(
     (key: string, options?: any) => translation.t(key, options) as string,
-    [translation.t]
+    [translation]
   )
 
   return {

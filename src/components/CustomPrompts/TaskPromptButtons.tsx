@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react'
 import { Space, Button, Card, Input, Modal, List, message, Popconfirm } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, BookOutlined, HolderOutlined } from '@ant-design/icons'
@@ -7,14 +8,12 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import MilkdownEditor from '../MilkdownEditor'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../../utils/errorUtils'
 import { customPromptsService, type TaskPromptButton } from '../../services/customPromptsService'
-
-const { TextArea } = Input
 
 interface SortableButtonItemProps {
   id: string
   button: TaskPromptButton
-  index: number
   onEdit: (button: TaskPromptButton) => void
   onDelete: (buttonId: string) => void
 }
@@ -22,7 +21,6 @@ interface SortableButtonItemProps {
 const SortableButtonItem: React.FC<SortableButtonItemProps> = ({
   id,
   button,
-  index,
   onEdit,
   onDelete
 }) => {
@@ -175,7 +173,7 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
       setEditingButton(null)
     } catch (error) {
       console.error('Failed to save button:', error)
-      message.error(tp('messages.saveFailed'))
+      message.error(getErrorMessage(error, tp('messages.saveFailed')))
     } finally {
       setIsLoading(false)
     }
@@ -190,7 +188,7 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
       message.success(tp('messages.deleteSuccess'))
     } catch (error) {
       console.error('Failed to delete button:', error)
-      message.error(tp('messages.deleteFailed'))
+      message.error(getErrorMessage(error, tp('messages.deleteFailed')))
     }
   }
 
@@ -218,7 +216,7 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
       } catch (error) {
         // 如果保存失败，恢复原来的顺序
         setButtons(buttons)
-        message.error(tp('messages.reorderFailed'))
+        message.error(getErrorMessage(error, tp('messages.reorderFailed')))
       }
     }
   }
@@ -261,12 +259,11 @@ const TaskPromptButtons: React.FC<TaskPromptButtonsProps> = ({
           >
             <List
               dataSource={buttons}
-              renderItem={(button, index) => (
+              renderItem={(button) => (
                 <SortableButtonItem
                   key={button.id}
                   id={button.id}
                   button={button}
-                  index={index}
                   onEdit={handleEditButton}
                   onDelete={handleDeleteButton}
                 />

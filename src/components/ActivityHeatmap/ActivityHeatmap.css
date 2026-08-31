@@ -1,0 +1,23 @@
+.activity-heatmap__loading {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.activity-heatmap__empty {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+}
+
+.activity-heatmap__content {
+  padding: 20px 0;
+}
+
+.activity-heatmap__subtitle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+}

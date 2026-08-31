@@ -3,6 +3,8 @@ import type {
   AgentSecret,
   AgentSecretListResponse,
   AgentSecretCollaborationResponse,
+  ApprovalRequestListResponse,
+  AuditLogResponse,
   CreateAgentSecretRequest,
   CreateAgentSecretShareRequest,
   AgentSecretShareListResponse,
@@ -78,6 +80,65 @@ export class AgentSecretsApi {
 
   async revokeAgentSecretShare(workspaceId: number, agentId: number, secretId: number, shareId: number) {
     return apiClient.post(`/workspaces/${workspaceId}/agents/${agentId}/secrets/${secretId}/shares/${shareId}/revoke`)
+  }
+
+  // Approval APIs
+  async getSecretApprovalRequests(
+    workspaceId: number,
+    params?: { status?: string; secretId?: number }
+  ) {
+    const query = new URLSearchParams()
+    if (params?.status) {
+      query.set('status', params.status)
+    }
+    if (params?.secretId) {
+      query.set('secret_id', String(params.secretId))
+    }
+    const qs = query.toString()
+    return apiClient.get<ApprovalRequestListResponse>(
+      `/workspaces/${workspaceId}/secret-approvals${qs ? `?${qs}` : ''}`
+    )
+  }
+
+  async approveSecretRequest(workspaceId: number, requestId: number, notes?: string) {
+    return apiClient.post(`/workspaces/${workspaceId}/secret-approvals/${requestId}/approve`, { notes })
+  }
+
+  async rejectSecretRequest(workspaceId: number, requestId: number, notes?: string) {
+    return apiClient.post(`/workspaces/${workspaceId}/secret-approvals/${requestId}/reject`, { notes })
+  }
+
+  // Audit Log APIs
+  async getSecretAuditLog(
+    workspaceId: number,
+    params?: {
+      secretId?: number
+      agentId?: number
+      action?: string
+      actorType?: string
+      page?: number
+      perPage?: number
+    }
+  ) {
+    const query = new URLSearchParams()
+    query.set('source', 'agent_audit')
+    if (params?.secretId) {
+      query.set('secret_id', String(params.secretId))
+    }
+    if (params?.agentId) {
+      query.set('agent_id', String(params.agentId))
+    }
+    if (params?.action) {
+      query.set('event_type', params.action)
+    }
+    if (params?.actorType) {
+      query.set('actor_type', params.actorType)
+    }
+    query.set('page', String(params?.page || 1))
+    query.set('per_page', String(params?.perPage || 20))
+    return apiClient.get<AuditLogResponse>(
+      `/workspaces/${workspaceId}/insights/activities?${query.toString()}`
+    )
   }
 }
 

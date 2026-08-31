@@ -28,6 +28,7 @@ export function RotateSecretModal({
       onCancel={onCancel}
       onOk={onConfirm}
       confirmLoading={loading}
+      className='flat-modal'
     >
       <Space direction='vertical' className='agent-secrets-rotate-modal__body'>
         <Text>New secret value</Text>

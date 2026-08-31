@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ThemeChangeListeners 占位实现
 export class ThemeChangeListeners {
-  addListener(callback: Function) {
+  addListener(_callback: (...args: any[]) => any) {
     // 占位
   }
   
-  removeListener(callback: Function) {
+  removeListener(_callback: (...args: any[]) => any) {
     // 占位
   }
   
-  subscribe(callback: Function) {
+  subscribe(_callback: (...args: any[]) => any) {
     // 占位
     return () => {} // 返回取消订阅函数
   }

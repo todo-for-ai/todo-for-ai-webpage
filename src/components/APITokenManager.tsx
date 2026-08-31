@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Card, Table, Button, Space, Tag, Modal, Form, Input, message, Popconfirm } from 'antd'
 import { PlusOutlined, DeleteOutlined, EyeOutlined, CopyOutlined } from '@ant-design/icons'
 import { apiTokensApi } from '../api/apiTokens'
 import type { ApiToken } from '../api/apiTokens'
 import { useTranslation } from '../i18n/hooks/useTranslation'
+import { getErrorMessage } from '../utils/errorUtils'
 
 const APITokenManager: React.FC = () => {
   const { tc } = useTranslation()
@@ -17,21 +18,21 @@ const APITokenManager: React.FC = () => {
 
   useEffect(() => {
     loadTokens()
-  }, [])
+  }, [loadTokens])
 
-  const loadTokens = async () => {
+  const loadTokens = useCallback(async () => {
     setLoading(true)
     try {
       const result = await apiTokensApi.list()
       setTokens(result)
     } catch (error) {
-      message.error(tc('apiTokenManager.messages.loadFailed'))
+      message.error(getErrorMessage(error, tc('apiTokenManager.messages.loadFailed')))
     } finally {
       setLoading(false)
     }
-  }
+  }, [tc])
 
-  const handleCreateToken = async (values: any) => {
+  const handleCreateToken = async (values: Record<string, unknown>) => {
     try {
       await apiTokensApi.create(values)
       message.success(tc('apiTokenManager.messages.createSuccess'))
@@ -39,7 +40,7 @@ const APITokenManager: React.FC = () => {
       form.resetFields()
       loadTokens()
     } catch (error) {
-      message.error(tc('apiTokenManager.messages.createFailed'))
+      message.error(getErrorMessage(error, tc('apiTokenManager.messages.createFailed')))
     }
   }
 
@@ -49,7 +50,7 @@ const APITokenManager: React.FC = () => {
       message.success(tc('apiTokenManager.messages.deleteSuccess'))
       loadTokens()
     } catch (error) {
-      message.error(tc('apiTokenManager.messages.deleteFailed'))
+      message.error(getErrorMessage(error, tc('apiTokenManager.messages.deleteFailed')))
     }
   }
 
@@ -75,7 +76,7 @@ const APITokenManager: React.FC = () => {
         const token = await apiTokensApi.reveal(tokenId)
         setRevealedTokens((prev) => ({ ...prev, [tokenId]: token }))
       } catch (error) {
-        message.error(tc('apiTokenManager.messages.loadFailed'))
+        message.error(getErrorMessage(error, tc('apiTokenManager.messages.loadFailed')))
         return
       } finally {
         setRevealingTokenIds((prev) => {

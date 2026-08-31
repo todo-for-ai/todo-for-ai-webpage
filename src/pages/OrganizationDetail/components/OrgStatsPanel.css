@@ -1,0 +1,91 @@
+/**
+ * OrgStatsPanel 组件样式
+ */
+
+.org-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.org-stats__panel {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.org-stats__panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.org-stats__metric {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.org-stats__bar {
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+}
+
+.org-stats__bar-segment {
+  height: 100%;
+}
+
+.org-stats__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 12px;
+  color: #595959;
+}
+
+.org-stats__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.org-stats__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.org-stats__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.org-stats__detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+}
+
+.org-stats__detail-label {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.org-stats__detail-value {
+  font-size: 13px;
+  color: #1f1f1f;
+  font-weight: 500;
+}

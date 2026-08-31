@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Descriptions, Modal, Typography } from 'antd'
 import type { AgentActivityItem } from '../../../../api/agents'
 import { formatDateTime } from '../detailTabs/shared'

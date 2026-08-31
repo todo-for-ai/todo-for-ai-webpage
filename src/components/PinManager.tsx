@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Modal,
   List,
@@ -93,7 +94,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, pin, onRemove }) => {
           }
           title={
             <Space>
-              <PushpinOutlined style={{ color: pin.project.color || '#1890ff' }} />
+              <PushpinOutlined style={{ color: pin.project.color || '#00b96b' }} />
               <Text>{pin.project.name}</Text>
             </Space>
           }
@@ -148,7 +149,7 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
   }, [pins.length, screenHeight])
 
   // 加载Pin列表
-  const loadPins = async () => {
+  const loadPins = useCallback(async () => {
     setLoading(true)
     try {
       const response = await pinsApi.getUserPins()
@@ -163,7 +164,7 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
 
   // 移除Pin
   const handleRemovePin = async (projectId: number) => {
@@ -217,7 +218,7 @@ const PinManager: React.FC<PinManagerProps> = ({ visible, onClose, onUpdate }) =
     if (visible) {
       loadPins()
     }
-  }, [visible])
+  }, [visible, loadPins])
 
   return (
     <Modal

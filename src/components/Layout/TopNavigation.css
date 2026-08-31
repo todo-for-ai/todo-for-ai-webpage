@@ -114,7 +114,7 @@
 
 /* 菜单项激活状态 */
 .top-navigation .ant-menu-item-selected {
-  background-color: #e6f7ff !important;
+  background-color: #f0faf5 !important;
   /* 移除重复的下划线，Ant Design已经提供了默认的下划线效果 */
 }
 
@@ -126,6 +126,6 @@
 
 /* 文档链接悬停效果 */
 .top-navigation .ant-btn:hover {
-  color: #1890ff !important;
+  color: #00b96b !important;
   background-color: #f0f8ff !important;
 }

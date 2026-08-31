@@ -1,0 +1,23 @@
+/**
+ * OrgHeader 组件样式
+ */
+
+.org-header {
+  margin-bottom: 16px;
+}
+
+.org-header__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.org-header__title {
+  margin: 0 0 8px 0 !important;
+}
+
+.org-header__subtitle {
+  margin: 0 !important;
+  color: #595959;
+}

@@ -1,12 +1,12 @@
 /* 任务ID徽标基础样式 - 符合UI设计四个基本原则 */
 .taskIdBadge {
   /* 基础样式 */
-  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  background: linear-gradient(135deg, #00b96b, #3cc884);
   color: white;
   border-radius: 4px;
   font-weight: 500;
   text-align: center;
-  box-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 185, 107, 0.2);
   flex-shrink: 0; /* 防止压缩 */
   display: inline-block;
   line-height: 1.2;
@@ -29,18 +29,18 @@
 }
 
 .taskIdBadge[role="button"]:hover {
-  background: linear-gradient(135deg, #40a9ff, #69c0ff);
-  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+  background: linear-gradient(135deg, #3cc884, #3cc884);
+  box-shadow: 0 2px 4px rgba(0, 185, 107, 0.3);
   transform: translateY(-1px);
 }
 
 .taskIdBadge[role="button"]:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 185, 107, 0.2);
 }
 
 .taskIdBadge[role="button"]:focus {
-  outline: 2px solid #1890ff;
+  outline: 2px solid #00b96b;
   outline-offset: 2px;
 }
 

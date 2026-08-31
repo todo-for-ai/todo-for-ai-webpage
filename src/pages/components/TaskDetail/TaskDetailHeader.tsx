@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { Breadcrumb, Card, Button, Space, Typography, Tag } from 'antd'
 import { ArrowLeftOutlined, HomeOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons'

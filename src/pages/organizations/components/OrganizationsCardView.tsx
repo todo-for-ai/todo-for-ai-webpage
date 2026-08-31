@@ -1,5 +1,4 @@
 import {
-  ArrowRightOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
   TeamOutlined,
@@ -50,7 +49,7 @@ export function OrganizationsCardView({
             const timelineItems = [
               {
                 key: 'lastActivity',
-                icon: <ClockCircleOutlined style={{ color: '#1677ff' }} />,
+                icon: <ClockCircleOutlined style={{ color: '#00b96b' }} />,
                 label: tp('detail.stats.lastActivity'),
                 value: primaryActivityAt,
               },
@@ -74,14 +73,15 @@ export function OrganizationsCardView({
 
             return (
               <Card
+                className="flat-card"
                 hoverable
                 bodyStyle={{ padding: 18, height: '100%' }}
                 style={{
                   height: '100%',
-                  borderRadius: 8,
-                  border: '1px solid #e6f4ff',
-                  boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
-                  background: 'linear-gradient(180deg, #ffffff 0%, #fafcff 100%)',
+                  borderRadius: 6,
+                  border: '1px solid #e8e8e8',
+                  boxShadow: 'none',
+                  background: '#ffffff',
                 }}
                 onClick={(event) => {
                   const target = event.target as HTMLElement
@@ -103,18 +103,18 @@ export function OrganizationsCardView({
                     <Space align="start" size={12}>
                       <div
                         style={{
-                          width: 46,
-                          height: 46,
-                          minWidth: 46,
-                          borderRadius: 8,
-                          background: 'linear-gradient(135deg, #e6f4ff 0%, #f0f5ff 100%)',
+                          width: 44,
+                          height: 44,
+                          minWidth: 44,
+                          borderRadius: 6,
+                          background: '#00b96b',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          boxShadow: 'inset 0 0 0 1px rgba(24, 144, 255, 0.12)',
+                          color: '#fff',
                         }}
                       >
-                        <TeamOutlined style={{ color: '#1677ff', fontSize: 22 }} />
+                        <TeamOutlined style={{ fontSize: 20 }} />
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <LinkButton
@@ -163,18 +163,13 @@ export function OrganizationsCardView({
 
                   <div
                     style={{
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      background: 'rgba(24, 144, 255, 0.04)',
-                      border: '1px solid rgba(24, 144, 255, 0.08)',
+                      padding: '8px 10px',
+                      borderRadius: 4,
+                      background: 'rgba(0, 185, 107, 0.04)',
+                      border: 'none',
                     }}
                   >
-                    <div style={{ marginBottom: 8 }}>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {tp('table.role')}
-                      </Text>
-                    </div>
-                    <Space size={[8, 8]} wrap>
+                    <Space size={[6, 6]} wrap>
                       {visibleRoleKeys.length > 0 ? (
                         visibleRoleKeys.map((roleKey) => (
                           <Tag
@@ -207,10 +202,10 @@ export function OrganizationsCardView({
                       <div
                         key={stat.key}
                         style={{
-                          borderRadius: 8,
-                          padding: '12px 14px',
+                          borderRadius: 4,
+                          padding: '10px 12px',
                           background: stat.tint,
-                          border: '1px solid rgba(24, 144, 255, 0.08)',
+                          border: 'none',
                         }}
                       >
                         <Space size={8} align="center">
@@ -237,20 +232,19 @@ export function OrganizationsCardView({
                   <div
                     style={{
                       marginTop: 'auto',
-                      paddingTop: 14,
-                      borderTop: '1px solid #f0f0f0',
+                      paddingTop: 10,
                     }}
                   >
                     <div
                       style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 8,
+                        gap: 6,
                       }}
                     >
                       {timelineItems.map((item) => (
                         <Tooltip key={item.key} title={formatFullDateTime(item.value)}>
-                          <Space size={8}>
+                          <Space size={6}>
                             {item.icon}
                             <Text type="secondary" style={{ fontSize: 12 }}>
                               {item.label} · {formatRelativeTimeI18n(item.value, tp)}
@@ -258,24 +252,6 @@ export function OrganizationsCardView({
                           </Space>
                         </Tooltip>
                       ))}
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        marginTop: 12,
-                      }}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <LinkButton
-                        to={`/todo-for-ai/pages/organizations/${org.id}`}
-                        type="link"
-                        icon={<ArrowRightOutlined />}
-                        style={{ paddingInline: 0, fontWeight: 500 }}
-                      >
-                        {tp('actions.view')}
-                      </LinkButton>
                     </div>
                   </div>
                 </div>

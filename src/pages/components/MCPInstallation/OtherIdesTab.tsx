@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Typography, Alert, List, Tag } from 'antd'
+import { Card, Typography, Alert, List } from 'antd'
 import {
   AppstoreOutlined,
   InfoCircleOutlined,
@@ -23,7 +23,7 @@ export const OtherIdesTab: React.FC = () => {
     },
     {
       key: 'cline',
-      icon: <CodeOutlined style={{ color: '#1890ff' }} />,
+      icon: <CodeOutlined style={{ color: '#00b96b' }} />,
     },
     {
       key: 'continue',
