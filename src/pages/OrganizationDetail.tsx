@@ -34,6 +34,7 @@ import { projectsApi, type Project } from '../api/projects'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { OrganizationMembersCard } from './organizations/components/OrganizationMembersCard'
 import NotificationChannelManager from '../components/NotificationChannelManager'
+import { OrgBudgetsTab } from './OrganizationDetail/components/OrgBudgetsTab'
 import { LinkButton } from '../components/SmartLink'
 import { formatFullDateTime, formatRelativeTimeI18n } from '../utils/dateUtils'
 import {
@@ -1200,6 +1201,13 @@ const OrganizationDetail = () => {
                     ),
                   }}
                 />
+              ),
+            },
+            {
+              key: 'budgets',
+              label: tp('detail.tabs.budgets'),
+              children: (
+                <OrgBudgetsTab organizationId={parsedOrganizationId} canManage={!!canManageMembers} />
               ),
             },
           ]}

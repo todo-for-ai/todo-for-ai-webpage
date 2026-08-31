@@ -148,7 +148,8 @@
     "tabs": {
       "members": "Members",
       "activity": "Activity",
-      "projects": "Projects"
+      "projects": "Projects",
+      "budgets": "Budgets"
     },
     "recentActivity": {
       "title": "Recent Activity",

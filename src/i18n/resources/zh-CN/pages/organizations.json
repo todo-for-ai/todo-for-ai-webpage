@@ -148,7 +148,8 @@
     "tabs": {
       "members": "成员",
       "activity": "活跃动态",
-      "projects": "项目"
+      "projects": "项目",
+      "budgets": "预算配额"
     },
     "recentActivity": {
       "title": "近期动态",
