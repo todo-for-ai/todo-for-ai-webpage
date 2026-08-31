@@ -3,6 +3,7 @@ import { DeploymentUnitOutlined, ExperimentOutlined, SafetyCertificateOutlined }
 import { Space, Tag, Typography } from 'antd'
 import type { Agent } from '../../../../api/agents'
 import { usePageTranslation } from '../../../../i18n/hooks/useTranslation'
+import { SkillProfileCard } from '../SkillProfileCard'
 import { formatDateTime } from './shared'
 import './AgentOverviewTab.css'
 
@@ -361,6 +362,8 @@ export function AgentOverviewTab({ agent }: AgentOverviewTabProps) {
           ))}
         </div>
       </section>
+
+      <SkillProfileCard agentId={agent.id} />
 
       <section className='agent-overview-tab__canvas'>
         {panels.map((panel) => (
