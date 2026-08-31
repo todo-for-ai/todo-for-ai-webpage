@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useState, useCallback } from 'react';
 
+// Unique id counter so tasks created in the same millisecond don't collide
+let idCounter = 0;
+
 // Simple useTasks hook mock for testing
 const useTasks = () => {
   const [tasks, setTasks] = useState<{ id: string; title: string; status: string }[]>([]);
@@ -24,8 +27,9 @@ const useTasks = () => {
   }, []);
 
   const addTask = useCallback((task: { title: string }) => {
+    idCounter += 1;
     const newTask = {
-      id: String(Date.now()),
+      id: String(idCounter),
       title: task.title,
       status: 'pending'
     };
