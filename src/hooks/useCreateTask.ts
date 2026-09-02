@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { useTaskStore } from '../stores'
 import type { CreateTaskData } from '../api/tasks'
 import { tasksApi } from '../api/tasks'
+import { taskContentForEditing } from '../utils/taskContent'
 
 interface CreateTaskHook {
 form: any
@@ -244,10 +245,12 @@ try {
 setLoading(true)
 const task = await getTask(taskId)
 if (task) {
+// 编辑器加载归一化：历史 JSON 信封还原为正文+Agent 分节，人类编辑不破坏 Agent 产出
+const editableContent = taskContentForEditing(task.content)
 const formData = {
 project_id: task.project_id,
 title: task.title,
-content: task.content,
+content: editableContent,
 status: task.status,
 priority: task.priority,
 due_date: task.due_date ? dayjs(task.due_date) : null,
@@ -260,14 +263,14 @@ mentions: formatParticipantsForForm(task.mentions),
 revision: task.revision || 1,
 }
 form.setFieldsValue(formData)
-setOriginalTaskContent(task.content || '')
+setOriginalTaskContent(editableContent)
 setLastSavedTime(task.updated_at || task.created_at)
 const editDraft = loadEditDraft(taskId)
 if (editDraft) {
 const draftFormData = {
 project_id: editDraft.project_id || task.project_id,
 title: editDraft.title || task.title,
-content: editDraft.content || task.content,
+content: editDraft.content || editableContent,
 status: editDraft.status || task.status,
 priority: editDraft.priority || task.priority,
 due_date: editDraft.due_date ? dayjs(editDraft.due_date) : (task.due_date ? dayjs(task.due_date) : null),
@@ -280,9 +283,9 @@ mentions: formatParticipantsForForm(editDraft.mentions || task.mentions || []),
 revision: task.revision || 1,
 }
 form.setFieldsValue(draftFormData)
-setEditorContent(editDraft.content || '')
+setEditorContent(editDraft.content || editableContent)
 } else {
-setEditorContent(task.content || '')
+setEditorContent(editableContent)
 }
 setTaskLoaded(true)
 } else {
@@ -437,11 +440,13 @@ try {
 const copyDataStr = sessionStorage.getItem('copyTaskData')
 if (copyDataStr) {
 const copyData = JSON.parse(copyDataStr)
+// 复制来源可能是含 Agent 分节/历史信封的协同文档，统一归一化
+const editableCopyContent = taskContentForEditing(copyData.content)
 // 设置表单值
 form.setFieldsValue({
 project_id: copyData.project_id,
 title: copyData.title,
-content: copyData.content,
+content: editableCopyContent,
 priority: copyData.priority || 'medium',
 due_date: copyData.due_date ? dayjs(copyData.due_date) : null,
 tags: copyData.tags || [],
@@ -450,7 +455,7 @@ assignees: formatParticipantsForForm(copyData.assignees || []),
 mentions: formatParticipantsForForm(copyData.mentions || [])
 })
 // 设置编辑器内容
-setEditorContent(copyData.content || '')
+setEditorContent(editableCopyContent)
 // 清除sessionStorage中的数据
 sessionStorage.removeItem('copyTaskData')
 }

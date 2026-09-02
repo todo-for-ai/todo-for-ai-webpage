@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Card, Descriptions, Input, List, message, Popconfirm, Tag, Typography } from 'antd'
 import { DeleteOutlined, LinkOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons'
 import TaskIdBadge from '../../../components/TaskIdBadge'
 import { MarkdownEditor } from '../../../components/MarkdownEditor'
 import { tasksApi, type Task } from '../../../api/tasks'
 import { agentsApi, type SharedContextEntry } from '../../../api/agents'
+import { parseTaskDocument } from '../../../utils/taskContent'
 import dayjs from 'dayjs'
 import { TaskCollaborationTimeline } from './TaskCollaborationTimeline'
 import SubtaskTree from '../../../components/Task/SubtaskTree'
@@ -116,6 +117,9 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
     }
   }, [task, loadSharedCtx, tp])
 
+  // 协同文档：人类正文在前，Agent 产出分节（带归属）随后；历史 JSON 信封在此归一化还原
+  const doc = useMemo(() => parseTaskDocument(task?.content), [task?.content])
+
   if (!task) return null
 
   return (
@@ -123,11 +127,22 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
       <div style={{ flex: 3 }}>
         <Card title={tp('content.title')} style={{ marginBottom: '16px' }}>
           <div className="markdown-content">
-            {task.content ? (
-              <div dangerouslySetInnerHTML={{ __html: task.content }} />
-            ) : (
+            {doc.body.trim() ? (
+              <MarkdownEditor value={doc.body} readOnly hideToolbar height={undefined} autoHeight />
+            ) : doc.sections.length === 0 ? (
               <Paragraph type="secondary">{tp('content.empty')}</Paragraph>
-            )}
+            ) : null}
+            {doc.sections.map((section, index) => (
+              <Card
+                key={index}
+                type="inner"
+                size="small"
+                title={<span>🤖 {section.label}</span>}
+                style={{ marginTop: doc.body.trim() || index > 0 ? 12 : 0 }}
+              >
+                <MarkdownEditor value={section.content} readOnly hideToolbar height={undefined} autoHeight />
+              </Card>
+            ))}
           </div>
         </Card>
       </div>
