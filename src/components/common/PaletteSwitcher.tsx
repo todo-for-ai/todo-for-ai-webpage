@@ -60,6 +60,24 @@ const PALETTES: PaletteDef[] = [
   },
 ]
 
+/** 读取 localStorage 已存色板并应用（供 AppLayout 外的页面如 Login 使用） */
+export function applySavedPalette(): void {
+  let id = 'sky'
+  try {
+    id = localStorage.getItem(STORAGE_KEY) || 'sky'
+  } catch {
+    return
+  }
+  const palette = PALETTES.find((p) => p.id === id)
+  const rootStyle = document.documentElement.style
+  PALETTES.forEach((p) =>
+    Object.keys(p.vars).forEach((k) => rootStyle.removeProperty(k)),
+  )
+  if (palette && palette.id !== 'sky') {
+    Object.entries(palette.vars).forEach(([k, v]) => rootStyle.setProperty(k, v))
+  }
+}
+
 export function PaletteSwitcher() {
   const [current, setCurrent] = useState<string>(() => {
     try {

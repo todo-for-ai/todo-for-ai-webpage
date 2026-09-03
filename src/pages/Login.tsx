@@ -21,6 +21,7 @@ const Login: React.FC = () => {
   const { t } = useTranslation('login')
 
   useEffect(() => {
+    applySavedPalette()
     // 如果已经登录，重定向到主页
     if (isAuthenticated) {
       window.location.href = '/todo-for-ai/pages'
