@@ -102,6 +102,17 @@
     "pageInfo": "Page {{current}} of {{total}}"
   },
   "card": {
-    "orgTooltip": "Organization"
+    "orgTooltip": "Organization",
+    "statusTipActive": "Active: tasks can be created and dispatched; agents can claim them automatically",
+    "statusTipArchived": "Archived: read-only, no new tasks; switch back to active in Edit",
+    "tipStat.total": "Total number of tasks in this project (all statuses)",
+    "tipStat.pending": "Tasks in \"todo\" status: not started yet",
+    "tipStat.inProgress": "Tasks in \"in progress\" status: started but not finished",
+    "tipStat.completed": "Number of completed tasks",
+    "tipOrg": "Organization: {name}\nOrganizations are the top boundary of human-agent collaboration; agents join projects through them.",
+    "tipGithub": "GitHub repository linked to this project, click to open:\n{url}",
+    "tipRules": "Context rules: injected as project background when an agent picks up a task from this project",
+    "tipActivity": "Last activity: {time}\nThe most recent task or collaboration event",
+    "tipId": "Project ID: used for API calls and exact lookup"
   }
 }

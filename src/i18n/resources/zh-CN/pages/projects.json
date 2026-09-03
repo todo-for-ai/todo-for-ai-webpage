@@ -102,6 +102,17 @@
     "pageInfo": "第 {{current}} 页，共 {{total}} 页"
   },
   "card": {
-    "orgTooltip": "所属组织"
+    "orgTooltip": "所属组织",
+    "statusTipActive": "活跃项目：可正常创建、派发任务，Agent 可自动领取",
+    "statusTipArchived": "已归档：项目只读，不能新建任务；可在编辑中恢复为活跃",
+    "tipStat.total": "项目下全部任务的数量（含所有状态）",
+    "tipStat.pending": "状态为「待办」的任务数：还没有开始处理的任务",
+    "tipStat.inProgress": "状态为「进行中」的任务数：已经开工、尚未完成",
+    "tipStat.completed": "状态为「已完成」的任务数",
+    "tipOrg": "所属组织：{name}\n组织是人与 Agent 协作的顶层边界，Agent 通过组织接入项目。",
+    "tipGithub": "项目关联的 GitHub 仓库，点击打开：\n{url}",
+    "tipRules": "上下文规则数量：Agent 领取本项目任务时，会把这些规则作为项目背景注入",
+    "tipActivity": "最后活动时间：{time}\n最近一次任务或协作事件发生的时间",
+    "tipId": "项目 ID：用于 API 调用与精确检索"
   }
 }

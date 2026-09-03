@@ -6,6 +6,7 @@ import {
   EditOutlined,
   EyeOutlined,
   GithubOutlined,
+  SafetyOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
 import type { Project } from '../../api/projects'
@@ -28,29 +29,7 @@ interface ProjectsCardViewProps {
   onNextPage: () => void
 }
 
-/** 项目名首字母头像：项目色 15% 底 + 项目色字符 */
-function ProjectAvatar({ project }: { project: Project }) {
-  const letter = (project.name || '?').trim().charAt(0).toUpperCase()
-  return (
-    <div
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: 6,
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 700,
-        fontSize: 15,
-        color: project.color || '#00b96b',
-        background: `${project.color || '#00b96b'}26`,
-      }}
-    >
-      {letter}
-    </div>
-  )
-}
+const META_ICON_STYLE = { marginRight: 3 }
 
 export const ProjectsCardView = ({
   t,
@@ -84,46 +63,46 @@ export const ProjectsCardView = ({
     }
   }, [])
 
-  const statsOf = (project: Project) => {
-    const s = project.stats
-    return {
-      total: s?.total_tasks ?? project.total_tasks ?? 0,
-      inProgress: s?.in_progress_tasks ?? 0,
-      completed: s?.done_tasks ?? project.completed_tasks ?? 0,
-    }
-  }
-
-  const metaStyle = { fontSize: 11, color: '#8c8c8c', display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 } as const
-
   const cards = useMemo(
     () =>
       projects.map((project) => {
-        const stats = statsOf(project)
+        const s = project.stats
+        const statCells = [
+          { key: 'total', label: t('stats.total'), value: s?.total_tasks ?? project.total_tasks ?? 0, color: '#262626' },
+          { key: 'pending', label: t('stats.pending'), value: s?.todo_tasks ?? project.pending_tasks ?? 0, color: '#fa8c16' },
+          { key: 'inProgress', label: t('stats.inProgress'), value: s?.in_progress_tasks ?? 0, color: '#1890ff' },
+          { key: 'completed', label: t('stats.completed'), value: s?.done_tasks ?? project.completed_tasks ?? 0, color: '#52c41a' },
+        ]
         const orgName = project.organization_id ? orgMap.get(project.organization_id) : undefined
+        const isActive = project.status === 'active'
+
         return (
           <Col key={project.id} xs={24} sm={12} md={8} lg={6} xl={6}>
             <Card
               className="project-card"
-              style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.3s ease' }}
-              styles={{ body: { padding: '16px 16px 12px', height: '100%' } }}
+              style={{
+                position: 'relative',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                borderLeft: `3px solid ${project.color || '#00b96b'}`,
+              }}
+              styles={{ body: { padding: '14px 16px 10px', height: '100%' } }}
               hoverable
               onClick={() => onOpenProject(project.id)}
             >
-              {/* 顶部项目色条 */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 3,
-                  background: `linear-gradient(90deg, ${project.color || '#00b96b'}, ${project.color || '#00b96b'}55)`,
-                }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 172 }}>
-                {/* 头部：头像 + 名称 + 状态 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <ProjectAvatar project={project} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9, minHeight: 176 }}>
+                {/* 头部：色点 + 名称 + 状态（悬停解释状态含义） */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: project.color || '#00b96b',
+                      flexShrink: 0,
+                    }}
+                  />
                   <div
                     style={{
                       fontWeight: 600,
@@ -139,12 +118,14 @@ export const ProjectsCardView = ({
                   >
                     {project.name}
                   </div>
-                  <Tag
-                    color={project.status === 'active' ? 'green' : 'orange'}
-                    style={{ fontSize: 10, padding: '1px 6px', lineHeight: '16px', marginInlineEnd: 0, borderRadius: 4, fontWeight: 500 }}
-                  >
-                    {project.status === 'active' ? t('status.active') : t('status.archived')}
-                  </Tag>
+                  <Tooltip title={isActive ? t('card.statusTipActive') : t('card.statusTipArchived')}>
+                    <Tag
+                      color={isActive ? 'green' : 'orange'}
+                      style={{ fontSize: 10, padding: '1px 6px', lineHeight: '16px', marginInlineEnd: 0, borderRadius: 4, fontWeight: 500 }}
+                    >
+                      {isActive ? t('status.active') : t('status.archived')}
+                    </Tag>
+                  </Tooltip>
                 </div>
 
                 {/* 描述 */}
@@ -164,59 +145,84 @@ export const ProjectsCardView = ({
                   {project.description || t('empty.noDescription')}
                 </div>
 
-                {/* 三格统计 */}
+                {/* 四格统计：悬停解释每个数字的统计口径 */}
                 <div style={{ display: 'flex', gap: 6 }}>
-                  {[
-                    { label: t('stats.total'), value: stats.total, color: '#00b96b' },
-                    { label: t('stats.inProgress'), value: stats.inProgress, color: '#1890ff' },
-                    { label: t('stats.completed'), value: stats.completed, color: '#52c41a' },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        padding: '6px 4px',
-                        background: '#fafafa',
-                        borderRadius: 6,
-                        border: '1px solid #f0f0f0',
-                      }}
+                  {statCells.map((cell) => (
+                    <Tooltip
+                      key={cell.key}
+                      title={t(`card.tipStat.${cell.key}`)}
+                      overlayStyle={{ maxWidth: 320 }}
                     >
-                      <div style={{ fontSize: 16, fontWeight: 600, color: item.color, lineHeight: 1.2 }}>
-                        {item.value}
+                      <div
+                        style={{
+                          flex: 1,
+                          textAlign: 'center',
+                          padding: '5px 4px',
+                          background: '#fafafa',
+                          borderRadius: 6,
+                          border: '1px solid #f0f0f0',
+                          cursor: 'help',
+                        }}
+                      >
+                        <div style={{ fontSize: 15, fontWeight: 600, color: cell.color, lineHeight: 1.2 }}>
+                          {cell.value}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#8c8c8c' }}>{cell.label}</div>
                       </div>
-                      <div style={{ fontSize: 11, color: '#8c8c8c' }}>{item.label}</div>
-                    </div>
+                    </Tooltip>
                   ))}
                 </div>
 
-                {/* 元信息：组织 / GitHub / 最后活动 */}
+                {/* 元信息：组织 / GitHub / 上下文规则 / 最后活动（全部悬停有解释） */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   {orgName && (
-                    <Tooltip title={t('card.orgTooltip')}>
-                      <span style={{ ...metaStyle, maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <TeamOutlined />
+                    <Tooltip title={t('card.tipOrg', { name: orgName })} overlayStyle={{ maxWidth: 320 }}>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#595959',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          minWidth: 0,
+                          maxWidth: 120,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'help',
+                        }}
+                      >
+                        <TeamOutlined style={META_ICON_STYLE} />
                         {orgName}
                       </span>
                     </Tooltip>
                   )}
                   {project.github_url && (
-                    <Tooltip title={project.github_url}>
+                    <Tooltip title={t('card.tipGithub', { url: project.github_url })} overlayStyle={{ maxWidth: 320 }}>
                       <a
                         href={project.github_url}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(event) => event.stopPropagation()}
-                        style={{ ...metaStyle, color: '#8c8c8c' }}
+                        style={{ fontSize: 12, color: '#595959', display: 'flex', alignItems: 'center', gap: 3 }}
                       >
-                        <GithubOutlined /> GitHub
+                        <GithubOutlined style={META_ICON_STYLE} />
+                        GitHub
                       </a>
                     </Tooltip>
                   )}
-                  <span style={{ ...metaStyle, marginLeft: 'auto' }}>
+                  {typeof s?.context_rules_count === 'number' && (
+                    <Tooltip title={t('card.tipRules')} overlayStyle={{ maxWidth: 320 }}>
+                      <span style={{ fontSize: 12, color: '#595959', display: 'flex', alignItems: 'center', gap: 3, cursor: 'help' }}>
+                        <SafetyOutlined style={META_ICON_STYLE} />
+                        {s.context_rules_count}
+                      </span>
+                    </Tooltip>
+                  )}
+                  <span style={{ fontSize: 12, color: '#8c8c8c', display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
                     <ClockCircleOutlined />
                     {project.last_activity_at ? (
-                      <Tooltip title={formatFullDateTime(project.last_activity_at)}>
+                      <Tooltip title={t('card.tipActivity', { time: formatFullDateTime(project.last_activity_at) })} overlayStyle={{ maxWidth: 320 }}>
                         <span style={{ cursor: 'help' }}>{formatRelativeTimeI18n(project.last_activity_at, t)}</span>
                       </Tooltip>
                     ) : (
@@ -231,11 +237,13 @@ export const ProjectsCardView = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    paddingTop: 8,
+                    paddingTop: 7,
                     borderTop: '1px solid #f5f5f5',
                   }}
                 >
-                  <span style={{ fontSize: 11, color: '#bfbfbf' }}>#{project.id}</span>
+                  <Tooltip title={t('card.tipId')}>
+                    <span style={{ fontSize: 11, color: '#bfbfbf', cursor: 'help' }}>#{project.id}</span>
+                  </Tooltip>
                   <div onClick={(event) => event.stopPropagation()}>
                     <Space size={0}>
                       <LinkButton
