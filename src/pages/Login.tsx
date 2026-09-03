@@ -9,6 +9,9 @@ import TelegramGroup from '../components/TelegramGroup/TelegramGroup'
 import { Footer } from '../components/Footer'
 import GitHubBadge from '../components/GitHubBadge/GitHubBadge'
 import { analytics } from '../utils/analytics'
+import '@fontsource/press-start-2p'
+import '../styles/pixel-fonts.css'
+import '../styles/pixel-theme.css'
 import './Login.css'
 
 const { Title, Paragraph } = Typography

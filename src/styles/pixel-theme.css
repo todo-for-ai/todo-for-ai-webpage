@@ -445,3 +445,20 @@ body::before {
   background: #fff7d6 !important;
   font-weight: 700;
 }
+
+/* ── 地面条：全站底部 6px 砖块（马里奥地面）── */
+body::before {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  z-index: 9998;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.4) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.4) 2px, transparent 2px),
+    var(--mario-brick);
+  background-size: 16px 3px, 16px 6px, auto;
+}
