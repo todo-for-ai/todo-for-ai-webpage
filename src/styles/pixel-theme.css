@@ -508,3 +508,27 @@ body::before {
   background: var(--mario-white) !important;
   border: 2px solid var(--mario-black) !important;
 }
+
+/* ── 导航 Logo：问号块替换原脑图（纯 CSS 像素块）── */
+.top-navigation .logo-section img {
+  display: none !important;
+}
+.top-navigation .logo-section::before {
+  content: '?';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--mario-gold);
+  border: 2px solid #000;
+  box-shadow:
+    inset 3px 3px 0 #ffe28a,
+    inset -3px -3px 0 var(--mario-gold-dark),
+    2px 2px 0 rgba(0, 0, 0, 0.6);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000;
+  margin-right: 10px;
+}
