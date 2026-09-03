@@ -1,0 +1,61 @@
+/* 项目详情页 · 上下文头部（ProjectContextHeader） */
+
+.pd-context-header__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-context-header__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pd-context-header__divider {
+  color: #999;
+}
+
+.pd-context-header__org-link {
+  color: #00b96b;
+  cursor: pointer;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-context-header__org-link:hover {
+  text-decoration: underline;
+}
+
+.pd-context-header__name {
+  color: #333;
+  font-weight: 500;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-context-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pd-context-header__facts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.pd-context-header__chip {
+  cursor: pointer;
+}

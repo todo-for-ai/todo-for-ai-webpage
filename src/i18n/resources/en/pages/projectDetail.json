@@ -51,7 +51,11 @@
       "tasks": "Task List",
       "overview": "Overview",
       "contextRules": "Context Rules",
-      "members": "Members"
+      "members": "Members",
+      "code": "Code",
+      "agents": "Agents",
+      "governance": "Governance",
+      "notifications": "Notifications"
     }
   },
   "members": {
@@ -169,7 +173,7 @@
       "bulkActions": {
         "selectedCount": "{{count}} tasks selected",
         "changeStatus": "Change Status",
-        "changePriority": "Change Priority", 
+        "changePriority": "Change Priority",
         "delete": "Batch Delete",
         "clearSelection": "Clear Selection",
         "noSelectionForDelete": "Please select tasks to delete first",
@@ -184,14 +188,14 @@
           "title": "Are you sure you want to delete these tasks?",
           "description": "{{count}} tasks will be deleted. This action cannot be undone"
         },
-      "statusChangeConfirm": {
-        "title": "Are you sure you want to change the status of these tasks?",
-        "description": "{{count}} tasks will be changed to: {{status}}"
-      },
-      "priorityChangeConfirm": {
-        "title": "Are you sure you want to change the priority of these tasks?",
-        "description": "{{count}} tasks priority will be changed to: {{priority}}"
-      },
+        "statusChangeConfirm": {
+          "title": "Are you sure you want to change the status of these tasks?",
+          "description": "{{count}} tasks will be changed to: {{status}}"
+        },
+        "priorityChangeConfirm": {
+          "title": "Are you sure you want to change the priority of these tasks?",
+          "description": "{{count}} tasks priority will be changed to: {{priority}}"
+        },
         "deleteSuccess": "Successfully deleted {{count}} tasks",
         "deleteError": "Failed to batch delete tasks",
         "statusChangeSuccess": "Successfully changed {{count}} tasks status to: {{status}}",
@@ -303,5 +307,70 @@
     },
     "executionGuide": "Execution Guide",
     "taskOverview": "Task Overview"
+  },
+  "contextHeader": {
+    "goToOrganization": "Go to organization",
+    "repoChipTitle": "View repository binding",
+    "repoLoading": "Loading repository…",
+    "repoUnbound": "No repository bound",
+    "agentsChipTitle": "View collaborating agents",
+    "agentsCount": "Agents",
+    "agentsActive": "active",
+    "contextRules": "Context rules",
+    "owner": "Owner",
+    "agentOnlinePrefix": "Online: ",
+    "lastActivity": "Last activity"
+  },
+  "codeTab": {
+    "bindingTitle": "Repository Binding",
+    "tokenConfigured": "Token configured",
+    "tokenMissing": "Token missing",
+    "repo": "Repository",
+    "defaultBranch": "Default branch",
+    "autonomy": "Autonomy level",
+    "agentReview": "Agent review gate",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "reviewerFallback": "auto-resolved reviewer",
+    "boundAt": "Bound at",
+    "manageHint": "Only project maintainers can change the repository binding.",
+    "unboundHint1": "No repository is bound to this project yet.",
+    "unboundHint2": "Bind a GitHub repository so agent task commits can open PRs and enter the approval flow.",
+    "flowTitle": "Pull Request Flow",
+    "flowStep1": "Agent finishes a task and pushes to the bound repository branch.",
+    "flowStep2": "A PR is created per the repo autonomy level (L2 auto-merges when all evidence passes).",
+    "flowStep3": "PRs requiring human decisions go to the approval queue:",
+    "flowStep3Link": "View pending approvals"
+  },
+  "agentsTab": {
+    "title": "Agent Collaboration",
+    "summary": "{total} agents can see this project · {explicit} explicitly granted · {inherited} inherited from workspace",
+    "noWorkspaceHint": "Project has no organization: agents join via organization (workspace) boundary, so this project is invisible to agents.",
+    "empty": "No collaborating agents",
+    "colAgent": "Agent",
+    "colStatus": "Status",
+    "colRole": "Role",
+    "colExecution": "Execution",
+    "colSandbox": "Sandbox",
+    "colAuthz": "Authorization",
+    "explicitGrant": "Explicit grant",
+    "workspaceInherit": "Workspace inherited",
+    "colLastSeen": "Last seen"
+  },
+  "governanceTab": {
+    "prTitle": "Pending PR Merge Approvals",
+    "prEmpty": "No pending PR approvals",
+    "colPR": "Pull Request",
+    "colTask": "Task",
+    "colBranch": "Branch",
+    "colRequestedAt": "Requested",
+    "auditTitle": "Recent Audit Events",
+    "viewAllAudit": "View all workspace audit",
+    "auditEmpty": "No audit events for this project",
+    "auditNote": "Only project-related events are shown (filtered client-side from the workspace audit stream); server-side project filtering comes later.",
+    "colTime": "Time",
+    "colEvent": "Event",
+    "colLevel": "Level",
+    "colActor": "Actor"
   }
 }

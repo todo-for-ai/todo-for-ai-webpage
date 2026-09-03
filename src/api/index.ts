@@ -16,5 +16,12 @@ export { organizationsApi, type Organization } from './organizations'
 export { organizationAgentsApi, type OrganizationAgentMember } from './organizationAgents'
 export { taskLabelsApi, type TaskLabel } from './taskLabels'
 export { agentsApi, agentKeysApi, agentAutomationApi, agentInsightsApi, type Agent, type AgentKey } from './agents'
+export {
+  projectContextApi,
+  type ProjectRepoBinding,
+  type WorkspaceAgentSummary,
+  type WorkspaceAuditEvent,
+  type PendingPRApproval,
+} from './projectContext'
 export { notificationsApi } from './notifications'
 export { AuthAPI } from './auth'

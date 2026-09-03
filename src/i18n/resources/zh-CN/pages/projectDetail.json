@@ -51,7 +51,11 @@
       "tasks": "任务列表",
       "overview": "概览",
       "contextRules": "上下文规则",
-      "members": "成员管理"
+      "members": "成员管理",
+      "code": "代码",
+      "agents": "Agent 协作",
+      "governance": "治理",
+      "notifications": "通知设置"
     }
   },
   "members": {
@@ -163,43 +167,43 @@
         "high": "高",
         "urgent": "紧急"
       },
-    "pagination": {
-      "total": "第 {{start}}-{{end}} 条，共 {{total}} 条"
+      "pagination": {
+        "total": "第 {{start}}-{{end}} 条，共 {{total}} 条"
+      },
+      "bulkActions": {
+        "selectedCount": "已选中 {{count}} 个任务",
+        "changeStatus": "更改状态",
+        "changePriority": "更改优先级",
+        "delete": "批量删除",
+        "clearSelection": "清除选中",
+        "noSelectionForDelete": "请先选择要删除的任务",
+        "noSelectionForStatus": "请先选择要修改的任务",
+        "deleteConfirmTitle": "批量删除确认",
+        "deleteConfirmDescription": "确定要删除选中的 {{count}} 个任务吗？此操作不可恢复。",
+        "confirmDelete": "确定删除",
+        "statusChangeConfirmTitle": "批量更改状态确认",
+        "statusChangeConfirmDescription": "确定要将选中的 {{count}} 个任务的状态修改为\"{{status}}\"吗？",
+        "confirmStatusChange": "确定修改",
+        "deleteConfirm": {
+          "title": "确定要删除这些任务吗？",
+          "description": "将删除 {{count}} 个任务，删除后无法恢复"
+        },
+        "statusChangeConfirm": {
+          "title": "确定要更改这些任务的状态吗？",
+          "description": "将把 {{count}} 个任务的状态更改为：{{status}}"
+        },
+        "priorityChangeConfirm": {
+          "title": "确定要更改这些任务的优先级吗？",
+          "description": "将把 {{count}} 个任务的优先级更改为：{{priority}}"
+        },
+        "deleteSuccess": "已成功删除 {{count}} 个任务",
+        "deleteError": "批量删除任务失败",
+        "statusChangeSuccess": "已成功将 {{count}} 个任务状态更改为：{{status}}",
+        "statusChangeError": "批量更改任务状态失败",
+        "priorityChangeSuccess": "已成功将 {{count}} 个任务优先级更改为：{{priority}}",
+        "priorityChangeError": "批量更改任务优先级失败"
+      }
     },
-    "bulkActions": {
-      "selectedCount": "已选中 {{count}} 个任务",
-      "changeStatus": "更改状态",
-      "changePriority": "更改优先级", 
-      "delete": "批量删除",
-      "clearSelection": "清除选中",
-      "noSelectionForDelete": "请先选择要删除的任务",
-      "noSelectionForStatus": "请先选择要修改的任务",
-      "deleteConfirmTitle": "批量删除确认",
-      "deleteConfirmDescription": "确定要删除选中的 {{count}} 个任务吗？此操作不可恢复。",
-      "confirmDelete": "确定删除",
-      "statusChangeConfirmTitle": "批量更改状态确认",
-      "statusChangeConfirmDescription": "确定要将选中的 {{count}} 个任务的状态修改为\"{{status}}\"吗？",
-      "confirmStatusChange": "确定修改",
-      "deleteConfirm": {
-        "title": "确定要删除这些任务吗？",
-        "description": "将删除 {{count}} 个任务，删除后无法恢复"
-      },
-      "statusChangeConfirm": {
-        "title": "确定要更改这些任务的状态吗？",
-        "description": "将把 {{count}} 个任务的状态更改为：{{status}}"
-      },
-      "priorityChangeConfirm": {
-        "title": "确定要更改这些任务的优先级吗？",
-        "description": "将把 {{count}} 个任务的优先级更改为：{{priority}}"
-      },
-      "deleteSuccess": "已成功删除 {{count}} 个任务",
-      "deleteError": "批量删除任务失败",
-      "statusChangeSuccess": "已成功将 {{count}} 个任务状态更改为：{{status}}",
-      "statusChangeError": "批量更改任务状态失败",
-      "priorityChangeSuccess": "已成功将 {{count}} 个任务优先级更改为：{{priority}}",
-      "priorityChangeError": "批量更改任务优先级失败"
-    }
-  },
     "confirm": {
       "delete": {
         "title": "确定要删除这个任务吗？",
@@ -303,5 +307,70 @@
     },
     "executionGuide": "执行指引",
     "taskOverview": "任务概览"
+  },
+  "contextHeader": {
+    "goToOrganization": "前往组织详情",
+    "repoChipTitle": "查看代码仓库绑定",
+    "repoLoading": "仓库加载中…",
+    "repoUnbound": "未绑定代码仓库",
+    "agentsChipTitle": "查看可协作的 Agent",
+    "agentsCount": "可协作 Agent",
+    "agentsActive": "活跃",
+    "contextRules": "上下文规则",
+    "owner": "负责人",
+    "agentOnlinePrefix": "在线：",
+    "lastActivity": "最后活动"
+  },
+  "codeTab": {
+    "bindingTitle": "代码仓库绑定",
+    "tokenConfigured": "Token 已配置",
+    "tokenMissing": "Token 未配置",
+    "repo": "仓库",
+    "defaultBranch": "默认分支",
+    "autonomy": "自治等级",
+    "agentReview": "Agent 评审关卡",
+    "enabled": "已开启",
+    "disabled": "未开启",
+    "reviewerFallback": "自动解析评审者",
+    "boundAt": "绑定时间",
+    "manageHint": "仅项目维护者可以修改仓库绑定。",
+    "unboundHint1": "该项目尚未绑定代码仓库。",
+    "unboundHint2": "绑定 GitHub 仓库后，Agent 的任务提交可自动创建 PR 并进入审批流。",
+    "flowTitle": "Pull Request 流程",
+    "flowStep1": "Agent 完成任务并推送到绑定仓库的分支。",
+    "flowStep2": "系统按仓库自治等级创建 PR（L2 且证据全通过时自动合并）。",
+    "flowStep3": "需要人工决策的 PR 会进入审批队列：",
+    "flowStep3Link": "查看待审批"
+  },
+  "agentsTab": {
+    "title": "Agent 协作",
+    "summary": "共 {total} 个 Agent 可见本项目 · 显式授权 {explicit} · 工作区继承 {inherited}",
+    "noWorkspaceHint": "项目未挂组织：Agent 以组织（工作区）为接入边界，未挂组织的项目对 Agent 不可见。",
+    "empty": "暂无可协作的 Agent",
+    "colAgent": "Agent",
+    "colStatus": "状态",
+    "colRole": "协作角色",
+    "colExecution": "执行模式",
+    "colSandbox": "沙箱",
+    "colAuthz": "授权方式",
+    "explicitGrant": "显式授权",
+    "workspaceInherit": "工作区继承",
+    "colLastSeen": "最近在线"
+  },
+  "governanceTab": {
+    "prTitle": "待审批的 PR 合并请求",
+    "prEmpty": "暂无待审批的 PR 合并请求",
+    "colPR": "Pull Request",
+    "colTask": "任务",
+    "colBranch": "分支",
+    "colRequestedAt": "请求时间",
+    "auditTitle": "最近审计事件",
+    "viewAllAudit": "查看工作区全部审计",
+    "auditEmpty": "暂无本项目的审计事件",
+    "auditNote": "仅展示本项目相关事件（自工作区审计流过滤），服务端项目级过滤将在后续版本提供。",
+    "colTime": "时间",
+    "colEvent": "事件",
+    "colLevel": "级别",
+    "colActor": "来源"
   }
 }

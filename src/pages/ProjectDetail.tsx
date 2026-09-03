@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Card, Tabs, Spin, Button, Space, Tag } from 'antd'
+import { Card, Tabs, Spin, Button, Space } from 'antd'
 import {
-  ArrowLeftOutlined,
-  HomeOutlined,
   EditOutlined,
   PlusOutlined,
   PushpinFilled,
@@ -16,8 +14,11 @@ import { TaskListSection } from '../components/ProjectDetail/TaskListSection'
 import { StatisticsSection } from '../components/ProjectDetail/StatisticsSection'
 import { ProjectInfoSection } from '../components/ProjectDetail/ProjectInfoSection'
 import { ContextRulesTab } from '../components/ProjectDetail/ContextRulesTab'
-import MembersTab from '../components/ProjectDetail/MembersTab'
 import { ProjectMembersTab } from '../components/ProjectDetail/ProjectMembersTab'
+import { ProjectContextHeader } from '../components/ProjectDetail/ProjectContextHeader'
+import { CodeTab } from '../components/ProjectDetail/CodeTab'
+import { AgentsTab } from '../components/ProjectDetail/AgentsTab'
+import { GovernanceTab } from '../components/ProjectDetail/GovernanceTab'
 import { LinkButton } from '../components/SmartLink'
 import { useProjectPin } from '../hooks/useProjectPin'
 import NotificationChannelManager from '../components/NotificationChannelManager'
@@ -95,20 +96,11 @@ const ProjectDetail = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* 页面头部 - 面包屑导航 */}
-      <Card style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/todo-for-ai/pages/projects')}>
-              {tc('actions.back')}
-            </Button>
-            <span style={{ color: '#999' }}>|</span>
-            <HomeOutlined style={{ color: '#00b96b' }} />
-            <span style={{ color: '#666' }}>{currentProject.name}</span>
-            <Tag color={currentProject.status === 'active' ? 'green' : 'orange'}>
-              {tp(`status.${currentProject.status}`)}
-            </Tag>
-          </div>
+      {/* 页面头部 - 项目上下文（组织归属 / 代码仓库 / Agent 信号） */}
+      <ProjectContextHeader
+        project={currentProject}
+        onOpenTab={handleTabChange}
+        actions={
           <Space size="small">
             <Button
               icon={isPinned ? <PushpinFilled /> : <PushpinOutlined />}
@@ -125,8 +117,8 @@ const ProjectDetail = () => {
               {tp('buttons.newTask')}
             </Button>
           </Space>
-        </div>
-      </Card>
+        }
+      />
 
       {/* 项目统计信息 */}
       <StatisticsSection stats={projectStats} />
@@ -156,6 +148,37 @@ const ProjectDetail = () => {
               )
             },
             {
+              key: 'code',
+              label: tp('overview.tabs.code'),
+              children: (
+                <CodeTab
+                  projectId={parseInt(id || '0', 10)}
+                  canManage={['owner', 'maintainer'].includes(currentProject.current_user_role || '')}
+                  onOpenTab={handleTabChange}
+                />
+              )
+            },
+            {
+              key: 'agents',
+              label: tp('overview.tabs.agents'),
+              children: (
+                <AgentsTab
+                  projectId={parseInt(id || '0', 10)}
+                  workspaceId={currentProject.organization_id}
+                />
+              )
+            },
+            {
+              key: 'governance',
+              label: tp('overview.tabs.governance'),
+              children: (
+                <GovernanceTab
+                  projectId={parseInt(id || '0', 10)}
+                  workspaceId={currentProject.organization_id}
+                />
+              )
+            },
+            {
               key: 'context-rules',
               label: tp('overview.tabs.contextRules'),
               children: (
@@ -175,7 +198,7 @@ const ProjectDetail = () => {
             },
             {
               key: 'notifications',
-              label: '通知设置',
+              label: tp('overview.tabs.notifications'),
               children: (
                 <NotificationChannelManager
                   scopeType="project"

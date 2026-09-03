@@ -26,6 +26,7 @@ export interface Project {
   color: string
   status: 'active' | 'archived' | 'deleted'
   organization_id?: number | null
+  owner_id?: number
   current_user_role?: 'owner' | 'maintainer' | 'member' | 'viewer' | null
   created_at: string
   updated_at: string
