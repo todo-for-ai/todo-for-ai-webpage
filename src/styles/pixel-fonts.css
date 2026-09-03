@@ -1,0 +1,22 @@
+/*
+ * 像素字体：Fusion Pixel 12px Monospaced（SIL OFL 开源）
+ * 文件来源：https://github.com/TakWolf/fusion-pixel-font releases
+ * latin 子集 + zh_hans 全量同族声明，浏览器按 unicode-range 自动分流。
+ */
+
+@font-face {
+  font-family: 'Fusion Pixel 12px';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/fusion-pixel-12px-monospaced-latin.ttf.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21FF, U+25A0-25FF;
+}
+
+@font-face {
+  font-family: 'Fusion Pixel 12px';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/fusion-pixel-12px-monospaced-zh_hans.ttf.woff2') format('woff2');
+}

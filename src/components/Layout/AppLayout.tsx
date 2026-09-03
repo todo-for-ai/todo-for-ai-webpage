@@ -5,6 +5,8 @@ import TopNavigation from './TopNavigation'
 import { Footer } from '../Footer'
 import WeChatGroup from '../WeChatGroup'
 import TelegramGroup from '../TelegramGroup'
+import '../../styles/pixel-fonts.css'
+import '@fontsource/press-start-2p'
 import '../../styles/pixel-theme.css'
 
 const { Content } = Layout
@@ -21,7 +23,7 @@ const AppLayout = () => {
           marginTop: '64px', // 为固定的顶部导航栏留出空间
           padding: '24px',
           flex: '1',
-          background: '#fdf8ef',
+          background: '#5c94fc',
         }}
       >
         <div

@@ -1,224 +1,243 @@
 /**
- * PIXEL THEME v2 — 彩色像素风（colorful pixel / 复古游戏机 UI）
+ * PIXEL THEME v3 — 超级玛丽 8-bit 风格（NES palette）
  *
- * 决策背景：用户要求像素风但拒绝黑白——核心是「像素几何 × 丰富色彩」：
- *  - 0 圆角 + 硬边框 + 无模糊偏移阴影（像素几何）
- *  - 奶油纸底 + 彩色偏移阴影 + 彩色面板强调（颜色丰富，像素游戏机感）
- * 注入点：AppLayout.tsx（全站布局壳；main.tsx/index.css 处于 WIP 锁定）。
+ * 用户基准：超级玛丽式游戏 UI——像素字体 + 天空蓝 + 问号块金 + 砖块橙 + 管道绿，
+ * 黑色粗描边白色面板，颜色必须丰富。
+ * 结构：0 圆角 / 黑色粗描边 / 无模糊硬阴影 / 像素字体，全部经 antd 类名覆盖。
+ * 字体：@fontsource/fusion-pixel-12px-monospaced-sc（CJK+拉丁像素字）
+ *       + @fontsource/press-start-2p（标题/数字用 8-bit 字），在 AppLayout.tsx 引入。
  */
 
 :root {
-  --px-ink: #1f1f1f;        /* 轮廓墨色 */
-  --px-red: #ff6b6b;
-  --px-orange: #ffa94d;
-  --px-yellow: #ffd43b;
-  --px-green: #00b96b;
-  --px-green-dark: #0a8f57;
-  --px-cyan: #3bc9db;
-  --px-blue: #4dabf7;
-  --px-violet: #9775fa;
-  --px-pink: #f783ac;
-  --px-paper: #fdf8ef;      /* 奶油纸底 */
+  --mario-sky: #5c94fc;      /* 天空蓝（1-1 关卡天空） */
+  --mario-red: #d82800;      /* 马里奥红 */
+  --mario-gold: #f8b800;     /* 问号块金 */
+  --mario-gold-dark: #ac7c00;
+  --mario-green: #00a800;    /* 管道绿 */
+  --mario-green-dark: #006400;
+  --mario-blue: #0058f8;     /* 深蓝（HUD） */
+  --mario-brick: #c84c0c;    /* 砖块橙 */
+  --mario-black: #000;
+  --mario-white: #fcfcfc;
+  --px-font: 'Fusion Pixel 12px', 'Press Start 2P', ui-monospace, Menlo, monospace, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --px-title-font: 'Press Start 2P', 'Fusion Pixel 12px Monospaced SC', monospace;
 }
 
-/* ── 全局：直角 + 等宽优先 ── */
+/* ── 全局：直角 + 像素字体 ── */
 * {
   border-radius: 0 !important;
 }
 
+
+/* ── antd 组件自带 font-family（ConfigProvider token），需显式覆盖才能继承像素字体 ── */
+body,
+[class*='ant-'] {
+  font-family: var(--px-font);
+}
+
+/* 标题用 8-bit 拉丁像素字（中文自动回退 Fusion Pixel） */
+h1,
+h2,
+.ant-page-header-heading-title,
+.ant-modal-title,
+.ant-statistic-content,
+.ant-card-head-title {
+  font-family: var(--px-title-font), var(--px-font);
+}
+
 body {
-  background: var(--px-paper);
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Consolas,
-    'Liberation Mono',
-    monospace,
-    -apple-system,
-    'PingFang SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif;
+  background: var(--mario-sky);
+  font-family: var(--px-font);
+  -webkit-font-smoothing: none;
+  text-rendering: geometricPrecision;
+}
+
+/* 位图资源像素化渲染 */
+img {
+  image-rendering: pixelated;
 }
 
 ::selection {
-  background: var(--px-green);
-  color: #fff;
+  background: var(--mario-gold);
+  color: var(--mario-black);
 }
 
-/* 方形滚动条 */
+/* 方形像素滚动条 */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--px-ink);
-  border: 3px solid var(--px-paper);
+  background: var(--mario-black);
+  border: 4px solid var(--mario-sky);
 }
 ::-webkit-scrollbar-track {
-  background: var(--px-paper);
+  background: var(--mario-sky);
 }
 
-/* ── 卡片：白底 + 墨色描边 + 彩色偏移阴影 ── */
+/* ── 卡片：白色面板 + 黑色粗描边 + 硬阴影 ── */
 .ant-card {
-  border: 2px solid var(--px-ink);
-  box-shadow: 5px 5px 0 var(--px-yellow);
+  border: 3px solid var(--mario-black);
+  box-shadow: 4px 4px 0 var(--mario-black);
+  background: var(--mario-white);
 }
 .ant-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 7px 7px 0 var(--px-green);
+  box-shadow: 6px 6px 0 var(--mario-black);
 }
 
-/* 项目卡片：按列位轮换彩色阴影（红/橙/蓝/紫），像素游戏机色盘 */
+/* 项目卡片：四色轮换阴影（红/金/绿/蓝 = 马里奥敌人/问号块/管道/HUD） */
 .ant-col:nth-child(4n + 1) .ant-card {
-  box-shadow: 5px 5px 0 var(--px-red);
+  box-shadow: 4px 4px 0 var(--mario-red);
 }
 .ant-col:nth-child(4n + 2) .ant-card {
-  box-shadow: 5px 5px 0 var(--px-blue);
+  box-shadow: 4px 4px 0 var(--mario-gold);
 }
 .ant-col:nth-child(4n + 3) .ant-card {
-  box-shadow: 5px 5px 0 var(--px-orange);
+  box-shadow: 4px 4px 0 var(--mario-green);
 }
 .ant-col:nth-child(4n + 4) .ant-card {
-  box-shadow: 5px 5px 0 var(--px-violet);
+  box-shadow: 4px 4px 0 var(--mario-blue);
 }
 .ant-col:nth-child(4n + 1) .ant-card:hover {
-  box-shadow: 7px 7px 0 var(--px-red);
+  box-shadow: 6px 6px 0 var(--mario-red);
 }
 .ant-col:nth-child(4n + 2) .ant-card:hover {
-  box-shadow: 7px 7px 0 var(--px-blue);
+  box-shadow: 6px 6px 0 var(--mario-gold);
 }
 .ant-col:nth-child(4n + 3) .ant-card:hover {
-  box-shadow: 7px 7px 0 var(--px-orange);
+  box-shadow: 6px 6px 0 var(--mario-green);
 }
 .ant-col:nth-child(4n + 4) .ant-card:hover {
-  box-shadow: 7px 7px 0 var(--px-violet);
+  box-shadow: 6px 6px 0 var(--mario-blue);
 }
 
-/* ── 按钮：实体按键，主按钮绿、默认键蓝影 ── */
+/* ── 按钮：问号块金主按钮 + 管道绿确认 ── */
 .ant-btn {
-  border: 2px solid var(--px-ink);
-  box-shadow: 3px 3px 0 var(--px-blue);
-  font-weight: 600;
+  border: 3px solid var(--mario-black);
+  box-shadow: 3px 3px 0 var(--mario-black);
+  font-weight: 700;
 }
 .ant-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--px-blue);
+  box-shadow: 4px 4px 0 var(--mario-black);
 }
 .ant-btn:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--px-blue);
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--mario-black);
+}
+.ant-btn-default {
+  background: var(--mario-white);
 }
 .ant-btn-primary {
-  background: var(--px-green);
-  border-color: var(--px-ink);
-  box-shadow: 3px 3px 0 var(--px-green-dark);
+  background: var(--mario-gold);
+  color: var(--mario-black);
+  border-color: var(--mario-black);
+  box-shadow: 3px 3px 0 var(--mario-black);
 }
 .ant-btn-primary:hover {
-  background: var(--px-green-dark);
-  box-shadow: 4px 4px 0 var(--px-green-dark);
-}
-.ant-btn-primary:active {
-  box-shadow: 1px 1px 0 var(--px-green-dark);
+  background: var(--mario-gold);
+  filter: brightness(1.08);
 }
 .ant-btn-text,
 .ant-btn-link {
   box-shadow: none;
+  border-color: transparent;
 }
 .ant-btn-text:hover,
 .ant-btn-link:hover {
   transform: none;
 }
 .ant-btn-dangerous {
-  box-shadow: 3px 3px 0 var(--px-red);
+  background: var(--mario-red);
+  color: #fff;
 }
 
-/* ── 输入/选择：墨框 + 聚焦蓝影 ── */
+/* ── 输入：白底黑粗框，聚焦蓝影 ── */
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector,
 .ant-input-number,
 .ant-picker {
-  border: 2px solid var(--px-ink) !important;
-  box-shadow: 2px 2px 0 var(--px-cyan);
+  border: 3px solid var(--mario-black) !important;
+  background: var(--mario-white);
 }
 .ant-input:focus,
 .ant-input-focused,
 .ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector {
-  box-shadow: 3px 3px 0 var(--px-blue) !important;
+  box-shadow: 3px 3px 0 var(--mario-blue) !important;
 }
 
 /* ── 弹层 ── */
 .ant-modal-content {
-  border: 2px solid var(--px-ink);
-  box-shadow: 8px 8px 0 var(--px-green);
+  border: 3px solid var(--mario-black);
+  box-shadow: 8px 8px 0 var(--mario-black);
+  background: var(--mario-white);
 }
 .ant-modal-header {
-  border-bottom: 2px solid var(--px-ink);
+  border-bottom: 3px solid var(--mario-black);
+  background: var(--mario-gold);
 }
 .ant-popover .ant-popover-inner {
-  border: 2px solid var(--px-ink);
-  box-shadow: 4px 4px 0 var(--px-violet);
+  border: 3px solid var(--mario-black);
+  box-shadow: 4px 4px 0 var(--mario-black);
 }
 .ant-alert {
-  border: 2px solid var(--px-ink);
-  box-shadow: 4px 4px 0 var(--px-cyan);
-}
-.ant-alert-success {
-  box-shadow: 4px 4px 0 var(--px-green);
-}
-.ant-alert-warning {
-  box-shadow: 4px 4px 0 var(--px-orange);
-}
-.ant-alert-error {
-  box-shadow: 4px 4px 0 var(--px-red);
+  border: 3px solid var(--mario-black);
+  box-shadow: 4px 4px 0 var(--mario-black);
 }
 
 /* ── 标签 / 表格 ── */
 .ant-tag {
-  border: 1px solid var(--px-ink);
-  font-weight: 600;
+  border: 2px solid var(--mario-black);
+  font-weight: 700;
 }
 .ant-table {
-  border: 2px solid var(--px-ink);
+  border: 3px solid var(--mario-black);
 }
 .ant-table-thead > tr > th {
-  background: #e7f5ee;
-  border-bottom: 2px solid var(--px-ink);
+  background: var(--mario-gold);
+  border-bottom: 3px solid var(--mario-black);
+  color: var(--mario-black);
 }
 
-/* ── 分段/开关/复选 ── */
+/* ── 分段 / 开关 / 复选 ── */
 .ant-segmented {
-  border: 2px solid var(--px-ink);
-  background: #fff;
+  border: 3px solid var(--mario-black);
+  background: var(--mario-white);
 }
 .ant-segmented .ant-segmented-item-selected {
-  background: var(--px-green);
+  background: var(--mario-green);
   color: #fff;
 }
 .ant-switch-checked {
-  background: var(--px-green);
+  background: var(--mario-green);
 }
 .ant-checkbox-inner,
 .ant-radio-inner {
-  border: 2px solid var(--px-ink);
+  border: 2px solid var(--mario-black);
 }
 
-/* ── 分页：彩色方块 ── */
+/* ── 分页：问号块方块 ── */
 .ant-pagination-item,
 .ant-pagination-prev .ant-pagination-item-link,
 .ant-pagination-next .ant-pagination-item-link {
-  border: 2px solid var(--px-ink);
-  box-shadow: 2px 2px 0 var(--px-yellow);
+  border: 3px solid var(--mario-black);
+  box-shadow: 2px 2px 0 var(--mario-black);
 }
 .ant-pagination-item-active {
-  background: var(--px-green);
-  border-color: var(--px-ink);
+  background: var(--mario-gold);
 }
 
-/* ── 链接下划线（像素风惯例）── */
+/* ── 标题：8-bit 字体 ── */
+h1,
+h2,
+.ant-page-header-heading-title,
+.ant-modal-title {
+  font-family: var(--px-title-font);
+}
+
 a:hover {
   text-decoration: underline;
 }
