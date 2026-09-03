@@ -315,3 +315,16 @@ a {
   height: auto !important;
   overflow: visible;
 }
+
+/* ── 导航右侧按钮（AI接入等）：透底金字，避免白块隐身 ── */
+.top-navigation a .ant-btn,
+.top-navigation .ant-btn-default {
+  background: transparent;
+  color: var(--mario-gold);
+  border-color: var(--mario-gold);
+}
+.top-navigation a .ant-btn:hover,
+.top-navigation .ant-btn-default:hover {
+  background: rgba(248, 184, 0, 0.15);
+  color: var(--mario-gold);
+}
