@@ -278,6 +278,7 @@ a:hover {
 }
 
 /* ── 页脚：马里奥砖块地面 ── */
+.app-footer,
 footer,
 .ant-layout-footer {
   background: #c84c0c;
@@ -287,6 +288,7 @@ footer,
   background-size: 32px 16px;
   border-top: 3px solid #000;
 }
+.app-footer,
 footer,
 .ant-layout-footer,
 .ant-layout-footer * {

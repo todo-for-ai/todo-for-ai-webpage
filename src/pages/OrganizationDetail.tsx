@@ -111,7 +111,7 @@ const OrganizationDetail = () => {
   const { organizationId } = useParams<{ organizationId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { tp, language } = usePageTranslation('organizations')
+  const { tp, tc, language } = usePageTranslation('organizations')
   const tpRef = useRef(tp)
 
   const [organization, setOrganization] = useState<Organization | null>(null)
