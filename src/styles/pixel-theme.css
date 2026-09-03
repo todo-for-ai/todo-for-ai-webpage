@@ -566,3 +566,8 @@ body::before {
 .ant-alert-description {
   font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
+
+/* ── 项目卡元信息行：可读字体（长组织名/时间在小字号像素字下过紧）── */
+.project-card-meta {
+  font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}

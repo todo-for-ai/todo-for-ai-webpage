@@ -192,7 +192,7 @@ export const ProjectsCardView = ({
                 </div>
 
                 {/* 元信息：组织 / GitHub / 上下文规则 / 最后活动（全部悬停有解释） */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div className="project-card-meta" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   {orgName && (
                     <Tooltip title={t('card.tipOrg', { name: orgName })} overlayStyle={{ maxWidth: 320 }}>
                       <span
@@ -260,7 +260,7 @@ export const ProjectsCardView = ({
                   }}
                 >
                   <Tooltip title={t('card.tipId')}>
-                    <span style={{ fontSize: 12, color: '#bfbfbf', cursor: 'help' }}>#{project.id}</span>
+                    <span style={{ fontSize: 12, color: '#bfbfbf', cursor: 'help', fontFamily: '-apple-system, PingFang SC, sans-serif' }}>#{project.id}</span>
                   </Tooltip>
                   <div onClick={(event) => event.stopPropagation()}>
                     <Space size={0}>
