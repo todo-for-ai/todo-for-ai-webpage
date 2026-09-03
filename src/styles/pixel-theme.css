@@ -394,3 +394,52 @@ body::before {
     45vw 260px #fff, calc(45vw + 8px) 260px #fff, calc(45vw - 8px) 260px #fff,
     calc(45vw + 8px) 252px #fff;
 }
+
+/* ── 空状态 = 问号块（全站所有 Empty 替换为马里奥问号块）── */
+.ant-empty-image {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  background: var(--mario-gold);
+  border: 3px solid var(--mario-black);
+  box-shadow:
+    inset 3px 3px 0 #ffe28a,
+    inset -3px -3px 0 var(--mario-gold-dark),
+    3px 3px 0 var(--mario-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+.ant-empty-image img,
+.ant-empty-image svg {
+  display: none;
+}
+.ant-empty-image::after {
+  content: '?';
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--mario-black);
+}
+
+/* ── 表格行悬停 / 条纹 ── */
+.ant-table-tbody > tr:hover > td {
+  background: #fff7d6 !important;
+}
+
+/* ── 消息弹窗 / 下拉面板像素化 ── */
+.ant-message .ant-message-notice-content {
+  border: 3px solid var(--mario-black);
+  box-shadow: 4px 4px 0 var(--mario-black);
+  background: var(--mario-white);
+}
+.ant-select-dropdown {
+  border: 3px solid var(--mario-black);
+  box-shadow: 4px 4px 0 var(--mario-black);
+  background: var(--mario-white);
+}
+.ant-select-item-option-selected {
+  background: #fff7d6 !important;
+  font-weight: 700;
+}
