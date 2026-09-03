@@ -76,7 +76,8 @@
   font-size: 14px;
   border-radius: 6px;
   background-color: #24292e;
-  border-color: #24292e;
+  border-color: #000;
+  color: #fff;
 }
 
 .login-button-google {
