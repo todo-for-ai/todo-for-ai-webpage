@@ -146,9 +146,14 @@ img {
 .ant-btn-link:hover {
   transform: none;
 }
-.ant-btn-dangerous {
+/* 危险按钮：实体型红底白字；描边型(text/ghost)红字透底，避免白字白底隐身 */
+.ant-btn-dangerous.ant-btn-primary {
   background: var(--mario-red);
   color: #fff;
+}
+.ant-btn-dangerous:not(.ant-btn-primary) {
+  background: transparent;
+  color: var(--mario-red);
 }
 
 /* ── 输入：白底黑粗框，聚焦蓝影 ── */
