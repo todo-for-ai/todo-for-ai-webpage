@@ -446,8 +446,8 @@ body::before {
   font-weight: 700;
 }
 
-/* ── 地面条：全站底部 6px 砖块（马里奥地面）── */
-body::before {
+/* ── 地面条：全站底部 6px 砖块（马里奥地面；用 #root::after，body::before 已被像素云占用）── */
+#root::after {
   content: '';
   position: fixed;
   left: 0;
