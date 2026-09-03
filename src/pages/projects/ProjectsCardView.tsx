@@ -131,8 +131,8 @@ export const ProjectsCardView = ({
                 {/* 描述 */}
                 <div
                   style={{
-                    fontSize: 12.5,
-                    color: '#595959',
+                    fontSize: 13,
+                    color: '#404040',
                     lineHeight: 1.55,
                     overflow: 'hidden',
                     display: '-webkit-box',
@@ -158,16 +158,16 @@ export const ProjectsCardView = ({
                           flex: 1,
                           textAlign: 'center',
                           padding: '5px 4px',
-                          background: '#fafafa',
-                          borderRadius: 6,
-                          border: '1px solid #f0f0f0',
+                          background: '#fff',
+                          borderRadius: 0,
+                          border: '1px solid #1f1f1f',
                           cursor: 'help',
                         }}
                       >
                         <div style={{ fontSize: 15, fontWeight: 600, color: cell.color, lineHeight: 1.2 }}>
                           {cell.value}
                         </div>
-                        <div style={{ fontSize: 11, color: '#8c8c8c' }}>{cell.label}</div>
+                        <div style={{ fontSize: 12, color: '#8c8c8c' }}>{cell.label}</div>
                       </div>
                     </Tooltip>
                   ))}
@@ -242,7 +242,7 @@ export const ProjectsCardView = ({
                   }}
                 >
                   <Tooltip title={t('card.tipId')}>
-                    <span style={{ fontSize: 11, color: '#bfbfbf', cursor: 'help' }}>#{project.id}</span>
+                    <span style={{ fontSize: 12, color: '#bfbfbf', cursor: 'help' }}>#{project.id}</span>
                   </Tooltip>
                   <div onClick={(event) => event.stopPropagation()}>
                     <Space size={0}>

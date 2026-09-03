@@ -48,8 +48,6 @@ h2,
 body {
   background: var(--mario-sky);
   font-family: var(--px-font);
-  -webkit-font-smoothing: none;
-  text-rendering: geometricPrecision;
 }
 
 /* 位图资源像素化渲染 */
@@ -88,16 +86,16 @@ img {
 
 /* 项目卡片：四色轮换阴影（红/金/绿/蓝 = 马里奥敌人/问号块/管道/HUD） */
 .ant-col:nth-child(4n + 1) .ant-card {
-  box-shadow: 4px 4px 0 var(--mario-red);
+  box-shadow: 6px 6px 0 var(--mario-red);
 }
 .ant-col:nth-child(4n + 2) .ant-card {
-  box-shadow: 4px 4px 0 var(--mario-gold);
+  box-shadow: 6px 6px 0 var(--mario-gold);
 }
 .ant-col:nth-child(4n + 3) .ant-card {
-  box-shadow: 4px 4px 0 var(--mario-green);
+  box-shadow: 6px 6px 0 var(--mario-green);
 }
 .ant-col:nth-child(4n + 4) .ant-card {
-  box-shadow: 4px 4px 0 var(--mario-blue);
+  box-shadow: 6px 6px 0 var(--mario-blue);
 }
 .ant-col:nth-child(4n + 1) .ant-card:hover {
   box-shadow: 6px 6px 0 var(--mario-red);
@@ -240,4 +238,80 @@ h2,
 
 a:hover {
   text-decoration: underline;
+}
+
+/* ── 顶部导航：马里奥 HUD 黑条 ── */
+.top-navigation {
+  background: #1f1f1f !important;
+  border-bottom: 3px solid #000;
+  box-shadow: none;
+}
+.top-navigation .logo-section span,
+.top-navigation .welcome-text {
+  color: #fcfcfc !important;
+}
+.top-navigation .ant-menu {
+  background: transparent;
+  border-bottom: none;
+}
+.top-navigation .ant-menu-item,
+.top-navigation .ant-menu-item .ant-menu-title-content {
+  color: #fcfcfc;
+}
+.top-navigation .ant-menu-item-active {
+  color: var(--mario-gold) !important;
+}
+.top-navigation .ant-menu-item-selected {
+  background: var(--mario-gold) !important;
+  color: #000 !important;
+}
+.top-navigation .ant-menu-item-selected .ant-menu-title-content {
+  color: #000 !important;
+}
+.top-navigation .ant-menu-horizontal > .ant-menu-item-selected::after,
+.top-navigation .ant-menu-horizontal > .ant-menu-item-active::after {
+  border-bottom: 3px solid var(--mario-gold);
+}
+.top-navigation .welcome-text,
+.top-navigation .header-user-section {
+  color: #fcfcfc;
+}
+
+/* ── 页脚：马里奥砖块地面 ── */
+footer,
+.ant-layout-footer {
+  background: #c84c0c;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.35) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.35) 2px, transparent 2px);
+  background-size: 32px 16px;
+  border-top: 3px solid #000;
+}
+footer,
+.ant-layout-footer,
+.ant-layout-footer * {
+  color: #ffe9d2;
+}
+
+/* ── 细节：Tab 下线加粗、链接绿、徽标金 ── */
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  font-weight: 700;
+}
+.ant-tabs-ink-bar {
+  background: var(--mario-black);
+  height: 3px;
+}
+a {
+  color: var(--mario-green-dark);
+}
+.ant-badge-count {
+  background: var(--mario-red);
+  border: 2px solid #000;
+  font-family: var(--px-font);
+}
+
+/* ── 项目卡片：解除旧版 140px 定高裁切（index.css 遗留规则）── */
+.project-card {
+  height: auto !important;
+  overflow: visible;
 }
