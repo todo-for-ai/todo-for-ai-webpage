@@ -552,3 +552,17 @@ body::before {
   --mario-red: #306230;  --mario-gold: #306230;   --mario-gold-dark: #0f380f;
   --mario-green: #306230; --mario-blue: #0f380f;  (AppLayout bg: #8bac0f)
    ───────────────────────────────────────────────────────────── */
+
+/* ── 混合字体：像素字保留在标题/按钮/标签/数字（短文本 = 像素个性），
+   正文/表格内容/描述回退可读系统字体（长文本 = 可读性），这是像素风
+   生产力站点的标准做法，解决「看久了累」── */
+.ant-table-tbody > tr > td,
+.ant-table-thead > tr > th,
+.ant-typography p,
+.ant-form-item .ant-form-item-control-input-content p,
+.project-card .ant-card-body,
+.ant-descriptions-item-content,
+.ant-list-item-main,
+.ant-alert-description {
+  font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
