@@ -202,7 +202,9 @@
         "statusChangeError": "Failed to batch change task status",
         "priorityChangeSuccess": "Successfully changed {{count}} tasks priority to: {{priority}}",
         "priorityChangeError": "Failed to batch change task priority"
-      }
+      },
+      "emptyTitle": "No tasks match the current filters",
+      "emptyHint": "Adjust the filters above (e.g. include completed status) to see more, or click New Task to create one"
     },
     "confirm": {
       "delete": {

@@ -202,7 +202,9 @@
         "statusChangeError": "批量更改任务状态失败",
         "priorityChangeSuccess": "已成功将 {{count}} 个任务优先级更改为：{{priority}}",
         "priorityChangeError": "批量更改任务优先级失败"
-      }
+      },
+      "emptyTitle": "当前筛选条件下暂无任务",
+      "emptyHint": "可调整上方筛选条件（如状态包含「已完成」）查看更多任务，或点击右上角「新建任务」"
     },
     "confirm": {
       "delete": {

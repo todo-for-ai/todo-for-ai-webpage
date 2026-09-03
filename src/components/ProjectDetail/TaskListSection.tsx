@@ -191,6 +191,16 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
         rowSelection={handleTaskSelection()}
         pagination={{ current: 1, pageSize: 20, showSizeChanger: true }}
         onChange={onTableChange}
+        locale={{
+          emptyText: (
+            <div style={{ padding: '16px 0' }}>
+              <div>{tp('tasks.table.emptyTitle')}</div>
+              <div style={{ fontSize: 12, color: '#999', marginTop: 6 }}>
+                {tp('tasks.table.emptyHint')}
+              </div>
+            </div>
+          )
+        }}
       />
     </Card>
 
