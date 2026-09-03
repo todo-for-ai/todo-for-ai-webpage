@@ -1,14 +1,25 @@
 /**
- * PIXEL THEME — 全站像素/硬朗风（neo-brutalist）
+ * PIXEL THEME v2 — 彩色像素风（colorful pixel / 复古游戏机 UI）
  *
- * 决策背景：用户否决圆角风格，明确要求全站直角、像素化视觉。
- * 注入点：AppLayout.tsx（全站唯一布局壳，绕开 WIP 锁定的 main.tsx/index.css）。
- * 规则：
- *  - 全站 0 圆角（含 antd 组件与第三方）
- *  - 硬边框 1px #1f1f1f + 无模糊偏移阴影（3px 3px 0），hover 抬起、active 按下
- *  - 拉丁字符走等宽字体（CJK 自动回退系统中文字体，离线安全）
- *  - 品牌绿 #00b96b 保留
+ * 决策背景：用户要求像素风但拒绝黑白——核心是「像素几何 × 丰富色彩」：
+ *  - 0 圆角 + 硬边框 + 无模糊偏移阴影（像素几何）
+ *  - 奶油纸底 + 彩色偏移阴影 + 彩色面板强调（颜色丰富，像素游戏机感）
+ * 注入点：AppLayout.tsx（全站布局壳；main.tsx/index.css 处于 WIP 锁定）。
  */
+
+:root {
+  --px-ink: #1f1f1f;        /* 轮廓墨色 */
+  --px-red: #ff6b6b;
+  --px-orange: #ffa94d;
+  --px-yellow: #ffd43b;
+  --px-green: #00b96b;
+  --px-green-dark: #0a8f57;
+  --px-cyan: #3bc9db;
+  --px-blue: #4dabf7;
+  --px-violet: #9775fa;
+  --px-pink: #f783ac;
+  --px-paper: #fdf8ef;      /* 奶油纸底 */
+}
 
 /* ── 全局：直角 + 等宽优先 ── */
 * {
@@ -16,6 +27,7 @@
 }
 
 body {
+  background: var(--px-paper);
   font-family:
     ui-monospace,
     SFMono-Regular,
@@ -31,7 +43,7 @@ body {
 }
 
 ::selection {
-  background: #00b96b;
+  background: var(--px-green);
   color: #fff;
 }
 
@@ -41,41 +53,74 @@ body {
   height: 12px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f1f1f;
-  border: 3px solid #f5f5f5;
+  background: var(--px-ink);
+  border: 3px solid var(--px-paper);
 }
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: var(--px-paper);
 }
 
-/* ── 卡片：硬边框 + 偏移阴影，hover 抬起 ── */
+/* ── 卡片：白底 + 墨色描边 + 彩色偏移阴影 ── */
 .ant-card {
-  border: 1px solid #1f1f1f;
-  box-shadow: 3px 3px 0 #1f1f1f;
+  border: 2px solid var(--px-ink);
+  box-shadow: 5px 5px 0 var(--px-yellow);
 }
-.ant-card.is-hoverable:hover,
 .ant-card:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 #1f1f1f;
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 var(--px-green);
 }
 
-/* ── 按钮：实体按键手感 ── */
+/* 项目卡片：按列位轮换彩色阴影（红/橙/蓝/紫），像素游戏机色盘 */
+.ant-col:nth-child(4n + 1) .ant-card {
+  box-shadow: 5px 5px 0 var(--px-red);
+}
+.ant-col:nth-child(4n + 2) .ant-card {
+  box-shadow: 5px 5px 0 var(--px-blue);
+}
+.ant-col:nth-child(4n + 3) .ant-card {
+  box-shadow: 5px 5px 0 var(--px-orange);
+}
+.ant-col:nth-child(4n + 4) .ant-card {
+  box-shadow: 5px 5px 0 var(--px-violet);
+}
+.ant-col:nth-child(4n + 1) .ant-card:hover {
+  box-shadow: 7px 7px 0 var(--px-red);
+}
+.ant-col:nth-child(4n + 2) .ant-card:hover {
+  box-shadow: 7px 7px 0 var(--px-blue);
+}
+.ant-col:nth-child(4n + 3) .ant-card:hover {
+  box-shadow: 7px 7px 0 var(--px-orange);
+}
+.ant-col:nth-child(4n + 4) .ant-card:hover {
+  box-shadow: 7px 7px 0 var(--px-violet);
+}
+
+/* ── 按钮：实体按键，主按钮绿、默认键蓝影 ── */
 .ant-btn {
-  border: 1px solid #1f1f1f;
-  box-shadow: 2px 2px 0 #1f1f1f;
+  border: 2px solid var(--px-ink);
+  box-shadow: 3px 3px 0 var(--px-blue);
   font-weight: 600;
 }
 .ant-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 #1f1f1f;
+  box-shadow: 4px 4px 0 var(--px-blue);
 }
-.ant-btn:active,
-.ant-btn-primary:not(:disabled):active {
+.ant-btn:active {
   transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 #1f1f1f;
+  box-shadow: 1px 1px 0 var(--px-blue);
 }
 .ant-btn-primary {
-  border-color: #1f1f1f;
+  background: var(--px-green);
+  border-color: var(--px-ink);
+  box-shadow: 3px 3px 0 var(--px-green-dark);
+}
+.ant-btn-primary:hover {
+  background: var(--px-green-dark);
+  box-shadow: 4px 4px 0 var(--px-green-dark);
+}
+.ant-btn-primary:active {
+  box-shadow: 1px 1px 0 var(--px-green-dark);
 }
 .ant-btn-text,
 .ant-btn-link {
@@ -85,85 +130,92 @@ body {
 .ant-btn-link:hover {
   transform: none;
 }
+.ant-btn-dangerous {
+  box-shadow: 3px 3px 0 var(--px-red);
+}
 
-/* ── 输入/选择：方角硬框 ── */
+/* ── 输入/选择：墨框 + 聚焦蓝影 ── */
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector,
 .ant-input-number,
 .ant-picker {
-  border: 1px solid #1f1f1f !important;
-  box-shadow: 2px 2px 0 rgba(31, 31, 31, 0.15);
+  border: 2px solid var(--px-ink) !important;
+  box-shadow: 2px 2px 0 var(--px-cyan);
 }
 .ant-input:focus,
 .ant-input-focused,
 .ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector {
-  box-shadow: 3px 3px 0 #00b96b !important;
+  box-shadow: 3px 3px 0 var(--px-blue) !important;
 }
 
-/* ── 弹层：模态 / 确认框 / 提示 ── */
+/* ── 弹层 ── */
 .ant-modal-content {
-  border: 2px solid #1f1f1f;
-  box-shadow: 6px 6px 0 #1f1f1f;
+  border: 2px solid var(--px-ink);
+  box-shadow: 8px 8px 0 var(--px-green);
 }
 .ant-modal-header {
-  border-bottom: 2px solid #1f1f1f;
+  border-bottom: 2px solid var(--px-ink);
 }
 .ant-popover .ant-popover-inner {
-  border: 1px solid #1f1f1f;
-  box-shadow: 3px 3px 0 #1f1f1f;
-}
-.ant-tooltip {
-  max-width: 380px;
-}
-.ant-tooltip-inner {
-  border: 1px solid #1f1f1f;
-  border-radius: 0;
-  font-family: inherit;
+  border: 2px solid var(--px-ink);
+  box-shadow: 4px 4px 0 var(--px-violet);
 }
 .ant-alert {
-  border: 1px solid #1f1f1f;
-  box-shadow: 3px 3px 0 #1f1f1f;
+  border: 2px solid var(--px-ink);
+  box-shadow: 4px 4px 0 var(--px-cyan);
+}
+.ant-alert-success {
+  box-shadow: 4px 4px 0 var(--px-green);
+}
+.ant-alert-warning {
+  box-shadow: 4px 4px 0 var(--px-orange);
+}
+.ant-alert-error {
+  box-shadow: 4px 4px 0 var(--px-red);
 }
 
-/* ── 标签 / 表格 / 分段控件 ── */
+/* ── 标签 / 表格 ── */
 .ant-tag {
-  border: 1px solid #1f1f1f;
+  border: 1px solid var(--px-ink);
   font-weight: 600;
 }
 .ant-table {
-  border: 1px solid #1f1f1f;
+  border: 2px solid var(--px-ink);
 }
 .ant-table-thead > tr > th {
-  background: #f0f0f0;
-  border-bottom: 2px solid #1f1f1f;
-}
-.ant-segmented {
-  border: 1px solid #1f1f1f;
+  background: #e7f5ee;
+  border-bottom: 2px solid var(--px-ink);
 }
 
-/* ── 开关/单选/复选：方形化 ── */
-.ant-switch {
-  border: 1px solid #1f1f1f;
+/* ── 分段/开关/复选 ── */
+.ant-segmented {
+  border: 2px solid var(--px-ink);
+  background: #fff;
+}
+.ant-segmented .ant-segmented-item-selected {
+  background: var(--px-green);
+  color: #fff;
+}
+.ant-switch-checked {
+  background: var(--px-green);
 }
 .ant-checkbox-inner,
 .ant-radio-inner {
-  border: 1px solid #1f1f1f;
+  border: 2px solid var(--px-ink);
 }
 
-/* ── 菜单/分页 ── */
+/* ── 分页：彩色方块 ── */
 .ant-pagination-item,
 .ant-pagination-prev .ant-pagination-item-link,
 .ant-pagination-next .ant-pagination-item-link {
-  border: 1px solid #1f1f1f;
-  box-shadow: 2px 2px 0 rgba(31, 31, 31, 0.85);
+  border: 2px solid var(--px-ink);
+  box-shadow: 2px 2px 0 var(--px-yellow);
 }
 .ant-pagination-item-active {
-  background: #00b96b;
-}
-.ant-menu {
-  border-right: 1px solid #1f1f1f;
+  background: var(--px-green);
+  border-color: var(--px-ink);
 }
 
 /* ── 链接下划线（像素风惯例）── */
