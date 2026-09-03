@@ -1,5 +1,6 @@
 // import React from 'react' // React 18+ with JSX Transform doesn't need explicit React import
 import { Layout } from 'antd'
+import PaletteSwitcher from '../common/PaletteSwitcher'
 import { Outlet } from 'react-router-dom'
 import TopNavigation from './TopNavigation'
 import { Footer } from '../Footer'
@@ -36,6 +37,8 @@ const AppLayout = () => {
           <Outlet />
         </div>
       </Content>
+
+      <PaletteSwitcher />
 
       {/* 页脚 */}
       <Footer />
