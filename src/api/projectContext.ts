@@ -101,6 +101,17 @@ export interface PendingPRApprovalsResponse {
   pagination: { page: number; per_page: number; total: number; has_next: boolean }
 }
 
+export interface RepoBindingPayload {
+  repo_owner: string
+  repo_name: string
+  default_branch?: string
+  /** GitHub Personal Access Token（repo 权限）；加密存储，更新时留空表示不修改 */
+  token?: string
+  autonomy_level?: number
+  require_agent_review?: boolean
+  reviewer_agent_id?: number | null
+}
+
 function isHttpStatus(error: unknown, status: number): boolean {
   return (
     typeof error === 'object' &&
@@ -150,6 +161,16 @@ export const projectContextApi = {
       }
       throw error
     }
+  },
+
+  /** 绑定/更新 GitHub 仓库（需项目管理权限）。 */
+  async bindRepo(projectId: number, payload: RepoBindingPayload): Promise<ProjectRepoBinding> {
+    return apiClient.put<ProjectRepoBinding>(`/projects/${projectId}/repo`, payload)
+  },
+
+  /** 解除 repo 绑定（需项目管理权限）。 */
+  async unbindRepo(projectId: number): Promise<void> {
+    await apiClient.delete(`/projects/${projectId}/repo`)
   },
 
   async getPendingPRApprovals(params?: {

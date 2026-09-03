@@ -22,7 +22,7 @@ export {
   type ProjectAgentOverview,
   type ProjectRunsSummary,
   type ProjectAuditEvent,
-  type ProjectRepoBinding,
+  type ProjectRepoBinding, type RepoBindingPayload,
   type PendingPRApproval,
 } from './projectContext'
 export { notificationsApi } from './notifications'
