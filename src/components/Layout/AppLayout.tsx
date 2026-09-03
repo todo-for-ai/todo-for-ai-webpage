@@ -28,11 +28,9 @@ const AppLayout = () => {
       >
         <div
           style={{
-            background: '#fff',
-            borderRadius: '8px',
+            background: 'transparent',
             padding: '24px',
             minHeight: 'calc(100vh - 64px - 48px - 48px)', // 减去顶部导航栏、padding和页脚高度
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
           }}
         >
           <Outlet />

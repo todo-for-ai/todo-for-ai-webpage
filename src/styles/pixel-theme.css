@@ -328,3 +328,43 @@ a {
   background: rgba(248, 184, 0, 0.15);
   color: var(--mario-gold);
 }
+
+/* ── CRT 扫描线（极淡，全站氛围）── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.05) 0px,
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ── 主按钮：问号块四角铆钉 ── */
+.ant-btn-primary {
+  background-image:
+    linear-gradient(#1f1f1f, #1f1f1f),
+    linear-gradient(#1f1f1f, #1f1f1f),
+    linear-gradient(#1f1f1f, #1f1f1f),
+    linear-gradient(#1f1f1f, #1f1f1f);
+  background-size: 3px 3px, 3px 3px, 3px 3px, 3px 3px;
+  background-position:
+    4px 4px,
+    calc(100% - 4px) 4px,
+    4px calc(100% - 5px),
+    calc(100% - 4px) calc(100% - 5px);
+  background-repeat: no-repeat;
+}
+
+/* ── 导航内所有按钮：透底金字（AI接入等白块隐身修复加强版）── */
+.top-navigation .ant-btn {
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: var(--mario-gold) !important;
+  border: 2px solid var(--mario-gold) !important;
+  box-shadow: none;
+}
