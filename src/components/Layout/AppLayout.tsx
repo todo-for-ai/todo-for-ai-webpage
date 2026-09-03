@@ -5,6 +5,7 @@ import TopNavigation from './TopNavigation'
 import { Footer } from '../Footer'
 import WeChatGroup from '../WeChatGroup'
 import TelegramGroup from '../TelegramGroup'
+import '../../styles/pixel-theme.css'
 
 const { Content } = Layout
 
