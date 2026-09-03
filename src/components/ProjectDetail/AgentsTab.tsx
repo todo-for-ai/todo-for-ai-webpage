@@ -1,62 +1,54 @@
 /**
- * Agent 协作 Tab：本项目可见的 Agent 一览。
+ * Agent 协作 Tab：本项目可见的 Agent 及其在本项目上的运行画像。
  *
- * Agent 挂在组织（工作区）下，通过 allowed_project_ids 控制项目级可见性；
- * allowed_project_ids 为空表示继承全工作区（与后端 _resolve_accessible_project_ids
- * 的语义一致）。项目未挂组织时 Agent 无法接入，这里给出明确提示。
+ * 数据来自项目 overview 聚合端点（服务端完成 allowed_project_ids 语义
+ * 的可见性过滤与运行统计）；项目未挂组织时 Agent 无法接入，给出明确提示。
  */
-import { useEffect, useMemo, useState } from 'react'
-import { Card, Empty, Spin, Table, Tag } from 'antd'
+import { Card, Empty, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { LinkButton } from '../SmartLink'
-import {
-  projectContextApi,
-  type WorkspaceAgentSummary,
-} from '../../api/projectContext'
+import type { ProjectAgentOverview, ProjectOverview } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
-import { AgentStatusColor } from './ProjectContextHeader'
 
 interface AgentsTabProps {
-  projectId: number
-  workspaceId?: number | null
+  overview?: ProjectOverview | null
 }
 
-export function AgentsTab({ projectId, workspaceId }: AgentsTabProps) {
+function AgentStatusColor(status?: string): string {
+  switch (status) {
+    case 'active':
+      return 'green'
+    case 'paused':
+      return 'orange'
+    case 'revoked':
+    case 'disabled':
+      return 'red'
+    default:
+      return 'default'
+  }
+}
+
+function RunStateColor(state?: string | null): string {
+  switch (state) {
+    case 'succeeded':
+      return 'green'
+    case 'failed':
+    case 'expired':
+      return 'red'
+    case 'running':
+    case 'leased':
+    case 'queued':
+      return 'blue'
+    default:
+      return 'default'
+  }
+}
+
+export function AgentsTab({ overview }: AgentsTabProps) {
   const { tp } = usePageTranslation('projectDetail')
-  const [loading, setLoading] = useState(true)
-  const [agents, setAgents] = useState<WorkspaceAgentSummary[]>([])
+  const agents: ProjectAgentOverview[] = overview?.agents ?? []
 
-  useEffect(() => {
-    if (!workspaceId) {
-      setLoading(false)
-      setAgents([])
-      return
-    }
-    let cancelled = false
-    setLoading(true)
-    projectContextApi
-      .getWorkspaceAgents(workspaceId, { page: 1, per_page: 200 })
-      .then((resp) => {
-        if (cancelled) return
-        setAgents(
-          (resp.items ?? []).filter(
-            (agent) =>
-              !agent.allowed_project_ids || agent.allowed_project_ids.includes(projectId)
-          )
-        )
-      })
-      .catch(() => {
-        if (!cancelled) setAgents([])
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [projectId, workspaceId])
-
-  const columns: ColumnsType<WorkspaceAgentSummary> = [
+  const columns: ColumnsType<ProjectAgentOverview> = [
     {
       title: tp('agentsTab.colAgent'),
       key: 'name',
@@ -75,12 +67,6 @@ export function AgentsTab({ projectId, workspaceId }: AgentsTabProps) {
       ),
     },
     {
-      title: tp('agentsTab.colRole'),
-      dataIndex: 'collaboration_role',
-      width: 130,
-      render: (role: string | undefined) => role ?? '-',
-    },
-    {
       title: tp('agentsTab.colExecution'),
       dataIndex: 'execution_mode',
       width: 120,
@@ -89,62 +75,96 @@ export function AgentsTab({ projectId, workspaceId }: AgentsTabProps) {
     {
       title: tp('agentsTab.colSandbox'),
       dataIndex: 'sandbox_profile',
-      width: 130,
-      render: (profile: string | undefined, record) =>
-        profile ?? (record.runner_enabled ? 'runner' : '-'),
+      width: 120,
+      render: (profile: string | undefined) => profile ?? '-',
     },
     {
       title: tp('agentsTab.colAuthz'),
       key: 'authz',
-      width: 120,
+      width: 110,
       render: (_, record) =>
-        record.allowed_project_ids ? (
+        record.explicitly_allowed ? (
           <Tag color="blue">{tp('agentsTab.explicitGrant')}</Tag>
         ) : (
           <Tag>{tp('agentsTab.workspaceInherit')}</Tag>
         ),
     },
     {
-      title: tp('agentsTab.colLastSeen'),
-      dataIndex: 'last_seen_at',
-      render: (value: string | undefined) =>
-        value ? new Date(value).toLocaleString() : '-',
+      title: tp('agentsTab.colRuns'),
+      key: 'runs',
+      width: 150,
+      render: (_, record) =>
+        record.runs_total > 0 ? (
+          <span>
+            {record.runs_total}
+            <Tag color="green" style={{ marginLeft: 6 }}>
+              ✓ {record.runs_succeeded}
+            </Tag>
+            {record.runs_failed > 0 && (
+              <Tag color="red" style={{ marginLeft: 4 }}>
+                ✗ {record.runs_failed}
+              </Tag>
+            )}
+          </span>
+        ) : (
+          '-'
+        ),
+    },
+    {
+      title: tp('agentsTab.colLastRun'),
+      key: 'last_run',
+      width: 190,
+      render: (_, record) => {
+        if (record.has_active_lease || record.active_runs > 0) {
+          return (
+            <Tag color="processing" icon={<span className="pd-pulse-dot" />}>
+              {tp('agentsTab.runningNow')}
+            </Tag>
+          )
+        }
+        if (!record.last_run_at) return '-'
+        return (
+          <span>
+            <Tag color={RunStateColor(record.last_run_state)}>{record.last_run_state}</Tag>
+            {new Date(record.last_run_at).toLocaleString()}
+          </span>
+        )
+      },
     },
   ]
 
-  const summary = useMemo(() => {
-    const explicit = agents.filter((agent) => agent.allowed_project_ids).length
-    const inherited = agents.length - explicit
-    return tp('agentsTab.summary')
-      .replace('{total}', String(agents.length))
-      .replace('{explicit}', String(explicit))
-      .replace('{inherited}', String(inherited))
-  }, [agents, tp])
+  const explicit = agents.filter((agent) => agent.explicitly_allowed).length
+  const inherited = agents.length - explicit
+  const summary = tp('agentsTab.summary')
+    .replace('{total}', String(agents.length))
+    .replace('{explicit}', String(explicit))
+    .replace('{inherited}', String(inherited))
 
-  if (!workspaceId) {
-    return (
-      <Card title={tp('agentsTab.title')}>
+  return (
+    <Card
+      title={tp('agentsTab.title')}
+      extra={<span style={{ color: '#999', fontSize: 12 }}>{summary}</span>}
+    >
+      {!overview?.organization ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={tp('agentsTab.noWorkspaceHint')}
         />
-      </Card>
-    )
-  }
-
-  return (
-    <Card title={tp('agentsTab.title')} extra={<span style={{ color: '#999', fontSize: 12 }}>{summary}</span>}>
-      <Table
-        rowKey="id"
-        size="small"
-        loading={loading}
-        columns={columns}
-        dataSource={agents}
-        pagination={false}
-        locale={{
-          emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={tp('agentsTab.empty')} />,
-        }}
-      />
+      ) : (
+        <Table
+          rowKey="id"
+          size="small"
+          columns={columns}
+          dataSource={agents}
+          pagination={false}
+          locale={{
+            emptyText: (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={tp('agentsTab.empty')} />
+            ),
+          }}
+        />
+      )}
     </Card>
   )
 }
+

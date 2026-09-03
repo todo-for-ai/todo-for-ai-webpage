@@ -1,122 +1,43 @@
 /**
  * 项目上下文头：把项目放回它的上下文里（组织 / 代码仓库 / Agent）。
  *
- * 与旧头部的区别：面包屑显示组织归属并可跳回组织详情；事实行展示
- * repo 绑定、Agent 覆盖、负责人等跨域信号，chip 可点击跳到对应 Tab。
+ * 数据来自 GET /projects/{id}/overview 聚合端点（页面级拉取后传入），
+ * 面包屑显示组织归属并可跳回组织详情；事实行展示 repo 绑定、Agent
+ * 覆盖、运行中任务等跨域信号，chip 可点击跳到对应 Tab。
  */
-import { useEffect, useState, type ReactNode } from 'react'
-import { Button, Card, Spin, Tag } from 'antd'
+import { type ReactNode } from 'react'
+import { Button, Card, Tag } from 'antd'
 import {
   ArrowLeftOutlined,
   ApiOutlined,
   BranchesOutlined,
   HomeOutlined,
+  PlayCircleOutlined,
   SafetyOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import { organizationsApi, type Organization } from '../../api/organizations'
-import {
-  projectContextApi,
-  type ProjectRepoBinding,
-  type WorkspaceAgentSummary,
-} from '../../api/projectContext'
+import type { ProjectOverview } from '../../api/projectContext'
 import type { Project } from '../../api/projects'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import './projectDetail.css'
 
 interface ProjectContextHeaderProps {
   project: Project
+  overview?: ProjectOverview | null
   onOpenTab: (tabKey: string) => void
   actions?: ReactNode
 }
 
-function AgentStatusColor(status?: string): string {
-  switch (status) {
-    case 'active':
-      return 'green'
-    case 'paused':
-      return 'orange'
-    case 'revoked':
-    case 'disabled':
-      return 'red'
-    default:
-      return 'default'
-  }
-}
-
-export function ProjectContextHeader({ project, onOpenTab, actions }: ProjectContextHeaderProps) {
+export function ProjectContextHeader({ project, overview, onOpenTab, actions }: ProjectContextHeaderProps) {
   const navigate = useNavigate()
   const { tp, tc } = usePageTranslation('projectDetail')
 
-  const [orgName, setOrgName] = useState<string | null>(null)
-  const [repoBinding, setRepoBinding] = useState<ProjectRepoBinding | null | undefined>(undefined)
-  const [agents, setAgents] = useState<WorkspaceAgentSummary[] | null>(null)
-
-  const organizationId = project.organization_id ?? null
-
-  useEffect(() => {
-    let cancelled = false
-    if (!organizationId) {
-      setOrgName(null)
-      return
-    }
-    organizationsApi
-      .getOrganizations({ page: 1, per_page: 200 })
-      .then((resp) => {
-        if (cancelled) return
-        const list = (resp as { items?: Organization[] }).items ?? []
-        const match = list.find((org) => org.id === organizationId)
-        setOrgName(match?.name ?? `#${organizationId}`)
-      })
-      .catch(() => {
-        if (!cancelled) setOrgName(`#${organizationId}`)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [organizationId])
-
-  useEffect(() => {
-    let cancelled = false
-    projectContextApi
-      .getRepoBinding(project.id)
-      .then((binding) => {
-        if (!cancelled) setRepoBinding(binding)
-      })
-      .catch(() => {
-        if (!cancelled) setRepoBinding(null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [project.id])
-
-  useEffect(() => {
-    let cancelled = false
-    if (!organizationId) {
-      setAgents(null)
-      return
-    }
-    projectContextApi
-      .getWorkspaceAgents(organizationId, { page: 1, per_page: 200 })
-      .then((resp) => {
-        if (cancelled) return
-        const visible = (resp.items ?? []).filter(
-          (agent) =>
-            !agent.allowed_project_ids || agent.allowed_project_ids.includes(project.id)
-        )
-        setAgents(visible)
-      })
-      .catch(() => {
-        if (!cancelled) setAgents([])
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [organizationId, project.id])
-
+  const organization = overview?.organization ?? null
+  const repoBinding = overview?.repo ?? null
+  const agents = overview?.agents ?? null
   const activeAgents = (agents ?? []).filter((agent) => agent.status === 'active')
+  const runningTasks = overview?.runs_summary.running_tasks ?? 0
 
   return (
     <Card style={{ marginBottom: '16px' }} className="pd-context-header">
@@ -127,14 +48,14 @@ export function ProjectContextHeader({ project, onOpenTab, actions }: ProjectCon
           </Button>
           <span className="pd-context-header__divider">|</span>
           <HomeOutlined style={{ color: '#00b96b' }} />
-          {organizationId && (
+          {organization && (
             <>
               <a
-                onClick={() => navigate(`/todo-for-ai/pages/organizations/${organizationId}`)}
+                onClick={() => navigate(`/todo-for-ai/pages/organizations/${organization.id}`)}
                 className="pd-context-header__org-link"
                 title={tp('contextHeader.goToOrganization')}
               >
-                {orgName ?? <Spin size="small" />}
+                {organization.name}
               </a>
               <span className="pd-context-header__divider">/</span>
             </>
@@ -155,16 +76,16 @@ export function ProjectContextHeader({ project, onOpenTab, actions }: ProjectCon
           className="pd-context-header__chip"
           title={tp('contextHeader.repoChipTitle')}
         >
-          {repoBinding === undefined
+          {overview === undefined
             ? tp('contextHeader.repoLoading')
             : repoBinding
               ? `${repoBinding.repo_full_name} @ ${repoBinding.default_branch}`
               : tp('contextHeader.repoUnbound')}
         </Tag>
-        {organizationId && (
+        {organization && (
           <Tag
             icon={<ApiOutlined />}
-            color={activeAgents.length > 0 ? 'green' : 'default'}
+            color={(agents ?? []).length > 0 ? 'green' : 'default'}
             onClick={() => onOpenTab('agents')}
             className="pd-context-header__chip"
             title={tp('contextHeader.agentsChipTitle')}
@@ -172,6 +93,17 @@ export function ProjectContextHeader({ project, onOpenTab, actions }: ProjectCon
             {agents === null
               ? tp('contextHeader.agentsLoading')
               : `${tp('contextHeader.agentsCount')} ${agents.length} · ${tp('contextHeader.agentsActive')} ${activeAgents.length}`}
+          </Tag>
+        )}
+        {runningTasks > 0 && (
+          <Tag
+            icon={<PlayCircleOutlined />}
+            color="processing"
+            onClick={() => onOpenTab('governance')}
+            className="pd-context-header__chip"
+            title={tp('contextHeader.runningChipTitle')}
+          >
+            {`${tp('contextHeader.runningTasks')} ${runningTasks}`}
           </Tag>
         )}
         <Tag
@@ -204,5 +136,3 @@ export function ProjectContextHeader({ project, onOpenTab, actions }: ProjectCon
     </Card>
   )
 }
-
-export { AgentStatusColor }

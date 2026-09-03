@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Card, Tabs, Spin, Button, Space } from 'antd'
 import {
@@ -19,6 +19,8 @@ import { ProjectContextHeader } from '../components/ProjectDetail/ProjectContext
 import { CodeTab } from '../components/ProjectDetail/CodeTab'
 import { AgentsTab } from '../components/ProjectDetail/AgentsTab'
 import { GovernanceTab } from '../components/ProjectDetail/GovernanceTab'
+import { ProjectActivitySection } from '../components/ProjectDetail/ProjectActivitySection'
+import { projectContextApi, type ProjectOverview } from '../api/projectContext'
 import { LinkButton } from '../components/SmartLink'
 import { useProjectPin } from '../hooks/useProjectPin'
 import NotificationChannelManager from '../components/NotificationChannelManager'
@@ -36,6 +38,30 @@ const ProjectDetail = () => {
   } = useProjectStore()
 
   const { isPinned, pinLoading, checkPinStatus, handleTogglePin } = useProjectPin(id || '0')
+
+  // 项目跨域聚合概览（组织 / repo / Agent 运行画像 / 审计事件），
+  // 头部与各 Tab 共享一次请求
+  const [projectOverview, setProjectOverview] = useState<ProjectOverview | undefined>(undefined)
+
+  useEffect(() => {
+    const pid = parseInt(id || '0', 10)
+    if (!pid) {
+      return
+    }
+    setProjectOverview(undefined)
+    let cancelled = false
+    projectContextApi
+      .getProjectOverview(pid)
+      .then((data) => {
+        if (!cancelled) setProjectOverview(data)
+      })
+      .catch(() => {
+        if (!cancelled) setProjectOverview(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 
   useEffect(() => {
     if (id) {
@@ -99,6 +125,7 @@ const ProjectDetail = () => {
       {/* 页面头部 - 项目上下文（组织归属 / 代码仓库 / Agent 信号） */}
       <ProjectContextHeader
         project={currentProject}
+        overview={projectOverview}
         onOpenTab={handleTabChange}
         actions={
           <Space size="small">
@@ -144,7 +171,13 @@ const ProjectDetail = () => {
               key: 'overview',
               label: tp('overview.tabs.overview'),
               children: (
-                <ProjectInfoSection project={currentProject} />
+                <div>
+                  <ProjectInfoSection project={currentProject} />
+                  <ProjectActivitySection
+                    overview={projectOverview}
+                    onOpenTab={handleTabChange}
+                  />
+                </div>
               )
             },
             {
@@ -162,10 +195,7 @@ const ProjectDetail = () => {
               key: 'agents',
               label: tp('overview.tabs.agents'),
               children: (
-                <AgentsTab
-                  projectId={parseInt(id || '0', 10)}
-                  workspaceId={currentProject.organization_id}
-                />
+                <AgentsTab overview={projectOverview} />
               )
             },
             {
@@ -174,7 +204,7 @@ const ProjectDetail = () => {
               children: (
                 <GovernanceTab
                   projectId={parseInt(id || '0', 10)}
-                  workspaceId={currentProject.organization_id}
+                  overview={projectOverview}
                 />
               )
             },

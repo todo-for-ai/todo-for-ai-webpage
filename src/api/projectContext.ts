@@ -1,13 +1,20 @@
 /**
  * 项目上下文集成 API
  *
- * 项目详情页需要把后来新增的能力（repo 绑定 / 工作区 Agent / 审计事件 /
- * PR 审批队列）聚合呈现；这些端点分散在多个后端蓝图里，这里按项目视角
- * 统一封装。全部走 apiClient（返回已剥壳的 data），不改既有 WIP 模块。
+ * 项目详情页把后来新增的能力（组织归属 / repo 绑定 / Agent 运行画像 /
+ * 审计事件 / PR 审批队列）聚合呈现。核心是 GET /projects/{id}/overview
+ * 聚合端点（服务端按 project_id 过滤），页面级一次拉取后由头部与各 Tab
+ * 共享；repo 绑定与 PR 审批队列仍走各自端点。
  */
 import { apiClient } from './client/index.js'
 
-// ── 项目 repo 绑定（GET /projects/{id}/repo，api/project_repo.py）──
+// ── 组织归属 ──
+export interface ProjectOverviewOrganization {
+  id: number
+  name: string
+}
+
+// ── repo 绑定（GET /projects/{id}/repo，api/project_repo.py）──
 export interface ProjectRepoBinding {
   id: number
   project_id: number
@@ -25,62 +32,55 @@ export interface ProjectRepoBinding {
   updated_at: string
 }
 
-// ── 工作区 Agent（GET /workspaces/{ws}/agents，api/agent_workspace_agents.py）──
-export interface WorkspaceAgentSummary {
+// ── 项目可见 Agent（overview 聚合，含本项目运行画像）──
+export interface ProjectAgentOverview {
   id: number
   name: string
   display_name?: string
   status?: string
-  kind?: string
-  description?: string
   avatar_url?: string
-  collaboration_role?: string
   execution_mode?: string
   sandbox_profile?: string
-  runner_enabled?: boolean
-  /** null/空 = 不限制（继承全工作区）；否则为显式授权的项目 ID 列表 */
-  allowed_project_ids?: number[] | null
-  last_seen_at?: string
-  workspace_id?: number
+  /** true=allowed_project_ids 显式包含本项目；false=工作区继承 */
+  explicitly_allowed: boolean
+  has_active_lease: boolean
+  runs_total: number
+  runs_succeeded: number
+  runs_failed: number
+  active_runs: number
+  last_run_state?: string | null
+  last_run_at?: string | null
 }
 
-export interface WorkspaceAgentListResponse {
-  items: WorkspaceAgentSummary[]
-  pagination: {
-    page: number
-    per_page: number
-    total: number
-    has_prev: boolean
-    has_next: boolean
-  }
+export interface ProjectRunsSummary {
+  active: number
+  running_tasks: number
+  succeeded_window: number
+  failed_window: number
+  window_days: number
 }
 
-// ── 审计事件（GET /workspaces/{ws}/audit-events，api/agent_audit.py）──
-export interface WorkspaceAuditEvent {
+// ── 审计事件（overview 聚合，按项目匹配）──
+export interface ProjectAuditEvent {
   id: number
-  workspace_id: number
   event_type: string
-  actor_type: string
-  actor_id?: number | null
-  target_type?: string | null
-  target_id?: number | null
-  source?: string | null
   level?: string | null
-  risk_score?: number | null
-  task_id?: number | null
-  project_id?: number | null
+  actor_type?: string | null
   actor_agent_id?: number | null
-  target_agent_id?: number | null
+  task_id?: number | null
   duration_ms?: number | null
   error_code?: string | null
-  occurred_at: string
+  occurred_at?: string | null
 }
 
-export interface WorkspaceAuditEventsResponse {
-  items: WorkspaceAuditEvent[]
-  total: number
-  page: number
-  per_page: number
+// ── 聚合概览（GET /projects/{id}/overview，api/projects/routes_project_overview.py）──
+export interface ProjectOverview {
+  project_id: number
+  organization: ProjectOverviewOrganization | null
+  repo: ProjectRepoBinding | null
+  agents: ProjectAgentOverview[]
+  runs_summary: ProjectRunsSummary
+  recent_events: ProjectAuditEvent[]
 }
 
 // ── 待审批 PR 合并请求（GET /tasks/pull-request/approvals/pending）──
@@ -109,10 +109,37 @@ function isHttpStatus(error: unknown, status: number): boolean {
   )
 }
 
+// overview 进程内短缓存（30s）：头部 + 概览 + Agent/治理 Tab 共享一次请求
+const OVERVIEW_CACHE_TTL_MS = 30_000
+const overviewCache = new Map<
+  number,
+  { fetchedAt: number; promise: Promise<ProjectOverview> }
+>()
+
 export const projectContextApi = {
   /**
-   * 项目 repo 绑定；未绑定时后端 404（NO_REPO_BOUND），归一为 null，
-   * 让调用方不必逐个 try/catch。
+   * 项目跨域聚合概览。带 30s 进程内缓存，页面级多处消费只发一次请求。
+   */
+  getProjectOverview(projectId: number): Promise<ProjectOverview> {
+    const cached = overviewCache.get(projectId)
+    const now = Date.now()
+    if (cached && now - cached.fetchedAt < OVERVIEW_CACHE_TTL_MS) {
+      return cached.promise
+    }
+    const promise = apiClient.get<ProjectOverview>(`/projects/${projectId}/overview`)
+    overviewCache.set(projectId, { fetchedAt: now, promise })
+    promise.catch(() => {
+      // 失败不缓存，允许下一次重试
+      const entry = overviewCache.get(projectId)
+      if (entry && entry.promise === promise) {
+        overviewCache.delete(projectId)
+      }
+    })
+    return promise
+  },
+
+  /**
+   * 项目 repo 绑定；未绑定时后端 404（NO_REPO_BOUND），归一为 null。
    */
   async getRepoBinding(projectId: number): Promise<ProjectRepoBinding | null> {
     try {
@@ -123,33 +150,6 @@ export const projectContextApi = {
       }
       throw error
     }
-  },
-
-  async getWorkspaceAgents(
-    workspaceId: number,
-    params?: { search?: string; page?: number; per_page?: number }
-  ): Promise<WorkspaceAgentListResponse> {
-    const query = new URLSearchParams()
-    query.set('page', String(params?.page ?? 1))
-    query.set('per_page', String(params?.per_page ?? 200))
-    if (params?.search) {
-      query.set('search', params.search)
-    }
-    return apiClient.get<WorkspaceAgentListResponse>(
-      `/workspaces/${workspaceId}/agents?${query.toString()}`
-    )
-  },
-
-  async getWorkspaceAuditEvents(
-    workspaceId: number,
-    params?: { page?: number; per_page?: number }
-  ): Promise<WorkspaceAuditEventsResponse> {
-    const query = new URLSearchParams()
-    query.set('page', String(params?.page ?? 1))
-    query.set('per_page', String(params?.per_page ?? 100))
-    return apiClient.get<WorkspaceAuditEventsResponse>(
-      `/workspaces/${workspaceId}/audit-events?${query.toString()}`
-    )
   },
 
   async getPendingPRApprovals(params?: {

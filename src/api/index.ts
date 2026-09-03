@@ -18,9 +18,11 @@ export { taskLabelsApi, type TaskLabel } from './taskLabels'
 export { agentsApi, agentKeysApi, agentAutomationApi, agentInsightsApi, type Agent, type AgentKey } from './agents'
 export {
   projectContextApi,
+  type ProjectOverview,
+  type ProjectAgentOverview,
+  type ProjectRunsSummary,
+  type ProjectAuditEvent,
   type ProjectRepoBinding,
-  type WorkspaceAgentSummary,
-  type WorkspaceAuditEvent,
   type PendingPRApproval,
 } from './projectContext'
 export { notificationsApi } from './notifications'

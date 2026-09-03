@@ -3,23 +3,24 @@
  *
  * - PR 审批队列：后端按"当前用户可管理的项目"隐式过滤，item 带 project_id，
  *   这里做项目级过滤呈现。
- * - 审计事件：后端只有工作区级列表（item 带 project_id），这里拉取后
- *   客户端过滤出本项目相关条目——服务端项目级过滤是后续后端聚合点。
+ * - 审计事件：来自项目 overview 聚合端点（服务端按 project_id / 项目任务
+ *   ID 匹配最新事件）。
  */
 import { useEffect, useState } from 'react'
-import { Button, Card, Empty, Spin, Table, Tag } from 'antd'
+import { Button, Card, Empty, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { LinkButton } from '../SmartLink'
 import {
   projectContextApi,
   type PendingPRApproval,
-  type WorkspaceAuditEvent,
+  type ProjectAuditEvent,
+  type ProjectOverview,
 } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 
 interface GovernanceTabProps {
   projectId: number
-  workspaceId?: number | null
+  overview?: ProjectOverview | null
 }
 
 function LevelColor(level?: string | null): string {
@@ -36,12 +37,10 @@ function LevelColor(level?: string | null): string {
   }
 }
 
-export function GovernanceTab({ projectId, workspaceId }: GovernanceTabProps) {
+export function GovernanceTab({ projectId, overview }: GovernanceTabProps) {
   const { tp } = usePageTranslation('projectDetail')
   const [loadingApprovals, setLoadingApprovals] = useState(true)
   const [approvals, setApprovals] = useState<PendingPRApproval[]>([])
-  const [loadingAudit, setLoadingAudit] = useState(workspaceId != null)
-  const [auditEvents, setAuditEvents] = useState<WorkspaceAuditEvent[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -65,34 +64,7 @@ export function GovernanceTab({ projectId, workspaceId }: GovernanceTabProps) {
     }
   }, [projectId])
 
-  useEffect(() => {
-    if (!workspaceId) {
-      setLoadingAudit(false)
-      setAuditEvents([])
-      return
-    }
-    let cancelled = false
-    setLoadingAudit(true)
-    projectContextApi
-      .getWorkspaceAuditEvents(workspaceId, { page: 1, per_page: 100 })
-      .then((resp) => {
-        if (cancelled) return
-        setAuditEvents(
-          (resp.items ?? [])
-            .filter((event) => event.project_id === projectId)
-            .slice(0, 20)
-        )
-      })
-      .catch(() => {
-        if (!cancelled) setAuditEvents([])
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingAudit(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [projectId, workspaceId])
+  const auditEvents: ProjectAuditEvent[] = overview?.recent_events ?? []
 
   const approvalColumns: ColumnsType<PendingPRApproval> = [
     {
@@ -132,12 +104,13 @@ export function GovernanceTab({ projectId, workspaceId }: GovernanceTabProps) {
     },
   ]
 
-  const auditColumns: ColumnsType<WorkspaceAuditEvent> = [
+  const auditColumns: ColumnsType<ProjectAuditEvent> = [
     {
       title: tp('governanceTab.colTime'),
       dataIndex: 'occurred_at',
       width: 170,
-      render: (value: string) => new Date(value).toLocaleString(),
+      render: (value: string | null | undefined) =>
+        value ? new Date(value).toLocaleString() : '-',
     },
     {
       title: tp('governanceTab.colEvent'),
@@ -155,6 +128,8 @@ export function GovernanceTab({ projectId, workspaceId }: GovernanceTabProps) {
       title: tp('governanceTab.colActor'),
       dataIndex: 'actor_type',
       width: 110,
+      render: (actorType: string | null | undefined, record) =>
+        actorType ?? (record.actor_agent_id ? `agent #${record.actor_agent_id}` : '-'),
     },
     {
       title: tp('governanceTab.colTask'),
@@ -192,31 +167,29 @@ export function GovernanceTab({ projectId, workspaceId }: GovernanceTabProps) {
       <Card
         title={tp('governanceTab.auditTitle')}
         extra={
-          workspaceId ? (
-            <Button type="link" size="small" href={`/todo-for-ai/pages/organizations/${workspaceId}?tab=activity`}>
+          overview?.organization ? (
+            <Button
+              type="link"
+              size="small"
+              href={`/todo-for-ai/pages/organizations/${overview.organization.id}?tab=activity`}
+            >
               {tp('governanceTab.viewAllAudit')}
             </Button>
           ) : undefined
         }
       >
-        {loadingAudit ? (
-          <div style={{ textAlign: 'center', padding: '32px 0' }}>
-            <Spin />
-          </div>
-        ) : (
-          <Table
-            rowKey="id"
-            size="small"
-            columns={auditColumns}
-            dataSource={auditEvents}
-            pagination={false}
-            locale={{
-              emptyText: (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={tp('governanceTab.auditEmpty')} />
-              ),
-            }}
-          />
-        )}
+        <Table
+          rowKey="id"
+          size="small"
+          columns={auditColumns}
+          dataSource={auditEvents}
+          pagination={false}
+          locale={{
+            emptyText: (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={tp('governanceTab.auditEmpty')} />
+            ),
+          }}
+        />
         <p style={{ marginTop: 8, color: '#999', fontSize: 12 }}>{tp('governanceTab.auditNote')}</p>
       </Card>
     </div>

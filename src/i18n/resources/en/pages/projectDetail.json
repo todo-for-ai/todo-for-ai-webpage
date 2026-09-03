@@ -316,6 +316,8 @@
     "agentsChipTitle": "View collaborating agents",
     "agentsCount": "Agents",
     "agentsActive": "active",
+    "runningChipTitle": "View agent activity",
+    "runningTasks": "Running tasks",
     "contextRules": "Context rules",
     "owner": "Owner",
     "agentOnlinePrefix": "Online: ",
@@ -349,13 +351,14 @@
     "empty": "No collaborating agents",
     "colAgent": "Agent",
     "colStatus": "Status",
-    "colRole": "Role",
     "colExecution": "Execution",
     "colSandbox": "Sandbox",
     "colAuthz": "Authorization",
     "explicitGrant": "Explicit grant",
     "workspaceInherit": "Workspace inherited",
-    "colLastSeen": "Last seen"
+    "colRuns": "Runs (90d)",
+    "colLastRun": "Last run",
+    "runningNow": "Running"
   },
   "governanceTab": {
     "prTitle": "Pending PR Merge Approvals",
@@ -367,10 +370,21 @@
     "auditTitle": "Recent Audit Events",
     "viewAllAudit": "View all workspace audit",
     "auditEmpty": "No audit events for this project",
-    "auditNote": "Only project-related events are shown (filtered client-side from the workspace audit stream); server-side project filtering comes later.",
+    "auditNote": "Shows latest events related to this project (including its tasks); recall improves once audit writers populate project_id.",
     "colTime": "Time",
     "colEvent": "Event",
     "colLevel": "Level",
     "colActor": "Actor"
+  },
+  "activity": {
+    "runsTitle": "Agent Runs Overview",
+    "viewAgents": "View agents",
+    "runningTasks": "Running tasks",
+    "succeededWindow": "Succeeded ({days}d)",
+    "failedWindow": "Failed ({days}d)",
+    "visibleAgents": "Collaborating agents",
+    "eventsTitle": "Recent Activity",
+    "viewGovernance": "Governance",
+    "eventsEmpty": "No activity yet"
   }
 }

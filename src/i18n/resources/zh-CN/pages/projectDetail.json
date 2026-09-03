@@ -314,8 +314,11 @@
     "repoLoading": "仓库加载中…",
     "repoUnbound": "未绑定代码仓库",
     "agentsChipTitle": "查看可协作的 Agent",
+    "agentsChipTitleRunning": "查看 Agent 协作",
     "agentsCount": "可协作 Agent",
     "agentsActive": "活跃",
+    "runningChipTitle": "查看 Agent 运行情况",
+    "runningTasks": "执行中任务",
     "contextRules": "上下文规则",
     "owner": "负责人",
     "agentOnlinePrefix": "在线：",
@@ -349,13 +352,14 @@
     "empty": "暂无可协作的 Agent",
     "colAgent": "Agent",
     "colStatus": "状态",
-    "colRole": "协作角色",
     "colExecution": "执行模式",
     "colSandbox": "沙箱",
     "colAuthz": "授权方式",
     "explicitGrant": "显式授权",
     "workspaceInherit": "工作区继承",
-    "colLastSeen": "最近在线"
+    "colRuns": "近 90 天运行",
+    "colLastRun": "最近运行",
+    "runningNow": "执行中"
   },
   "governanceTab": {
     "prTitle": "待审批的 PR 合并请求",
@@ -367,10 +371,21 @@
     "auditTitle": "最近审计事件",
     "viewAllAudit": "查看工作区全部审计",
     "auditEmpty": "暂无本项目的审计事件",
-    "auditNote": "仅展示本项目相关事件（自工作区审计流过滤），服务端项目级过滤将在后续版本提供。",
+    "auditNote": "展示与本项目（含项目任务）相关的最新事件；审计写入方补全 project_id 后召回会更完整。",
     "colTime": "时间",
     "colEvent": "事件",
     "colLevel": "级别",
     "colActor": "来源"
+  },
+  "activity": {
+    "runsTitle": "Agent 运行概览",
+    "viewAgents": "查看 Agent",
+    "runningTasks": "执行中任务",
+    "succeededWindow": "近 {days} 天成功运行",
+    "failedWindow": "近 {days} 天失败运行",
+    "visibleAgents": "可协作 Agent",
+    "eventsTitle": "最近动态",
+    "viewGovernance": "查看治理",
+    "eventsEmpty": "暂无动态"
   }
 }
