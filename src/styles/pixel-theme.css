@@ -532,3 +532,18 @@ body::before {
   text-shadow: 2px 2px 0 #000;
   margin-right: 10px;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   备选色板（用户选定为正式版时，用下面变量块替换 :root 中的
+   --mario-* 八个变量 + AppLayout.tsx Content 内联 sky 色即可）
+
+【FC 灰紫】
+  --mario-sky: #b8aedb;  --mario-white: #efeaf8;  --mario-black: #2a2140;
+  --mario-red: #d95763;  --mario-gold: #e0a84e;   --mario-gold-dark: #b9823a;
+  --mario-green: #7bb661; --mario-blue: #6f7bd1;  (AppLayout bg: #b8aedb)
+
+【Game Boy 绿】
+  --mario-sky: #8bac0f;  --mario-white: #9bbc0f;  --mario-black: #0f380f;
+  --mario-red: #306230;  --mario-gold: #306230;   --mario-gold-dark: #0f380f;
+  --mario-green: #306230; --mario-blue: #0f380f;  (AppLayout bg: #8bac0f)
+   ───────────────────────────────────────────────────────────── */
