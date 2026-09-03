@@ -45,5 +45,149 @@
       "完成：/agent/tasks/{id}/commit（带 Idempotency-Key）"
     ],
     "notice": "OpenClaw 接入需要严格遵守 lease 与幂等提交规则，避免任务并发冲突。"
+  },
+  "overview": {
+    "title": "MCP 接入总览",
+    "description": "MCP（Model Context Protocol）是 AI 助手与外部工具通信的标准协议。接入后，AI 助手可以直接领取平台任务、回传执行结果、同步任务状态。",
+    "whatIsMcp": {
+      "title": "MCP 能做什么",
+      "description": "通过 MCP，你的 AI 助手可以：自动领取任务、更新执行状态、提交带证据的结果、读取项目上下文与规则。",
+      "features": "领取任务 · 提交结果 · 同步状态 · 读取上下文"
+    },
+    "requirements": {
+      "title": "接入前准备",
+      "node": "Node.js 18 或更高版本（npx 随附）",
+      "ide": "受支持的 AI 助手：Claude Code / Cursor 等",
+      "token": "平台 API Token（在「设置」页创建）",
+      "backend": "可访问的 Todo for AI 服务地址"
+    },
+    "supportedTools": {
+      "title": "支持的 AI 助手"
+    }
+  },
+  "installation": {
+    "title": "安装步骤",
+    "alert": {
+      "message": "开始前请确认已安装 Node.js 18+",
+      "description": "安装命令依赖 npx，Node.js 18+ 已自带。"
+    },
+    "steps": {
+      "first": {
+        "title": "第一步：创建 API Token",
+        "description": {
+          "prefix": "打开终端前，先",
+          "linkText": "在「设置」页创建 API Token",
+          "suffix": "，下方命令会用到。"
+        }
+      },
+      "second": {
+        "title": "第二步：选择你的 AI 助手",
+        "description": "点击上方对应助手的标签页，按步骤完成接入配置。",
+        "claude": "Claude Code 接入配置",
+        "cursor": "Cursor 接入配置"
+      },
+      "third": {
+        "title": "第三步：验证接入",
+        "description": "配置完成后，按以下方式验证是否接通：",
+        "items": {
+          "restart": "重启你的 AI 助手，使其加载 MCP 配置",
+          "testCommand": "让助手执行一条平台测试任务",
+          "verify": "回到平台查看任务状态是否已更新"
+        }
+      }
+    }
+  },
+  "claude": {
+    "title": "Claude Code 接入",
+    "description": "将 Todo for AI 的 MCP 服务注册到 Claude Code。",
+    "steps": {
+      "configLocation": {
+        "title": "配置文件位置",
+        "macos": "macOS：~/.claude.json",
+        "windows": "Windows：%USERPROFILE%\\.claude.json"
+      },
+      "editConfig": {
+        "title": "编辑配置文件",
+        "description": "在 mcpServers 字段中加入 Todo for AI 服务条目；也可以直接复制上方命令自动写入。"
+      },
+      "restart": {
+        "title": "重启 Claude Code",
+        "description": "保存配置后重启 Claude Code，MCP 服务才会生效。"
+      },
+      "verify": {
+        "title": "验证接入",
+        "description": "在会话中让 Claude 领取一条平台任务，回到平台看任务状态是否变为进行中。"
+      }
+    }
+  },
+  "cursor": {
+    "title": "Cursor 接入",
+    "description": "在 Cursor 的 MCP 设置中添加 Todo for AI 服务。",
+    "steps": {
+      "openSettings": {
+        "title": "打开 MCP 设置",
+        "description": "Cursor → Settings → MCP → Add new MCP server。"
+      },
+      "addServer": {
+        "title": "添加服务",
+        "name": "名称填写 todo-for-ai",
+        "type": "类型选择 SSE，并粘贴平台服务地址",
+        "command": "或直接复制下方命令一键写入配置"
+      },
+      "save": {
+        "title": "保存并连接",
+        "description": "保存后 Cursor 会自动连接 MCP 服务。"
+      },
+      "useInChat": {
+        "title": "在对话中使用",
+        "description": "对 Cursor 说「领取平台任务」，它就能开始为你干活。"
+      }
+    }
+  },
+  "configuration": {
+    "title": "环境变量",
+    "description": "MCP 服务支持以下环境变量，全部有默认值，通常无需修改。",
+    "envVars": {
+      "title": "可用变量",
+      "description": "在启动 MCP 服务时通过环境变量传入。"
+    },
+    "params": {
+      "apiBaseUrl": {
+        "description": "平台 API 地址，默认 https://todo4ai.org/todo-for-ai/api/v1"
+      },
+      "apiToken": {
+        "description": "API Token，与配置中的 token 参数等价，二选一"
+      },
+      "logLevel": {
+        "description": "日志级别：debug / info / warn / error，默认 info"
+      }
+    },
+    "security": {
+      "title": "安全提示",
+      "tips": "Token 等同于你的账号身份：不要提交到代码仓库；一旦泄露，立即到「设置」页吊销重建。"
+    }
+  },
+  "otherIdes": {
+    "title": "其他 AI 助手",
+    "description": "任何支持 MCP 协议的客户端都可以接入 Todo for AI。",
+    "genericConfig": {
+      "title": "通用接入配置",
+      "description": "按 MCP 标准填写服务地址（SSE）与 API Token 即可，字段含义见「环境变量」一节。"
+    }
+  },
+  "testing": {
+    "title": "测试与支持",
+    "description": "接入完成后，建议做一次端到端验证：建一个测试任务，让助手领取并提交。",
+    "testCommands": {
+      "title": "常用测试命令"
+    },
+    "support": {
+      "title": "获取支持",
+      "description": "接入遇到问题时，可以通过以下渠道求助：",
+      "channels": "GitHub Issues · 用户交流群 · 邮件"
+    },
+    "troubleshooting": {
+      "title": "常见问题排查"
+    }
   }
 }

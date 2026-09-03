@@ -45,5 +45,149 @@
       "Finish: /agent/tasks/{id}/commit with Idempotency-Key"
     ],
     "notice": "OpenClaw integration must strictly follow lease and idempotency rules to avoid update races."
+  },
+  "overview": {
+    "title": "MCP Integration Overview",
+    "description": "MCP (Model Context Protocol) is the standard protocol between AI assistants and external tools. Once connected, your assistant can claim platform tasks, submit results, and sync task status.",
+    "whatIsMcp": {
+      "title": "What MCP enables",
+      "description": "Through MCP your assistant can: claim tasks automatically, update execution status, submit evidence-backed results, and read project context and rules.",
+      "features": "Claim tasks · Submit results · Sync status · Read context"
+    },
+    "requirements": {
+      "title": "Before you start",
+      "node": "Node.js 18+ (npx included)",
+      "ide": "A supported AI assistant: Claude Code / Cursor, etc.",
+      "token": "A platform API Token (create it in Settings)",
+      "backend": "A reachable Todo for AI service URL"
+    },
+    "supportedTools": {
+      "title": "Supported assistants"
+    }
+  },
+  "installation": {
+    "title": "Installation steps",
+    "alert": {
+      "message": "Make sure Node.js 18+ is installed first",
+      "description": "The install command relies on npx, which ships with Node.js 18+."
+    },
+    "steps": {
+      "first": {
+        "title": "Step 1: Create an API Token",
+        "description": {
+          "prefix": "Before opening a terminal,",
+          "linkText": "create an API Token in Settings",
+          "suffix": "— the command below uses it."
+        }
+      },
+      "second": {
+        "title": "Step 2: Pick your assistant",
+        "description": "Open the tab for your assistant and follow the steps.",
+        "claude": "Claude Code setup",
+        "cursor": "Cursor setup"
+      },
+      "third": {
+        "title": "Step 3: Verify the connection",
+        "description": "After configuring, verify as follows:",
+        "items": {
+          "restart": "Restart your assistant so it loads the MCP config",
+          "testCommand": "Ask it to run a test task from the platform",
+          "verify": "Check the task status updates on the platform"
+        }
+      }
+    }
+  },
+  "claude": {
+    "title": "Claude Code integration",
+    "description": "Register the Todo for AI MCP server in Claude Code.",
+    "steps": {
+      "configLocation": {
+        "title": "Config file location",
+        "macos": "macOS: ~/.claude.json",
+        "windows": "Windows: %USERPROFILE%\\.claude.json"
+      },
+      "editConfig": {
+        "title": "Edit the config",
+        "description": "Add the Todo for AI entry under mcpServers — or paste the command above to write it automatically."
+      },
+      "restart": {
+        "title": "Restart Claude Code",
+        "description": "Restart Claude Code after saving so the MCP server takes effect."
+      },
+      "verify": {
+        "title": "Verify",
+        "description": "Ask Claude to claim a platform task; its status should switch to in progress."
+      }
+    }
+  },
+  "cursor": {
+    "title": "Cursor integration",
+    "description": "Add the Todo for AI server in Cursor's MCP settings.",
+    "steps": {
+      "openSettings": {
+        "title": "Open MCP settings",
+        "description": "Cursor → Settings → MCP → Add new MCP server."
+      },
+      "addServer": {
+        "title": "Add the server",
+        "name": "Set the name to todo-for-ai",
+        "type": "Choose SSE and paste the platform URL",
+        "command": "Or copy the command below to write it automatically"
+      },
+      "save": {
+        "title": "Save and connect",
+        "description": "Cursor connects to the MCP server automatically after saving."
+      },
+      "useInChat": {
+        "title": "Use it in chat",
+        "description": "Tell Cursor to \"claim a platform task\" and it starts working for you."
+      }
+    }
+  },
+  "configuration": {
+    "title": "Environment variables",
+    "description": "The MCP server supports these variables. All have defaults; usually no change needed.",
+    "envVars": {
+      "title": "Available variables",
+      "description": "Pass them when launching the MCP server."
+    },
+    "params": {
+      "apiBaseUrl": {
+        "description": "Platform API base URL. Default: https://todo4ai.org/todo-for-ai/api/v1"
+      },
+      "apiToken": {
+        "description": "API token — equivalent to the token param in the MCP config; use either"
+      },
+      "logLevel": {
+        "description": "Log level: debug / info / warn / error. Default: info"
+      }
+    },
+    "security": {
+      "title": "Security note",
+      "tips": "A token acts as your account identity: never commit it to a repository. If leaked, revoke and recreate it in Settings."
+    }
+  },
+  "otherIdes": {
+    "title": "Other AI assistants",
+    "description": "Any MCP-compatible client can connect to Todo for AI.",
+    "genericConfig": {
+      "title": "Generic configuration",
+      "description": "Fill in the service URL (SSE) and API token per the MCP standard. See the Environment variables section for field meanings."
+    }
+  },
+  "testing": {
+    "title": "Testing & support",
+    "description": "After connecting, run an end-to-end check: create a test task and let your assistant claim and submit it.",
+    "testCommands": {
+      "title": "Test commands"
+    },
+    "support": {
+      "title": "Get support",
+      "description": "If you hit issues during integration:",
+      "channels": "GitHub Issues · Community group · Email"
+    },
+    "troubleshooting": {
+      "title": "Troubleshooting"
+    }
   }
 }

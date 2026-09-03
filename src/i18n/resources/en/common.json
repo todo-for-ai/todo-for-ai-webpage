@@ -198,7 +198,9 @@
       "timeout": "Request timeout",
       "invalidData": "Invalid data format",
       "fileSize": "File size exceeds limit",
-      "fileType": "Unsupported file type"
+      "fileType": "Unsupported file type",
+      "copyFailed": "Copy failed",
+      "loadFailed": "Load failed"
     },
     "confirm": {
       "delete": "Are you sure you want to delete? This action cannot be undone.",

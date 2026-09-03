@@ -198,7 +198,9 @@
       "timeout": "请求超时",
       "invalidData": "数据格式错误",
       "fileSize": "文件大小超出限制",
-      "fileType": "不支持的文件类型"
+      "fileType": "不支持的文件类型",
+      "copyFailed": "复制失败",
+      "loadFailed": "加载失败"
     },
     "confirm": {
       "delete": "确定要删除吗？此操作不可撤销。",

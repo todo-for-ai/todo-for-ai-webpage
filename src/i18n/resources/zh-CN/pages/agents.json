@@ -231,30 +231,16 @@
       "errorCode": "错误码"
     },
     "projects": {
-      "project": "项目",
-      "allowed": "白名单",
-      "touchedTasks": "触达任务数",
-      "committedTasks": "完成提交数",
-      "interactionLogs": "交互日志数",
-      "lastActivity": "最后活动时间",
-      "search": "搜索项目名称",
-      "status": "项目状态",
-      "color": "主题色",
-      "noColor": "未设置",
-      "commitRate": "提交率",
-      "activitySignals": "活跃度",
-      "statusValues": {
-        "active": "活跃",
-        "archived": "已归档",
-        "deleted": "已删除"
-      }
+      "activityScore": "活跃度评分",
+      "interactionDays": "交互天数"
     },
     "interactions": {
-      "user": "用户",
-      "interactionCount": "交互次数",
-      "taskCount": "关联任务数",
-      "lastInteraction": "最后交互时间",
-      "search": "搜索用户名称或邮箱"
+      "activityScore": "活跃度评分",
+      "avgPerDay": "日均交互",
+      "contentLength": "内容长度",
+      "daysSinceLast": "距上次交互",
+      "firstInteraction": "首次交互",
+      "projectCount": "覆盖项目数"
     },
     "tasks": {
       "task": "任务",
@@ -396,7 +382,10 @@
     "revokeFailed": "撤销Agent失败",
     "agentNotFound": "未找到Agent",
     "agentNotFoundDesc": "该 Agent 不存在于你可访问的工作区中。",
-    "backToAgents": "返回Agent列表"
+    "backToAgents": "返回Agent列表",
+    "loadFailed": "Agent 列表加载失败",
+    "saveFailed": "保存失败",
+    "saveSuccess": "保存成功"
   },
   "workspaceTabs": {
     "agents": "Agent列表",
@@ -409,5 +398,16 @@
   },
   "detailPage": {
     "workspace": "工作区"
+  },
+  "actions": {
+    "cancel": "取消",
+    "edit": "编辑",
+    "save": "保存"
+  },
+  "ownership": {
+    "all": "全部",
+    "mine": "我创建的",
+    "collaborating": "我协作的",
+    "owner": "我负责的"
   }
 }

@@ -6,7 +6,11 @@
     "projectTaskList": "项目任务列表",
     "previousTask": "上一个任务",
     "nextTask": "下一个任务",
-    "returnToProjectTaskList": "返回项目任务列表"
+    "returnToProjectTaskList": "返回项目任务列表",
+    "title": "任务导航",
+    "backToProject": "返回项目",
+    "previous": "上一个任务",
+    "next": "下一个任务"
   },
   "actions": {
     "edit": "编辑",
@@ -70,7 +74,8 @@
     "unknownProject": "未知项目",
     "interactive": "交互模式",
     "interactiveTask": "交互式任务",
-    "aiWaitingFeedback": "AI等待反馈中"
+    "aiWaitingFeedback": "AI等待反馈中",
+    "loading": "任务信息加载中…"
   },
   "taskContent": {
     "title": "任务内容",
@@ -325,5 +330,19 @@
     "saveFailed": "保存失败",
     "confirmDelete": "确定删除？",
     "deleteFailed": "删除失败"
+  },
+  "content": {
+    "title": "任务内容",
+    "empty": "暂无内容"
+  },
+  "info": {
+    "title": "任务信息",
+    "taskId": "任务 ID",
+    "project": "所属项目",
+    "status": "状态",
+    "priority": "优先级",
+    "createdAt": "创建时间",
+    "updatedAt": "更新时间",
+    "dueDate": "截止时间"
   }
 }

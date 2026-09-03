@@ -6,7 +6,11 @@
     "projectTaskList": "Project Task List",
     "previousTask": "Previous Task",
     "nextTask": "Next Task",
-    "returnToProjectTaskList": "Return to Project Task List"
+    "returnToProjectTaskList": "Return to Project Task List",
+    "title": "Task navigation",
+    "backToProject": "Back to project",
+    "previous": "Previous task",
+    "next": "Next task"
   },
   "actions": {
     "edit": "Edit",
@@ -70,7 +74,8 @@
     "unknownProject": "Unknown Project",
     "interactive": "Interactive Mode",
     "interactiveTask": "Interactive Task",
-    "aiWaitingFeedback": "AI Waiting Feedback"
+    "aiWaitingFeedback": "AI Waiting Feedback",
+    "loading": "Loading task…"
   },
   "taskContent": {
     "title": "Task Content",
@@ -325,5 +330,19 @@
     "saveFailed": "Failed to save",
     "confirmDelete": "Delete this entry?",
     "deleteFailed": "Failed to delete"
+  },
+  "content": {
+    "title": "Task Content",
+    "empty": "No content yet"
+  },
+  "info": {
+    "title": "Task Info",
+    "taskId": "Task ID",
+    "project": "Project",
+    "status": "Status",
+    "priority": "Priority",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "dueDate": "Due date"
   }
 }

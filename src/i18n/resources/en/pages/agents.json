@@ -231,30 +231,16 @@
       "errorCode": "Error Code"
     },
     "projects": {
-      "project": "Project",
-      "allowed": "Allowed",
-      "touchedTasks": "Touched Tasks",
-      "committedTasks": "Committed Tasks",
-      "interactionLogs": "Interaction Logs",
-      "lastActivity": "Last Activity",
-      "search": "Search project name",
-      "status": "Status",
-      "color": "Color",
-      "noColor": "N/A",
-      "commitRate": "Commit Rate",
-      "activitySignals": "Activity Signals",
-      "statusValues": {
-        "active": "Active",
-        "archived": "Archived",
-        "deleted": "Deleted"
-      }
+      "activityScore": "Activity score",
+      "interactionDays": "Interaction days"
     },
     "interactions": {
-      "user": "User",
-      "interactionCount": "Interactions",
-      "taskCount": "Task Count",
-      "lastInteraction": "Last Interaction",
-      "search": "Search name or email"
+      "activityScore": "Activity score",
+      "avgPerDay": "Avg interactions/day",
+      "contentLength": "Content length",
+      "daysSinceLast": "Days since last",
+      "firstInteraction": "First interaction",
+      "projectCount": "Projects covered"
     },
     "tasks": {
       "task": "Task",
@@ -396,7 +382,10 @@
     "revokeFailed": "Failed to revoke agent",
     "agentNotFound": "Agent not found",
     "agentNotFoundDesc": "The agent does not exist in your accessible workspaces.",
-    "backToAgents": "Back to Agents"
+    "backToAgents": "Back to Agents",
+    "loadFailed": "Failed to load agents",
+    "saveFailed": "Save failed",
+    "saveSuccess": "Saved"
   },
   "workspaceTabs": {
     "agents": "Agent List",
@@ -409,5 +398,16 @@
   },
   "detailPage": {
     "workspace": "Workspace"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "save": "Save"
+  },
+  "ownership": {
+    "all": "All",
+    "mine": "Created by me",
+    "collaborating": "Collaborating",
+    "owner": "Owned by me"
   }
 }
