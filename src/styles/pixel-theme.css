@@ -502,3 +502,9 @@ body::before {
   );
   filter: drop-shadow(8px 8px 0 var(--mario-black));
 }
+
+/* ── borderless 卡在天空蓝上会透明成幽灵，强制实底白 ── */
+.ant-card.ant-card-borderless {
+  background: var(--mario-white) !important;
+  border: 2px solid var(--mario-black) !important;
+}
