@@ -200,12 +200,12 @@ const CreateTask: React.FC = () => {
                     <Select placeholder={tp('form.project.placeholder')} showSearch allowClear={false} />
                   </Form.Item>
                 </Col>
-                <Col span={10}>
+                <Col span={8}>
                   <Form.Item label={tp('form.title.label')} name="title" tooltip={tp('form.title.tooltip')}>
                     <Input placeholder={tp('form.title.placeholder')} />
                   </Form.Item>
                 </Col>
-                <Col span={6}>
+                <Col span={8}>
                   <Form.Item name="is_ai_task" valuePropName="checked" style={{ marginTop: '30px' }}>
                     <Checkbox>
                       {tp('form.assignToAI')}
