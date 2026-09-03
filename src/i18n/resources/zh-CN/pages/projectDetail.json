@@ -310,19 +310,20 @@
   },
   "contextHeader": {
     "goToOrganization": "前往组织详情",
-    "repoChipTitle": "查看代码仓库绑定",
     "repoLoading": "仓库加载中…",
     "repoUnbound": "未绑定代码仓库",
-    "agentsChipTitle": "查看可协作的 Agent",
-    "agentsChipTitleRunning": "查看 Agent 协作",
     "agentsCount": "可协作 Agent",
     "agentsActive": "活跃",
-    "runningChipTitle": "查看 Agent 运行情况",
     "runningTasks": "执行中任务",
+    "hintRepo": "项目绑定 Git 仓库后，Agent 完成任务会推送到独立分支并可自动创建 PR。点击进入「代码」Tab 查看或绑定。",
+    "hintAgents": "Agent 挂在组织下，通过授权列表决定能接入哪些项目；这里是可以看到本项目的 Agent 数量。点击查看名单。",
+    "hintRunning": "有任务的租约处于活跃状态，表示 Agent 正在执行。点击进入「治理」Tab。",
+    "hintRules": "上下文规则会在 Agent 领取本项目任务时，作为项目背景注入给 Agent。点击管理规则。",
     "contextRules": "上下文规则",
     "owner": "负责人",
     "agentOnlinePrefix": "在线：",
-    "lastActivity": "最后活动"
+    "lastActivity": "最后活动",
+    "agentsLoading": "Agent 名单加载中…"
   },
   "codeTab": {
     "bindingTitle": "代码仓库绑定",
@@ -343,7 +344,10 @@
     "flowStep1": "Agent 完成任务并推送到绑定仓库的分支。",
     "flowStep2": "系统按仓库自治等级创建 PR（L2 且证据全通过时自动合并）。",
     "flowStep3": "需要人工决策的 PR 会进入审批队列：",
-    "flowStep3Link": "查看待审批"
+    "flowStep3Link": "查看待审批",
+    "hintBinding": "仓库绑定让 Agent 的代码产出有落点：Agent 在独立分支上工作 → 推送 → 创建 PR → 按自治等级审批合并。只有项目维护者可以修改绑定。",
+    "hintAutonomy": "L0：每一步都需人工审批；L1：自动创建 PR，合并需人工确认；L2：验证证据全部通过时自动合并。",
+    "hintAgentReview": "开启后，Agent 的产出在进入审批/合并前必须先通过指定的评审者 Agent 检查；未指定评审者时自动从团队解析。"
   },
   "agentsTab": {
     "title": "Agent 协作",
@@ -359,7 +363,10 @@
     "workspaceInherit": "工作区继承",
     "colRuns": "近 90 天运行",
     "colLastRun": "最近运行",
-    "runningNow": "执行中"
+    "runningNow": "执行中",
+    "hintAuthz": "显式授权：该 Agent 的授权列表里包含了本项目；工作区继承：Agent 未设置项目限制，默认可见组织内全部项目。",
+    "hintRuns": "该 Agent 在本项目任务上的运行统计（近 90 天，✓ 成功 / ✗ 失败为终态计数）。",
+    "hintLastRun": "该 Agent 最近一次在本项目上的运行结果与时间；显示「执行中」表示它的租约仍然活跃。"
   },
   "governanceTab": {
     "prTitle": "待审批的 PR 合并请求",
@@ -375,7 +382,9 @@
     "colTime": "时间",
     "colEvent": "事件",
     "colLevel": "级别",
-    "colActor": "来源"
+    "colActor": "来源",
+    "hintPr": "Agent 发起的 PR 在需要人工决策（L0/L1 自治等级或触发风控）时会进入这里，按你对项目的管理权限过滤；具体操作在对应任务详情页完成。",
+    "hintAudit": "与本项目（及其任务）相关的关键事件记录：任务领取、结果提交、审批操作等，用于回溯与问责。"
   },
   "activity": {
     "runsTitle": "Agent 运行概览",
@@ -386,6 +395,19 @@
     "visibleAgents": "可协作 Agent",
     "eventsTitle": "最近动态",
     "viewGovernance": "查看治理",
-    "eventsEmpty": "暂无动态"
+    "eventsEmpty": "暂无动态",
+    "hintRuns": "本项目上 Agent 执行情况的总览。执行中 > 0 说明此刻有 Agent 在为这个项目干活。",
+    "hintRunningTasks": "有活跃租约（Agent 正在执行、租约未过期）的任务数量。",
+    "hintWindow": "统计窗口内的 Agent 运行终态计数：进入过 succeeded 视为成功，failed/expired 视为失败。",
+    "hintEvents": "项目相关的最新关键事件（来自平台审计流），可用于快速回溯「刚刚发生了什么」。"
+  },
+  "intro": {
+    "title": "这个页面是什么？",
+    "desc": "项目详情页是人类与 Agent 协作开发的工作台，按概念分区：",
+    "pointTasks": "任务列表 —— 你和 Agent 的待办与进度，可批量派发给 Agent",
+    "pointCode": "代码 —— 项目绑定的 Git 仓库与 Pull Request 审批流",
+    "pointAgents": "Agent 协作 —— 哪些 AI Agent 能看到本项目、各自做了什么",
+    "pointGovernance": "治理 —— 需要人工决策的 PR 审批队列与项目相关审计事件",
+    "pointRules": "上下文规则 —— Agent 领取任务时注入的项目背景说明"
   }
 }

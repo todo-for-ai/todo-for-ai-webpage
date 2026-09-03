@@ -12,6 +12,7 @@ import {
   type ProjectRepoBinding,
 } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { withHint } from '../common/HintIcon'
 
 interface CodeTabProps {
   projectId: number
@@ -59,7 +60,7 @@ export function CodeTab({ projectId, canManage, onOpenTab }: CodeTabProps) {
 
   if (!binding) {
     return (
-      <Card title={tp('codeTab.bindingTitle')}>
+      <Card title={withHint(tp('codeTab.bindingTitle'), tp('codeTab.hintBinding'))}>
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
@@ -91,12 +92,12 @@ export function CodeTab({ projectId, canManage, onOpenTab }: CodeTabProps) {
           <Descriptions.Item label={tp('codeTab.defaultBranch')}>
             {binding.default_branch}
           </Descriptions.Item>
-          <Descriptions.Item label={tp('codeTab.autonomy')}>
+          <Descriptions.Item label={withHint(tp('codeTab.autonomy'), tp('codeTab.hintAutonomy'))}>
             <Tag color={binding.autonomy_level >= 2 ? 'green' : binding.autonomy_level === 1 ? 'blue' : 'orange'}>
               {AUTONOMY_LEVELS[binding.autonomy_level] ?? `L${binding.autonomy_level}`}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label={tp('codeTab.agentReview')}>
+          <Descriptions.Item label={withHint(tp('codeTab.agentReview'), tp('codeTab.hintAgentReview'))}>
             {binding.require_agent_review
               ? `${tp('codeTab.enabled')} · ${binding.reviewer_agent_id ? `Agent #${binding.reviewer_agent_id}` : tp('codeTab.reviewerFallback')}`
               : tp('codeTab.disabled')}

@@ -8,6 +8,7 @@ import { Button, Card, Empty, Tag } from 'antd'
 import { LinkButton } from '../SmartLink'
 import type { ProjectOverview } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { HintIcon, withHint } from '../common/HintIcon'
 
 interface ProjectActivitySectionProps {
   overview?: ProjectOverview | null
@@ -27,7 +28,7 @@ export function ProjectActivitySection({ overview, onOpenTab }: ProjectActivityS
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
       <Card
-        title={tp('activity.runsTitle')}
+        title={withHint(tp('activity.runsTitle'), tp('activity.hintRuns'))}
         extra={
           onOpenTab && (
             <Button type="link" size="small" onClick={() => onOpenTab('agents')}>
@@ -41,12 +42,16 @@ export function ProjectActivitySection({ overview, onOpenTab }: ProjectActivityS
             <div className="pd-activity__stat-value pd-activity__stat-value--running">
               {runs.running_tasks}
             </div>
-            <div className="pd-activity__stat-label">{tp('activity.runningTasks')}</div>
+            <div className="pd-activity__stat-label">
+              {tp('activity.runningTasks')}
+              <HintIcon title={tp('activity.hintRunningTasks')} />
+            </div>
           </div>
           <div className="pd-activity__stat">
             <div className="pd-activity__stat-value">{runs.succeeded_window}</div>
             <div className="pd-activity__stat-label">
               {tp('activity.succeededWindow').replace('{days}', String(runs.window_days))}
+              <HintIcon title={tp('activity.hintWindow')} />
             </div>
           </div>
           <div className="pd-activity__stat">
@@ -55,6 +60,7 @@ export function ProjectActivitySection({ overview, onOpenTab }: ProjectActivityS
             </div>
             <div className="pd-activity__stat-label">
               {tp('activity.failedWindow').replace('{days}', String(runs.window_days))}
+              <HintIcon title={tp('activity.hintWindow')} />
             </div>
           </div>
           <div className="pd-activity__stat">
@@ -65,7 +71,7 @@ export function ProjectActivitySection({ overview, onOpenTab }: ProjectActivityS
       </Card>
 
       <Card
-        title={tp('activity.eventsTitle')}
+        title={withHint(tp('activity.eventsTitle'), tp('activity.hintEvents'))}
         extra={
           onOpenTab && (
             <Button type="link" size="small" onClick={() => onOpenTab('governance')}>

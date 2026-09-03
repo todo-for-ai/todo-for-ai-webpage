@@ -6,7 +6,7 @@
  * 覆盖、运行中任务等跨域信号，chip 可点击跳到对应 Tab。
  */
 import { type ReactNode } from 'react'
-import { Button, Card, Tag } from 'antd'
+import { Button, Card, Tag, Tooltip } from 'antd'
 import {
   ArrowLeftOutlined,
   ApiOutlined,
@@ -69,51 +69,56 @@ export function ProjectContextHeader({ project, overview, onOpenTab, actions }: 
       </div>
 
       <div className="pd-context-header__facts">
-        <Tag
-          icon={<BranchesOutlined />}
-          color={repoBinding ? 'green' : 'default'}
-          onClick={() => onOpenTab('code')}
-          className="pd-context-header__chip"
-          title={tp('contextHeader.repoChipTitle')}
-        >
-          {overview === undefined
-            ? tp('contextHeader.repoLoading')
-            : repoBinding
-              ? `${repoBinding.repo_full_name} @ ${repoBinding.default_branch}`
-              : tp('contextHeader.repoUnbound')}
-        </Tag>
-        {organization && (
+        <Tooltip title={tp('contextHeader.hintRepo')} overlayStyle={{ maxWidth: 360 }}>
           <Tag
-            icon={<ApiOutlined />}
-            color={(agents ?? []).length > 0 ? 'green' : 'default'}
-            onClick={() => onOpenTab('agents')}
+            icon={<BranchesOutlined />}
+            color={repoBinding ? 'green' : 'default'}
+            onClick={() => onOpenTab('code')}
             className="pd-context-header__chip"
-            title={tp('contextHeader.agentsChipTitle')}
           >
-            {agents === null
-              ? tp('contextHeader.agentsLoading')
-              : `${tp('contextHeader.agentsCount')} ${agents.length} · ${tp('contextHeader.agentsActive')} ${activeAgents.length}`}
+            {overview === undefined
+              ? tp('contextHeader.repoLoading')
+              : repoBinding
+                ? `${repoBinding.repo_full_name} @ ${repoBinding.default_branch}`
+                : tp('contextHeader.repoUnbound')}
           </Tag>
+        </Tooltip>
+        {organization && (
+          <Tooltip title={tp('contextHeader.hintAgents')} overlayStyle={{ maxWidth: 360 }}>
+            <Tag
+              icon={<ApiOutlined />}
+              color={(agents ?? []).length > 0 ? 'green' : 'default'}
+              onClick={() => onOpenTab('agents')}
+              className="pd-context-header__chip"
+            >
+              {agents === null
+                ? tp('contextHeader.agentsLoading')
+                : `${tp('contextHeader.agentsCount')} ${agents.length} · ${tp('contextHeader.agentsActive')} ${activeAgents.length}`}
+            </Tag>
+          </Tooltip>
         )}
         {runningTasks > 0 && (
-          <Tag
-            icon={<PlayCircleOutlined />}
-            color="processing"
-            onClick={() => onOpenTab('governance')}
-            className="pd-context-header__chip"
-            title={tp('contextHeader.runningChipTitle')}
-          >
-            {`${tp('contextHeader.runningTasks')} ${runningTasks}`}
-          </Tag>
+          <Tooltip title={tp('contextHeader.hintRunning')} overlayStyle={{ maxWidth: 360 }}>
+            <Tag
+              icon={<PlayCircleOutlined />}
+              color="processing"
+              onClick={() => onOpenTab('governance')}
+              className="pd-context-header__chip"
+            >
+              {`${tp('contextHeader.runningTasks')} ${runningTasks}`}
+            </Tag>
+          </Tooltip>
         )}
-        <Tag
-          icon={<SafetyOutlined />}
-          color="default"
-          onClick={() => onOpenTab('context-rules')}
-          className="pd-context-header__chip"
-        >
-          {`${tp('contextHeader.contextRules')} ${project.stats?.context_rules_count ?? 0}`}
-        </Tag>
+        <Tooltip title={tp('contextHeader.hintRules')} overlayStyle={{ maxWidth: 360 }}>
+          <Tag
+            icon={<SafetyOutlined />}
+            color="default"
+            onClick={() => onOpenTab('context-rules')}
+            className="pd-context-header__chip"
+          >
+            {`${tp('contextHeader.contextRules')} ${project.stats?.context_rules_count ?? 0}`}
+          </Tag>
+        </Tooltip>
         {project.owner_id != null && (
           <Tag color="default">
             {`${tp('contextHeader.owner')} #${project.owner_id}`}

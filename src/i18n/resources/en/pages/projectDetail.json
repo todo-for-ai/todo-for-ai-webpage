@@ -310,18 +310,20 @@
   },
   "contextHeader": {
     "goToOrganization": "Go to organization",
-    "repoChipTitle": "View repository binding",
     "repoLoading": "Loading repository…",
     "repoUnbound": "No repository bound",
-    "agentsChipTitle": "View collaborating agents",
     "agentsCount": "Agents",
     "agentsActive": "active",
-    "runningChipTitle": "View agent activity",
     "runningTasks": "Running tasks",
+    "hintRepo": "Once a Git repository is bound, agent task commits go to dedicated branches and can open PRs automatically. Click to open the Code tab.",
+    "hintAgents": "Agents belong to organizations; an authorization list decides which projects they can join. This is how many agents can see this project.",
+    "hintRunning": "Some task leases are active, meaning agents are executing right now. Click to open the Governance tab.",
+    "hintRules": "Context rules are injected as project background when an agent picks up a task from this project. Click to manage.",
     "contextRules": "Context rules",
     "owner": "Owner",
     "agentOnlinePrefix": "Online: ",
-    "lastActivity": "Last activity"
+    "lastActivity": "Last activity",
+    "agentsLoading": "Loading agents…"
   },
   "codeTab": {
     "bindingTitle": "Repository Binding",
@@ -342,7 +344,10 @@
     "flowStep1": "Agent finishes a task and pushes to the bound repository branch.",
     "flowStep2": "A PR is created per the repo autonomy level (L2 auto-merges when all evidence passes).",
     "flowStep3": "PRs requiring human decisions go to the approval queue:",
-    "flowStep3Link": "View pending approvals"
+    "flowStep3Link": "View pending approvals",
+    "hintBinding": "Repository binding gives agent code output a destination: work on a branch → push → open a PR → merge per autonomy level. Only project maintainers can change it.",
+    "hintAutonomy": "L0: every step needs human approval. L1: PR is created automatically, merge needs confirmation. L2: auto-merge when all verification evidence passes.",
+    "hintAgentReview": "When enabled, agent output must pass the designated reviewer agent before approval/merge; without one, the reviewer is resolved from the team."
   },
   "agentsTab": {
     "title": "Agent Collaboration",
@@ -358,7 +363,10 @@
     "workspaceInherit": "Workspace inherited",
     "colRuns": "Runs (90d)",
     "colLastRun": "Last run",
-    "runningNow": "Running"
+    "runningNow": "Running",
+    "hintAuthz": "Explicit grant: this project is in the agent's authorization list. Workspace inherited: the agent has no project restrictions, so it sees everything in the organization.",
+    "hintRuns": "This agent's run stats on this project's tasks (last 90 days; ✓ succeeded / ✗ failed are terminal counts).",
+    "hintLastRun": "The agent's latest run on this project and its result. \"Running\" means its lease is still active."
   },
   "governanceTab": {
     "prTitle": "Pending PR Merge Approvals",
@@ -374,7 +382,9 @@
     "colTime": "Time",
     "colEvent": "Event",
     "colLevel": "Level",
-    "colActor": "Actor"
+    "colActor": "Actor",
+    "hintPr": "PRs raised by agents that need a human decision (L0/L1 autonomy or risk triggers) land here, filtered by your management permissions. Handle them from the task detail page.",
+    "hintAudit": "Key events related to this project (and its tasks): leases, commits, approvals — for traceability and accountability."
   },
   "activity": {
     "runsTitle": "Agent Runs Overview",
@@ -385,6 +395,19 @@
     "visibleAgents": "Collaborating agents",
     "eventsTitle": "Recent Activity",
     "viewGovernance": "Governance",
-    "eventsEmpty": "No activity yet"
+    "eventsEmpty": "No activity yet",
+    "hintRuns": "Overview of agent execution on this project. Running > 0 means an agent is working on it right now.",
+    "hintRunningTasks": "Number of tasks with an active lease (an agent is executing and the lease has not expired).",
+    "hintWindow": "Terminal run counts within the window: runs that reached succeeded count as success; failed/expired count as failure.",
+    "hintEvents": "Latest key events related to this project (from the platform audit stream) — a quick answer to \"what just happened?\"."
+  },
+  "intro": {
+    "title": "What is this page?",
+    "desc": "The project detail page is the workspace where humans and agents build together. It is organized by concept:",
+    "pointTasks": "Task List — to-dos and progress for you and your agents; bulk-dispatch tasks to agents",
+    "pointCode": "Code — the Git repository bound to this project and its PR approval flow",
+    "pointAgents": "Agents — which AI agents can see this project and what each has done",
+    "pointGovernance": "Governance — the PR approval queue needing human decisions, plus project audit events",
+    "pointRules": "Context Rules — project background injected to agents when they pick up tasks"
   }
 }

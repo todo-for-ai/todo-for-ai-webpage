@@ -17,6 +17,7 @@ import {
   type ProjectOverview,
 } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { withHint } from '../common/HintIcon'
 
 interface GovernanceTabProps {
   projectId: number
@@ -148,7 +149,7 @@ export function GovernanceTab({ projectId, overview }: GovernanceTabProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Card title={tp('governanceTab.prTitle')}>
+      <Card title={withHint(tp('governanceTab.prTitle'), tp('governanceTab.hintPr'))}>
         <Table
           rowKey="interaction_id"
           size="small"
@@ -165,7 +166,7 @@ export function GovernanceTab({ projectId, overview }: GovernanceTabProps) {
       </Card>
 
       <Card
-        title={tp('governanceTab.auditTitle')}
+        title={withHint(tp('governanceTab.auditTitle'), tp('governanceTab.hintAudit'))}
         extra={
           overview?.organization ? (
             <Button

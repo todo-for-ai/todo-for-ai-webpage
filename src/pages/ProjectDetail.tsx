@@ -24,6 +24,7 @@ import { projectContextApi, type ProjectOverview } from '../api/projectContext'
 import { LinkButton } from '../components/SmartLink'
 import { useProjectPin } from '../hooks/useProjectPin'
 import NotificationChannelManager from '../components/NotificationChannelManager'
+import { PageIntro } from '../components/common/PageIntro'
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -122,6 +123,22 @@ const ProjectDetail = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      <PageIntro
+        storageKey="page-intro:projectDetail:v1"
+        title={tp('intro.title')}
+        description={
+          <div>
+            <div>{tp('intro.desc')}</div>
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+              <li>{tp('intro.pointTasks')}</li>
+              <li>{tp('intro.pointCode')}</li>
+              <li>{tp('intro.pointAgents')}</li>
+              <li>{tp('intro.pointGovernance')}</li>
+              <li>{tp('intro.pointRules')}</li>
+            </ul>
+          </div>
+        }
+      />
       {/* 页面头部 - 项目上下文（组织归属 / 代码仓库 / Agent 信号） */}
       <ProjectContextHeader
         project={currentProject}

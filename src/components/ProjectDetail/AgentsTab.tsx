@@ -9,6 +9,7 @@ import type { ColumnsType } from 'antd/es/table'
 import { LinkButton } from '../SmartLink'
 import type { ProjectAgentOverview, ProjectOverview } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { withHint } from '../common/HintIcon'
 
 interface AgentsTabProps {
   overview?: ProjectOverview | null
@@ -79,7 +80,7 @@ export function AgentsTab({ overview }: AgentsTabProps) {
       render: (profile: string | undefined) => profile ?? '-',
     },
     {
-      title: tp('agentsTab.colAuthz'),
+      title: withHint(tp('agentsTab.colAuthz'), tp('agentsTab.hintAuthz')),
       key: 'authz',
       width: 110,
       render: (_, record) =>
@@ -90,7 +91,7 @@ export function AgentsTab({ overview }: AgentsTabProps) {
         ),
     },
     {
-      title: tp('agentsTab.colRuns'),
+      title: withHint(tp('agentsTab.colRuns'), tp('agentsTab.hintRuns')),
       key: 'runs',
       width: 150,
       render: (_, record) =>
@@ -111,7 +112,7 @@ export function AgentsTab({ overview }: AgentsTabProps) {
         ),
     },
     {
-      title: tp('agentsTab.colLastRun'),
+      title: withHint(tp('agentsTab.colLastRun'), tp('agentsTab.hintLastRun')),
       key: 'last_run',
       width: 190,
       render: (_, record) => {
