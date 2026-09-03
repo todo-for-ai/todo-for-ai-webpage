@@ -9,6 +9,7 @@ import { TaskDetailHeader } from './components/TaskDetail/TaskDetailHeader'
 import { TaskDetailContent } from './components/TaskDetail/TaskDetailContent'
 import { TaskDetailNavigation } from './components/TaskDetail/TaskDetailNavigation'
 import { TaskEvidenceCard } from './components/TaskDetail/TaskEvidenceCard'
+import { PageIntro } from '../components/common/PageIntro'
 
 const TaskDetail: React.FC = () => {
   const { message } = App.useApp()
@@ -92,6 +93,11 @@ const TaskDetail: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1600px' }}>
+      <PageIntro
+        storageKey="page-intro:taskDetail:v1"
+        title={tc('pageIntro.taskDetail.title')}
+        description={tc('pageIntro.taskDetail.desc')}
+      />
       <TaskDetailHeader
         task={task}
         projects={projects}

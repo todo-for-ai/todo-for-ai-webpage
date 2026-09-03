@@ -45,6 +45,7 @@ import {
   translateStatusLabel,
 } from './organizations/components/organizationViewShared'
 import './OrganizationDetail.css'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -806,6 +807,11 @@ const OrganizationDetail = () => {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:organizationDetail:v1"
+        title={tc('pageIntro.organizationDetail.title')}
+        description={tc('pageIntro.organizationDetail.desc')}
+      />
       <div className="page-header">
         <div className="flex-between">
           <div>

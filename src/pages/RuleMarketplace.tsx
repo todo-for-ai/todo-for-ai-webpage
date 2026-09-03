@@ -6,13 +6,14 @@ import { useMarketplaceStore } from '../stores'
 import { RuleMarketplaceModal } from '../components/RuleMarketplaceModal'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { getErrorMessage } from '../utils/errorUtils'
+import { PageIntro } from '../components/common/PageIntro'
 
 const marketplaceApi = {
   install: async (_id: number) => Promise.resolve()
 }
 
 const RuleMarketplace: React.FC = () => {
-  const { tp } = usePageTranslation('ruleMarketplace')
+  const { tp, tc } = usePageTranslation('ruleMarketplace')
   const [searchText, setSearchText] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedRule, setSelectedRule] = useState<any>(null)
@@ -93,6 +94,11 @@ const RuleMarketplace: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      <PageIntro
+        storageKey="page-intro:ruleMarketplace:v1"
+        title={tc('pageIntro.ruleMarketplace.title')}
+        description={tc('pageIntro.ruleMarketplace.desc')}
+      />
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>{tp('title')}</h1>
       </div>

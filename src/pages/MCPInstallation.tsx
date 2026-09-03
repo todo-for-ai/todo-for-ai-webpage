@@ -3,13 +3,14 @@ import { Alert, Card, List, Tabs, Typography } from 'antd'
 import { ApiOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph, Text } = Typography
 
 const validTabs = ['skill', 'mcp', 'openclaw']
 
 const MCPInstallation: React.FC = () => {
-  const { tp } = usePageTranslation('mcpInstallation')
+  const { tp, tc } = usePageTranslation('mcpInstallation')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = searchParams.get('tab')
@@ -41,6 +42,11 @@ const MCPInstallation: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      <PageIntro
+        storageKey="page-intro:mcpInstallation:v1"
+        title={tc('pageIntro.mcpInstallation.title')}
+        description={tc('pageIntro.mcpInstallation.desc')}
+      />
       <div style={{ marginBottom: '16px' }}>
         <Title level={2}>
           <ApiOutlined style={{ marginRight: '8px', color: '#00b96b' }} />

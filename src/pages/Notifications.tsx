@@ -4,10 +4,13 @@ import { Badge, Button, Card, List, Segmented, Space, Tag, Typography, message }
 import { useNavigate } from 'react-router-dom'
 import type { NotificationItem } from '../api/notificationTypes'
 import { useNotifications, notificationLevelColorMap } from '../modules/notifications'
+import { PageIntro } from '../components/common/PageIntro'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Paragraph, Text } = Typography
 
 const Notifications = () => {
+  const { tc } = usePageTranslation('common')
   const navigate = useNavigate()
   const [onlyUnread, setOnlyUnread] = useState(false)
   const { loading, items, unreadCount, markAsRead, markAllAsRead } = useNotifications({
@@ -44,6 +47,11 @@ const Notifications = () => {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:notifications:v1"
+        title={tc('pageIntro.notifications.title')}
+        description={tc('pageIntro.notifications.desc')}
+      />
       <div className="page-header">
         <Title level={2} className="page-title">通知中心</Title>
         <Paragraph className="page-description">

@@ -25,11 +25,13 @@ import {
 } from '@ant-design/icons'
 import { useContextRuleStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
-import { useTranslation } from '../i18n/hooks/useTranslation'
+import { useTranslation, usePageTranslation } from '../i18n/hooks/useTranslation'
 import { getErrorMessage } from '../utils/errorUtils'
 import type { ContextRule } from '../api/contextRules'
+import { PageIntro } from '../components/common/PageIntro'
 const { Title, Paragraph } = Typography
 const ContextRules = () => {
+  const { tc } = usePageTranslation('common')
   const navigate = useNavigate()
   const { t } = useTranslation('contextRules')
   const [isDetailVisible, setIsDetailVisible] = useState(false)
@@ -215,6 +217,11 @@ const ContextRules = () => {
   const filteredRules = contextRules
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:contextRules:v1"
+        title={tc('pageIntro.contextRules.title')}
+        description={tc('pageIntro.contextRules.desc')}
+      />
       <div className="page-header">
         <div className="flex-between">
           <div>

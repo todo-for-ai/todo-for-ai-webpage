@@ -361,5 +361,75 @@
       "unauthorized": "You do not have access, please sign in",
       "required": "Please sign in to continue"
     }
+  },
+  "glossary": {
+    "agent": "AI Agent: an AI coding assistant (Claude Code, Codex, OpenCode, etc.) connected to the platform. Agents join via an organization, pick up tasks automatically, and submit results.",
+    "mcp": "MCP (Model Context Protocol): the standard protocol for AI assistants to talk to external tools. The platform dispatches tasks to agents and collects results over MCP.",
+    "lease": "Task lease: the \"lock\" an agent holds while executing a task. An active lease = this agent is working on the task right now; expired leases are released automatically.",
+    "attempt": "Attempt: one independent execution of a task. Retries create new attempts; every attempt's input and output is traceable.",
+    "aiTask": "AI task: a task flagged so agents can claim and execute it automatically. Regular tasks are handled by humans or assigned manually.",
+    "sandbox": "Sandbox: the isolated working environment (separate directory, dependencies, permissions) where an agent executes a task, so parallel tasks never pollute each other.",
+    "worktree": "Git worktree: an independent checkout of the same repository, letting multiple tasks/agents make changes in parallel without interference.",
+    "autonomy": "Autonomy level: how much human approval an agent's output needs. L0 = approve every step; L1 = auto PR, human merge; L2 = auto-merge when all verification evidence passes.",
+    "dod": "DoD (Definition of Done): the machine-verifiable criteria a task must pass (tests, build, etc.). An agent's self-report does not count.",
+    "contextRule": "Context rule: project background automatically injected when an agent picks up a task from this project (architecture conventions, pitfalls, standards).",
+    "soul": "SOUL (agent persona): an agent's identity and behavior settings (responsibilities, style), versioned so changes are traceable.",
+    "trigger": "Trigger: a rule that wakes an agent run automatically when conditions are met (task created, schedule reached).",
+    "orchestration": "Team orchestration: splitting one task across multiple role-playing agents; the platform assigns work and collects results.",
+    "budget": "Budget: usage limits for an organization or project. When exceeded, new agent work is restricted.",
+    "approvalQueue": "Approval queue: items needing a human decision (risky operations, PR merges) wait here; agents pause until resolved.",
+    "auditEvent": "Audit event: the platform's record of key operations (who did what, when) for traceability and accountability.",
+    "secret": "Secret: credentials (tokens, passwords) vaulted by the platform — encrypted at rest, injected by reference, never shown in plaintext.",
+    "runner": "Runner: the component that drives actual agent execution inside a sandbox — pulls tasks, runs the agent, reports results.",
+    "pr": "Pull Request (PR): a request for human review before code is merged. Agent changes reach the main branch through PRs, merged per autonomy level.",
+    "kanban": "Kanban: tasks laid out in status columns (todo → in progress → review → done); drag cards to update status and see the whole flow at a glance.",
+    "organization": "Organization: the top-level boundary for collaboration. Projects and agents both hang off organizations; a project without one is invisible to agents.",
+    "skill": "Skill: a reusable capability pack for agents (prompt + tools). Installing one grants the agent that ability.",
+    "channel": "Notification channel: where the platform forwards messages (email, external chat, etc.), configurable per project/organization.",
+    "ruleMarketplace": "Rule marketplace: share and install context rules — publish your project's rules or install community ones in one click.",
+    "customPrompt": "Custom prompt: tailored instructions injected into an AI's behavior — useful for encoding instructions you would otherwise repeat every time.",
+    "coAuthor": "Co-authored document: the task body is written jointly by human and agent in sections; agent output is written back into the task."
+  },
+  "pageIntro": {
+    "kanban": {
+      "title": "What is the kanban?",
+      "desc": "Tasks laid out in status columns (todo → in progress → review → done). Drag cards to update status — the fastest way to see where everything is stuck."
+    },
+    "taskDetail": {
+      "title": "How to use the task detail page?",
+      "desc": "Everything about a task lives here: status history, execution logs, the agent's lease and attempts, the co-authored body and conversation. Items needing your decision (approvals) appear at the top."
+    },
+    "createTask": {
+      "title": "Tips for creating tasks",
+      "desc": "Write the description for a future agent with zero context: why it matters and what the acceptance criteria are. Check \"AI task\" to let agents claim it automatically."
+    },
+    "contextRules": {
+      "title": "What are context rules?",
+      "desc": "Agents have no project memory. Rules configured here are injected when an agent picks up a task from this project — the project's briefing document."
+    },
+    "customPrompts": {
+      "title": "What are custom prompts?",
+      "desc": "Tailored instructions injected into AI behavior — encode instructions you would otherwise repeat every time."
+    },
+    "ruleMarketplace": {
+      "title": "What is the rule marketplace?",
+      "desc": "Share and install context rules. Publish your project's rules or install community ones in one click."
+    },
+    "notifications": {
+      "title": "How to use notifications?",
+      "desc": "Configure where platform messages go (email, external chat) and which events trigger them. When an agent needs you, it reaches you here."
+    },
+    "mcpInstallation": {
+      "title": "Connect your AI assistant to the platform",
+      "desc": "MCP is the standard protocol between AI assistants and the platform. Copy the config for your assistant (Claude Code, Codex, etc.) and it can claim tasks and submit results automatically."
+    },
+    "organizationDetail": {
+      "title": "What is the organization page?",
+      "desc": "The organization is the top collaboration boundary: members and roles, the agent roster, budgets and activity. Projects must hang under an organization for agents to join."
+    },
+    "agents": {
+      "title": "What is the Agents page?",
+      "desc": "Manage AI agents connected to the platform: online status, MCP access, execution mode and sandbox profile. Create or pause agents here."
+    }
   }
 }

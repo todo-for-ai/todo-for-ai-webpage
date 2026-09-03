@@ -12,12 +12,14 @@ import { taskLabelsApi } from '../api/taskLabels'
 import { projectsApi } from '../api/projects'
 import { organizationsApi } from '../api/organizations'
 import { organizationAgentsApi } from '../api/organizationAgents'
+import { PageIntro } from '../components/common/PageIntro'
+import { HintIcon } from '../components/common/HintIcon'
 
 const { Title, Paragraph } = Typography
 const { Option } = Select
 
 const CreateTask: React.FC = () => {
-  const { tp } = usePageTranslation('createTask')
+  const { tp, tc } = usePageTranslation('createTask')
   const navigate = useNavigate()
   const hook = useCreateTask(tp)
   const [labelOptions, setLabelOptions] = useState<{ label: string; value: string }[]>([])
@@ -134,6 +136,11 @@ const CreateTask: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', width: '80%', margin: '0 auto', minWidth: '800px', maxWidth: '1600px' }}>
+      <PageIntro
+        storageKey="page-intro:createTask:v1"
+        title={tc('pageIntro.createTask.title')}
+        description={tc('pageIntro.createTask.desc')}
+      />
       <Breadcrumb style={{ marginBottom: '24px' }}>
         <Breadcrumb.Item>
           <HomeOutlined />
@@ -200,7 +207,10 @@ const CreateTask: React.FC = () => {
                 </Col>
                 <Col span={6}>
                   <Form.Item name="is_ai_task" valuePropName="checked" style={{ marginTop: '30px' }}>
-                    <Checkbox>{tp('form.assignToAI')}</Checkbox>
+                    <Checkbox>
+                      {tp('form.assignToAI')}
+                      <HintIcon term="aiTask" />
+                    </Checkbox>
                   </Form.Item>
                 </Col>
               </Row>

@@ -7,12 +7,13 @@ import type { KanbanBoardRef } from '../components/Kanban/KanbanBoard'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import type { Task } from '../api/tasks'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph } = Typography
 const { Option } = Select
 
 const Kanban = () => {
-  const { tp } = usePageTranslation('kanban')
+  const { tp, tc } = usePageTranslation('kanban')
   const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>()
   const [viewingTask, setViewingTask] = useState<Task | null>(null)
   const [isDetailVisible, setIsDetailVisible] = useState(false)
@@ -67,6 +68,11 @@ const Kanban = () => {
 
   return (
     <div className="page-container" style={{ padding: 0 }}>
+      <PageIntro
+        storageKey="page-intro:kanban:v1"
+        title={tc('pageIntro.kanban.title')}
+        description={tc('pageIntro.kanban.desc')}
+      />
       {/* 页面头部 */}
       <div style={{ 
         padding: '24px 24px 16px 24px',

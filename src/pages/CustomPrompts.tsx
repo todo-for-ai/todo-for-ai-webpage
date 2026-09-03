@@ -4,11 +4,12 @@ import { EditOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { ProjectPromptEditor, TaskPromptButtons } from '../components/CustomPrompts'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph } = Typography
 
 const CustomPrompts: React.FC = () => {
-  const { tp } = usePageTranslation('customPrompts')
+  const { tp, tc } = usePageTranslation('customPrompts')
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -52,6 +53,11 @@ const CustomPrompts: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      <PageIntro
+        storageKey="page-intro:customPrompts:v1"
+        title={tc('pageIntro.customPrompts.title')}
+        description={tc('pageIntro.customPrompts.desc')}
+      />
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* 页面标题 */}
         <div>

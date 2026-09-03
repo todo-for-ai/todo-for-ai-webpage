@@ -44,6 +44,7 @@ import {
   type AgentsViewMode,
 } from './storage'
 import './AgentsPage.css'
+import { PageIntro } from '../../components/common/PageIntro'
 
 const { Title, Paragraph, Text } = Typography
 const { Search } = Input
@@ -57,7 +58,7 @@ const statusColorMap: Record<string, string> = {
 type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration' | 'teams' | 'audit' | 'review'
 
 export default function AgentsPage() {
-  const { tp, pageTitle, pageSubtitle } = usePageTranslation('agents')
+  const { tp, tc, pageTitle, pageSubtitle } = usePageTranslation('agents')
   const navigate = useNavigate()
   const [viewMode, setViewMode] = useState<AgentsViewMode>('list')
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTabKey>('agents')
@@ -386,6 +387,11 @@ export default function AgentsPage() {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:agents:v1"
+        title={tc('pageIntro.agents.title')}
+        description={tc('pageIntro.agents.desc')}
+      />
       <div style={{ marginBottom: 16 }}>
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>
