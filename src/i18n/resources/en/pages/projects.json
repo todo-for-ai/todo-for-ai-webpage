@@ -38,7 +38,8 @@
     "total": "Total",
     "completed": "Completed",
     "pending": "Pending",
-    "noTasks": "No tasks"
+    "noTasks": "No tasks",
+    "inProgress": "In progress"
   },
   "search": {
     "placeholder": "Search project name or description...",
@@ -92,11 +93,15 @@
   "empty": {
     "noData": "No project data",
     "noSearchResults": "No projects found containing \"{{keyword}}\"",
-    "noActivity": "No activity"
+    "noActivity": "No activity",
+    "noDescription": "No description"
   },
   "pagination": {
     "showTotal": "{{start}}-{{end}} of {{total}} items",
     "cardTotal": "{{start}}-{{end}} of {{total}} items",
     "pageInfo": "Page {{current}} of {{total}}"
+  },
+  "card": {
+    "orgTooltip": "Organization"
   }
 }

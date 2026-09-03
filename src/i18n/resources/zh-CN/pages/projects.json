@@ -38,7 +38,8 @@
     "total": "总计",
     "completed": "完成",
     "pending": "待处理",
-    "noTasks": "暂无任务"
+    "noTasks": "暂无任务",
+    "inProgress": "进行中"
   },
   "search": {
     "placeholder": "搜索项目名称或描述...",
@@ -92,11 +93,15 @@
   "empty": {
     "noData": "暂无项目数据",
     "noSearchResults": "未找到包含 \"{{keyword}}\" 的项目",
-    "noActivity": "无活动"
+    "noActivity": "无活动",
+    "noDescription": "暂无描述"
   },
   "pagination": {
     "showTotal": "第 {{start}}-{{end}} 条，共 {{total}} 条",
     "cardTotal": "第 {{start}}-{{end}} 条，共 {{total}} 条",
     "pageInfo": "第 {{current}} 页，共 {{total}} 页"
+  },
+  "card": {
+    "orgTooltip": "所属组织"
   }
 }
