@@ -12,11 +12,12 @@ import {
   saveOrganizationsViewModeToIndexedDb,
   type OrganizationsViewMode,
 } from './organizations/storage'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph, Text } = Typography
 
 const Organizations = () => {
-  const { tp } = usePageTranslation('organizations')
+  const { tp, tc } = usePageTranslation('organizations')
   const navigate = useNavigate()
   const tpRef = useRef(tp)
   const [orgs, setOrgs] = useState<Organization[]>([])
@@ -88,6 +89,11 @@ const Organizations = () => {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:organizations:v1"
+        title={tc('pageIntro.organizations.title')}
+        description={tc('pageIntro.organizations.desc')}
+      />
       <div className="page-header">
         <div className="flex-between">
           <div>

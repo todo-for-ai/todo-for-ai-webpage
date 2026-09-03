@@ -11,6 +11,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import NotificationChannelManager from '../components/NotificationChannelManager'
 import AdminLLMConfig from '../components/AdminLLMConfig'
 import { useNotificationCatalog } from '../modules/notifications'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph } = Typography
 const { Option } = Select
@@ -101,6 +102,11 @@ const Settings = () => {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:settings:v1"
+        title={tc('pageIntro.settings.title')}
+        description={tc('pageIntro.settings.desc')}
+      />
       <div className="page-header">
         <Title level={2} className="page-title">
           {pageTitle}

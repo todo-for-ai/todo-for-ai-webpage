@@ -36,6 +36,7 @@ import {
   resolveUserAvatarSrc,
   setStoredAvatarToken,
 } from '../utils/defaultAvatars'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Text, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -55,7 +56,7 @@ const Profile = () => {
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false)
   const [avatarPage, setAvatarPage] = useState(1)
   const [localAvatarToken, setLocalAvatarToken] = useState<string | null>(null)
-  const { tp } = usePageTranslation('profile')
+  const { tp, tc } = usePageTranslation('profile')
   const [searchParams, setSearchParams] = useSearchParams()
 
   // 定义所有有效的标签页key
@@ -268,6 +269,11 @@ const Profile = () => {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:profile:v1"
+        title={tc('pageIntro.profile.title')}
+        description={tc('pageIntro.profile.desc')}
+      />
       <div className="page-header">
         <Title level={2}>{tp('title')}</Title>
         <Paragraph>{tp('subtitle')}</Paragraph>

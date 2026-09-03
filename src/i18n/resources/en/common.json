@@ -388,7 +388,9 @@
     "channel": "Notification channel: where the platform forwards messages (email, external chat, etc.), configurable per project/organization.",
     "ruleMarketplace": "Rule marketplace: share and install context rules — publish your project's rules or install community ones in one click.",
     "customPrompt": "Custom prompt: tailored instructions injected into an AI's behavior — useful for encoding instructions you would otherwise repeat every time.",
-    "coAuthor": "Co-authored document: the task body is written jointly by human and agent in sections; agent output is written back into the task."
+    "coAuthor": "Co-authored document: the task body is written jointly by human and agent in sections; agent output is written back into the task.",
+    "apiToken": "API Token: a credential for programmatic access to the platform API (unlike a browser login session). Shown only once at creation; revoke and rotate if leaked.",
+    "commandCenter": "Command Center: the centralized monitoring board for all agent runs — trends, failure analysis, sandbox status and security events. Built for on-call inspection."
   },
   "pageIntro": {
     "kanban": {
@@ -430,6 +432,34 @@
     "agents": {
       "title": "What is the Agents page?",
       "desc": "Manage AI agents connected to the platform: online status, MCP access, execution mode and sandbox profile. Create or pause agents here."
+    },
+    "agentDetail": {
+      "title": "How to use the agent detail page?",
+      "desc": "The full profile of one agent: online status, SOUL persona, sandbox profile, skills and run history. Adjust an agent's behavior or permissions here."
+    },
+    "commandCenter": {
+      "title": "What is the Command Center?",
+      "desc": "Centralized monitoring of all agent runs: trends, failure reasons, sandbox status and security events. Built for on-call inspection and troubleshooting."
+    },
+    "organizations": {
+      "title": "How to use the organizations list?",
+      "desc": "Organizations are the top-level boundary for human-agent collaboration. Create organizations and manage members here; projects must hang under an organization for agents to join."
+    },
+    "settings": {
+      "title": "What can I do in Settings?",
+      "desc": "Manage account preferences, API tokens and integrations. API tokens grant programmatic access; revoke and rotate them if leaked."
+    },
+    "profile": {
+      "title": "How to use the profile page?",
+      "desc": "Maintain your account info (avatar, nickname, email). It appears in comments, @mentions and other collaboration contexts."
+    },
+    "createContextRule": {
+      "title": "Tips for creating a context rule",
+      "desc": "Rules are injected into agents that pick up tasks — the more specific the better: coding standards, pitfalls, architecture conventions. Avoid one-off, task-specific notes."
+    },
+    "apiDocumentation": {
+      "title": "How to use the API documentation?",
+      "desc": "Reference and examples for the platform REST API. Combined with an API token from Settings, external systems can call platform capabilities directly."
     }
   }
 }

@@ -7,6 +7,7 @@ import { agentsApi, type Agent } from '../../api/agents'
 import { organizationsApi, type Organization } from '../../api/organizations'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentDetailTabs, isAgentDetailTabKey, type AgentDetailTabKey } from './components/AgentDetailTabs'
+import { PageIntro } from '../../components/common/PageIntro'
 
 const { Title, Text } = Typography
 const DEFAULT_TAB: AgentDetailTabKey = 'overview'
@@ -79,7 +80,7 @@ async function probeAgentAcrossWorkspaces(agentId: number, workspaceCandidates: 
 }
 
 export default function AgentDetailPage() {
-  const { tp } = usePageTranslation('agents')
+  const { tp, tc } = usePageTranslation('agents')
   const navigate = useNavigate()
   const params = useParams<{ agentId?: string; tabKey?: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -318,6 +319,11 @@ export default function AgentDetailPage() {
 
   return (
     <div className="page-container">
+      <PageIntro
+        storageKey="page-intro:agentDetail:v1"
+        title={tc('pageIntro.agentDetail.title')}
+        description={tc('pageIntro.agentDetail.desc')}
+      />
       <div style={{ marginBottom: 16 }}>
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>

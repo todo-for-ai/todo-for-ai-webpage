@@ -25,9 +25,12 @@ import { useContextRuleStore } from '../stores'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { ComplianceNotice } from '../components/ComplianceNotice'
 import type { CreateContextRuleData, UpdateContextRuleData } from '../api/contextRules'
+import { PageIntro } from '../components/common/PageIntro'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 const { Title } = Typography
 const { TextArea } = Input
 const CreateContextRule = () => {
+  const { tc } = usePageTranslation('common')
 const { t } = useTranslation('createContextRule')
 const navigate = useNavigate()
 const { id } = useParams()
@@ -161,6 +164,11 @@ navigate('/todo-for-ai/pages/context-rules')
 }
 return (
 <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <PageIntro
+        storageKey="page-intro:createContextRule:v1"
+        title={tc('pageIntro.createContextRule.title')}
+        description={tc('pageIntro.createContextRule.desc')}
+      />
 {}
 <Card style={{ marginBottom: '16px' }}>
 <Breadcrumb>

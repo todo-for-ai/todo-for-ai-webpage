@@ -30,6 +30,8 @@ import ConflictsTrendChart from '../components/ConflictsTrendChart'
 import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 import { useTranslation } from '../i18n/hooks/useTranslation'
 import { CommandCenterStatsRow, SecurityEventTrendAlert, QuickActionsCard, AgentMonitorCard, SecurityEventsCard, OrchestratorStatusCard, PRApprovalsCard } from './command-center'
+import { PageIntro } from '../components/common/PageIntro'
+import { usePageTranslation } from '../i18n/hooks/useTranslation'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -38,6 +40,7 @@ const { Title, Text, Paragraph } = Typography
  * 四大数据源，作为统一指挥入口。支持手动刷新与 SSE 实时刷新。
  */
 const CommandCenter: React.FC = () => {
+  const { tc } = usePageTranslation('common')
   const { tn } = useTranslation()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -437,6 +440,11 @@ const CommandCenter: React.FC = () => {
 
   return (
     <div>
+      <PageIntro
+        storageKey="page-intro:commandCenter:v1"
+        title={tc('pageIntro.commandCenter.title')}
+        description={tc('pageIntro.commandCenter.desc')}
+      />
       <Card
         style={{ marginBottom: 16 }}
         variant="borderless"

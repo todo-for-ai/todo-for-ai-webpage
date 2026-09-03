@@ -3,11 +3,12 @@ import { Card, Typography } from 'antd'
 import { ApiOutlined } from '@ant-design/icons'
 import { CodeBlock } from '../components/common/CodeBlock'
 import { usePageTranslation } from '../i18n/hooks/useTranslation'
+import { PageIntro } from '../components/common/PageIntro'
 
 const { Title, Paragraph } = Typography
 
 const APIDocumentation: React.FC = () => {
-  const { tp } = usePageTranslation('apiDocumentation')
+  const { tp, tc } = usePageTranslation('apiDocumentation')
 
   useEffect(() => {
     document.title = tp('pageTitle')
@@ -16,6 +17,11 @@ const APIDocumentation: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      <PageIntro
+        storageKey="page-intro:apiDocumentation:v1"
+        title={tc('pageIntro.apiDocumentation.title')}
+        description={tc('pageIntro.apiDocumentation.desc')}
+      />
       <Title level={2}>
         <ApiOutlined style={{ marginRight: '8px', color: '#00b96b' }} />
         {tp('title')}
