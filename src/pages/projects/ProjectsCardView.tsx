@@ -93,7 +93,17 @@ export const ProjectsCardView = ({
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, minHeight: 176 }}>
                 {/* 头部：色点 + 名称 + 状态（悬停解释状态含义） */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    margin: '-14px -16px 0',
+                    padding: '8px 12px',
+                    borderBottom: `2px solid ${project.color || '#00b96b'}`,
+                    background: `${project.color || '#00b96b'}1f`,
+                  }}
+                >
                   <span
                     style={{
                       width: 8,
@@ -105,8 +115,8 @@ export const ProjectsCardView = ({
                   />
                   <div
                     style={{
-                      fontWeight: 600,
-                      fontSize: 15,
+                      fontWeight: 700,
+                      fontSize: 14,
                       color: '#262626',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -164,7 +174,15 @@ export const ProjectsCardView = ({
                           cursor: 'help',
                         }}
                       >
-                        <div style={{ fontSize: 15, fontWeight: 600, color: cell.color, lineHeight: 1.2 }}>
+                        <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 400,
+                          fontFamily: "'Press Start 2P', 'Fusion Pixel 12px', monospace",
+                          color: cell.color,
+                          lineHeight: 1.4,
+                        }}
+                      >
                           {cell.value}
                         </div>
                         <div style={{ fontSize: 12, color: '#8c8c8c' }}>{cell.label}</div>
