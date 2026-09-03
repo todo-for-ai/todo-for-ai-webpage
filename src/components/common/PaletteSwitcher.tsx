@@ -114,7 +114,7 @@ export function PaletteSwitcher() {
         position: 'fixed',
         left: 12,
         bottom: 14,
-        zIndex: 9900,
+        zIndex: 900,
         display: 'flex',
         alignItems: 'center',
         gap: 6,
