@@ -12,6 +12,7 @@ import { analytics } from '../utils/analytics'
 import '@fontsource/press-start-2p'
 import '../styles/pixel-fonts.css'
 import '../styles/pixel-theme.css'
+import { applySavedPalette } from '../components/common/PaletteSwitcher'
 import './Login.css'
 
 const { Title, Paragraph } = Typography
