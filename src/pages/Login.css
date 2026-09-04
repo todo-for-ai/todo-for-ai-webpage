@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #5c94fc;
+  background: var(--mario-sky, #5c94fc);
   position: relative;
 }
 
