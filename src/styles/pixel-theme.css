@@ -75,50 +75,50 @@ img {
 
 /* ── 卡片：白色面板 + 黑色粗描边 + 硬阴影 ── */
 .ant-card {
-  border: 3px solid var(--mario-black);
-  box-shadow: 4px 4px 0 var(--mario-black);
+  border: 2px solid var(--mario-black);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.72);
   background: var(--mario-white);
 }
 .ant-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--mario-black);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.72);
 }
 
 /* 项目卡片：四色轮换阴影（红/金/绿/蓝 = 马里奥敌人/问号块/管道/HUD） */
 .ant-col:nth-child(4n + 1) .ant-card {
-  box-shadow: 6px 6px 0 var(--mario-red);
+  box-shadow: 4px 4px 0 var(--mario-red);
 }
 .ant-col:nth-child(4n + 2) .ant-card {
-  box-shadow: 6px 6px 0 var(--mario-gold);
+  box-shadow: 4px 4px 0 var(--mario-gold);
 }
 .ant-col:nth-child(4n + 3) .ant-card {
-  box-shadow: 6px 6px 0 var(--mario-green);
+  box-shadow: 4px 4px 0 var(--mario-green);
 }
 .ant-col:nth-child(4n + 4) .ant-card {
-  box-shadow: 6px 6px 0 var(--mario-blue);
+  box-shadow: 4px 4px 0 var(--mario-blue);
 }
 .ant-col:nth-child(4n + 1) .ant-card:hover {
-  box-shadow: 6px 6px 0 var(--mario-red);
+  box-shadow: 4px 4px 0 var(--mario-red);
 }
 .ant-col:nth-child(4n + 2) .ant-card:hover {
-  box-shadow: 6px 6px 0 var(--mario-gold);
+  box-shadow: 4px 4px 0 var(--mario-gold);
 }
 .ant-col:nth-child(4n + 3) .ant-card:hover {
-  box-shadow: 6px 6px 0 var(--mario-green);
+  box-shadow: 4px 4px 0 var(--mario-green);
 }
 .ant-col:nth-child(4n + 4) .ant-card:hover {
-  box-shadow: 6px 6px 0 var(--mario-blue);
+  box-shadow: 4px 4px 0 var(--mario-blue);
 }
 
 /* ── 按钮：问号块金主按钮 + 管道绿确认 ── */
 .ant-btn {
-  border: 3px solid var(--mario-black);
-  box-shadow: 3px 3px 0 var(--mario-black);
+  border: 2px solid var(--mario-black);
+  box-shadow: 2px 2px 0 var(--mario-black);
   font-weight: 700;
 }
 .ant-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--mario-black);
+  box-shadow: 3px 3px 0 var(--mario-black);
 }
 .ant-btn:active {
   transform: translate(2px, 2px);
@@ -523,7 +523,7 @@ body::after {
   --mario-green: #7bb661; --mario-blue: #6f7bd1;  (AppLayout bg: #b8aedb)
 
 【Game Boy 绿】
-  --mario-sky: #8bac0f;  --mario-white: #9bbc0f;  --mario-black: #0f380f;
+  --mario-sky: #8bac0f;  --mario-white: #c5d96b;  --mario-black: #0f380f;
   --mario-red: #306230;  --mario-gold: #306230;   --mario-gold-dark: #0f380f;
   --mario-green: #306230; --mario-blue: #0f380f;  (AppLayout bg: #8bac0f)
    ───────────────────────────────────────────────────────────── */

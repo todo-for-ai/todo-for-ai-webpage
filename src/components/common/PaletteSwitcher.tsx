@@ -48,7 +48,7 @@ const PALETTES: PaletteDef[] = [
     swatch: '#8bac0f',
     vars: {
       '--mario-sky': '#8bac0f',
-      '--mario-white': '#9bbc0f',
+      '--mario-white': '#c5d96b',
       '--mario-black': '#0f380f',
       '--mario-red': '#306230',
       '--mario-gold': '#306230',
