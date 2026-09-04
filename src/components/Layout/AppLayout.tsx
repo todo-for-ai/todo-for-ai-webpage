@@ -24,7 +24,7 @@ const AppLayout = () => {
           marginTop: '64px', // 为固定的顶部导航栏留出空间
           padding: '24px',
           flex: '1',
-          background: '#5c94fc',
+          background: 'var(--mario-sky, #5c94fc)',
         }}
       >
         <div
