@@ -376,31 +376,6 @@ body::after {
   box-shadow: none;
 }
 
-/* ── 天空装饰：像素云（box-shadow 像素画，不可交互）── */
-body::before {
-  content: '';
-  position: fixed;
-  top: 120px;
-  left: 2%;
-  width: 8px;
-  height: 8px;
-  background: transparent;
-  z-index: 0;
-  pointer-events: none;
-  color: #ffffff;
-  box-shadow:
-    /* 云 A：三层阶梯 */
-    24px 0 #fff, 30px 0 #fff, 36px 0 #fff,
-    18px -8px #fff, 24px -8px #fff, 30px -8px #fff, 36px -8px #fff, 42px -8px #fff,
-    12px -16px #fff, 18px -16px #fff, 24px -16px #fff, 30px -16px #fff, 36px -16px #fff, 42px -16px #fff, 48px -16px #fff,
-    18px -24px #fff, 24px -24px #fff, 30px -24px #fff, 36px -24px #fff,
-    /* 云 B：右侧小朵 */
-    78vw 40px #fff, 78vw 32px #fff, calc(78vw + 8px) 40px #fff, calc(78vw - 8px) 40px #fff,
-    calc(78vw + 8px) 32px #fff, calc(78vw - 8px) 32px #fff, calc(78vw + 8px) 24px #fff,
-    /* 云 C：中上小朵 */
-    45vw 260px #fff, calc(45vw + 8px) 260px #fff, calc(45vw - 8px) 260px #fff,
-    calc(45vw + 8px) 252px #fff;
-}
 
 /* ── 空状态 = 问号块（全站所有 Empty 替换为马里奥问号块）── */
 .ant-empty-image {
