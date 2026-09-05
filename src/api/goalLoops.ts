@@ -27,6 +27,10 @@ export interface GoalLoop {
   stall_count: number
   last_error: string | null
   completion_summary: string | null
+  /** 计划式拆解：规划器生成的有序步骤与进度 */
+  plan?: { title: string; content?: string }[]
+  plan_index?: number
+  plan_revision?: number
   agent_name?: string
   agent_display_name?: string
   tasks: GoalLoopTask[]

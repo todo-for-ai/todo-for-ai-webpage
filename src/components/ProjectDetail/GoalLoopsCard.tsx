@@ -124,8 +124,32 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
     {
       title: tp('goalLoop.colRounds'),
       key: 'rounds',
-      width: 90,
-      render: (_, record) => `${record.tasks?.length ?? 0}/${record.rounds_limit}`,
+      width: 100,
+      render: (_, record) => {
+        const planLen = record.plan?.length ?? 0
+        return (
+          <Tooltip
+            title={
+              planLen > 0
+                ? tp('goalLoop.hintPlan')
+                    .replace('{done}', String(record.plan_index ?? 0))
+                    .replace('{total}', String(planLen))
+                : undefined
+            }
+          >
+            <span>
+              {record.tasks?.length ?? 0}/{record.rounds_limit}
+              {planLen > 0 && (
+                <Tag style={{ marginLeft: 6 }} color="cyan">
+                  {tp('goalLoop.planTag')
+                    .replace('{index}', String(record.plan_index ?? 0))
+                    .replace('{total}', String(planLen))}
+                </Tag>
+              )}
+            </span>
+          </Tooltip>
+        )
+      },
     },
     {
       title: tp('goalLoop.colAgent'),
@@ -270,7 +294,9 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
               placeholder={tp('goalLoop.form.agentAuto')}
               options={(overview?.agents ?? []).map((a) => ({
                 value: a.id,
-                label: a.display_name || a.name,
+                label: a.role
+                  ? `${a.display_name || a.name}（${a.role.display_name}）`
+                  : a.display_name || a.name,
               }))}
             />
           </Form.Item>

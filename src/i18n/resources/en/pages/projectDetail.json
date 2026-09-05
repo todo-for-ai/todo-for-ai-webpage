@@ -391,7 +391,8 @@
     "runningNow": "Running",
     "hintAuthz": "Explicit grant: this project is in the agent's authorization list. Workspace inherited: the agent has no project restrictions, so it sees everything in the organization.",
     "hintRuns": "This agent's run stats on this project's tasks (last 90 days; ✓ succeeded / ✗ failed are terminal counts).",
-    "hintLastRun": "The agent's latest run on this project and its result. \"Running\" means its lease is still active."
+    "hintLastRun": "The agent's latest run on this project and its result. \"Running\" means its lease is still active.",
+    "hintRole": "Job role from the bound role template; it steers task planning inside goal loops"
   },
   "governanceTab": {
     "prTitle": "Pending PR Merge Approvals",
@@ -484,6 +485,8 @@
     "hintFormGoal": "The goal to reach; the more specific, the better the agent performs",
     "hintFormDone": "What counts as achieved; the planner uses this to decide when to finish",
     "hintFormRounds": "Max rounds of auto-generated tasks (guardrail against runaway loops)",
-    "hintFormAgent": "Pick the executing agent; leave empty to auto-select"
+    "hintFormAgent": "Pick the executing agent; leave empty to auto-select",
+    "planTag": "plan {index}/{total}",
+    "hintPlan": "Plan-based decomposition: {done}/{total} steps done; the plan is reviewed automatically on failure or exhaustion"
   }
 }

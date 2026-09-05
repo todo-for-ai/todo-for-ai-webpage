@@ -4,7 +4,7 @@
  * 数据来自项目 overview 聚合端点（服务端完成 allowed_project_ids 语义
  * 的可见性过滤与运行统计）；项目未挂组织时 Agent 无法接入，给出明确提示。
  */
-import { Card, Empty, Table, Tag } from 'antd'
+import { Card, Empty, Table, Tag, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { LinkButton } from '../SmartLink'
 import type { ProjectAgentOverview, ProjectOverview } from '../../api/projectContext'
@@ -54,9 +54,18 @@ export function AgentsTab({ overview }: AgentsTabProps) {
       title: tp('agentsTab.colAgent'),
       key: 'name',
       render: (_, record) => (
-        <LinkButton to={`/todo-for-ai/pages/agents/${record.id}`} type="link">
-          {record.display_name || record.name}
-        </LinkButton>
+        <span>
+          <LinkButton to={`/todo-for-ai/pages/agents/${record.id}`} type="link">
+            {record.display_name || record.name}
+          </LinkButton>
+          {record.role && (
+            <Tooltip title={tp('agentsTab.hintRole')}>
+              <Tag color="cyan" style={{ marginLeft: 6 }}>
+                {record.role.display_name}
+              </Tag>
+            </Tooltip>
+          )}
+        </span>
       ),
     },
     {

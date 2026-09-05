@@ -391,7 +391,8 @@
     "runningNow": "执行中",
     "hintAuthz": "显式授权：该 Agent 的授权列表里包含了本项目；工作区继承：Agent 未设置项目限制，默认可见组织内全部项目。",
     "hintRuns": "该 Agent 在本项目任务上的运行统计（近 90 天，✓ 成功 / ✗ 失败为终态计数）。",
-    "hintLastRun": "该 Agent 最近一次在本项目上的运行结果与时间；显示「执行中」表示它的租约仍然活跃。"
+    "hintLastRun": "该 Agent 最近一次在本项目上的运行结果与时间；显示「执行中」表示它的租约仍然活跃。",
+    "hintRole": "岗位角色：来自绑定的角色模板，影响目标循环里的任务规划"
   },
   "governanceTab": {
     "prTitle": "待审批的 PR 合并请求",
@@ -484,6 +485,8 @@
     "hintFormGoal": "要达成的目标，越具体 Agent 推进得越准",
     "hintFormDone": "满足什么条件就算达成，规划器据此判断是否收尾",
     "hintFormRounds": "最多自动生成的任务轮数（护栏，防止无限消耗）",
-    "hintFormAgent": "指定由哪个 Agent 执行；留空则自动选择"
+    "hintFormAgent": "指定由哪个 Agent 执行；留空则自动选择",
+    "planTag": "计划 {index}/{total}",
+    "hintPlan": "计划式拆解：已完成 {done}/{total} 步；失败或计划耗尽时会自动评审调整"
   }
 }

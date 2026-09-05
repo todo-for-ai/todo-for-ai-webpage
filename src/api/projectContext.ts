@@ -44,6 +44,8 @@ export interface ProjectAgentOverview {
   /** true=allowed_project_ids 显式包含本项目；false=工作区继承 */
   explicitly_allowed: boolean
   has_active_lease: boolean
+  /** 岗位角色（绑定的 agent_role_templates，产品经理/开发/测试等） */
+  role?: { id: number; name: string; display_name: string; category?: string } | null
   runs_total: number
   runs_succeeded: number
   runs_failed: number
