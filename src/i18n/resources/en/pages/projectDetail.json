@@ -434,5 +434,56 @@
     "pointAgents": "Agents — which AI agents can see this project and what each has done",
     "pointGovernance": "Governance — the PR approval queue needing human decisions, plus project audit events",
     "pointRules": "Context Rules — project background injected to agents when they pick up tasks"
+  },
+  "goalLoop": {
+    "title": "Goal Loops",
+    "hintTitle": "Let an agent work toward a goal round by round: one task per round, the platform plans the next round automatically until done or a guardrail trips",
+    "empty": "No goal loops yet — create one and let the agent drive toward a goal",
+    "note": "The next round starts automatically when a loop task finishes; the loop pauses itself on repeated stalls or when the round limit is hit.",
+    "createTitle": "New Goal Loop",
+    "colTitle": "Loop",
+    "colStatus": "Status",
+    "colRounds": "Rounds",
+    "colAgent": "Agent",
+    "colTasks": "Rounds",
+    "colActions": "Actions",
+    "status": {
+      "running": "Running",
+      "paused": "Paused",
+      "done": "Done",
+      "limit_reached": "Limit reached",
+      "stalled": "Stalled",
+      "stopped": "Stopped"
+    },
+    "statusHint": {
+      "running": "Running: the next round is planned automatically when a task finishes",
+      "paused": "Paused: no new rounds until resumed",
+      "done": "The planner declared the goal achieved",
+      "limit_reached": "Round limit exhausted without a completion claim; resume to continue",
+      "stalled": "Repeatedly blocked (e.g. AI planner failed); waiting for manual action",
+      "stopped": "Manually stopped; no more rounds"
+    },
+    "action": {
+      "create": "New Loop",
+      "pause": "Pause",
+      "resume": "Resume",
+      "stop": "Stop",
+      "kick": "Kick",
+      "cancel": "Cancel"
+    },
+    "hintKick": "Plan the next round immediately without waiting for a task to finish (fallback when an agent is down)",
+    "form": {
+      "title": "Loop title",
+      "goal": "Goal",
+      "done": "Done definition",
+      "rounds": "Round limit",
+      "agent": "Agent",
+      "agentAuto": "Auto (first active agent in workspace)"
+    },
+    "hintFormTitle": "A name to identify this loop in the list",
+    "hintFormGoal": "The goal to reach; the more specific, the better the agent performs",
+    "hintFormDone": "What counts as achieved; the planner uses this to decide when to finish",
+    "hintFormRounds": "Max rounds of auto-generated tasks (guardrail against runaway loops)",
+    "hintFormAgent": "Pick the executing agent; leave empty to auto-select"
   }
 }

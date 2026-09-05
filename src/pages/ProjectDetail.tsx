@@ -222,6 +222,7 @@ const ProjectDetail = () => {
                 <GovernanceTab
                   projectId={parseInt(id || '0', 10)}
                   overview={projectOverview}
+                  canManage={['owner', 'maintainer'].includes(currentProject.current_user_role || '')}
                 />
               )
             },

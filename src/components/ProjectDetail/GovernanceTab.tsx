@@ -18,10 +18,12 @@ import {
 } from '../../api/projectContext'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { withHint } from '../common/HintIcon'
+import { GoalLoopsCard } from './GoalLoopsCard'
 
 interface GovernanceTabProps {
   projectId: number
   overview?: ProjectOverview | null
+  canManage?: boolean
 }
 
 function LevelColor(level?: string | null): string {
@@ -38,7 +40,7 @@ function LevelColor(level?: string | null): string {
   }
 }
 
-export function GovernanceTab({ projectId, overview }: GovernanceTabProps) {
+export function GovernanceTab({ projectId, overview, canManage = false }: GovernanceTabProps) {
   const { tp } = usePageTranslation('projectDetail')
   const [loadingApprovals, setLoadingApprovals] = useState(true)
   const [approvals, setApprovals] = useState<PendingPRApproval[]>([])
@@ -149,6 +151,8 @@ export function GovernanceTab({ projectId, overview }: GovernanceTabProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <GoalLoopsCard projectId={projectId} overview={overview} canManage={canManage} />
+
       <Card title={withHint(tp('governanceTab.prTitle'), tp('governanceTab.hintPr'))}>
         <Table
           rowKey="interaction_id"

@@ -434,5 +434,56 @@
     "pointAgents": "Agent 协作 —— 哪些 AI Agent 能看到本项目、各自做了什么",
     "pointGovernance": "治理 —— 需要人工决策的 PR 审批队列与项目相关审计事件",
     "pointRules": "上下文规则 —— Agent 领取任务时注入的项目背景说明"
+  },
+  "goalLoop": {
+    "title": "目标循环",
+    "hintTitle": "让 Agent 朝一个目标逐轮做任务：每轮一个任务，完成后由平台自动规划下一轮，直到宣告完成或触发护栏",
+    "empty": "还没有目标循环——新建一个，让 Agent 自主朝目标推进",
+    "note": "循环任务到终态后自动推进下一轮；连续受阻或达到轮数上限会自动停下等待人工处理。",
+    "createTitle": "新建目标循环",
+    "colTitle": "循环",
+    "colStatus": "状态",
+    "colRounds": "轮数",
+    "colAgent": "执行 Agent",
+    "colTasks": "轮次任务",
+    "colActions": "操作",
+    "status": {
+      "running": "运行中",
+      "paused": "已暂停",
+      "done": "已完成",
+      "limit_reached": "轮数耗尽",
+      "stalled": "已受阻",
+      "stopped": "已停止"
+    },
+    "statusHint": {
+      "running": "循环运行中：任务完成后自动规划下一轮",
+      "paused": "已暂停：不推进新任务，可随时恢复",
+      "done": "规划器宣告目标达成",
+      "limit_reached": "轮数上限耗尽且目标未宣告完成，可恢复继续或调整",
+      "stalled": "连续受阻（如 AI 规划失败），已停止等待人工处理",
+      "stopped": "已人工停止，不再推进"
+    },
+    "action": {
+      "create": "新建循环",
+      "pause": "暂停",
+      "resume": "继续",
+      "stop": "停止",
+      "kick": "立即推进",
+      "cancel": "取消"
+    },
+    "hintKick": "不等任务终态，立即尝试规划下一轮（agent 宕机等场景的兜底）",
+    "form": {
+      "title": "循环标题",
+      "goal": "目标描述",
+      "done": "完成标准",
+      "rounds": "轮数上限",
+      "agent": "执行 Agent",
+      "agentAuto": "自动选择（工作区第一个活跃 Agent）"
+    },
+    "hintFormTitle": "给这个循环起个名字，便于在列表中识别",
+    "hintFormGoal": "要达成的目标，越具体 Agent 推进得越准",
+    "hintFormDone": "满足什么条件就算达成，规划器据此判断是否收尾",
+    "hintFormRounds": "最多自动生成的任务轮数（护栏，防止无限消耗）",
+    "hintFormAgent": "指定由哪个 Agent 执行；留空则自动选择"
   }
 }
