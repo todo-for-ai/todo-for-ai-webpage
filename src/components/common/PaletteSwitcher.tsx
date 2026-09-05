@@ -1,111 +1,59 @@
 /**
- * PaletteSwitcher —— 像素色板切换器（右下角悬浮）
+ * PaletteSwitcher —— 像素皮肤切换器（右下角悬浮）
  *
- * 三套内置色板（天空蓝 / FC 灰紫 / Game Boy 绿）实时切换：
- * 直接在 documentElement 上写入 --mario-* CSS 变量（覆盖 pixel-theme.css
- * 的 :root 定义），并持久化到 localStorage（key: px-palette）。
- * 全站所有使用 var(--mario-*) 的元素（含 AppLayout 的 --px-sky）即时跟随。
+ * 色板定义见 src/theme/palettes.ts（单一事实源）。切换时三层生效：
+ * 1. 即时应用 CSS 变量；2. localStorage（未登录/下次首屏快路径）；
+ * 3. PUT /user-settings（到人级别持久化，登录后跨设备跟随；失败静默降级为仅本地）。
+ * 挂载时拉取服务端皮肤：与本地不一致时以服务端为准（跨设备真值）。
  */
 import { useEffect, useState } from 'react'
 import { Tooltip } from 'antd'
 import { BgColorsOutlined } from '@ant-design/icons'
+import { apiClient } from '../../api'
+import {
+  PALETTES,
+  applyPalette,
+  applySavedPalette,
+  readSavedPaletteId,
+  savePaletteId,
+} from '../../theme/palettes'
 
-const STORAGE_KEY = 'px-palette'
-
-interface PaletteDef {
-  id: string
-  name: string
-  swatch: string
-  vars: Record<string, string>
-}
-
-const PALETTES: PaletteDef[] = [
-  {
-    id: 'sky',
-    name: '天空蓝（默认）',
-    swatch: '#5c94fc',
-    vars: {},
-  },
-  {
-    id: 'fc',
-    name: 'FC 灰紫',
-    swatch: '#b8aedb',
-    vars: {
-      '--mario-sky': '#b8aedb',
-      '--mario-white': '#efeaf8',
-      '--mario-black': '#2a2140',
-      '--mario-red': '#d95763',
-      '--mario-gold': '#e0a84e',
-      '--mario-gold-dark': '#b9823a',
-      '--mario-green': '#7bb661',
-      '--mario-blue': '#6f7bd1',
-      '--px-ink': '#2a2140',
-    },
-  },
-  {
-    id: 'gameboy',
-    name: 'Game Boy 绿',
-    swatch: '#8bac0f',
-    vars: {
-      '--mario-sky': '#8bac0f',
-      '--mario-white': '#c5d96b',
-      '--mario-black': '#0f380f',
-      '--mario-red': '#306230',
-      '--mario-gold': '#306230',
-      '--mario-gold-dark': '#0f380f',
-      '--mario-green': '#306230',
-      '--mario-blue': '#0f380f',
-      '--px-ink': '#0f380f',
-    },
-  },
-]
-
-/** 读取 localStorage 已存色板并应用（供 AppLayout 外的页面如 Login 使用） */
-export function applySavedPalette(): void {
-  let id = 'sky'
-  try {
-    id = localStorage.getItem(STORAGE_KEY) || 'sky'
-  } catch {
-    return
-  }
-  const palette = PALETTES.find((p) => p.id === id)
-  const rootStyle = document.documentElement.style
-  PALETTES.forEach((p) =>
-    Object.keys(p.vars).forEach((k) => rootStyle.removeProperty(k)),
-  )
-  if (palette && palette.id !== 'sky') {
-    Object.entries(palette.vars).forEach(([k, v]) => rootStyle.setProperty(k, v))
-  }
-}
+// 兼容既有导入（Login 等公开页从这里取 applySavedPalette）
+export { applySavedPalette }
 
 export function PaletteSwitcher() {
-  const [current, setCurrent] = useState<string>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) || 'sky'
-    } catch {
-      return 'sky'
-    }
-  })
+  const [current, setCurrent] = useState<string>(() => readSavedPaletteId())
 
+  // 首屏先应用本地选择（避免闪烁），随后以服务端持久化值校准（跨设备真值）
   useEffect(() => {
-    const palette = PALETTES.find((p) => p.id === current)
-    const rootStyle = document.documentElement.style
-    // 先清掉上一个色板写入的变量，再应用当前色板
-    PALETTES.forEach((p) =>
-      Object.keys(p.vars).forEach((k) => rootStyle.removeProperty(k)),
-    )
-    if (palette && palette.id !== 'sky') {
-      Object.entries(palette.vars).forEach(([k, v]) => rootStyle.setProperty(k, v))
+    applyPalette(current)
+    let cancelled = false
+    apiClient
+      .get('/user-settings')
+      .then((resp: any) => {
+        // apiClient 已解包后端标准结构，data 本体或再包一层 data 都兼容
+        const serverTheme = resp?.theme || resp?.data?.theme
+        if (!cancelled && serverTheme && serverTheme !== readSavedPaletteId()) {
+          applyPalette(serverTheme)
+          savePaletteId(serverTheme)
+          setCurrent(serverTheme)
+        }
+      })
+      .catch(() => {
+        // 未登录/接口失败：保持本地选择
+      })
+    return () => {
+      cancelled = true
     }
-  }, [current])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const select = (id: string) => {
     setCurrent(id)
-    try {
-      localStorage.setItem(STORAGE_KEY, id)
-    } catch {
-      // localStorage 不可用时仅本次会话生效
-    }
+    applyPalette(id)
+    savePaletteId(id)
+    // 到人级别持久化；未登录或失败时静默降级为仅本地
+    apiClient.put('/user-settings', { theme: id }).catch(() => {})
   }
 
   return (
@@ -123,7 +71,7 @@ export function PaletteSwitcher() {
         border: '2px solid #000',
         boxShadow: '2px 2px 0 #000',
       }}
-      title="像素色板"
+      title="像素皮肤"
     >
       <BgColorsOutlined style={{ color: '#ffe28a', fontSize: 13 }} />
       {PALETTES.map((p) => (
