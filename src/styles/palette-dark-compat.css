@@ -1,0 +1,33 @@
+/*
+ * 像素皮肤 · 暗色皮肤兼容层
+ *
+ * 由 src/theme/palettes.ts 副作用导入（pixel-theme.css / AppLayout 等注入点
+ * 可能被并行会话锁定，本文件独立成篇）。解决两件事：
+ * 1. antd 组件硬编码的 rgba(0,0,0,0.88) 文字色不跟随皮肤变量——统一改为
+ *    墨色变量 var(--mario-black)：浅色皮肤视觉等价（黑 ≈ 原默认），
+ *    暗色皮肤（面板深底 + 浅墨色）从此可读。
+ * 2. 「金底上的文字」「表格行悬停底」在暗色皮肤下需要相反明暗——
+ *    经 --px-on-gold / --px-row-hover 覆盖变量驱动，浅色皮肤未定义时
+ *    回退原值，完全等价既有主题。
+ * 选择器特意高于 pixel-theme.css 同类规则，不依赖加载顺序。
+ */
+
+body,
+[class*='ant-'] {
+  color: var(--mario-black);
+}
+
+/* 主按钮：金底 + 「金底文字」变量（暗色皮肤定义深色文字） */
+.ant-btn.ant-btn-primary {
+  color: var(--px-on-gold, var(--mario-black));
+}
+
+/* 文字选区同金底逻辑 */
+:root ::selection {
+  color: var(--px-on-gold, var(--mario-black));
+}
+
+/* 表格行悬停：暗色皮肤用浅白叠加，浅色皮肤回退原 #fff7d6 */
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: var(--px-row-hover, #fff7d6) !important;
+}
