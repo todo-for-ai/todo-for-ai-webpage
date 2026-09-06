@@ -92,6 +92,7 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
         done_definition: values.done_definition,
         rounds_limit: values.rounds_limit,
         agent_id: values.agent_id ?? null,
+        director_agent_id: values.director_agent_id ?? null,
       })
       setModalOpen(false)
       form.resetFields()
@@ -127,13 +128,27 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
       width: 100,
       render: (_, record) => {
         const planLen = record.plan?.length ?? 0
+        const planText = (record.plan ?? [])
+          .slice(0, 8)
+          .map((s, i) => {
+            const mark = i < (record.plan_index ?? 0) ? '✓' : '○'
+            return s.role ? `${mark} ${s.title}（${s.role}）` : `${mark} ${s.title}`
+          })
+          .join('\n')
         return (
           <Tooltip
             title={
               planLen > 0
-                ? tp('goalLoop.hintPlan')
-                    .replace('{done}', String(record.plan_index ?? 0))
-                    .replace('{total}', String(planLen))
+                ? (
+                  <div style={{ whiteSpace: 'pre-wrap' }}>
+                    <div>
+                      {tp('goalLoop.hintPlan')
+                        .replace('{done}', String(record.plan_index ?? 0))
+                        .replace('{total}', String(planLen))}
+                    </div>
+                    <div>{planText}</div>
+                  </div>
+                )
                 : undefined
             }
           >
@@ -154,8 +169,22 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
     {
       title: tp('goalLoop.colAgent'),
       key: 'agent',
-      width: 140,
-      render: (_, record) => record.agent_display_name || record.agent_name || `#${record.agent_id}`,
+      width: 180,
+      render: (_, record) => {
+        const directorName = record.director_display_name || record.director_name
+        return (
+          <Space size={4} wrap>
+            {directorName && (
+              <Tooltip title={tp('goalLoop.hintDirector')}>
+                <Tag color="blue">
+                  {tp('goalLoop.directorTag')}·{directorName}
+                </Tag>
+              </Tooltip>
+            )}
+            <span>{record.agent_display_name || record.agent_name || `#${record.agent_id}`}</span>
+          </Space>
+        )
+      },
     },
     {
       title: tp('goalLoop.colTasks'),
@@ -166,9 +195,11 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
         return (
           <Space size={4} wrap>
             {tasks.slice(0, 5).map((t) => (
-              <LinkButton key={t.id} to={`/todo-for-ai/pages/tasks/${t.id}`} type="link">
-                #{t.id}
-              </LinkButton>
+              <Tooltip key={t.id} title={t.agent_name || undefined}>
+                <LinkButton to={`/todo-for-ai/pages/tasks/${t.id}`} type="link">
+                  #{t.id}
+                </LinkButton>
+              </Tooltip>
             ))}
             {tasks.length > 5 && <span>+{tasks.length - 5}</span>}
           </Space>
@@ -292,6 +323,21 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
             <Select
               allowClear
               placeholder={tp('goalLoop.form.agentAuto')}
+              options={(overview?.agents ?? []).map((a) => ({
+                value: a.id,
+                label: a.role
+                  ? `${a.display_name || a.name}（${a.role.display_name}）`
+                  : a.display_name || a.name,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="director_agent_id"
+            label={withHint(tp('goalLoop.form.director'), tp('goalLoop.hintFormDirector'))}
+          >
+            <Select
+              allowClear
+              placeholder={tp('goalLoop.form.directorAuto')}
               options={(overview?.agents ?? []).map((a) => ({
                 value: a.id,
                 label: a.role

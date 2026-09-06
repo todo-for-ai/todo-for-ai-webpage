@@ -12,6 +12,16 @@ export interface GoalLoopTask {
   id: number
   title: string
   status: string | null
+  /** 实际执行者（按步骤岗位要求路由分配） */
+  agent_id?: number | null
+  agent_name?: string | null
+}
+
+export interface GoalLoopStep {
+  title: string
+  content?: string
+  /** 本步骤要求的执行岗位（可选，用于路由执行者） */
+  role?: string
 }
 
 export interface GoalLoop {
@@ -28,11 +38,15 @@ export interface GoalLoop {
   last_error: string | null
   completion_summary: string | null
   /** 计划式拆解：规划器生成的有序步骤与进度 */
-  plan?: { title: string; content?: string }[]
+  plan?: GoalLoopStep[]
   plan_index?: number
   plan_revision?: number
   agent_name?: string
   agent_display_name?: string
+  /** 指挥者（负责拆解与评审）；缺省时由执行 Agent 兼任 */
+  director_agent_id?: number | null
+  director_name?: string
+  director_display_name?: string
   tasks: GoalLoopTask[]
 }
 
@@ -42,6 +56,7 @@ export interface CreateGoalLoopPayload {
   done_definition?: string
   rounds_limit?: number
   agent_id?: number | null
+  director_agent_id?: number | null
 }
 
 export const goalLoopApi = {
