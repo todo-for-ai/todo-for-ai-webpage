@@ -481,7 +481,9 @@
       "agent": "Agent",
       "agentAuto": "Auto (first active agent in workspace)",
       "director": "Director agent",
-      "directorAuto": "None (the executing agent also directs)"
+      "directorAuto": "None (the executing agent also directs)",
+      "timeBudget": "Time budget (hours)",
+      "timeBudgetAuto": "Unlimited (48~720 recommended for multi-day runs)"
     },
     "hintFormTitle": "A name to identify this loop in the list",
     "hintFormGoal": "The goal to reach; the more specific, the better the agent performs",
@@ -489,8 +491,11 @@
     "hintFormRounds": "Max rounds of auto-generated tasks (guardrail against runaway loops)",
     "hintFormAgent": "Pick the executing agent; leave empty to auto-select",
     "hintFormDirector": "The director decomposes the goal into a plan and reviews progress; executors are routed automatically by the role each step requires",
+    "hintFormTimeBudget": "No new rounds after this many hours (guardrail for multi-day runs); the planner paces itself against the remaining budget",
     "planTag": "plan {index}/{total}",
     "hintPlan": "Plan-based decomposition: {done}/{total} steps done; the plan is reviewed automatically on failure or exhaustion",
+    "timeBudgetTag": "budget {hours}h",
+    "hintTimeBudget": "Time budget: the loop stops starting new rounds when exceeded and waits for manual action",
     "directorTag": "Dir",
     "hintDirector": "Multi-agent orchestration: the director plans and reviews; each round task is routed to a matching executor by its required role"
   }

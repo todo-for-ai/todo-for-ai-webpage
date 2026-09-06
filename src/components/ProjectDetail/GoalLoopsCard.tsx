@@ -93,6 +93,7 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
         rounds_limit: values.rounds_limit,
         agent_id: values.agent_id ?? null,
         director_agent_id: values.director_agent_id ?? null,
+        time_budget_hours: values.time_budget_hours ?? null,
       })
       setModalOpen(false)
       form.resetFields()
@@ -154,6 +155,13 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
           >
             <span>
               {record.tasks?.length ?? 0}/{record.rounds_limit}
+              {record.time_budget_hours ? (
+                <Tooltip title={tp('goalLoop.hintTimeBudget')}>
+                  <Tag style={{ marginLeft: 6 }} color="gold">
+                    {tp('goalLoop.timeBudgetTag').replace('{hours}', String(record.time_budget_hours))}
+                  </Tag>
+                </Tooltip>
+              ) : null}
               {planLen > 0 && (
                 <Tag style={{ marginLeft: 6 }} color="cyan">
                   {tp('goalLoop.planTag')
@@ -314,7 +322,18 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
             name="rounds_limit"
             label={withHint(tp('goalLoop.form.rounds'), tp('goalLoop.hintFormRounds'))}
           >
-            <InputNumber min={1} max={50} style={{ width: '100%' }} />
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item
+            name="time_budget_hours"
+            label={withHint(tp('goalLoop.form.timeBudget'), tp('goalLoop.hintFormTimeBudget'))}
+          >
+            <InputNumber
+              min={1}
+              max={720}
+              style={{ width: '100%' }}
+              placeholder={tp('goalLoop.form.timeBudgetAuto')}
+            />
           </Form.Item>
           <Form.Item
             name="agent_id"

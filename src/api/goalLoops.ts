@@ -47,6 +47,8 @@ export interface GoalLoop {
   director_agent_id?: number | null
   director_name?: string
   director_display_name?: string
+  /** 时长预算（小时）；超时后不再推进新轮次，NULL=不限时 */
+  time_budget_hours?: number | null
   tasks: GoalLoopTask[]
 }
 
@@ -57,6 +59,9 @@ export interface CreateGoalLoopPayload {
   rounds_limit?: number
   agent_id?: number | null
   director_agent_id?: number | null
+  /** 长跑护栏：时长预算（小时，1..720）与连续受阻容忍 */
+  time_budget_hours?: number | null
+  stall_limit?: number | null
 }
 
 export const goalLoopApi = {

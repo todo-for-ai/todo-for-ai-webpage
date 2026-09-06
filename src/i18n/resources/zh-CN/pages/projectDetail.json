@@ -481,7 +481,9 @@
       "agent": "执行 Agent",
       "agentAuto": "自动选择（工作区第一个活跃 Agent）",
       "director": "指挥者 Agent",
-      "directorAuto": "不指定（由执行 Agent 兼任指挥）"
+      "directorAuto": "不指定（由执行 Agent 兼任指挥）",
+      "timeBudget": "时长预算（小时）",
+      "timeBudgetAuto": "不限时（长跑建议填 48~720）"
     },
     "hintFormTitle": "给这个循环起个名字，便于在列表中识别",
     "hintFormGoal": "要达成的目标，越具体 Agent 推进得越准",
@@ -489,8 +491,11 @@
     "hintFormRounds": "最多自动生成的任务轮数（护栏，防止无限消耗）",
     "hintFormAgent": "指定由哪个 Agent 执行；留空则自动选择",
     "hintFormDirector": "指挥者负责拆解目标、规划任务与评审进展；执行者按每步的岗位要求自动分配",
+    "hintFormTimeBudget": "超过该时长后不再推进新轮次（连续跑几天的护栏）；规划器会参考剩余预算安排节奏",
     "planTag": "计划 {index}/{total}",
     "hintPlan": "计划式拆解：已完成 {done}/{total} 步；失败或计划耗尽时会自动评审调整",
+    "timeBudgetTag": "预算 {hours}h",
+    "hintTimeBudget": "时长预算：超时后循环停止推进新轮次，等待人工处理",
     "directorTag": "指挥",
     "hintDirector": "多 Agent 编排：指挥者负责把目标拆解成计划并评审进展；每轮任务按岗位要求自动路由给匹配的执行者"
   }
