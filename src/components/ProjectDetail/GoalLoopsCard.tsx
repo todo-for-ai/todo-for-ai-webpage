@@ -56,7 +56,10 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [adjustRecord, setAdjustRecord] = useState<GoalLoop | null>(null)
+  const [adjustSubmitting, setAdjustSubmitting] = useState(false)
   const [form] = Form.useForm()
+  const [adjustForm] = Form.useForm()
 
   const refresh = useCallback(async () => {
     try {
@@ -100,6 +103,32 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
       await refresh()
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const openAdjust = (record: GoalLoop) => {
+    setAdjustRecord(record)
+    adjustForm.setFieldsValue({
+      rounds_limit: record.rounds_limit,
+      time_budget_hours: record.time_budget_hours ?? undefined,
+      stall_limit: record.stall_limit,
+    })
+  }
+
+  const submitAdjust = async () => {
+    if (!adjustRecord) return
+    const values = await adjustForm.validateFields()
+    setAdjustSubmitting(true)
+    try {
+      await goalLoopApi.update(adjustRecord.id, {
+        rounds_limit: values.rounds_limit,
+        time_budget_hours: values.time_budget_hours ?? 0,
+        stall_limit: values.stall_limit ?? undefined,
+      })
+      setAdjustRecord(null)
+      await refresh()
+    } finally {
+      setAdjustSubmitting(false)
     }
   }
 
@@ -219,11 +248,20 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
           {
             title: tp('goalLoop.colActions'),
             key: 'actions',
-            width: 220,
+            width: 260,
             render: (_: unknown, record: GoalLoop) => {
               const busy = actionLoading === record.id
+              const adjustable = record.status !== 'done' && record.status !== 'stopped'
               return (
                 <Space size={4}>
+                  {adjustable && (
+                    <Button
+                      size="small"
+                      onClick={() => openAdjust(record)}
+                    >
+                      {tp('goalLoop.action.adjust')}
+                    </Button>
+                  )}
                   {record.status === 'running' && (
                     <>
                       <Button size="small" loading={busy} onClick={() => runAction(record.id, 'pause')}>
@@ -364,6 +402,44 @@ export function GoalLoopsCard({ projectId, overview, canManage }: GoalLoopsCardP
                   : a.display_name || a.name,
               }))}
             />
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        title={tp('goalLoop.adjustTitle')}
+        open={!!adjustRecord}
+        onCancel={() => setAdjustRecord(null)}
+        onOk={submitAdjust}
+        confirmLoading={adjustSubmitting}
+        okText={tp('goalLoop.action.save')}
+        cancelText={tp('goalLoop.action.cancel')}
+        destroyOnClose
+      >
+        <p style={{ color: '#999', fontSize: 12, marginTop: 0 }}>{tp('goalLoop.hintAdjust')}</p>
+        <Form form={adjustForm} layout="vertical">
+          <Form.Item
+            name="rounds_limit"
+            label={withHint(tp('goalLoop.form.rounds'), tp('goalLoop.hintFormRounds'))}
+            rules={[{ required: true }]}
+          >
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item
+            name="time_budget_hours"
+            label={withHint(tp('goalLoop.form.timeBudget'), tp('goalLoop.hintFormTimeBudget'))}
+          >
+            <InputNumber
+              min={1}
+              max={720}
+              style={{ width: '100%' }}
+              placeholder={tp('goalLoop.form.timeBudgetAuto')}
+            />
+          </Form.Item>
+          <Form.Item
+            name="stall_limit"
+            label={withHint(tp('goalLoop.form.stallLimit'), tp('goalLoop.hintFormStallLimit'))}
+          >
+            <InputNumber min={1} max={50} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
       </Modal>

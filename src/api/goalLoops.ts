@@ -35,6 +35,8 @@ export interface GoalLoop {
   rounds_done?: number
   rounds_limit: number
   stall_count: number
+  /** 连续受阻容忍（跑多少次失败才停） */
+  stall_limit?: number
   last_error: string | null
   completion_summary: string | null
   /** 计划式拆解：规划器生成的有序步骤与进度 */
@@ -64,6 +66,15 @@ export interface CreateGoalLoopPayload {
   stall_limit?: number | null
 }
 
+export interface UpdateGoalLoopPayload {
+  /** 跑多少轮才停（1..2000） */
+  rounds_limit?: number
+  /** 跑多久才停（小时，1..720；0 = 清除预算改为不限时） */
+  time_budget_hours?: number | null
+  /** 连续受阻容忍（1..50） */
+  stall_limit?: number | null
+}
+
 export const goalLoopApi = {
   async list(projectId: number): Promise<GoalLoop[]> {
     const resp = (await apiClient.get(`/projects/${projectId}/goal-loops`)) as any
@@ -77,6 +88,12 @@ export const goalLoopApi = {
 
   async detail(loopId: number): Promise<GoalLoop> {
     const resp = (await apiClient.get(`/projects/goal-loops/${loopId}`)) as any
+    return resp?.data ?? resp
+  },
+
+  /** 调整长跑护栏（跑多久/多少轮才停）；limit_reached 续命后 resume 即继续 */
+  async update(loopId: number, payload: UpdateGoalLoopPayload): Promise<GoalLoop> {
+    const resp = (await apiClient.put(`/projects/goal-loops/${loopId}`, payload)) as any
     return resp?.data ?? resp
   },
 

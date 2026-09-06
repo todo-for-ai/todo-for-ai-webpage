@@ -464,15 +464,19 @@
       "stalled": "连续受阻（如 AI 规划失败），已停止等待人工处理",
       "stopped": "已人工停止，不再推进"
     },
-    "action": {
-      "create": "新建循环",
-      "pause": "暂停",
-      "resume": "继续",
-      "stop": "停止",
-      "kick": "立即推进",
-      "cancel": "取消"
-    },
-    "hintKick": "不等任务终态，立即尝试规划下一轮（agent 宕机等场景的兜底）",
+ "action": {
+  "create": "新建循环",
+  "pause": "暂停",
+  "resume": "继续",
+  "stop": "停止",
+  "kick": "立即推进",
+  "cancel": "取消",
+  "adjust": "调整",
+  "save": "保存"
+ },
+ "hintKick": "不等任务终态，立即尝试规划下一轮（agent 宕机等场景的兜底）",
+ "adjustTitle": "调整持续干活护栏",
+ "hintAdjust": "设置这群 Agent 跑多久、跑多少轮才停；轮数耗尽或超时的循环调大后点「继续」即可接着跑",
     "form": {
       "title": "循环标题",
       "goal": "目标描述",
@@ -483,7 +487,8 @@
       "director": "指挥者 Agent",
       "directorAuto": "不指定（由执行 Agent 兼任指挥）",
       "timeBudget": "时长预算（小时）",
-      "timeBudgetAuto": "不限时（长跑建议填 48~720）"
+      "timeBudgetAuto": "不限时（长跑建议填 48~720）",
+      "stallLimit": "连续受阻容忍"
     },
     "hintFormTitle": "给这个循环起个名字，便于在列表中识别",
     "hintFormGoal": "要达成的目标，越具体 Agent 推进得越准",
@@ -492,6 +497,7 @@
     "hintFormAgent": "指定由哪个 Agent 执行；留空则自动选择",
     "hintFormDirector": "指挥者负责拆解目标、规划任务与评审进展；执行者按每步的岗位要求自动分配",
     "hintFormTimeBudget": "超过该时长后不再推进新轮次（连续跑几天的护栏）；规划器会参考剩余预算安排节奏",
+    "hintFormStallLimit": "连续多少轮失败/受阻后停下等人工；长跑建议调大（如 10）以容忍偶发失败",
     "planTag": "计划 {index}/{total}",
     "hintPlan": "计划式拆解：已完成 {done}/{total} 步；失败或计划耗尽时会自动评审调整",
     "timeBudgetTag": "预算 {hours}h",
