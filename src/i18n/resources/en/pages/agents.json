@@ -100,7 +100,8 @@
       "runtime": "Runtime",
       "keys": "Keys",
       "soul": "SOUL Versions",
-      "secrets": "Secrets"
+      "secrets": "Secrets",
+      "triggers": "Triggers"
     },
     "common": {
       "yes": "Yes",
@@ -370,6 +371,80 @@
       },
       "empty": "No secrets yet.",
       "sharedNotice": "This agent currently has access to {{count}} shared secret(s) from other agents."
+    },
+    "triggers": {
+      "title": "Triggers",
+      "subtitle": "Task events or schedules automatically drive this agent",
+      "refresh": "Refresh",
+      "create": "New Trigger",
+      "empty": "No triggers yet",
+      "table": {
+        "name": "Name",
+        "type": "Type",
+        "action": "Action",
+        "match": "Match",
+        "nextFire": "Next Fire",
+        "enabled": "Enabled",
+        "actions": "Actions"
+      },
+      "types": {
+        "task_event": "Task Event",
+        "cron": "Schedule"
+      },
+      "actions": {
+        "run_agent": "Run Agent",
+        "create_task": "Create Task"
+      },
+      "events": {
+        "created": "Task Created",
+        "updated": "Task Updated",
+        "status_changed": "Status Changed",
+        "completed": "Task Completed",
+        "assigned": "Task Assigned",
+        "mentioned": "Mentioned"
+      },
+      "priorities": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "urgent": "Urgent"
+      },
+      "createModal": {
+        "title": "New Trigger",
+        "ok": "Create",
+        "cancel": "Cancel",
+        "name": "Name",
+        "nameRequired": "Please enter trigger name",
+        "namePlaceholder": "e.g. Auto respond to new tasks",
+        "type": "Trigger Type",
+        "eventTypes": "Task Events",
+        "eventTypesRequired": "Select at least one event",
+        "cronExpr": "Cron Expression (UTC)",
+        "cronExprHelp": "5 fields: min hour day month weekday. 0 9 * * 1-5 means 09:00 on weekdays",
+        "cronExprRequired": "Please enter a cron expression",
+        "action": "Action",
+        "taskProject": "Target Project",
+        "taskProjectRequired": "Please select target project",
+        "taskProjectPlaceholder": "Select the project for scheduled tasks",
+        "taskTitle": "Task Title",
+        "taskTitleRequired": "Please enter task title",
+        "taskTitlePlaceholder": "e.g. Daily task pool inspection",
+        "taskDescription": "Task Description",
+        "taskPriority": "Priority",
+        "taskTags": "Tags (comma separated)",
+        "priority": "Priority Weight",
+        "priorityHelp": "Lower value matches first",
+        "utcNotice": "Only UTC timezone is supported for now. Missed schedules fire once by default (catch-up)."
+      },
+      "messages": {
+        "loadFailed": "Failed to load triggers",
+        "createSuccess": "Trigger created",
+        "createFailed": "Failed to create trigger",
+        "updateFailed": "Failed to update trigger",
+        "deleteSuccess": "Trigger disabled",
+        "deleteFailed": "Failed to disable trigger",
+        "deleteConfirm": "Disable this trigger?"
+      }
     }
   },
   "messages": {

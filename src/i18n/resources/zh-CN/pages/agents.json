@@ -100,7 +100,8 @@
       "runtime": "运行时",
       "keys": "密钥",
       "soul": "SOUL版本",
-      "secrets": "机密"
+      "secrets": "机密",
+      "triggers": "触发器"
     },
     "common": {
       "yes": "是",
@@ -370,6 +371,80 @@
       },
       "empty": "暂无机密。",
       "sharedNotice": "此 Agent 当前可访问 {{count}} 个来自其他 Agent 的共享机密。"
+    },
+    "triggers": {
+      "title": "触发器",
+      "subtitle": "任务事件或定时计划自动驱动该 Agent 工作",
+      "refresh": "刷新",
+      "create": "新建触发器",
+      "empty": "暂无触发器",
+      "table": {
+        "name": "名称",
+        "type": "类型",
+        "action": "动作",
+        "match": "触发条件",
+        "nextFire": "下次触发",
+        "enabled": "启用",
+        "actions": "操作"
+      },
+      "types": {
+        "task_event": "任务事件",
+        "cron": "定时计划"
+      },
+      "actions": {
+        "run_agent": "运行 Agent",
+        "create_task": "定时创建任务"
+      },
+      "events": {
+        "created": "任务创建",
+        "updated": "任务更新",
+        "status_changed": "状态变更",
+        "completed": "任务完成",
+        "assigned": "任务被指派",
+        "mentioned": "被提及"
+      },
+      "priorities": {
+        "low": "低",
+        "medium": "中",
+        "high": "高",
+        "urgent": "紧急"
+      },
+      "createModal": {
+        "title": "新建触发器",
+        "ok": "创建",
+        "cancel": "取消",
+        "name": "名称",
+        "nameRequired": "请输入触发器名称",
+        "namePlaceholder": "例如：新任务自动响应",
+        "type": "触发类型",
+        "eventTypes": "任务事件",
+        "eventTypesRequired": "请选择至少一个事件",
+        "cronExpr": "Cron 表达式（UTC）",
+        "cronExprHelp": "5 段式：分 时 日 月 周，如 0 9 * * 1-5 表示工作日每天 09:00",
+        "cronExprRequired": "请输入 Cron 表达式",
+        "action": "触发动作",
+        "taskProject": "目标项目",
+        "taskProjectRequired": "请选择目标项目",
+        "taskProjectPlaceholder": "选择定时创建任务的目标项目",
+        "taskTitle": "任务标题",
+        "taskTitleRequired": "请输入任务标题",
+        "taskTitlePlaceholder": "例如：每日巡检待办任务",
+        "taskDescription": "任务描述",
+        "taskPriority": "优先级",
+        "taskTags": "标签（逗号分隔）",
+        "priority": "优先级权重",
+        "priorityHelp": "数值越小越先匹配",
+        "utcNotice": "时区目前仅支持 UTC，错过触发的计划默认补偿执行一次"
+      },
+      "messages": {
+        "loadFailed": "加载触发器失败",
+        "createSuccess": "触发器创建成功",
+        "createFailed": "触发器创建失败",
+        "updateFailed": "触发器更新失败",
+        "deleteSuccess": "触发器已停用",
+        "deleteFailed": "触发器停用失败",
+        "deleteConfirm": "停用该触发器？"
+      }
     }
   },
   "messages": {

@@ -22,6 +22,8 @@ export interface UpdateAgentRunnerConfigRequest {
   }
 }
 
+export type AgentTriggerAction = 'run_agent' | 'create_task' | string
+
 export interface AgentTrigger {
   id: number
   workspace_id: number
@@ -37,6 +39,8 @@ export interface AgentTrigger {
   misfire_policy?: 'skip' | 'catch_up_once' | string
   catch_up_window_seconds?: number
   dedup_window_seconds?: number
+  action?: AgentTriggerAction
+  action_payload?: Record<string, any>
   last_triggered_at?: string
   next_fire_at?: string
   created_at: string
@@ -59,6 +63,15 @@ export interface CreateAgentTriggerRequest {
   misfire_policy?: 'skip' | 'catch_up_once' | string
   catch_up_window_seconds?: number
   dedup_window_seconds?: number
+  action?: AgentTriggerAction
+  action_payload?: {
+    project_id?: number
+    title?: string
+    description?: string
+    priority?: string
+    tags?: string[]
+    [key: string]: any
+  }
 }
 
 export type UpdateAgentTriggerRequest = Partial<CreateAgentTriggerRequest>
