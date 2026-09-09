@@ -5,6 +5,7 @@ import type { Agent, AgentStatus } from '../../../api/agents'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 import type { AgentFormPayload, AgentFormValues } from './agentFormTypes'
 import AgentAvatarUpload from './AgentAvatarUpload'
+import { WorkingScheduleEditor, validateWorkingScheduleValue } from './WorkingScheduleEditor'
 import './AgentEditorForm.css'
 
 interface WorkspaceOption {
@@ -67,7 +68,7 @@ function toInitialValues(agent?: Agent | null): AgentFormValues {
     homepage_url: agent?.homepage_url || '',
     contact_email: agent?.contact_email || '',
     description: agent?.description || '',
-    status: (agent?.status || 'active') as AgentStatus,
+    status: (agent?.status || 'active') as 'active' | 'inactive' | 'revoked',
     capability_tags_text: (agent?.capability_tags || []).join(', '),
     allowed_project_ids_text: (agent?.allowed_project_ids || []).join(', '),
     llm_provider: agent?.llm_provider || '',
@@ -91,6 +92,7 @@ function toInitialValues(agent?: Agent | null): AgentFormValues {
     runner_enabled: agent?.runner_enabled ?? false,
     sandbox_profile: agent?.sandbox_profile || 'standard',
     sandbox_policy_json: stringifyJson(agent?.sandbox_policy),
+    working_schedule: agent?.working_schedule || {},
     change_summary: '',
   }
 }
@@ -154,6 +156,17 @@ export function AgentEditorForm({
               onClick={async () => {
                 try {
                   const values = await form.validateFields()
+                  const scheduleError = validateWorkingScheduleValue(values.working_schedule, {
+                    weeklyDaysRequired: tp('form.workingSchedule.validation.weeklyDaysRequired'),
+                    monthlyDaysRequired: tp('form.workingSchedule.validation.monthlyDaysRequired'),
+                    timeRequired: tp('form.workingSchedule.validation.timeRequired'),
+                    timeRangeInvalid: tp('form.workingSchedule.validation.timeRangeInvalid'),
+                    datesRangeRequired: tp('form.workingSchedule.validation.datesRangeRequired'),
+                  })
+                  if (scheduleError) {
+                    message.error(scheduleError)
+                    return
+                  }
                   await onSubmit({
                     name: values.name.trim(),
                     display_name: values.display_name?.trim(),
@@ -185,6 +198,7 @@ export function AgentEditorForm({
                     runner_enabled: values.runner_enabled,
                     sandbox_profile: values.sandbox_profile?.trim(),
                     sandbox_policy: parseJsonField(values.sandbox_policy_json, 'sandbox_policy'),
+                    working_schedule: values.working_schedule,
                     change_summary: values.change_summary?.trim(),
                   })
                 } catch (error: any) {
@@ -353,6 +367,15 @@ export function AgentEditorForm({
                       <Input.TextArea rows={5} placeholder='{"network_mode":"whitelist","allowed_domains":["api.openai.com"]}' />
                     </Form.Item>
                   </>
+                ),
+              },
+              {
+                key: 'schedule',
+                label: tp('form.tabs.schedule'),
+                children: (
+                  <Form.Item name='working_schedule' label={tp('form.workingSchedule.sectionTitle')}>
+                    <WorkingScheduleEditor agentId={agent?.id} />
+                  </Form.Item>
                 ),
               },
               {

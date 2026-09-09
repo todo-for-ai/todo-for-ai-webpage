@@ -48,6 +48,7 @@ export interface Agent {
   capabilities: string[]
   config: Record<string, unknown>
   collaboration_role?: 'leader' | 'follower' | 'standalone'
+  working_schedule?: AgentWorkingSchedule
   last_seen_at?: string
   created_at: string
   updated_at: string
@@ -352,6 +353,35 @@ export interface CreateAgentData {
   model?: string
   capabilities?: string[]
   config?: Record<string, unknown>
+  working_schedule?: AgentWorkingSchedule
+}
+
+/** 工作时间区间配置（结构见 api-server services/agent_working_schedule.py） */
+export interface AgentWorkingScheduleWindow {
+  label?: string
+  enabled?: boolean
+  type: 'daily' | 'weekly' | 'monthly' | 'dates'
+  start_time?: string
+  end_time?: string
+  days_of_week?: number[]
+  days_of_month?: number[]
+  months?: number[]
+  start_date?: string
+  end_date?: string
+}
+
+export interface AgentWorkingSchedule {
+  enabled?: boolean
+  timezone?: string
+  includes?: AgentWorkingScheduleWindow[]
+  excludes?: AgentWorkingScheduleWindow[]
+}
+
+export interface WorkingScheduleEvaluation {
+  enabled: boolean
+  in_window: boolean
+  next_window_at?: string | null
+  timezone: string
 }
 
 export type UpdateAgentData = Partial<CreateAgentData>
@@ -424,6 +454,7 @@ export interface WorkspaceAgent {
   soul_version?: number
   config_version?: number
   runner_config_version?: number
+  working_schedule?: AgentWorkingSchedule
   created_at: string
   updated_at: string
   created_by?: string
@@ -471,6 +502,7 @@ export interface CreateWorkspaceAgentRequest {
   timeout_seconds?: number
   heartbeat_interval_seconds?: number
   change_summary?: string
+  working_schedule?: AgentWorkingSchedule
 }
 
 export interface UpdateWorkspaceAgentRequest {
@@ -505,5 +537,6 @@ export interface UpdateWorkspaceAgentRequest {
   timeout_seconds?: number
   heartbeat_interval_seconds?: number
   change_summary?: string
+  working_schedule?: AgentWorkingSchedule
 }
 

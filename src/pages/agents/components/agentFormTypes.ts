@@ -1,6 +1,6 @@
-import type { CreateAgentRequest, UpdateAgentRequest } from '../../../api/agents'
+import type { UpdateWorkspaceAgentRequest, AgentWorkingSchedule } from '../../../api/agents'
 
-export type AgentFormPayload = Omit<UpdateAgentRequest, 'name'> & Omit<CreateAgentRequest, 'name'> & { name: string }
+export type AgentFormPayload = UpdateWorkspaceAgentRequest & { name: string }
 
 export interface AgentFormValues {
   name: string
@@ -33,5 +33,6 @@ export interface AgentFormValues {
   runner_enabled?: boolean
   sandbox_profile?: string
   sandbox_policy_json?: string
+  working_schedule?: AgentWorkingSchedule
   change_summary?: string
 }
