@@ -4,6 +4,7 @@ import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons'
 import { Button, Card, Result, Space, Spin, Tag, Typography, message } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { agentsApi, type Agent } from '../../api/agents'
+import { agentsApi as workspaceAgentsApi } from '../../api/agents/agents'
 import { organizationsApi, type Organization } from '../../api/organizations'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentDetailTabs, isAgentDetailTabKey, type AgentDetailTabKey } from './components/AgentDetailTabs'
@@ -62,7 +63,7 @@ async function probeAgentAcrossWorkspaces(agentId: number, workspaceCandidates: 
 
       const workspaceId = candidates[index]
       try {
-        const detail = await agentsApi.getAgent(workspaceId, agentId)
+        const detail = await workspaceAgentsApi.getAgent(workspaceId, agentId) as unknown as Agent
         if (!match) {
           match = { agent: detail, workspaceId }
         }
@@ -248,7 +249,7 @@ export default function AgentDetailPage() {
     if (!workspaceId || !agentId) {
       return
     }
-    const detail = await agentsApi.getAgent(workspaceId, agentId)
+    const detail = await workspaceAgentsApi.getAgent(workspaceId, agentId) as unknown as Agent
     setAgent(detail)
   }, [workspaceId, agentId])
 
