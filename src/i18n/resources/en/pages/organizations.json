@@ -149,7 +149,8 @@
       "members": "Members",
       "activity": "Activity",
       "projects": "Projects",
-      "budgets": "Budgets"
+      "budgets": "Budgets",
+      "runtime": "Runtime"
     },
     "recentActivity": {
       "title": "Recent Activity",

@@ -35,6 +35,7 @@ import { usePageTranslation } from '../i18n/hooks/useTranslation'
 import { OrganizationMembersCard } from './organizations/components/OrganizationMembersCard'
 import NotificationChannelManager from '../components/NotificationChannelManager'
 import { OrgBudgetsTab } from './OrganizationDetail/components/OrgBudgetsTab'
+import { OrgRuntimeSettingsTab } from './OrganizationDetail/components/OrgRuntimeSettingsTab'
 import { LinkButton } from '../components/SmartLink'
 import { formatFullDateTime, formatRelativeTimeI18n } from '../utils/dateUtils'
 import {
@@ -1214,6 +1215,13 @@ const OrganizationDetail = () => {
               label: tp('detail.tabs.budgets'),
               children: (
                 <OrgBudgetsTab organizationId={parsedOrganizationId} canManage={!!canManageMembers} />
+              ),
+            },
+            {
+              key: 'runtime',
+              label: tp('detail.tabs.runtime'),
+              children: (
+                <OrgRuntimeSettingsTab organizationId={parsedOrganizationId} canManage={!!canManageMembers} />
               ),
             },
           ]}
