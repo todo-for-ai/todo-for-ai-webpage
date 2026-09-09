@@ -1,0 +1,54 @@
+/* WorkingScheduleEditor 样式：中性色、小圆角（≤8px） */
+
+.working-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 860px;
+}
+
+.working-schedule__header {
+  margin-bottom: 0;
+}
+
+.working-schedule__hint {
+  margin-top: -4px;
+}
+
+.working-schedule__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.working-schedule__section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.working-schedule__section-hint {
+  font-size: 12px;
+}
+
+.working-schedule__window {
+  background: #fff;
+  border-radius: 6px;
+}
+
+.working-schedule__window-row {
+  margin-top: 8px;
+}
+
+.working-schedule__window-hint {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.working-schedule__preview {
+  margin-top: 4px;
+}

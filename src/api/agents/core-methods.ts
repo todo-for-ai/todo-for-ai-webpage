@@ -13,6 +13,8 @@ import type {
   TaskAssignmentQueryParams,
   CreateAgentData,
   UpdateAgentData,
+  AgentWorkingSchedule,
+  WorkingScheduleEvaluation,
   ClaimTaskData,
   ClaimTaskResult,
   UpdateAssignmentData,
@@ -42,6 +44,9 @@ export interface CoreMethods {
   getAgent(id: number): Promise<Agent>
   createAgent(data: CreateAgentData): Promise<Agent>
   updateAgent(id: number, data: UpdateAgentData): Promise<Agent>
+  getWorkingSchedule(id: number): Promise<{ agent_id: number; working_schedule: AgentWorkingSchedule; evaluation: WorkingScheduleEvaluation }>
+  updateWorkingSchedule(id: number, working_schedule: AgentWorkingSchedule): Promise<{ agent_id: number; working_schedule: AgentWorkingSchedule; evaluation: WorkingScheduleEvaluation }>
+  previewWorkingSchedule(id: number, working_schedule?: AgentWorkingSchedule, at?: string): Promise<{ agent_id: number; working_schedule: AgentWorkingSchedule; evaluation: WorkingScheduleEvaluation }>
   heartbeatAgent(id: number, status?: AgentStatus): Promise<Agent>
   getAgentAssignments(id: number, params?: AssignmentQueryParams): Promise<ListResult<TaskAssignment>>
   claimTask(id: number, data?: ClaimTaskData): Promise<ClaimTaskResult | null>
@@ -90,6 +95,21 @@ export function createCoreMethods(apiClient: ApiClient): CoreMethods {
 
     async updateAgent(id: number, data: UpdateAgentData): Promise<Agent> {
       return unwrapData<Agent>(await apiClient.put(`/agents/${id}`, data))
+    },
+
+    async getWorkingSchedule(id: number): Promise<{ agent_id: number; working_schedule: AgentWorkingSchedule; evaluation: WorkingScheduleEvaluation }> {
+      return unwrapData(await apiClient.get(`/agents/${id}/working-schedule`))
+    },
+
+    async updateWorkingSchedule(id: number, working_schedule: AgentWorkingSchedule): Promise<{ agent_id: number; working_schedule: AgentWorkingSchedule; evaluation: WorkingScheduleEvaluation }> {
+      return unwrapData(await apiClient.put(`/agents/${id}/working-schedule`, { working_schedule }))
+    },
+
+    async previewWorkingSchedule(id: number, working_schedule?: AgentWorkingSchedule, at?: string): Promise<{ agent_id: number; working_schedule: AgentWorkingSchedule; evaluation: WorkingScheduleEvaluation }> {
+      return unwrapData(await apiClient.post(`/agents/${id}/working-schedule/preview`, {
+        schedule: working_schedule,
+        ...(at ? { at } : {}),
+      }))
     },
 
     async heartbeatAgent(id: number, status?: AgentStatus): Promise<Agent> {

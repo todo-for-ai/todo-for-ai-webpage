@@ -45,6 +45,12 @@ export type {
   TaskAssignmentQueryParams,
   CreateAgentData,
   UpdateAgentData,
+  AgentWorkingSchedule,
+  AgentWorkingScheduleWindow,
+  WorkingScheduleEvaluation,
+  WorkspaceAgent,
+  CreateWorkspaceAgentRequest,
+  UpdateWorkspaceAgentRequest,
   ClaimTaskData,
   ClaimTaskResult,
   UpdateAssignmentData,
@@ -288,6 +294,9 @@ class AgentsApiImpl implements AgentsApi {
   getAgent = (id) => this.core.getAgent(id)
   createAgent = (data) => this.core.createAgent(data)
   updateAgent = (id, data) => this.core.updateAgent(id, data)
+  getWorkingSchedule = (id) => this.core.getWorkingSchedule(id)
+  updateWorkingSchedule = (id, schedule) => this.core.updateWorkingSchedule(id, schedule)
+  previewWorkingSchedule = (id, schedule?, at?) => this.core.previewWorkingSchedule(id, schedule, at)
   heartbeatAgent = (id, status?) => this.core.heartbeatAgent(id, status)
   getAgentAssignments = (id, params?) => this.core.getAgentAssignments(id, params)
   claimTask = (id, data?) => this.core.claimTask(id, data)
