@@ -9,7 +9,8 @@ import {
   ApiOutlined,
   ApartmentOutlined,
   PushpinOutlined,
-  ControlOutlined
+  ControlOutlined,
+  CloudServerOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
 import NotificationBell from '../NotificationBell'
@@ -133,6 +134,11 @@ const TopNavigation: React.FC = () => {
       key: '/todo-for-ai/pages/command-center',
       icon: <ControlOutlined />,
       label: '指挥中心',
+    },
+    {
+      key: '/todo-for-ai/pages/deployment-guide',
+      icon: <CloudServerOutlined />,
+      label: '部署引导',
     },
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id

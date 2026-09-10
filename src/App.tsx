@@ -11,6 +11,7 @@ import PageTracker from './components/PageTracker'
 import {
   Dashboard,
   CommandCenter,
+  DeploymentGuide,
   Projects,
   Agents,
   Workflows,
@@ -144,6 +145,7 @@ function App() {
               <Route path="variable-docs" element={<VariableDocs />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="deployment-guide" element={<DeploymentGuide />} />
               <Route path="profile" element={<Profile />} />
               <Route path="user-management" element={<UserManagement />} />
             </Route>
