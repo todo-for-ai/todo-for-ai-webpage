@@ -1,0 +1,99 @@
+/**
+ * MARIO THEME — 超级马里奥 · 现代版（取代 pixel-theme.css 的 8-bit 像素风）
+ *
+ * 设计目标：保留马里奥的标志性配色（马里奥红 / 问号块金 / 管道绿 / 深蓝 / 天空蓝），
+ * 但整体走干净现代的渲染——系统字体、常规圆角（antd 默认 6px，≤8px 规范）、
+ * 细边框、柔和阴影；不再有像素字体 / image-rendering / 黑色粗描边 / 硬阴影。
+ *
+ * 与色板系统（src/theme/palettes.ts）的契约不变：
+ * - :root 定义默认色板（super-mario），其余色板运行时覆盖同一组 --mario-* 变量；
+ * - --px-font / --px-title-font 供少数组件显式消费；
+ * - --px-on-gold / --px-row-hover 由暗色/特殊色板按需覆盖。
+ */
+
+:root {
+  /* 超级马里奥（默认色板，与 palettes.ts 的 super-mario 一致） */
+  --mario-sky: #eef6ff;      /* 页面底色：清晨天空（浅净蓝） */
+  --mario-red: #e52521;      /* 马里奥红（主行动色） */
+  --mario-gold: #fbd000;     /* 问号块金（强调/高亮） */
+  --mario-gold-dark: #b08900;
+  --mario-green: #349439;    /* 管道绿（成功；WCAG 对白面板 ≥3.8） */
+  --mario-green-dark: #2e7d32;
+  --mario-blue: #049cd8;     /* 马里奥蓝（信息/链接） */
+  --mario-brick: #c84c0c;    /* 砖块橙（少量点缀） */
+  --mario-black: #1f2430;    /* 墨色（文字/描边，深灰蓝非纯黑） */
+  --mario-white: #ffffff;    /* 面板底色 */
+
+  --px-font: ui-sans-serif, -apple-system, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+  --px-title-font: var(--px-font);
+}
+
+/* ── 全局 ── */
+body {
+  background: var(--mario-sky);
+  color: var(--mario-black);
+  font-family: var(--px-font);
+}
+
+::selection {
+  background: var(--mario-gold);
+  color: var(--mario-black);
+}
+
+/* 链接用马里奥蓝 */
+a {
+  color: var(--mario-blue);
+}
+a:hover {
+  color: var(--mario-green-dark);
+}
+
+/* ── 面板与卡片：白面板 + 细边 + 柔和阴影（无硬阴影、无粗描边） ── */
+.ant-card,
+.ant-modal .ant-modal-content,
+.ant-table {
+  box-shadow: 0 1px 3px rgba(31, 36, 48, 0.08);
+}
+
+.ant-card {
+  border: 1px solid rgba(31, 36, 48, 0.08);
+}
+
+/* 表格：表头浅金底、悬停浅蓝底（--px-row-hover 可被暗色色板覆盖） */
+.ant-table-thead > tr > th {
+  background: #fdf6d8;
+  color: var(--mario-black);
+}
+.ant-table-tbody > tr:hover > td {
+  background: var(--px-row-hover, #eaf4ff) !important;
+}
+
+/* 主按钮：马里奥红（悬停加深） */
+.ant-btn-primary {
+  background: var(--mario-red);
+  border-color: var(--mario-red);
+}
+.ant-btn-primary:not(:disabled):hover {
+  background: #c21f1c;
+  border-color: #c21f1c;
+}
+
+/* 金色强调块（问号块语义）：金底配深墨字，对比度充足 */
+.ant-tag-checkable-checked,
+.ant-radio-button-wrapper-checked {
+  color: var(--px-on-gold, var(--mario-black));
+}
+
+/* 滚动条轻量化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(31, 36, 48, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

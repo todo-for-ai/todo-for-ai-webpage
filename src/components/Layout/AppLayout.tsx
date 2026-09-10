@@ -6,9 +6,7 @@ import TopNavigation from './TopNavigation'
 import { Footer } from '../Footer'
 import WeChatGroup from '../WeChatGroup'
 import TelegramGroup from '../TelegramGroup'
-import '../../styles/pixel-fonts.css'
-import '@fontsource/press-start-2p'
-import '../../styles/pixel-theme.css'
+import '../../styles/mario-theme.css'
 
 const { Content } = Layout
 

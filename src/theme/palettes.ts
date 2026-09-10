@@ -76,8 +76,9 @@ function def(
 }
 
 export const PALETTES: PaletteDef[] = [
-  // ── 马里奥经典（品牌色系，保留） ──
-  def('sky', '天空蓝（默认）', '马里奥经典', '#5c94fc', ['#5c94fc', '#fcfcfc', '#000000', '#d82800', '#f8b800', '#ac7c00', '#00a800', '#0058f8']),
+  // ── 超级马里奥（默认：马里奥品牌色 × 现代干净渲染，见 styles/mario-theme.css） ──
+  def('super-mario', '超级马里奥', '马里奥经典', '#eef6ff', ['#eef6ff', '#ffffff', '#1f2430', '#e52521', '#fbd000', '#b08900', '#349439', '#049cd8'], { '--px-on-gold': '#1f2430' }),
+  def('sky', '天空蓝', '马里奥经典', '#5c94fc', ['#5c94fc', '#fcfcfc', '#000000', '#d82800', '#f8b800', '#ac7c00', '#00a800', '#0058f8']),
   def('fc', 'FC 灰紫', '马里奥经典', '#b8aedb', ['#b8aedb', '#efeaf8', '#2a2140', '#d95763', '#e0a84e', '#b9823a', '#5d8a4a', '#6f7bd1']),
   def('gameboy', '复古掌机绿', '马里奥经典', '#8bac0f', ['#8bac0f', '#c5d96b', '#0f380f', '#306230', '#306230', '#0f380f', '#306230', '#0f380f'], { '--px-on-gold': '#ffffff' }),
   def('gba', '掌机纸蓝', '马里奥经典', '#b6c8e8', ['#b6c8e8', '#eef4ff', '#1c2b4a', '#c04a42', '#b8860b', '#8a6508', '#3f7d4a', '#3a5fa8'], { '--px-on-gold': '#141414' }),
@@ -125,15 +126,24 @@ export const PALETTES: PaletteDef[] = [
   def('terracotta', '陶土', '黑白极简', '#e8d5c4', ['#e8d5c4', '#f8ede0', '#4a2c1a', '#a84a32', '#ad7422', '#825416', '#5f7036', '#4a6a80'], { '--px-on-gold': '#141414' }),
 ]
 
+/** 默认色板：超级马里奥（2026-09-11 起；旧默认 sky 自动迁移，见 readSavedPaletteId） */
+export const DEFAULT_PALETTE_ID = 'super-mario'
+
 export function getPalette(id: string | null | undefined): PaletteDef {
   return PALETTES.find((p) => p.id === id) || PALETTES[0]
 }
 
 export function readSavedPaletteId(): string {
   try {
-    return localStorage.getItem(STORAGE_KEY) || 'sky'
+    const saved = localStorage.getItem(STORAGE_KEY)
+    // 旧默认 sky 迁移到超级马里奥（显式选了其它色板的不受影响）
+    if (saved === 'sky') {
+      savePaletteId(DEFAULT_PALETTE_ID)
+      return DEFAULT_PALETTE_ID
+    }
+    return saved || DEFAULT_PALETTE_ID
   } catch {
-    return 'sky'
+    return DEFAULT_PALETTE_ID
   }
 }
 
@@ -152,7 +162,8 @@ export function applyPalette(id: string): void {
   PALETTES.forEach((p) =>
     Object.keys(p.vars).forEach((k) => rootStyle.removeProperty(k)),
   )
-  if (palette.id !== 'sky') {
+  // 默认色板的值即 :root 缺省（styles/mario-theme.css），无需逐项覆盖
+  if (palette.id !== DEFAULT_PALETTE_ID) {
     Object.entries(palette.vars).forEach(([k, v]) => rootStyle.setProperty(k, v))
   }
 }
