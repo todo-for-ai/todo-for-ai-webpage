@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Alert,
   Button,
@@ -181,6 +182,22 @@ function DeploymentGuide() {
               report.schema_version ? `（部署 schema 版本 ${report.schema_version}）` : ''
             }`}
           />
+
+          {report.ok && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="部署已完成，本页主要面向首次安装"
+              description={
+                <span>
+                  日常运维请使用{' '}
+                  <Link to="/todo-for-ai/pages/system-monitor">系统监控</Link>
+                  （服务器 CPU/内存/负载 与 Agent 全局状态）；部署出问题时随时回到本页重新自检。
+                </span>
+              }
+            />
+          )}
 
           {grouped.map(({ category, items }) => {
             const meta = CATEGORY_META[category]

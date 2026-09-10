@@ -10,7 +10,8 @@ import {
   ApartmentOutlined,
   PushpinOutlined,
   ControlOutlined,
-  CloudServerOutlined
+  CloudServerOutlined,
+  MonitorOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
 import NotificationBell from '../NotificationBell'
@@ -19,6 +20,8 @@ import { GitHubBadge } from '../GitHubBadge'
 import { pinsApi, type UserProjectPin, type ProjectTaskCount } from '../../api/pins'
 import { tasksApi } from '../../api/tasks'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
+import { useAuthStore } from '../../stores/useAuthStore'
+import { apiClient } from '../../api'
 import './TopNavigation.css'
 const { Header } = Layout
 const { Title } = Typography
@@ -31,6 +34,27 @@ const TopNavigation: React.FC = () => {
   const [taskCounts, setTaskCounts] = useState<ProjectTaskCount[]>([])
   const { tn } = useTranslation()
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  // 管理员专属菜单门控：部署未完成才显示「部署引导」，装完只留「系统监控」
+  const user = useAuthStore(state => state.user)
+  const isAdmin = (user as any)?.role === 'admin'
+  const [setupComplete, setSetupComplete] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (!isAdmin) {
+      setSetupComplete(null)
+      return
+    }
+    let cancelled = false
+    apiClient.get('/system/setup-state')
+      .then((data: any) => {
+        if (!cancelled) setSetupComplete(Boolean(data?.complete))
+      })
+      .catch(() => {
+        if (!cancelled) setSetupComplete(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isAdmin])
   const loadTaskCounts = useCallback(async () => {
     try {
       const response = await pinsApi.getPinnedProjectsTaskCounts()
@@ -135,11 +159,24 @@ const TopNavigation: React.FC = () => {
       icon: <ControlOutlined />,
       label: '指挥中心',
     },
-    {
-      key: '/todo-for-ai/pages/deployment-guide',
-      icon: <CloudServerOutlined />,
-      label: '部署引导',
-    },
+    ...(isAdmin
+      ? [
+          {
+            key: '/todo-for-ai/pages/system-monitor',
+            icon: <MonitorOutlined />,
+            label: '系统监控'
+          }
+        ]
+      : []),
+    ...(isAdmin && setupComplete === false
+      ? [
+          {
+            key: '/todo-for-ai/pages/deployment-guide',
+            icon: <CloudServerOutlined />,
+            label: '部署引导'
+          }
+        ]
+      : []),
     ...pinnedProjects.map(pin => {
       const projectId = pin.project?.id || pin.project_id
       const taskCount = getProjectTaskCount(projectId)
