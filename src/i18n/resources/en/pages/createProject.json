@@ -24,44 +24,52 @@
       "label": "Project Name",
       "placeholder": "Enter project name",
       "required": "Please enter project name",
-      "maxLength": "Project name cannot exceed 100 characters"
+      "maxLength": "Project name cannot exceed 100 characters",
+      "hint": "Shown in the project list and kanban. Required, up to 100 characters"
     },
     "color": {
       "label": "Project Color",
       "randomButton": "Random Color",
-      "randomTitle": "Generate completely random color (full color space)"
+      "randomTitle": "Generate completely random color (full color space)",
+      "hint": "Identifier color used in the project list and kanban"
     },
     "description": {
       "label": "Project Description",
-      "placeholder": "Enter project description"
+      "placeholder": "Enter project description",
+      "hint": "One or two sentences on what this project does; shown on the project card"
     },
     "organization": {
       "label": "Organization",
-      "placeholder": "Select an organization (optional)"
+      "placeholder": "Select an organization (optional)",
+      "hint": "Once assigned, organization members and AI agents can see this project; if left empty, only you can see it (agents cannot access personal projects)"
     },
     "githubUrl": {
       "label": "GitHub Repository Link",
       "placeholder": "https://github.com/username/repository",
       "invalidUrl": "Please enter a valid URL",
       "help": "After entering the GitHub repository link, you can click the 'Import from GitHub' button to automatically fill in project information",
+      "hint": "Optional. Helps AI agents locate the code repository when executing tasks",
       "importButton": "Import from GitHub"
     },
     "localUrl": {
       "label": "Local Development Link",
       "placeholder": "http://localhost:3000",
       "help": "Access address for local development environment",
+      "hint": "Optional. Access address of your local dev environment, handy for teammates",
       "invalidUrl": "Please enter a valid URL"
     },
     "productionUrl": {
       "label": "Production Environment Link",
       "placeholder": "https://your-app.com",
       "help": "Access address for production environment",
+      "hint": "Optional. Access address of the live production environment",
       "invalidUrl": "Please enter a valid URL"
     },
     "projectContext": {
       "label": "Project Context",
       "placeholder": "Enter project background information, tech stack, development standards and other context information...",
-      "help": "This information will help AI better understand the project background and provide more accurate suggestions"
+      "help": "This information will help AI better understand the project background and provide more accurate suggestions",
+      "hint": "A briefing for AI agents: background, tech stack, coding standards. The clearer it is, the better the agents perform"
     },
     "status": {
       "label": "Project Status",

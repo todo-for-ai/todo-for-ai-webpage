@@ -101,11 +101,20 @@ const CreateProject: React.FC = () => {
           onFinish={handleSubmit}
           disabled={loading}
         >
-          <Form.Item label={tp('form.name.label')} name="name" rules={[{ required: true, message: tp('form.name.required') }]}>
+          <Form.Item
+            label={tp('form.name.label')}
+            name="name"
+            rules={[{ required: true, message: tp('form.name.required') }]}
+            extra={tp('form.name.hint')}
+          >
             <Input placeholder={tp('form.name.placeholder')} />
           </Form.Item>
-          
-          <Form.Item label={tp('form.organization.label')} name="organization_id">
+
+          <Form.Item
+            label={tp('form.organization.label')}
+            name="organization_id"
+            extra={tp('form.organization.hint')}
+          >
             <Select
               allowClear
               placeholder={tp('form.organization.placeholder')}
@@ -116,30 +125,54 @@ const CreateProject: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item label={tp('form.description.label')} name="description">
+          <Form.Item
+            label={tp('form.description.label')}
+            name="description"
+            extra={tp('form.description.hint')}
+          >
             <Input.TextArea rows={4} placeholder={tp('form.description.placeholder')} />
           </Form.Item>
-          
-          <Form.Item label={tp('form.color.label')} name="color">
+
+          <Form.Item
+            label={tp('form.color.label')}
+            name="color"
+            extra={tp('form.color.hint')}
+          >
             <Input type="color" />
           </Form.Item>
-          
-          <Form.Item label={tp('form.githubUrl.label')} name="github_url">
+
+          <Form.Item
+            label={tp('form.githubUrl.label')}
+            name="github_url"
+            extra={tp('form.githubUrl.hint')}
+          >
             <Input placeholder={tp('form.githubUrl.placeholder')} />
           </Form.Item>
 
-          <Form.Item label={tp('form.localUrl.label')} name="local_url">
+          <Form.Item
+            label={tp('form.localUrl.label')}
+            name="local_url"
+            extra={tp('form.localUrl.hint')}
+          >
             <Input placeholder={tp('form.localUrl.placeholder')} />
           </Form.Item>
 
-          <Form.Item label={tp('form.productionUrl.label')} name="production_url">
+          <Form.Item
+            label={tp('form.productionUrl.label')}
+            name="production_url"
+            extra={tp('form.productionUrl.hint')}
+          >
             <Input placeholder={tp('form.productionUrl.placeholder')} />
           </Form.Item>
 
-          <Form.Item label={tp('form.projectContext.label')} name="project_context">
+          <Form.Item
+            label={tp('form.projectContext.label')}
+            name="project_context"
+            extra={tp('form.projectContext.hint')}
+          >
             <Input.TextArea rows={6} placeholder={tp('form.projectContext.placeholder')} />
           </Form.Item>
-          
+
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
             <Form.Item>
               <Space>
