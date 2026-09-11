@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from 'react'
-import { tasksApi, type Task } from '../../api/tasks'
+import { tasksApi, type Task, type CreateTaskData } from '../../api/tasks'
 
 export interface TaskQueryParams {
   page?: number
@@ -111,12 +111,26 @@ export const useTaskStore = () => {
     return updateTask(taskId, { status })
   }, [updateTask])
 
+  const createTask = useCallback(async (data: CreateTaskData) => {
+    setState(prev => ({ ...prev, loading: true, error: null }))
+    try {
+      const created = await tasksApi.createTask(data)
+      setState(prev => ({ ...prev, loading: false }))
+      return created
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setState(prev => ({ ...prev, loading: false, error: msg }))
+      throw err
+    }
+  }, [])
+
   const deleteTask = useCallback(async (taskId: number) => {
     await tasksApi.deleteTask(taskId)
     setState(prev => ({
       ...prev,
       tasks: prev.tasks.filter(t => t.id !== taskId),
     }))
+    return true
   }, [])
 
   const batchDeleteTasks = useCallback(async (taskIds: number[]) => {
@@ -166,6 +180,7 @@ export const useTaskStore = () => {
     getTask,
     updateTask,
     updateTaskStatus,
+    createTask,
     deleteTask,
     batchDeleteTasks,
     batchUpdateTaskStatus,

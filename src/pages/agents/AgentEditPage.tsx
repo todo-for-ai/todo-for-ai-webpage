@@ -2,7 +2,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Card, message } from 'antd'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { agentsApi, type Agent } from '../../api/agents'
+import type { WorkspaceAgent as Agent } from '../../api/agents/types'
+import type { Agent as CoreAgent } from '../../api/agents'
+import { agentsApi } from '../../api/agents/agents'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentEditorForm } from './components/AgentEditorForm'
 import { useAgentWorkspaceOptions } from './hooks/useAgentWorkspaceOptions'
@@ -135,7 +137,7 @@ export default function AgentEditPage() {
       workspaces={workspaceOptions}
       workspaceId={workspaceId}
       lockWorkspace
-      agent={agent}
+      agent={agent as unknown as CoreAgent}
       onWorkspaceChange={setWorkspaceId}
       onCancel={() =>
         navigate(

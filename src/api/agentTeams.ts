@@ -52,7 +52,12 @@ class AgentTeamsApi {
   }
 
   async list(workspaceId: number, params?: Record<string, any>): Promise<{ items: AgentTeam[]; total: number }> {
-    return await apiClient.get(this.baseUrl(workspaceId), params)
+    const qs = params
+      ? '?' + new URLSearchParams(
+          Object.entries(params).map(([k, v]) => [k, String(v)]),
+        ).toString()
+      : ''
+    return await apiClient.get(`${this.baseUrl(workspaceId)}${qs}`)
   }
 
   async get(workspaceId: number, teamId: number): Promise<AgentTeam> {

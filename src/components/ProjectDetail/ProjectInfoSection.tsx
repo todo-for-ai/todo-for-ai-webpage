@@ -44,12 +44,12 @@ export const ProjectInfoSection: React.FC<ProjectInfoSectionProps> = ({ project 
       )}
       <Row style={{ marginTop: '16px' }}>
         <div style={{ width: '100%' }}>
-          <ProjectBasicInfoCard project={project} />
+          <ProjectBasicInfoCard project={project as never} />
         </div>
       </Row>
       <Row style={{ marginTop: '16px' }}>
         <div style={{ width: '100%' }}>
-          <ProjectLinksCard project={project} />
+          <ProjectLinksCard project={project as never} />
         </div>
       </Row>
       {project.project_context && (

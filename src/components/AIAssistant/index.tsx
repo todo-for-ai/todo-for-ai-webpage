@@ -10,6 +10,7 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
   Button,
   Spin,
   Alert,
@@ -22,7 +23,7 @@ import {
 import {
   RobotOutlined,
   SplitCellsOutlined,
-  SparklesOutlined
+  ThunderboltOutlined
 } from '@ant-design/icons';
 
 const { TextArea } = Input;
@@ -112,7 +113,7 @@ export const AITaskAssistantModal: React.FC<{
           <Button
             type="primary"
             htmlType="submit"
-            icon={<SparklesOutlined />}
+            icon={<ThunderboltOutlined />}
             loading={loading}
           >
             AI 生成任务
@@ -243,7 +244,7 @@ export const AITaskSplitButton: React.FC<{
       >
         <div style={{ marginBottom: 16 }}>
           <Text>将当前任务拆分为 </Text>
-          <Input.Number
+          <InputNumber
             min={2}
             max={10}
             value={numSubtasks}

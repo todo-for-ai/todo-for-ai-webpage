@@ -4,7 +4,12 @@ import { dashboardApi, type ActivityHeatmapData } from '../../../api/dashboard'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 import { getErrorMessage } from '../../../utils/errorUtils'
 
-export function useActivityHeatmap() {
+interface UseActivityHeatmapOptions {
+  autoRefresh?: boolean
+  refreshInterval?: number
+}
+
+export function useActivityHeatmap(_options: UseActivityHeatmapOptions = {}) {
   const { tp } = usePageTranslation('dashboard')
   const [heatmapData, setHeatmapData] = useState<ActivityHeatmapData[]>([])
   const [loading, setLoading] = useState(true)

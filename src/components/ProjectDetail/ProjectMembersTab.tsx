@@ -4,7 +4,8 @@ import { Button, Card, Input, message, Popconfirm, Select, Space, Table, Tag, Ty
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, type ProjectMember } from '../../api/projects'
-import { agentsApi, type Agent } from '../../api/agents'
+import type { WorkspaceAgent as Agent } from '../../api/agents/types'
+import { agentsApi as workspaceAgentsApi } from '../../api/agents/agents'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 
 const { Text } = Typography
@@ -69,7 +70,7 @@ export const ProjectMembersTab: React.FC<ProjectMembersTabProps> = ({
     }
 
     try {
-      const data = await agentsApi.getAgents(workspaceId, { page: 1, per_page: 200 })
+      const data = await workspaceAgentsApi.getAgents(workspaceId, { page: 1, per_page: 200 })
       const filtered = (data.items || []).filter((agent) => {
         const projects = agent.allowed_project_ids || []
         return projects.length === 0 || projects.includes(projectId)

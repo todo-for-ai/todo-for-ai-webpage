@@ -69,7 +69,7 @@ const CollaborationGraphCard: FC<CollaborationGraphCardProps> = ({
   onExportSvg,
   onExportPng,
 }) => {
-  const Text = ({ type, children }: { type?: any; children: React.ReactNode }) => <span>{children}</span>
+  const Text = ({ type, style, children }: { type?: any; style?: React.CSSProperties; children: React.ReactNode }) => <span style={style}>{children}</span>
 
   return (
     <Card

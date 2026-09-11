@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react'
 import { message } from 'antd'
-import { agentSoulApi, type AgentSoulVersion, type Agent } from '../../../api/agents'
+import { agentSoulApi, type AgentSoulVersion } from '../../../api/agents'
+import type { WorkspaceAgent as Agent } from '../../../api/agents/types'
 
 export function useAgentSoul(workspaceId: number | null, agentId: number | null) {
   const [versions, setVersions] = useState<AgentSoulVersion[]>([])

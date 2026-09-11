@@ -26,7 +26,7 @@ import {
   StopOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import type { Agent, AgentStatus } from '../../api/agents'
+import type { WorkspaceAgent as Agent, WorkspaceAgentStatus as AgentStatus } from '../../api/agents/types'
 import { resolveUserAvatarSrc } from '../../utils/defaultAvatars'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentWorkspaceActivityCenter } from './components/AgentWorkspaceActivityCenter'

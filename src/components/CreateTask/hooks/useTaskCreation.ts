@@ -42,7 +42,7 @@ export const useTaskCreation = () => {
         status: 'todo'
       }
 
-      await createTask(taskData)
+      await createTask(taskData as never)
       message.success(tp('messages.createSuccess'))
 
       // 追踪创建任务事件

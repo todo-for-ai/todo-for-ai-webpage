@@ -59,17 +59,17 @@ export interface WorkflowMethods {
   retryWorkflowRun(runId: number): Promise<WorkflowRunItem>
   completeWorkflowStep(runId: number, stepKey: string, data: { success?: boolean; error?: string }): Promise<WorkflowRunItem>
   getWorkflowTriggers(params?: { workflow_id?: number; is_active?: boolean; page?: number; per_page?: number }): Promise<ListResult<unknown>>
-  createWorkflowTrigger(data: { workflow_id: number; name: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<unknown>
-  updateWorkflowTrigger(triggerId: number, data: { name?: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<unknown>
+  createWorkflowTrigger(data: { workflow_id: number; name: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<any>
+  updateWorkflowTrigger(triggerId: number, data: { name?: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<any>
   deleteWorkflowTrigger(triggerId: number): Promise<void>
   fireDueTriggers(): Promise<{ fired_count: number; fired: unknown[] }>
   getWorkflowTemplates(params?: { category?: string }): Promise<unknown[]>
-  getWorkflowTemplate(templateKey: string): Promise<unknown>
-  instantiateWorkflowTemplate(templateKey: string, data?: { name?: string; project_id?: number; root_task_id?: number }): Promise<unknown>
-  listWorkflowVersions(workflowId: number): Promise<unknown>
-  getWorkflowVersion(workflowId: number, versionNumber: number): Promise<unknown>
-  rollbackWorkflow(workflowId: number, version: number): Promise<unknown>
-  diffWorkflowVersions(workflowId: number, v1: number, v2: number): Promise<unknown>
+  getWorkflowTemplate(templateKey: string): Promise<any>
+  instantiateWorkflowTemplate(templateKey: string, data?: { name?: string; project_id?: number; root_task_id?: number }): Promise<any>
+  listWorkflowVersions(workflowId: number): Promise<any>
+  getWorkflowVersion(workflowId: number, versionNumber: number): Promise<any>
+  rollbackWorkflow(workflowId: number, version: number): Promise<any>
+  diffWorkflowVersions(workflowId: number, v1: number, v2: number): Promise<any>
   getWorkflowStepDependencyBottleneck(days?: number, limit?: number): Promise<WorkflowStepDependencyBottleneck>
   getWorkflowSimilarityMatrix(days?: number, limit?: number, maxRuns?: number): Promise<WorkflowSimilarityMatrix>
   getStepDurationHistogram(days?: number): Promise<StepDurationHistogramResult>
@@ -190,11 +190,11 @@ export function createWorkflowMethods(apiClient: ApiClient): WorkflowMethods {
       return unwrapList<unknown>(response)
     },
 
-    async createWorkflowTrigger(data: { workflow_id: number; name: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<unknown> {
+    async createWorkflowTrigger(data: { workflow_id: number; name: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<any> {
       return unwrapData(await apiClient.post('/agents/workflow-triggers', data))
     },
 
-    async updateWorkflowTrigger(triggerId: number, data: { name?: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<unknown> {
+    async updateWorkflowTrigger(triggerId: number, data: { name?: string; cron_expr?: string; one_shot_at?: string; is_active?: boolean; project_id?: number; root_task_id?: number; context_override?: Record<string, unknown> }): Promise<any> {
       return unwrapData(await apiClient.put(`/agents/workflow-triggers/${triggerId}`, data))
     },
 
@@ -210,27 +210,27 @@ export function createWorkflowMethods(apiClient: ApiClient): WorkflowMethods {
       return unwrapData<unknown[]>(await apiClient.get(`/agents/workflow-templates${buildQuery(params)}`))
     },
 
-    async getWorkflowTemplate(templateKey: string): Promise<unknown> {
+    async getWorkflowTemplate(templateKey: string): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/workflow-templates/${templateKey}`))
     },
 
-    async instantiateWorkflowTemplate(templateKey: string, data?: { name?: string; project_id?: number; root_task_id?: number }): Promise<unknown> {
+    async instantiateWorkflowTemplate(templateKey: string, data?: { name?: string; project_id?: number; root_task_id?: number }): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/workflow-templates/${templateKey}/instantiate`, data))
     },
 
-    async listWorkflowVersions(workflowId: number): Promise<unknown> {
+    async listWorkflowVersions(workflowId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/workflows/${workflowId}/versions`))
     },
 
-    async getWorkflowVersion(workflowId: number, versionNumber: number): Promise<unknown> {
+    async getWorkflowVersion(workflowId: number, versionNumber: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/workflows/${workflowId}/versions/${versionNumber}`))
     },
 
-    async rollbackWorkflow(workflowId: number, version: number): Promise<unknown> {
+    async rollbackWorkflow(workflowId: number, version: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/workflows/${workflowId}/versions/${version}/rollback`))
     },
 
-    async diffWorkflowVersions(workflowId: number, v1: number, v2: number): Promise<unknown> {
+    async diffWorkflowVersions(workflowId: number, v1: number, v2: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/workflows/${workflowId}/versions/diff${buildQuery({ v1, v2 })}`))
     },
 

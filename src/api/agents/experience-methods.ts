@@ -36,37 +36,37 @@ export interface ExperienceMethods {
   getExperiencesSkillCoverageRadar(limit?: number, domains?: number): Promise<ExperiencesSkillCoverageRadar>
   getAgentExperiencesDecayAlerts(days?: number, minDrop?: number, limit?: number): Promise<AgentExperiencesDecayAlerts>
   listAgentExperiences(agentId: number, params?: Record<string, string>): Promise<PaginatedResponse<unknown>>
-  createAgentExperience(agentId: number, data: Record<string, unknown>): Promise<unknown>
-  getAgentExperience(agentId: number, experienceId: number): Promise<unknown>
-  updateAgentExperience(agentId: number, experienceId: number, data: Record<string, unknown>): Promise<unknown>
-  deleteAgentExperience(agentId: number, experienceId: number): Promise<unknown>
+  createAgentExperience(agentId: number, data: Record<string, unknown>): Promise<any>
+  getAgentExperience(agentId: number, experienceId: number): Promise<any>
+  updateAgentExperience(agentId: number, experienceId: number, data: Record<string, unknown>): Promise<any>
+  deleteAgentExperience(agentId: number, experienceId: number): Promise<any>
   recommendExperiences(agentId: number, params?: Record<string, string>): Promise<unknown[]>
-  shareAgentExperience(agentId: number, experienceId: number): Promise<unknown>
-  learnFromExperience(agentId: number, experienceId: number): Promise<unknown>
+  shareAgentExperience(agentId: number, experienceId: number): Promise<any>
+  learnFromExperience(agentId: number, experienceId: number): Promise<any>
   listSharedExperiences(agentId: number, params?: Record<string, string>): Promise<PaginatedResponse<unknown>>
   autoExtractExperiences(agentId: number): Promise<unknown[]>
-  applyExperienceDecay(agentId: number, params?: Record<string, unknown>): Promise<unknown>
-  validateExperience(agentId: number, experienceId: number, data: { is_accurate: boolean }): Promise<unknown>
-  getExperienceValidationStats(agentId: number): Promise<unknown>
-  decayAllExperiences(params?: Record<string, unknown>): Promise<unknown>
-  suggestCapabilityAdaptation(agentId: number): Promise<unknown>
-  applyCapabilityAdaptation(agentId: number, data: Record<string, unknown>): Promise<unknown>
-  authorizeCrossProjectAgent(data: { agent_id: number; project_id: number; role_in_project?: string; capabilities_override?: string[]; max_concurrent_tasks?: number }): Promise<unknown>
-  revokeCrossProjectAgent(agentId: number, projectId: number): Promise<unknown>
+  applyExperienceDecay(agentId: number, params?: Record<string, unknown>): Promise<any>
+  validateExperience(agentId: number, experienceId: number, data: { is_accurate: boolean }): Promise<any>
+  getExperienceValidationStats(agentId: number): Promise<any>
+  decayAllExperiences(params?: Record<string, unknown>): Promise<any>
+  suggestCapabilityAdaptation(agentId: number): Promise<any>
+  applyCapabilityAdaptation(agentId: number, data: Record<string, unknown>): Promise<any>
+  authorizeCrossProjectAgent(data: { agent_id: number; project_id: number; role_in_project?: string; capabilities_override?: string[]; max_concurrent_tasks?: number }): Promise<any>
+  revokeCrossProjectAgent(agentId: number, projectId: number): Promise<any>
   listAgentCrossProjects(agentId: number): Promise<unknown[]>
   listProjectExternalAgents(projectId: number): Promise<PaginatedResponse<unknown>>
   discoverCrossProjectAgents(params?: Record<string, string>): Promise<unknown[]>
   findCapableAgentsCrossProject(params: Record<string, string>): Promise<unknown[]>
   findCrossProjectTasks(agentId: number, params?: Record<string, string>): Promise<unknown[]>
-  claimCrossProjectTask(agentId: number, taskId: number, data?: Record<string, unknown>): Promise<unknown>
-  listKnowledgeEntries(agentId: number, params?: Record<string, unknown>): Promise<unknown>
-  createKnowledgeEntry(agentId: number, data: Record<string, unknown>): Promise<unknown>
-  getKnowledgeEntry(agentId: number, entryId: number): Promise<unknown>
-  updateKnowledgeEntry(agentId: number, entryId: number, data: Record<string, unknown>): Promise<unknown>
-  deleteKnowledgeEntry(agentId: number, entryId: number): Promise<unknown>
+  claimCrossProjectTask(agentId: number, taskId: number, data?: Record<string, unknown>): Promise<any>
+  listKnowledgeEntries(agentId: number, params?: Record<string, unknown>): Promise<any>
+  createKnowledgeEntry(agentId: number, data: Record<string, unknown>): Promise<any>
+  getKnowledgeEntry(agentId: number, entryId: number): Promise<any>
+  updateKnowledgeEntry(agentId: number, entryId: number, data: Record<string, unknown>): Promise<any>
+  deleteKnowledgeEntry(agentId: number, entryId: number): Promise<any>
   searchKnowledge(agentId: number, params?: Record<string, unknown>): Promise<unknown[]>
-  listSharedKnowledge(params?: Record<string, unknown>): Promise<unknown>
-  autoExtractKnowledge(agentId: number, limit?: number): Promise<unknown>
+  listSharedKnowledge(params?: Record<string, unknown>): Promise<any>
+  autoExtractKnowledge(agentId: number, limit?: number): Promise<any>
 }
 
 export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods {
@@ -123,19 +123,19 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData<PaginatedResponse<unknown>>(await apiClient.get(`/agents/${agentId}/experiences${buildQuery(params)}`))
     },
 
-    async createAgentExperience(agentId: number, data: Record<string, unknown>): Promise<unknown> {
+    async createAgentExperience(agentId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/experiences`, data))
     },
 
-    async getAgentExperience(agentId: number, experienceId: number): Promise<unknown> {
+    async getAgentExperience(agentId: number, experienceId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/${agentId}/experiences/${experienceId}`))
     },
 
-    async updateAgentExperience(agentId: number, experienceId: number, data: Record<string, unknown>): Promise<unknown> {
+    async updateAgentExperience(agentId: number, experienceId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.put(`/agents/${agentId}/experiences/${experienceId}`, data))
     },
 
-    async deleteAgentExperience(agentId: number, experienceId: number): Promise<unknown> {
+    async deleteAgentExperience(agentId: number, experienceId: number): Promise<any> {
       return unwrapData(await apiClient.delete(`/agents/${agentId}/experiences/${experienceId}`))
     },
 
@@ -143,11 +143,11 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData<unknown[]>(await apiClient.get(`/agents/${agentId}/experiences/recommend${buildQuery(params)}`))
     },
 
-    async shareAgentExperience(agentId: number, experienceId: number): Promise<unknown> {
+    async shareAgentExperience(agentId: number, experienceId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/experiences/${experienceId}/share`))
     },
 
-    async learnFromExperience(agentId: number, experienceId: number): Promise<unknown> {
+    async learnFromExperience(agentId: number, experienceId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/experiences/${experienceId}/learn`))
     },
 
@@ -159,35 +159,35 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData<unknown[]>(await apiClient.post(`/agents/${agentId}/experiences/auto-extract`))
     },
 
-    async applyExperienceDecay(agentId: number, params?: Record<string, unknown>): Promise<unknown> {
+    async applyExperienceDecay(agentId: number, params?: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/experiences/decay${buildQuery(params as Record<string, string>)}`))
     },
 
-    async validateExperience(agentId: number, experienceId: number, data: { is_accurate: boolean }): Promise<unknown> {
+    async validateExperience(agentId: number, experienceId: number, data: { is_accurate: boolean }): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/experiences/${experienceId}/validate`, data))
     },
 
-    async getExperienceValidationStats(agentId: number): Promise<unknown> {
+    async getExperienceValidationStats(agentId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/${agentId}/experiences/validation-stats`))
     },
 
-    async decayAllExperiences(params?: Record<string, unknown>): Promise<unknown> {
+    async decayAllExperiences(params?: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/experiences/decay-all${buildQuery(params as Record<string, string>)}`))
     },
 
-    async suggestCapabilityAdaptation(agentId: number): Promise<unknown> {
+    async suggestCapabilityAdaptation(agentId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/${agentId}/capability-adaptation/suggest`))
     },
 
-    async applyCapabilityAdaptation(agentId: number, data: Record<string, unknown>): Promise<unknown> {
+    async applyCapabilityAdaptation(agentId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/capability-adaptation/apply`, data))
     },
 
-    async authorizeCrossProjectAgent(data: { agent_id: number; project_id: number; role_in_project?: string; capabilities_override?: string[]; max_concurrent_tasks?: number }): Promise<unknown> {
+    async authorizeCrossProjectAgent(data: { agent_id: number; project_id: number; role_in_project?: string; capabilities_override?: string[]; max_concurrent_tasks?: number }): Promise<any> {
       return unwrapData(await apiClient.post('/agents/cross-project/authorize', data))
     },
 
-    async revokeCrossProjectAgent(agentId: number, projectId: number): Promise<unknown> {
+    async revokeCrossProjectAgent(agentId: number, projectId: number): Promise<any> {
       return unwrapData(await apiClient.delete(`/agents/cross-project/authorize/${agentId}/${projectId}`))
     },
 
@@ -211,11 +211,11 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData<unknown[]>(await apiClient.get(`/agents/${agentId}/cross-project-tasks${buildQuery(params)}`))
     },
 
-    async claimCrossProjectTask(agentId: number, taskId: number, data?: Record<string, unknown>): Promise<unknown> {
+    async claimCrossProjectTask(agentId: number, taskId: number, data?: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/cross-project-tasks/${taskId}/claim`, data || {}))
     },
 
-    async listKnowledgeEntries(agentId: number, params?: Record<string, unknown>): Promise<unknown> {
+    async listKnowledgeEntries(agentId: number, params?: Record<string, unknown>): Promise<any> {
       const stringParams: Record<string, string> = {}
       if (params) {
         Object.entries(params).forEach(([k, v]) => {
@@ -225,19 +225,19 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData(await apiClient.get(`/agents/${agentId}/knowledge${buildQuery(stringParams)}`))
     },
 
-    async createKnowledgeEntry(agentId: number, data: Record<string, unknown>): Promise<unknown> {
+    async createKnowledgeEntry(agentId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/knowledge`, data))
     },
 
-    async getKnowledgeEntry(agentId: number, entryId: number): Promise<unknown> {
+    async getKnowledgeEntry(agentId: number, entryId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/${agentId}/knowledge/${entryId}`))
     },
 
-    async updateKnowledgeEntry(agentId: number, entryId: number, data: Record<string, unknown>): Promise<unknown> {
+    async updateKnowledgeEntry(agentId: number, entryId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.put(`/agents/${agentId}/knowledge/${entryId}`, data))
     },
 
-    async deleteKnowledgeEntry(agentId: number, entryId: number): Promise<unknown> {
+    async deleteKnowledgeEntry(agentId: number, entryId: number): Promise<any> {
       return unwrapData(await apiClient.delete(`/agents/${agentId}/knowledge/${entryId}`))
     },
 
@@ -251,7 +251,7 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData<unknown[]>(await apiClient.get(`/agents/${agentId}/knowledge/search${buildQuery(stringParams)}`))
     },
 
-    async listSharedKnowledge(params?: Record<string, unknown>): Promise<unknown> {
+    async listSharedKnowledge(params?: Record<string, unknown>): Promise<any> {
       const stringParams: Record<string, string> = {}
       if (params) {
         Object.entries(params).forEach(([k, v]) => {
@@ -261,7 +261,7 @@ export function createExperienceMethods(apiClient: ApiClient): ExperienceMethods
       return unwrapData(await apiClient.get(`/agents/knowledge/shared${buildQuery(stringParams)}`))
     },
 
-    async autoExtractKnowledge(agentId: number, limit?: number): Promise<unknown> {
+    async autoExtractKnowledge(agentId: number, limit?: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/knowledge/auto-extract${limit ? `?limit=${limit}` : ''}`))
     },
   }

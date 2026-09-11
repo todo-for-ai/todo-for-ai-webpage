@@ -23,42 +23,42 @@ import type {
 import { unwrapData, unwrapList, buildQuery } from './helpers'
 
 export interface SandboxConflictMethods {
-  listSandboxes(params?: Record<string, string>): Promise<unknown>
-  createSandbox(data: Record<string, unknown>): Promise<unknown>
-  getSandbox(sandboxId: number): Promise<unknown>
-  updateSandbox(sandboxId: number, data: Record<string, unknown>): Promise<unknown>
-  deleteSandbox(sandboxId: number): Promise<unknown>
-  bindAgentSandbox(agentId: number, sandboxId: number): Promise<unknown>
-  getAgentSandbox(agentId: number): Promise<unknown>
-  checkSandboxAction(sandboxId: number, action: string, target: string): Promise<unknown>
-  startSandboxExecution(sandboxId: number, data: Record<string, unknown>): Promise<unknown>
-  completeSandboxExecution(executionId: number, data: Record<string, unknown>): Promise<unknown>
-  revokeSandboxExecution(executionId: number): Promise<unknown>
-  reportSandboxViolation(executionId: number, data: Record<string, unknown>): Promise<unknown>
-  getSandboxExecution(executionId: number): Promise<unknown>
-  listSandboxExecutions(sandboxId: number, params?: Record<string, string>): Promise<unknown>
-  getSandboxDashboard(): Promise<unknown>
+  listSandboxes(params?: Record<string, string>): Promise<any>
+  createSandbox(data: Record<string, unknown>): Promise<any>
+  getSandbox(sandboxId: number): Promise<any>
+  updateSandbox(sandboxId: number, data: Record<string, unknown>): Promise<any>
+  deleteSandbox(sandboxId: number): Promise<any>
+  bindAgentSandbox(agentId: number, sandboxId: number): Promise<any>
+  getAgentSandbox(agentId: number): Promise<any>
+  checkSandboxAction(sandboxId: number, action: string, target: string): Promise<any>
+  startSandboxExecution(sandboxId: number, data: Record<string, unknown>): Promise<any>
+  completeSandboxExecution(executionId: number, data: Record<string, unknown>): Promise<any>
+  revokeSandboxExecution(executionId: number): Promise<any>
+  reportSandboxViolation(executionId: number, data: Record<string, unknown>): Promise<any>
+  getSandboxExecution(executionId: number): Promise<any>
+  listSandboxExecutions(sandboxId: number, params?: Record<string, string>): Promise<any>
+  getSandboxDashboard(): Promise<any>
   getSandboxViolationTrend(days?: number): Promise<SandboxViolationTrend>
   getSandboxViolationsByAgent(days?: number, limit?: number): Promise<SandboxViolationsByAgent>
   getSandboxTemplateUsage(): Promise<SandboxTemplateUsage>
-  getStepSandboxExecution(runId: number, stepKey: string): Promise<unknown>
-  reportStepSandboxViolation(runId: number, stepKey: string, data: Record<string, unknown>): Promise<unknown>
-  setStepRuntimeOverride(runId: number, stepKey: string, data: Record<string, unknown>): Promise<unknown>
-  clearStepRuntimeOverride(runId: number, stepKey: string): Promise<unknown>
-  getStepEffectiveParams(runId: number, stepKey: string): Promise<unknown>
-  listSandboxTemplates(): Promise<unknown>
-  instantiateSandboxTemplate(templateKey: string, data: Record<string, unknown>): Promise<unknown>
-  scanConflicts(): Promise<unknown>
-  listConflicts(params?: Record<string, string>): Promise<unknown>
-  getConflict(conflictId: number): Promise<unknown>
-  resolveConflict(conflictId: number, strategy: string, description?: string): Promise<unknown>
-  acknowledgeConflict(conflictId: number): Promise<unknown>
-  ignoreConflict(conflictId: number): Promise<unknown>
+  getStepSandboxExecution(runId: number, stepKey: string): Promise<any>
+  reportStepSandboxViolation(runId: number, stepKey: string, data: Record<string, unknown>): Promise<any>
+  setStepRuntimeOverride(runId: number, stepKey: string, data: Record<string, unknown>): Promise<any>
+  clearStepRuntimeOverride(runId: number, stepKey: string): Promise<any>
+  getStepEffectiveParams(runId: number, stepKey: string): Promise<any>
+  listSandboxTemplates(): Promise<any>
+  instantiateSandboxTemplate(templateKey: string, data: Record<string, unknown>): Promise<any>
+  scanConflicts(): Promise<any>
+  listConflicts(params?: Record<string, string>): Promise<any>
+  getConflict(conflictId: number): Promise<any>
+  resolveConflict(conflictId: number, strategy: string, description?: string): Promise<any>
+  acknowledgeConflict(conflictId: number): Promise<any>
+  ignoreConflict(conflictId: number): Promise<any>
   getConflictsDashboard(): Promise<ConflictsDashboard>
   getConflictsTrend(days?: number): Promise<ConflictsTrend>
   getConflictsByAgent(limit?: number): Promise<ConflictsByAgent>
   getConflictsStrategyStats(): Promise<ConflictsStrategyStats>
-  autoResolveConflicts(): Promise<unknown>
+  autoResolveConflicts(): Promise<any>
   getSecurityEvents(params?: Record<string, unknown>): Promise<ListResult<SecurityEventItem>>
   exportSecurityEvents(params?: Record<string, unknown>): Promise<string>
   getSecurityEventsDailyTrend(params?: Record<string, unknown>): Promise<SecurityDailyTrend>
@@ -67,71 +67,71 @@ export interface SandboxConflictMethods {
   getOrchestratorStatus(): Promise<OrchestratorStatus>
   listOrchestratorHistory(params?: { limit?: number; triggered_by?: string }): Promise<OrchestratorHistoryResult>
   getOrchestratorDailyTrend(params?: { triggered_by?: string; since?: string; until?: string }): Promise<OrchestratorDailyTrend>
-  getAgentReputation(agentId: number): Promise<unknown>
+  getAgentReputation(agentId: number): Promise<any>
   listReputations(): Promise<unknown[]>
-  recalculateReputation(agentId: number): Promise<unknown>
+  recalculateReputation(agentId: number): Promise<any>
   getAgentReputationHistory(agentId: number, params?: { since?: string; until?: string; limit?: number }): Promise<ReputationHistory>
 }
 
 export function createSandboxConflictMethods(apiClient: ApiClient): SandboxConflictMethods {
   return {
-    async listSandboxes(params?: Record<string, string>): Promise<unknown> {
+    async listSandboxes(params?: Record<string, string>): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/sandboxes${buildQuery(params)}`))
     },
 
-    async createSandbox(data: Record<string, unknown>): Promise<unknown> {
+    async createSandbox(data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post('/agents/sandboxes', data))
     },
 
-    async getSandbox(sandboxId: number): Promise<unknown> {
+    async getSandbox(sandboxId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/sandboxes/${sandboxId}`))
     },
 
-    async updateSandbox(sandboxId: number, data: Record<string, unknown>): Promise<unknown> {
+    async updateSandbox(sandboxId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.put(`/agents/sandboxes/${sandboxId}`, data))
     },
 
-    async deleteSandbox(sandboxId: number): Promise<unknown> {
+    async deleteSandbox(sandboxId: number): Promise<any> {
       return unwrapData(await apiClient.delete(`/agents/sandboxes/${sandboxId}`))
     },
 
-    async bindAgentSandbox(agentId: number, sandboxId: number): Promise<unknown> {
+    async bindAgentSandbox(agentId: number, sandboxId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/sandbox/${sandboxId}/bind`))
     },
 
-    async getAgentSandbox(agentId: number): Promise<unknown> {
+    async getAgentSandbox(agentId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/${agentId}/sandbox`))
     },
 
-    async checkSandboxAction(sandboxId: number, action: string, target: string): Promise<unknown> {
+    async checkSandboxAction(sandboxId: number, action: string, target: string): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/sandboxes/${sandboxId}/check`, { action, target }))
     },
 
-    async startSandboxExecution(sandboxId: number, data: Record<string, unknown>): Promise<unknown> {
+    async startSandboxExecution(sandboxId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/sandboxes/${sandboxId}/executions`, data))
     },
 
-    async completeSandboxExecution(executionId: number, data: Record<string, unknown>): Promise<unknown> {
+    async completeSandboxExecution(executionId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/sandbox-executions/${executionId}/complete`, data))
     },
 
-    async revokeSandboxExecution(executionId: number): Promise<unknown> {
+    async revokeSandboxExecution(executionId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/sandbox-executions/${executionId}/revoke`))
     },
 
-    async reportSandboxViolation(executionId: number, data: Record<string, unknown>): Promise<unknown> {
+    async reportSandboxViolation(executionId: number, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/sandbox-executions/${executionId}/violation`, data))
     },
 
-    async getSandboxExecution(executionId: number): Promise<unknown> {
+    async getSandboxExecution(executionId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/sandbox-executions/${executionId}`))
     },
 
-    async listSandboxExecutions(sandboxId: number, params?: Record<string, string>): Promise<unknown> {
+    async listSandboxExecutions(sandboxId: number, params?: Record<string, string>): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/sandboxes/${sandboxId}/executions${buildQuery(params)}`))
     },
 
-    async getSandboxDashboard(): Promise<unknown> {
+    async getSandboxDashboard(): Promise<any> {
       return unwrapData(await apiClient.get('/agents/sandbox-dashboard'))
     },
 
@@ -147,55 +147,55 @@ export function createSandboxConflictMethods(apiClient: ApiClient): SandboxConfl
       return unwrapData<SandboxTemplateUsage>(await apiClient.get('/agents/sandbox-analytics/template-usage'))
     },
 
-    async getStepSandboxExecution(runId: number, stepKey: string): Promise<unknown> {
+    async getStepSandboxExecution(runId: number, stepKey: string): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/workflow-runs/${runId}/steps/${stepKey}/sandbox-execution`))
     },
 
-    async reportStepSandboxViolation(runId: number, stepKey: string, data: Record<string, unknown>): Promise<unknown> {
+    async reportStepSandboxViolation(runId: number, stepKey: string, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/workflow-runs/${runId}/steps/${stepKey}/sandbox-violation`, data))
     },
 
-    async setStepRuntimeOverride(runId: number, stepKey: string, data: Record<string, unknown>): Promise<unknown> {
+    async setStepRuntimeOverride(runId: number, stepKey: string, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/workflow-runs/${runId}/steps/${stepKey}/runtime-override`, data))
     },
 
-    async clearStepRuntimeOverride(runId: number, stepKey: string): Promise<unknown> {
+    async clearStepRuntimeOverride(runId: number, stepKey: string): Promise<any> {
       return unwrapData(await apiClient.delete(`/agents/workflow-runs/${runId}/steps/${stepKey}/runtime-override`))
     },
 
-    async getStepEffectiveParams(runId: number, stepKey: string): Promise<unknown> {
+    async getStepEffectiveParams(runId: number, stepKey: string): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/workflow-runs/${runId}/steps/${stepKey}/effective-params`))
     },
 
-    async listSandboxTemplates(): Promise<unknown> {
+    async listSandboxTemplates(): Promise<any> {
       return unwrapData(await apiClient.get('/agents/sandbox-templates'))
     },
 
-    async instantiateSandboxTemplate(templateKey: string, data: Record<string, unknown>): Promise<unknown> {
+    async instantiateSandboxTemplate(templateKey: string, data: Record<string, unknown>): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/sandbox-templates/${templateKey}/instantiate`, data))
     },
 
-    async scanConflicts(): Promise<unknown> {
+    async scanConflicts(): Promise<any> {
       return unwrapData(await apiClient.post('/agents/conflicts/scan'))
     },
 
-    async listConflicts(params?: Record<string, string>): Promise<unknown> {
+    async listConflicts(params?: Record<string, string>): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/conflicts${buildQuery(params)}`))
     },
 
-    async getConflict(conflictId: number): Promise<unknown> {
+    async getConflict(conflictId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/conflicts/${conflictId}`))
     },
 
-    async resolveConflict(conflictId: number, strategy: string, description?: string): Promise<unknown> {
+    async resolveConflict(conflictId: number, strategy: string, description?: string): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/conflicts/${conflictId}/resolve`, { strategy, description }))
     },
 
-    async acknowledgeConflict(conflictId: number): Promise<unknown> {
+    async acknowledgeConflict(conflictId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/conflicts/${conflictId}/acknowledge`))
     },
 
-    async ignoreConflict(conflictId: number): Promise<unknown> {
+    async ignoreConflict(conflictId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/conflicts/${conflictId}/ignore`))
     },
 
@@ -215,7 +215,7 @@ export function createSandboxConflictMethods(apiClient: ApiClient): SandboxConfl
       return unwrapData<ConflictsStrategyStats>(await apiClient.get('/agents/conflicts-analytics/strategy-stats'))
     },
 
-    async autoResolveConflicts(): Promise<unknown> {
+    async autoResolveConflicts(): Promise<any> {
       return unwrapData(await apiClient.post('/agents/conflicts/auto-resolve'))
     },
 
@@ -276,7 +276,7 @@ export function createSandboxConflictMethods(apiClient: ApiClient): SandboxConfl
       return unwrapData<OrchestratorDailyTrend>(await apiClient.get(`/agents/orchestrator/daily-trend${buildQuery(params as Record<string, string>)}`))
     },
 
-    async getAgentReputation(agentId: number): Promise<unknown> {
+    async getAgentReputation(agentId: number): Promise<any> {
       return unwrapData(await apiClient.get(`/agents/${agentId}/reputation`))
     },
 
@@ -284,7 +284,7 @@ export function createSandboxConflictMethods(apiClient: ApiClient): SandboxConfl
       return unwrapData<unknown[]>(await apiClient.get('/agents/reputations'))
     },
 
-    async recalculateReputation(agentId: number): Promise<unknown> {
+    async recalculateReputation(agentId: number): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/${agentId}/reputation/recalculate`))
     },
 

@@ -71,7 +71,7 @@ export const TaskListSection: React.FC<TaskListSectionProps> = ({
       cancelText: tp('tasks.confirm.delete.cancel'),
       onOk: async () => {
         try {
-          await batchUpdateTaskStatus(selectedTaskIds, status)
+          await batchUpdateTaskStatus(selectedTaskIds, status as 'todo' | 'blocked' | 'in_progress' | 'review' | 'done' | 'cancelled')
           message.success(tp('tasks.table.bulkActions.statusChangeSuccess', { count: selectedTaskIds.length, status: getStatusLabel(status) }))
           setBatchStatusValue(undefined)
           handleClearSelection()

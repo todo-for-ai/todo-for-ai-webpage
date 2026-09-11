@@ -2,14 +2,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { message } from 'antd'
 import { organizationsApi, type Organization } from '../../../api/organizations'
-import {
-  agentsApi,
-  type Agent,
-  type AgentListResponse,
-  type AgentStatus,
-  type CreateAgentRequest,
-  type UpdateAgentRequest,
-} from '../../../api/agents'
+import { agentsApi } from '../../../api/agents/agents'
+import type {
+  WorkspaceAgent as Agent,
+  WorkspaceAgentListResponse as AgentListResponse,
+  WorkspaceAgentStatus as AgentStatus,
+  CreateWorkspaceAgentRequest as CreateAgentRequest,
+  UpdateWorkspaceAgentRequest as UpdateAgentRequest,
+} from '../../../api/agents/types'
 import i18n from '../../../i18n'
 
 const emptyPagination: AgentListResponse['pagination'] = {

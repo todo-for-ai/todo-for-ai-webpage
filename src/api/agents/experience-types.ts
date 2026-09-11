@@ -69,6 +69,7 @@ export interface ExperiencesReuseTrendBucket {
   reuse_count: number
   avg_confidence: number
   decayed: number
+  decay_rate?: number
 }
 
 export interface ExperiencesReuseTrend {

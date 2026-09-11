@@ -2,12 +2,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Space, message } from 'antd'
 import { LockOutlined } from '@ant-design/icons'
-import {
-  agentsApi,
-  type AgentSecret,
-  type AgentSecretCollaborationResponse,
-  type AgentSecretShare,
+import type {
+  AgentSecret,
+  AgentSecretCollaborationResponse,
+  AgentSecretShare,
 } from '../../../api/agents'
+import { agentsApi } from '../../../api/agents/agents'
 import { useAgentSecrets } from '../hooks/useAgentSecrets'
 import { useTranslation } from 'react-i18next'
 import { CreateSecretModal } from './secrets/CreateSecretModal'

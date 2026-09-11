@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { message } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { agentsApi } from '../../api/agents'
+import { agentsApi } from '../../api/agents/agents'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { AgentEditorForm } from './components/AgentEditorForm'
 import { useAgentWorkspaceOptions } from './hooks/useAgentWorkspaceOptions'

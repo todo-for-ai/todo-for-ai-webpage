@@ -160,7 +160,7 @@ const TaskDelegation: React.FC<TaskDelegationProps> = ({
                 }}
               />
               <span style={{ flex: 1 }}>{agent.name}</span>
-              {agent.role && <Tag size="small">{agent.role}</Tag>}
+              {agent.role && <Tag>{agent.role}</Tag>}
             </div>
           </Popconfirm>
         ),

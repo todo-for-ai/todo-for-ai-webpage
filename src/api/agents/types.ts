@@ -57,6 +57,62 @@ export interface Agent {
     active_assignments: number
     total_runs: number
   }
+
+  // ── 以下与后端 models/agent.py to_dict 对齐 ──
+  // 归属
+  workspace_id?: number | null
+  creator_user_id?: number | null
+
+  // 展示
+  display_name?: string
+  avatar_url?: string
+  homepage_url?: string
+  contact_email?: string
+
+  // 能力与项目边界
+  capability_tags?: string[]
+  allowed_project_ids?: number[]
+
+  // LLM 参数（平台侧调参）
+  llm_provider?: string
+  llm_model?: string
+  temperature?: number | null
+  top_p?: number | null
+  max_output_tokens?: number | null
+  context_window_tokens?: number | null
+  reasoning_mode?: string
+  system_prompt?: string
+  soul_markdown?: string
+  response_style?: Record<string, unknown> | null
+  tool_policy?: Record<string, unknown> | null
+  memory_policy?: Record<string, unknown> | null
+  handoff_policy?: Record<string, unknown> | null
+
+  // 执行与运行时
+  execution_mode: string
+  runner_enabled: boolean
+  sandbox_profile: string
+  sandbox_policy?: { network_mode?: string; allowed_domains?: string[] } | null
+  max_concurrency?: number
+  max_retry?: number
+  timeout_seconds?: number
+  heartbeat_interval_seconds?: number
+  soul_version?: number
+  config_version?: number
+  runner_config_version?: number
+  notification_channels?: Record<string, unknown> | null
+
+  // 角色模板与画像
+  role_template_id?: number | null
+  role?: {
+    id: number
+    name: string
+    display_name?: string
+    category?: string
+  } | null
+  skill_profile?: Record<string, unknown> | null
+  is_system?: boolean
+  is_owner?: boolean
 }
 
 export interface TaskAssignment {
@@ -90,6 +146,12 @@ export interface AgentRun {
   error?: string
   input_snapshot: Record<string, unknown>
   run_metadata: Record<string, unknown>
+  // 运行时链路字段（调度/触发/失败归因）
+  run_id?: string
+  attempt?: number
+  trigger_reason?: string
+  failure_reason?: string
+  failure_code?: string
 }
 
 export interface TaskEvent {
@@ -458,6 +520,7 @@ export interface WorkspaceAgent {
   created_at: string
   updated_at: string
   created_by?: string
+  is_owner?: boolean
 }
 
 export interface WorkspaceAgentListResponse {

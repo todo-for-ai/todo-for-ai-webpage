@@ -120,7 +120,7 @@ class GitHubService {
         let apiUrl: string
         let fetchOptions: RequestInit
         const baseUrl = typeof window !== 'undefined'
-          ? (window.__API_BASE_URL__ || '/todo-for-ai/api/v1')
+          ? ((window as unknown as Record<string, string | undefined>).__API_BASE_URL__ || '/todo-for-ai/api/v1')
           : '/todo-for-ai/api/v1'
         apiUrl = `${baseUrl}/github/repo/${owner}/${repo}`
         fetchOptions = { signal: controller.signal }

@@ -68,9 +68,9 @@ export interface CoreMethods {
   deleteSharedContext(taskId: number, entryId: number): Promise<void>
   getRunLogs(runId: number, params?: { since_id?: number; level?: RunLogLevel; per_page?: number }): Promise<{ items: RunLogEntry[]; latest_id: number; since_id?: number; run_id: number }>
   getTaskTemplates(): Promise<unknown[]>
-  createTaskTemplate(data: { name: string; description?: string; title_template?: string; content_template?: string; priority?: string; tags?: string[]; is_ai_task?: boolean; capabilities?: string[] }): Promise<unknown>
+  createTaskTemplate(data: { name: string; description?: string; title_template?: string; content_template?: string; priority?: string; tags?: string[]; is_ai_task?: boolean; capabilities?: string[] }): Promise<any>
   deleteTaskTemplate(id: number): Promise<void>
-  instantiateTaskTemplate(templateId: number, data: { project_id: number; title?: string; content?: string }): Promise<unknown>
+  instantiateTaskTemplate(templateId: number, data: { project_id: number; title?: string; content?: string }): Promise<any>
 }
 
 export function createCoreMethods(apiClient: ApiClient): CoreMethods {
@@ -203,7 +203,7 @@ export function createCoreMethods(apiClient: ApiClient): CoreMethods {
       return unwrapData<unknown[]>(await apiClient.get('/agents/task-templates'))
     },
 
-    async createTaskTemplate(data: { name: string; description?: string; title_template?: string; content_template?: string; priority?: string; tags?: string[]; is_ai_task?: boolean; capabilities?: string[] }): Promise<unknown> {
+    async createTaskTemplate(data: { name: string; description?: string; title_template?: string; content_template?: string; priority?: string; tags?: string[]; is_ai_task?: boolean; capabilities?: string[] }): Promise<any> {
       return unwrapData(await apiClient.post('/agents/task-templates', data))
     },
 
@@ -211,7 +211,7 @@ export function createCoreMethods(apiClient: ApiClient): CoreMethods {
       await apiClient.delete(`/agents/task-templates/${id}`)
     },
 
-    async instantiateTaskTemplate(templateId: number, data: { project_id: number; title?: string; content?: string }): Promise<unknown> {
+    async instantiateTaskTemplate(templateId: number, data: { project_id: number; title?: string; content?: string }): Promise<any> {
       return unwrapData(await apiClient.post(`/agents/task-templates/${templateId}/instantiate`, data))
     },
   }

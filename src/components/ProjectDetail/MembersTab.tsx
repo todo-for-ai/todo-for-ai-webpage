@@ -35,7 +35,7 @@ const MembersTab: React.FC<{ projectId: number }> = ({ projectId }) => {
     setLoading(true)
     try {
       const result = await agentsApi.getProjectMembers(projectId)
-      setMembers(result)
+      setMembers(result as MemberItem[])
     } catch {
       message.error('加载成员列表失败')
     } finally {

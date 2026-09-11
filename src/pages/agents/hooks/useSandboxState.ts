@@ -5,7 +5,7 @@
  */
 import { useState, useCallback } from 'react'
 import { message } from 'antd'
-import { agentsApi } from '../../api/agents'
+import { agentsApi } from '../../../api/agents'
 
 export interface SandboxForm {
   name: string

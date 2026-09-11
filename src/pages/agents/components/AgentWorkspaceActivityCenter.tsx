@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, Empty, Input, InputNumber, Select, Space, Table, Tag, Typography } from 'antd'
 import type { AgentActivityItem } from '../../../api/agents'
-import { agentInsightsApi, agentsApi } from '../../../api/agents'
+import { agentInsightsApi } from '../../../api/agents'
+import { agentsApi } from '../../../api/agents/agents'
 import { usePageTranslation } from '../../../i18n/hooks/useTranslation'
 import {
   activityLevelValues,

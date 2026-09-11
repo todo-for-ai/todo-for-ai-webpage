@@ -16,10 +16,6 @@ const APITokenManager: React.FC = () => {
   const [revealedTokens, setRevealedTokens] = useState<Record<number, string>>({})
   const [revealingTokenIds, setRevealingTokenIds] = useState<Set<number>>(new Set())
 
-  useEffect(() => {
-    loadTokens()
-  }, [loadTokens])
-
   const loadTokens = useCallback(async () => {
     setLoading(true)
     try {
@@ -32,9 +28,13 @@ const APITokenManager: React.FC = () => {
     }
   }, [tc])
 
+  useEffect(() => {
+    loadTokens()
+  }, [loadTokens])
+
   const handleCreateToken = async (values: Record<string, unknown>) => {
     try {
-      await apiTokensApi.create(values)
+      await apiTokensApi.create(values as never)
       message.success(tc('apiTokenManager.messages.createSuccess'))
       setModalVisible(false)
       form.resetFields()

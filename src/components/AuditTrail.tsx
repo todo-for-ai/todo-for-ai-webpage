@@ -23,6 +23,7 @@ import type { ColumnsType } from 'antd/es/table'
 import { auditEventsApi } from '../api/auditEvents.js'
 import type { AuditEvent, AuditStats } from '../api/auditEvents.js'
 import { getErrorMessage } from '../utils/errorUtils.js'
+import dayjs from 'dayjs'
 
 const { RangePicker } = DatePicker
 const { Text } = Typography
