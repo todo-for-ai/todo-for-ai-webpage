@@ -47,6 +47,7 @@ import {
 import { useAgentSandboxPanel } from './agents/hooks/useAgentSandboxPanel'
 import { useAgentChannelsPanel } from './agents/hooks/useAgentChannelsPanel'
 import { useAgentIntelligencePanel } from './agents/hooks/useAgentIntelligencePanel'
+import { useAgentInboxDmTasks } from './agents/hooks/useAgentInboxDmTasks'
 import { useAgentCollabKnowledgePanel } from './agents/hooks/useAgentCollabKnowledgePanel'
 import {
   agentsApi,
@@ -102,11 +103,6 @@ const Agents: React.FC = () => {
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
   const [feedbackReviewItem, setFeedbackReviewItem] = useState<ReviewQueueItem | null>(null)
   const [liveMode, setLiveMode] = useState(true)
-  const [inboxItems, setInboxItems] = useState<TaskEvent[]>([])
-  const [inboxLoading, setInboxLoading] = useState(false)
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
   const [broadcastOpen, setBroadcastOpen] = useState(false)
   const [broadcastAgent, setBroadcastAgent] = useState<Agent | null>(null)
@@ -137,18 +133,7 @@ const Agents: React.FC = () => {
       }))
   }, [agents, dispatchPreviewAgent?.id, dispatchPreviewOptions.include_self])
 
-  // Direct message state
-  const [dmOpen, setDmOpen] = useState(false)
-  const [dmFrom, setDmFrom] = useState<Agent | null>(null)
-  const [dmTo, setDmTo] = useState<Agent | null>(null)
-  const [dmContent, setDmContent] = useState('')
-  const [dmSending, setDmSending] = useState(false)
 
-  // Recommended tasks
-  const [recTasksOpen, setRecTasksOpen] = useState(false)
-  const [recTasksAgent, setRecTasksAgent] = useState<Agent | null>(null)
-  const [recTasks, setRecTasks] = useState<any[]>([])
-  const [recTasksLoading, setRecTasksLoading] = useState(false)
 
   // Channels
   // 频道/聊天领域块已抽至 agents/hooks/useAgentChannelsPanel.ts（原样搬移）
@@ -160,6 +145,16 @@ const Agents: React.FC = () => {
     loadChannels, openChannels, createChannel, openChat,
     sendChatMessage,
   } = useAgentChannelsPanel()
+
+  // 低耦合三小块已抽至 agents/hooks/useAgentInboxDmTasks.ts（原样搬移）
+  const {
+    inboxItems, inboxLoading, notifications, unreadCount, notificationsLoading,
+    dmOpen, setDmOpen, dmFrom, setDmFrom, dmTo, setDmTo, dmContent, setDmContent,
+    dmSending, recTasksOpen, setRecTasksOpen, recTasksAgent, setRecTasksAgent,
+    recTasks, setRecTasks, recTasksLoading,
+    sendDirectMessage, loadRecommendedTasks,
+    loadInbox, loadNotifications, markAllRead,
+  } = useAgentInboxDmTasks()
 
   // Agent 智能面板领域块已抽至 agents/hooks/useAgentIntelligencePanel.ts（原样搬移）
   const {
@@ -580,40 +575,7 @@ const Agents: React.FC = () => {
     }
   }
 
-  const sendDirectMessage = async () => {
-    if (!dmFrom || !dmTo || !dmContent.trim()) {
-      message.warning('请选择发送方和接收方，并输入消息内容')
-      return
-    }
-    setDmSending(true)
-    try {
-      await agentsApi.sendAgentMessage(dmFrom.id, dmTo.id, { content: dmContent.trim() })
-      message.success(`消息已发送给 ${dmTo.name}`)
-      setDmOpen(false)
-      setDmFrom(null)
-      setDmTo(null)
-      setDmContent('')
-    } catch {
-      message.error('消息发送失败')
-    } finally {
-      setDmSending(false)
-    }
-  }
 
-  const loadRecommendedTasks = async (agent: Agent) => {
-    setRecTasksAgent(agent)
-    setRecTasksOpen(true)
-    setRecTasksLoading(true)
-    try {
-      const result = await agentsApi.getRecommendedTasks(agent.id, { limit: 20 })
-      setRecTasks(Array.isArray(result) ? result : [])
-    } catch {
-      message.error('加载推荐任务失败')
-      setRecTasks([])
-    } finally {
-      setRecTasksLoading(false)
-    }
-  }
 
 
 
@@ -811,40 +773,8 @@ const Agents: React.FC = () => {
     }
   }
 
-  const loadInbox = async (agent: Agent) => {
-    setInboxLoading(true)
-    try {
-      const result = await agentsApi.getAgentInbox(agent.id, { per_page: 20 })
-      setInboxItems(result.items || [])
-    } catch {
-      message.error('加载收件箱失败')
-    } finally {
-      setInboxLoading(false)
-    }
-  }
 
-  const loadNotifications = async () => {
-    setNotificationsLoading(true)
-    try {
-      const result = await agentsApi.getNotifications({ per_page: 30 })
-      setNotifications(result.items || [])
-      setUnreadCount(result.unread_count || 0)
-    } catch {
-      // silent
-    } finally {
-      setNotificationsLoading(false)
-    }
-  }
 
-  const markAllRead = async () => {
-    try {
-      await agentsApi.markNotificationsRead({ all: true })
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
-      setUnreadCount(0)
-    } catch {
-      message.error('标记已读失败')
-    }
-  }
 
   const loadDashboardStats = async () => {
     try {
