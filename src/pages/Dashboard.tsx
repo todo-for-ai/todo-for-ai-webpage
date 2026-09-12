@@ -39,6 +39,11 @@ import SecurityEventDetailModal from '../components/SecurityEventDetailModal'
 import CollabGraphCard from './dashboard/CollabGraphCard'
 import TimelineReplayCard from './dashboard/TimelineReplayCard'
 import RecentProjectsTasksCard from './dashboard/RecentProjectsTasksCard'
+import UnifiedTrendCard from './dashboard/UnifiedTrendCard'
+import TopOrganizationsRow from './dashboard/TopOrganizationsRow'
+import OrgAgentStatsRow from './dashboard/OrgAgentStatsRow'
+import CollabOverviewRow from './dashboard/CollabOverviewRow'
+import AgentStatsRow from './dashboard/AgentStatsRow'
 import CollaborationGraphView from '../components/CollaborationGraphView'
 import ReputationTrendPopover from '../components/ReputationTrendPopover'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
@@ -683,171 +688,32 @@ const Dashboard = () => {
       <Title level={4} style={{ marginTop: 0 }}>
         {tp('sections.ownedScope')}
       </Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.ownedProjects')}
-              value={owned.projects.total || 0}
-              prefix={<ProjectOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.ownedTasks')}
-              value={owned.tasks.total || 0}
-              prefix={<CheckSquareOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.ownedInProgress')}
-              value={(owned.tasks.in_progress || 0) + (owned.tasks.review || 0)}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.ownedAiExecuting')}
-              value={owned.tasks.ai_executing || 0}
-              prefix={<RobotOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <AgentStatsRow
+        loading={ loading }
+        owned={ owned }
+        stats={ stats }
+      />
 
       {/* Agent 协作概览 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title={tp('agentCollaboration.activeAgents')}
-              value={agentCollaboration?.agents.active || 0}
-              prefix={<TeamOutlined />}
-              suffix={`/ ${agentCollaboration?.agents.total || 0}`}
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title={tp('agentCollaboration.activeAssignments')}
-              value={agentCollaboration?.assignments.active || 0}
-              prefix={<RobotOutlined />}
-              valueStyle={{ color: '#13c2c2' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title={tp('agentCollaboration.waitingHuman')}
-              value={agentCollaboration?.assignments.waiting_human || 0}
-              prefix={<ExclamationCircleOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title={tp('agentCollaboration.reviewAndExpired')}
-              value={reviewOrExpiredAssignments}
-              prefix={hasExpiredLeases ? <FieldTimeOutlined /> : <SafetyCertificateOutlined />}
-              valueStyle={{ color: hasExpiredLeases ? '#cf1322' : '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <CollabOverviewRow
+        agentCollaboration={ agentCollaboration }
+        hasExpiredLeases={ hasExpiredLeases }
+        reviewOrExpiredAssignments={ reviewOrExpiredAssignments }
+      />
 
       <Title level={4}>{tp('sections.organizationAgentStats')}</Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={8}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.totalOrganizations')}
-              value={orgSummary.total || 0}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.totalAgents')}
-              value={orgSummary.total_agents || 0}
-              prefix={<RobotOutlined />}
-              valueStyle={{ color: '#531dab' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card loading={loading}>
-            <Statistic
-              title={tp('stats.activeAgents7d')}
-              value={orgSummary.active_agents_7d || 0}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#389e0d' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <OrgAgentStatsRow
+        loading={ loading }
+        orgSummary={ orgSummary }
+        stats={ stats }
+      />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24}>
-          <Card title={tp('sections.topOrganizations')} variant="borderless" loading={loading}>
-            {topOrganizations.length > 0 ? (
-              <List
-                dataSource={topOrganizations}
-                renderItem={(item) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      avatar={<TeamOutlined style={{ color: '#1677ff' }} />}
-                      title={
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span>{item.organization_name}</span>
-                          <Tag color="blue">
-                            {tp('labels.myRole')}: {item.my_role}
-                          </Tag>
-                        </div>
-                      }
-                      description={
-                        <div>
-                          <div>
-                            {tp('stats.activeAgents7d')}: <strong>{item.active_agents_7d}</strong> / {tp('stats.totalAgents')}:{' '}
-                            <strong>{item.total_agents}</strong>
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                            <CalendarOutlined style={{ marginRight: '4px' }} />
-                            {tp('labels.lastAgentActivity')}: {formatDateTime(item.last_agent_activity_at)}
-                          </div>
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
-                <TeamOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
-                <div>{tp('empty.noOrganizations')}</div>
-              </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
+      <TopOrganizationsRow
+        formatDateTime={ formatDateTime }
+        loading={ loading }
+        stats={ stats }
+        topOrganizations={ topOrganizations }
+      />
 
       {/* 活跃度热力图 */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
@@ -898,51 +764,17 @@ const Dashboard = () => {
 
 
       {/* 平台活动统一趋势：编排活动 + 安全事件同时间轴 */}
-      <Card
-        title={<Space><LineChartOutlined /> 平台活动统一趋势</Space>}
-        style={{ marginBottom: 24 }}
-        extra={
-          <Space wrap>
-            <Segmented
-              size="small"
-              value={trendEventType || 'all'}
-              onChange={(v) => setTrendEventType(v === 'all' ? '' : v as string)}
-              options={[
-                { value: 'all', label: '全类型' },
-                { value: 'sandbox_violation', label: '沙盒' },
-                { value: 'conflict', label: '冲突' },
-                { value: 'audit', label: '审计' },
-              ]}
-            />
-            <Segmented
-              size="small"
-              value={trendSeverity || 'all'}
-              onChange={(v) => setTrendSeverity(v === 'all' ? '' : v as string)}
-              options={[
-                { value: 'all', label: '全部' },
-                { value: 'CRITICAL', label: '高危' },
-                { value: 'WARNING', label: '警告' },
-                { value: 'INFO', label: '普通' },
-              ]}
-            />
-            <Segmented
-              size="small"
-              value={trendWindow}
-              onChange={(v) => setTrendWindow(v as string)}
-              options={[
-                { value: '7', label: '7天' },
-                { value: '30', label: '30天' },
-                { value: 'all', label: '全部' },
-              ]}
-            />
-          </Space>
-        }
-      >
-        <PlatformActivityTrendSection
-          orchestratorTrend={orchDailyTrend}
-          securityTrend={unifiedSecTrend}
-        />
-      </Card>
+      <UnifiedTrendCard
+        orchDailyTrend={ orchDailyTrend }
+        securityTrend={ securityTrend }
+        trendEventType={ trendEventType }
+        trendSeverity={ trendSeverity }
+        trendWindow={ trendWindow }
+        unifiedSecTrend={ unifiedSecTrend }
+        setTrendEventType={ setTrendEventType }
+        setTrendSeverity={ setTrendSeverity }
+        setTrendWindow={ setTrendWindow }
+      />
 
       {/* Agent Real-time Monitor */}
       <AgentMonitorCard
