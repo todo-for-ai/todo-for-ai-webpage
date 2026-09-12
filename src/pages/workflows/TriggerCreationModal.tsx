@@ -1,30 +1,19 @@
-/**
- * Workflows「TriggerCreationModal」面板（从 Workflows.tsx 原样抽出）。
- */
+import { useMemo, useState } from 'react'
+import { Form, Input, Modal, Select, Typography } from 'antd'
 
-import { useState } from 'react'
-import { Modal, Form, Input, InputNumber, Select, DatePicker } from 'antd'
 const { Option } = Select
-import { ThunderboltOutlined } from '@ant-design/icons'
-import { usePageTranslation } from '../../i18n/hooks/useTranslation'
-
+const { Text } = Typography
 interface Props {
-  triggerModalOpen: any
-  setTriggerModalOpen: any
-  triggerTargetWfId: any
   handleCreateTrigger: any
-  triggerForm: any
+  triggerModalOpen: any
+  triggerTargetWfId: any
   workflows: any
+  setTriggerModalOpen: any
+  triggerForm: any
 }
 
 export default function TriggerCreationModal(props: Props) {
-  const { triggerModalOpen,
-    setTriggerModalOpen,
-    triggerTargetWfId,
-    handleCreateTrigger,
-    triggerForm,
-    workflows } = props
-  const { Option } = Select
+  const { handleCreateTrigger, setTriggerModalOpen, triggerForm, triggerModalOpen, triggerTargetWfId, workflows } = props
 
   return (
     <>
