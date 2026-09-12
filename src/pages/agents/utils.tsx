@@ -263,3 +263,12 @@ export const renderCapabilities = (capabilities: string[] = [], limit = 4) => {
   )
 }
 
+
+export const statusColorMap: Record<string, string> = {
+  active: 'green',
+  inactive: 'orange',
+  revoked: 'default',
+}
+
+type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration' | 'teams' | 'audit' | 'review'
+export type { WorkspaceTabKey }

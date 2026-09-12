@@ -43,19 +43,12 @@ import {
   saveAgentsViewModeToIndexedDb,
   type AgentsViewMode,
 } from './storage'
+import { statusColorMap, type WorkspaceTabKey } from './utils'
 import './AgentsPage.css'
 import { PageIntro } from '../../components/common/PageIntro'
 
 const { Title, Paragraph, Text } = Typography
 const { Search } = Input
-
-const statusColorMap: Record<string, string> = {
-  active: 'green',
-  inactive: 'orange',
-  revoked: 'default',
-}
-
-type WorkspaceTabKey = 'agents' | 'activity_center' | 'collaboration' | 'teams' | 'audit' | 'review'
 
 export default function AgentsPage() {
   const { tp, tc, pageTitle, pageSubtitle } = usePageTranslation('agents')
