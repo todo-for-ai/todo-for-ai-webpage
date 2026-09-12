@@ -1,0 +1,831 @@
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Typography, Card, Row, Col, Statistic, Spin, message, List, Tag, Select, Table, Tooltip, Empty, Space, Button, Popconfirm, Modal, DatePicker, Segmented, Input, InputNumber, Dropdown, Checkbox, Slider, Badge, Alert } from 'antd'
+import {
+  ProjectOutlined,
+  CheckSquareOutlined,
+  ClockCircleOutlined,
+  RobotOutlined,
+  CalendarOutlined,
+  ExclamationCircleOutlined,
+  FieldTimeOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
+  ApartmentOutlined,
+  SwapOutlined,
+  DashboardOutlined,
+  ReloadOutlined,
+  ThunderboltOutlined,
+  CheckCircleOutlined,
+  SafetyOutlined,
+  WarningOutlined,
+  HistoryOutlined,
+  DownloadOutlined,
+  DownOutlined,
+  LineChartOutlined,
+  ShareAltOutlined,
+  SearchOutlined,
+  ExpandOutlined,
+} from '@ant-design/icons'
+import dayjs from 'dayjs'
+import { dashboardApi, type DashboardStats } from '../../api/dashboard'
+import { tasksApi, type TaskDependencyChainAnalysis, type TaskCommentSentimentTrend, type TaskReworkAnalysis } from '../../api/tasks'
+import { agentsApi, type OrchestrationResult, type OrchestratorStatus, type OrchestratorHistoryResult, type OrchestratorDailyTrend, type SecurityDailyTrend, type SecurityByAgent, type CollaborationGraph, type CollaborationGraphTimeline, type TaskAllocationFairness, type AgentRunResourceTrend, type SandboxViolationTrend, type SandboxViolationsByAgent, type SandboxTemplateUsage, type AgentSkillMatching, type AgentTaskHandoffStats, type AgentWorkloadForecast, type KnowledgePropagationNetwork, type ProtocolDecisionLatency, type AgentSpecializationEvolution, type AgentExperiencesDecayAlerts, type AgentCrossProjectEfficiency, type AgentCapabilitySupplyDemand, type AgentIdleRanking } from '../../api/agents'
+import MiniTrendChart from '../../components/MiniTrendChart'
+import SecurityTrendSection from '../../components/SecurityTrendSection'
+import SecurityEventListItem from '../../components/SecurityEventListItem'
+import CollaborationGraphView from '../../components/CollaborationGraphView'
+import ReputationTrendPopover from '../../components/ReputationTrendPopover'
+import PlatformActivityTrendSection from '../../components/PlatformActivityTrendSection'
+import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { useCollaborationSSE } from '../../hooks/useCollaborationSSE'
+
+const { Title, Paragraph, Text } = Typography
+
+const _formatDuration = (seconds: number): string => {
+  if (seconds < 60) return `${Math.round(seconds)}秒`
+  if (seconds < 3600) return `${Math.round(seconds / 60)}分钟`
+  return `${(seconds / 3600).toFixed(1)}小时`
+}
+
+const _KIND_LABELS: Record<string, string> = {
+  assistant: '助手',
+  autonomous: '自主',
+  coordinator: '协调者',
+  external: '外部',
+}
+
+const IDLE_STAGE_COLOR: Record<string, string> = { active: '#52c41a', idle: '#1890ff', stale: '#faad14', dormant: '#ff4d4f', never: '#8c8c8c' }
+const IDLE_STAGE_ZH: Record<string, string> = { active: '活跃', idle: '空闲', stale: '陈旧', dormant: '休眠', never: '从未' }
+const stageColor = (s: string) => IDLE_STAGE_COLOR[s] || '#8c8c8c'
+const stageZh = (s: string) => IDLE_STAGE_ZH[s] || s
+
+
+
+export function useDashboardData() {
+  const navigate = useNavigate()
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const { tp, tc, pageTitle } = usePageTranslation('dashboard')
+
+  // Collaboration metrics state
+  const [collabMetrics, setCollabMetrics] = useState<any>(null)
+  const [collabLoading, setCollabLoading] = useState(false)
+  const [collabDays, setCollabDays] = useState(7)
+
+  // Agent monitor state
+  const [monitorData, setMonitorData] = useState<any>(null)
+  const [monitorLoading, setMonitorLoading] = useState(false)
+  const [monitorHours, setMonitorHours] = useState(24)
+
+  // Sandbox monitor state
+  const [sandboxData, setSandboxData] = useState<any>(null)
+  const [sandboxLoading, setSandboxLoading] = useState(false)
+  const [sandboxViolationTrend, setSandboxViolationTrend] = useState<SandboxViolationTrend | null>(null)
+  const [sandboxViolationsByAgent, setSandboxViolationsByAgent] = useState<SandboxViolationsByAgent | null>(null)
+  const [sandboxTemplateUsage, setSandboxTemplateUsage] = useState<SandboxTemplateUsage | null>(null)
+  const [securityEvents, setSecurityEvents] = useState<any[]>([])
+  const [securityLoading, setSecurityLoading] = useState(false)
+  const [securityTrend, setSecurityTrend] = useState<SecurityDailyTrend | null>(null)
+  const [securityByAgent, setSecurityByAgent] = useState<SecurityByAgent | null>(null)
+  const [securityFilter, setSecurityFilter] = useState<string>('')
+  const [securitySeverity, setSecuritySeverity] = useState<string>('')
+  const [securitySearch, setSecuritySearch] = useState<string>('')
+  const [securitySince, setSecuritySince] = useState<string>('')
+  const [securityUntil, setSecurityUntil] = useState<string>('')
+  const [exporting, setExporting] = useState(false)
+  // Global orchestrator state
+  const [orchestration, setOrchestration] = useState<OrchestrationResult | null>(null)
+  const [orchestrationLoading, setOrchestrationLoading] = useState(false)
+  const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
+  // Orchestrator history
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [historyData, setHistoryData] = useState<OrchestratorHistoryResult | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyFilter, setHistoryFilter] = useState<string>('')
+  const [orchDailyTrend, setOrchDailyTrend] = useState<OrchestratorDailyTrend | null>(null)
+  const [eventDetail, setEventDetail] = useState<any>(null)
+  const [collabGraph, setCollabGraph] = useState<CollaborationGraph | null>(null)
+  const [collabTimeline, setCollabTimeline] = useState<CollaborationGraphTimeline | null>(null)
+  const [collabTimelineIdx, setCollabTimelineIdx] = useState(0)
+  const [taskAllocationFairness, setTaskAllocationFairness] = useState<TaskAllocationFairness | null>(null)
+  const [agentRunResourceTrend, setAgentRunResourceTrend] = useState<AgentRunResourceTrend | null>(null)
+  const [depChain, setDepChain] = useState<TaskDependencyChainAnalysis | null>(null)
+  const [skillMatching, setSkillMatching] = useState<AgentSkillMatching | null>(null)
+  const [commentSentiment, setCommentSentiment] = useState<TaskCommentSentimentTrend | null>(null)
+  const [reworkAnalysis, setReworkAnalysis] = useState<TaskReworkAnalysis | null>(null)
+  const [handoffStats, setHandoffStats] = useState<AgentTaskHandoffStats | null>(null)
+  const [workloadForecast, setWorkloadForecast] = useState<AgentWorkloadForecast | null>(null)
+  const [specializationEvo, setSpecializationEvo] = useState<AgentSpecializationEvolution | null>(null)
+  const [decayAlerts, setDecayAlerts] = useState<AgentExperiencesDecayAlerts | null>(null)
+  const [crossProjEff, setCrossProjEff] = useState<AgentCrossProjectEfficiency | null>(null)
+  const [capSupplyDemand, setCapSupplyDemand] = useState<AgentCapabilitySupplyDemand | null>(null)
+  const [idleRanking, setIdleRanking] = useState<AgentIdleRanking | null>(null)
+  const [propagationNet, setPropagationNet] = useState<KnowledgePropagationNetwork | null>(null)
+  const [protocolLatency, setProtocolLatency] = useState<ProtocolDecisionLatency | null>(null)
+  const [collabGraphLoading, setCollabGraphLoading] = useState(false)
+  const collabSvgRef = useRef<SVGSVGElement>(null)
+  // 节点点击展开的协作明细 Modal
+  const [collabDetail, setCollabDetail] = useState<{ agentId: number; name: string; list: any[]; loading: boolean } | null>(null)
+
+  const agentCollaboration = stats?.agent_collaboration
+  const reviewOrExpiredAssignments =
+    (agentCollaboration?.assignments.review || 0) + (agentCollaboration?.assignments.expired_leases || 0)
+  const hasExpiredLeases = (agentCollaboration?.assignments.expired_leases || 0) > 0
+
+  // 设置网页标题
+  useEffect(() => {
+    document.title = `${pageTitle} - Todo for AI`
+
+    // 组件卸载时恢复默认标题
+    return () => {
+      document.title = 'Todo for AI'
+    }
+  }, [pageTitle])
+
+  // 全屏协作图尺寸随窗口自适应
+  useEffect(() => {
+    const update = () => {
+      const s = Math.min(window.innerWidth - 80, window.innerHeight - 160, 900)
+      setGraphFullscreenSize(Math.max(360, s))
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  // 加载仪表盘数据
+  useEffect(() => {
+    loadDashboardStats()
+  }, [])
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true)
+      const data = await dashboardApi.getStats()
+      setStats(data)
+    } catch (error) {
+      console.error('加载仪表盘数据失败:', error)
+      message.error(tc('messages.error.general'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadCollabMetrics = useCallback(async () => {
+    setCollabLoading(true)
+    try {
+      const result = await agentsApi.getCollaborationMetrics({ days: collabDays })
+      setCollabMetrics(result)
+    } catch {
+      // silent
+    } finally {
+      setCollabLoading(false)
+    }
+  }, [collabDays])
+
+  useEffect(() => {
+    loadCollabMetrics()
+  }, [loadCollabMetrics])
+
+  const loadMonitorData = useCallback(async () => {
+    setMonitorLoading(true)
+    try {
+      const result = await dashboardApi.getAgentMonitor({ hours: String(monitorHours) })
+      setMonitorData(result)
+    } catch {
+      // silent
+    } finally {
+      setMonitorLoading(false)
+    }
+  }, [monitorHours])
+
+  useEffect(() => {
+    loadMonitorData()
+  }, [loadMonitorData])
+
+  const loadSandboxData = useCallback(async () => {
+    setSandboxLoading(true)
+    try {
+      const result = await agentsApi.getSandboxDashboard()
+      setSandboxData(result)
+      agentsApi.getSandboxViolationTrend(30).then(setSandboxViolationTrend).catch(() => {})
+      agentsApi.getSandboxViolationsByAgent(30, 8).then(setSandboxViolationsByAgent).catch(() => {})
+      agentsApi.getSandboxTemplateUsage().then(setSandboxTemplateUsage).catch(() => {})
+      agentsApi.getCollaborationGraphTimeline(14, 'day', 30).then(setCollabTimeline).catch(() => {})
+    } catch {
+      // silent
+    } finally {
+      setSandboxLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadSandboxData()
+  }, [loadSandboxData])
+
+
+  const buildSecurityParams = useCallback((filter?: string) => ({
+    per_page: 50,
+    event_type: filter || undefined,
+    severity: securitySeverity || undefined,
+    search: securitySearch || undefined,
+    since: securitySince || undefined,
+    until: securityUntil || undefined,
+  }), [securitySeverity, securitySearch, securitySince, securityUntil])
+
+  const loadSecurityEvents = useCallback(async (filter?: string) => {
+    setSecurityLoading(true)
+    try {
+      const params = buildSecurityParams(filter)
+      const [result, trend, byAgent] = await Promise.all([
+        agentsApi.getSecurityEvents(params),
+        agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+        agentsApi.getSecurityEventsByAgent(params).catch(() => null),
+      ])
+      setSecurityEvents(result.items)
+      setSecurityTrend(trend)
+      setSecurityByAgent(byAgent)
+    } catch {
+      // silent
+    } finally {
+      setSecurityLoading(false)
+    }
+  }, [buildSecurityParams])
+
+  useEffect(() => {
+    loadSecurityEvents()
+  }, [loadSecurityEvents])
+
+  // 平台活动统一趋势：编排按天趋势 + 安全事件按天趋势，受 trendWindow 驱动
+  const [trendWindow, setTrendWindow] = useState<string>('30')
+  const [trendSeverity, setTrendSeverity] = useState<string>('')
+  const [trendEventType, setTrendEventType] = useState<string>('')
+  const [unifiedSecTrend, setUnifiedSecTrend] = useState<SecurityDailyTrend | null>(null)
+  const loadUnifiedTrend = useCallback(async (window: string, severity: string, eventType: string) => {
+    const since = window === 'all' ? undefined : dayjs().subtract(Number(window), 'day').toISOString()
+    const params: any = since ? { since } : {}
+    if (severity) params.severity = severity
+    if (eventType) params.event_type = eventType
+    try {
+      const [orch, sec] = await Promise.all([
+        agentsApi.getOrchestratorDailyTrend(since ? { since } : {}).catch(() => null),
+        agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+      ])
+      setOrchDailyTrend(orch)
+      setUnifiedSecTrend(sec)
+    } catch {
+      // silent
+    }
+  }, [])
+
+  useEffect(() => {
+    loadUnifiedTrend(trendWindow, trendSeverity, trendEventType)
+  }, [loadUnifiedTrend, trendWindow, trendSeverity, trendEventType])
+
+  // Agent 协作关系图
+  const [graphWindow, setGraphWindow] = useState<string>('30')
+  const [graphLayout, setGraphLayout] = useState<'circular' | 'grid' | 'force'>('circular')
+  // 力导向参数：从 localStorage 恢复，变更时持久化
+  const FORCE_PARAMS_KEY = 'collabGraphForceParams'
+  const loadForceParams = (): { repulsion: number; linkDistance: number } => {
+    try {
+      const raw = localStorage.getItem(FORCE_PARAMS_KEY)
+      if (raw) {
+        const p = JSON.parse(raw)
+        return {
+          repulsion: typeof p.repulsion === 'number' ? p.repulsion : 1,
+          linkDistance: typeof p.linkDistance === 'number' ? p.linkDistance : 1,
+        }
+      }
+    } catch { /* ignore */ }
+    return { repulsion: 1, linkDistance: 1 }
+  }
+  const [initialForceParams] = useState(loadForceParams)
+  const [forceRepulsion, setForceRepulsion] = useState(initialForceParams.repulsion)
+  const [forceLinkDistance, setForceLinkDistance] = useState(initialForceParams.linkDistance)
+  useEffect(() => {
+    try { localStorage.setItem(FORCE_PARAMS_KEY, JSON.stringify({ repulsion: forceRepulsion, linkDistance: forceLinkDistance })) } catch { /* ignore */ }
+  }, [forceRepulsion, forceLinkDistance])
+  const [graphKinds, setGraphKinds] = useState<string[]>([])
+  const [graphSearch, setGraphSearch] = useState('')
+  const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
+  const [graphResetKey, setGraphResetKey] = useState(0)
+  const [graphShowLabels, setGraphShowLabels] = useState(false)
+  const [graphFullscreen, setGraphFullscreen] = useState(false)
+  const [graphFullscreenSize, setGraphFullscreenSize] = useState(720)
+
+  // 协作图摘要（反映 kind 筛选 + minCount）：节点数/边数/最活跃协作对
+  const collabSummary = useMemo(() => {
+    if (!collabGraph) return null
+    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
+    const kindNodes = kindSet ? collabGraph.nodes.filter((n) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const kindIds = new Set(kindNodes.map((n) => n.id))
+    const minC = graphMinCount && graphMinCount > 0 ? graphMinCount : 0
+    const edges = collabGraph.edges.filter((e) => {
+      if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
+      if (minC && e.count < minC) return false
+      return true
+    })
+    const usedIds = new Set<number>()
+    edges.forEach((e) => { usedIds.add(e.source); usedIds.add(e.target) })
+    const nodes = kindNodes.filter((n) => usedIds.has(n.id))
+    if (edges.length === 0) return { nodeCount: nodes.length, edgeCount: 0, topPair: null }
+    const top = edges.reduce((m, e) => (e.count > m.count ? e : m), edges[0])
+    const topPair = { source: nodes.find((n) => n.id === top.source)?.name, target: nodes.find((n) => n.id === top.target)?.name, count: top.count }
+    return { nodeCount: nodes.length, edgeCount: edges.length, topPair }
+  }, [collabGraph, graphKinds, graphMinCount])
+
+  // 协作明细 Modal 内嵌迷你子图：以选中 Agent 为中心
+  const collabDetailGraph = useMemo<CollaborationGraph | null>(() => {
+    if (!collabDetail || collabDetail.list.length === 0) return null
+    const center = collabDetail
+    const nodes = [
+      { id: center.agentId, name: center.name, kind: undefined, messages: 0 },
+      ...collabDetail.list.map((c: any) => ({ id: c.agent_id, name: c.name, kind: undefined, messages: c.total })),
+    ]
+    nodes[0].messages = collabDetail.list.reduce((s: number, c: any) => s + (c.total || 0), 0)
+    const edges = collabDetail.list.map((c: any) => ({
+      source: Math.min(center.agentId, c.agent_id),
+      target: Math.max(center.agentId, c.agent_id),
+      count: c.total,
+      ...(center.agentId < c.agent_id
+        ? { source_to_target: c.sent, target_to_source: c.received }
+        : { source_to_target: c.received, target_to_source: c.sent }),
+    }))
+    return { nodes, edges, total_edges: edges.length }
+  }, [collabDetail])
+  const loadCollabGraph = useCallback(async (window: string) => {
+    setCollabGraphLoading(true)
+    try {
+      const since = window === 'all' ? undefined : dayjs().subtract(Number(window), 'day').toISOString()
+      const g = await agentsApi.getCollaborationGraph(since ? { limit: 50, since } : { limit: 50 }).catch(() => null)
+      setCollabGraph(g)
+    } catch {
+      // silent
+    } finally {
+      setCollabGraphLoading(false)
+    }
+  }, [])
+
+  // 点击协作图节点：加载该 Agent 的 top 协作者明细
+  const loadCollabDetail = useCallback(async (agentId: number, name: string) => {
+    setCollabDetail({ agentId, name, list: [], loading: true })
+    try {
+      const result = await agentsApi.getAgentCollaborators(agentId, { limit: 10 })
+      setCollabDetail({ agentId, name, list: result?.collaborators || [], loading: false })
+    } catch {
+      setCollabDetail({ agentId, name, list: [], loading: false })
+    }
+  }, [])
+
+  useEffect(() => {
+    loadCollabGraph(graphWindow)
+  }, [loadCollabGraph, graphWindow])
+
+  // 时间范围变化时重新加载（loadSecurityEvents 因依赖 buildSecurityParams 而重建，触发上面的 effect）
+
+  // SSE-driven live refresh of the security event aggregation card
+  const SECURITY_SSE_EVENTS = new Set([
+    'sandbox_violation', 'sandbox_step_violation', 'sandbox_execution_revoked',
+    'sandbox_bound', 'sandbox_created', 'conflicts_detected', 'conflict_resolved',
+    'conflicts_auto_resolved', 'workflow_step_overridden',
+  ])
+  useCollaborationSSE({
+    enabled: true,
+    onEvent: useCallback((event: any) => {
+      const et = event.event_type || ''
+      // Agent 直接消息事件刷新协作关系图
+      if (et === 'agent.direct_message') {
+        loadCollabGraph(graphWindow)
+        return
+      }
+      if (!SECURITY_SSE_EVENTS.has(et)) return
+      // Best-effort refresh, preserving the current filter and time range
+      const params = buildSecurityParams(securityFilter)
+      Promise.all([
+        agentsApi.getSecurityEvents(params),
+        agentsApi.getSecurityEventsDailyTrend(params).catch(() => null),
+        agentsApi.getSecurityEventsByAgent(params).catch(() => null),
+      ])
+        .then(([r, t, ba]) => {
+          setSecurityEvents(r.items)
+          if (t) setSecurityTrend(t)
+          if (ba) setSecurityByAgent(ba)
+        })
+        .catch(() => { /* silent: SSE refresh is best-effort */ })
+      // 编排活动相关事件同步刷新统一趋势的编排序列
+      if (et === 'conflicts_detected' || et === 'conflict_resolved' || et === 'conflicts_auto_resolved') {
+        loadUnifiedTrend(trendWindow, trendSeverity, trendEventType)
+      }
+    }, [securityFilter, buildSecurityParams, loadUnifiedTrend, trendWindow, trendSeverity, trendEventType, loadCollabGraph, graphWindow]),
+  })
+
+  const runOrchestration = useCallback(async () => {
+    setOrchestrationLoading(true)
+    try {
+      const result = await agentsApi.orchestrate()
+      setOrchestration(result)
+      message.success(`编排完成（${result.duration_seconds}s）`)
+      // Refresh security events + conflict data since orchestration may have changed them
+      loadSecurityEvents(securityFilter || undefined)
+      // Also refresh scheduler status (last_run updated)
+      agentsApi.getOrchestratorStatus().then(setOrchestratorStatus).catch(() => {})
+    } catch {
+      message.error('执行编排失败')
+    } finally {
+      setOrchestrationLoading(false)
+    }
+  }, [securityFilter, loadSecurityEvents])
+
+  // 导出当前筛选条件下的安全事件为 CSV
+  const exportSecurityEvents = useCallback(async (format: 'csv' | 'json' = 'csv') => {
+    setExporting(true)
+    try {
+      const params = buildSecurityParams(securityFilter || undefined)
+      const text = await agentsApi.exportSecurityEvents({ ...params, format })
+      const mime = format === 'json' ? 'application/json;charset=utf-8;' : 'text/csv;charset=utf-8;'
+      const blob = new Blob([text], { type: mime })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `security_events_${new Date().toISOString().slice(0, 10)}.${format}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      message.success(`安全事件已导出为 ${format.toUpperCase()}`)
+    } catch {
+      message.error('导出安全事件失败')
+    } finally {
+      setExporting(false)
+    }
+  }, [buildSecurityParams, securityFilter])
+
+  // 导出协作关系图为 CSV（节点段 + 边段，反映当前 kind 筛选）
+  const exportCollabGraph = useCallback(() => {
+    if (!collabGraph || (!collabGraph.nodes.length && !collabGraph.edges.length)) {
+      message.warning('暂无协作关系数据可导出')
+      return
+    }
+    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
+    const kindNodes = kindSet ? collabGraph.nodes.filter((n) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
+    const kindIds = new Set(kindNodes.map((n) => n.id))
+    const minC = graphMinCount && graphMinCount > 0 ? graphMinCount : 0
+    const edges = collabGraph.edges.filter((e) => {
+      if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
+      if (minC && e.count < minC) return false
+      return true
+    })
+    const usedIds = new Set<number>()
+    edges.forEach((e) => { usedIds.add(e.source); usedIds.add(e.target) })
+    const nodes = kindNodes.filter((n) => usedIds.has(n.id))
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const lines: string[] = []
+    lines.push('# 节点')
+    lines.push(['id', 'name', 'kind', 'messages'].map(esc).join(','))
+    nodes.forEach((n) => lines.push([n.id, n.name, n.kind ?? '', n.messages].map(esc).join(',')))
+    lines.push('')
+    lines.push('# 边')
+    lines.push(['source', 'target', 'count', 'source_to_target', 'target_to_source'].map(esc).join(','))
+    edges.forEach((e) => lines.push([e.source, e.target, e.count, e.source_to_target ?? 0, e.target_to_source ?? 0].map(esc).join(',')))
+    const text = '﻿' + lines.join('\n')
+    const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    message.success('协作关系图已导出为 CSV')
+  }, [collabGraph, graphKinds, graphMinCount])
+
+  // 导出协作关系图为 SVG 图片（保留可视化形态）
+  const exportCollabGraphSvg = useCallback(() => {
+    const svg = collabSvgRef.current
+    if (!svg) {
+      message.warning('暂无可导出的图形')
+      return
+    }
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    const text = new XMLSerializer().serializeToString(clone)
+    const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + text], { type: 'image/svg+xml;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.svg`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    message.success('协作关系图已导出为 SVG')
+  }, [])
+
+  // 导出协作关系图为 PNG（SVG → Canvas → PNG）
+  const exportCollabGraphPng = useCallback(() => {
+    const svg = collabSvgRef.current
+    if (!svg) {
+      message.warning('暂无可导出的图形')
+      return
+    }
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    clone.setAttribute('width', String(svg.viewBox.baseVal.width || svg.clientWidth || 380))
+    clone.setAttribute('height', String(svg.viewBox.baseVal.height || svg.clientHeight || 380))
+    const text = new XMLSerializer().serializeToString(clone)
+    const svgBlob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + text], { type: 'image/svg+xml;charset=utf-8;' })
+    const url = URL.createObjectURL(svgBlob)
+    const img = new Image()
+    img.onload = () => {
+      const w = Number(clone.getAttribute('width')) || 380
+      const h = Number(clone.getAttribute('height')) || 380
+      const scale = 2 // 2x 提升清晰度
+      const canvas = document.createElement('canvas')
+      canvas.width = w * scale
+      canvas.height = h * scale
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { URL.revokeObjectURL(url); message.error('PNG 导出失败'); return }
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      canvas.toBlob((pngBlob) => {
+        if (!pngBlob) { message.error('PNG 导出失败'); return }
+        const pngUrl = URL.createObjectURL(pngBlob)
+        const a = document.createElement('a')
+        a.href = pngUrl
+        a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.png`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(pngUrl)
+        message.success('协作关系图已导出为 PNG')
+      }, 'image/png')
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); message.error('PNG 导出失败：SVG 渲染失败') }
+    img.src = url
+  }, [])
+
+  const loadOrchestratorStatus = useCallback(async () => {
+    try {
+      const status = await agentsApi.getOrchestratorStatus()
+      setOrchestratorStatus(status)
+    } catch {
+      // silent: status is informational
+    }
+  }, [])
+
+  useEffect(() => {
+    loadOrchestratorStatus()
+  }, [loadOrchestratorStatus])
+
+  // 加载编排历史
+  const loadOrchestratorHistory = useCallback(async (filter?: string) => {
+    setHistoryLoading(true)
+    try {
+      const result = await agentsApi.listOrchestratorHistory({
+        limit: 30,
+        ...(filter ? { triggered_by: filter } : {}),
+      })
+      setHistoryData(result)
+    } catch {
+      message.error('加载编排历史失败')
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
+
+  const openHistory = useCallback(() => {
+    setHistoryOpen(true)
+    loadOrchestratorHistory(historyFilter)
+  }, [loadOrchestratorHistory, historyFilter])
+
+  // 格式化日期
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('zh-CN', {
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  // 获取任务状态标签颜色
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      'todo': 'default',
+      'in_progress': 'processing',
+      'review': 'warning',
+      'done': 'success',
+      'cancelled': 'error'
+    }
+    return colors[status] || 'default'
+  }
+
+  // 获取任务状态文本
+  const getStatusText = (status: string) => {
+    const statusKey = `taskStatus.${status}`
+    try {
+      return tp(statusKey)
+    } catch {
+      return status
+    }
+  }
+
+  const formatDateTime = (dateStr: string | null) => {
+    if (!dateStr) {
+      return tp('labels.noRecentAgentActivity')
+    }
+    return new Date(dateStr).toLocaleString('zh-CN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const owned = stats?.scopes?.owned || {
+    projects: stats?.projects || { total: 0, active: 0 },
+    tasks: stats?.tasks || { total: 0, todo: 0, in_progress: 0, review: 0, done: 0, ai_executing: 0 },
+  }
+  const participated = stats?.scopes?.participated || owned
+  const orgSummary = stats?.organizations?.summary || { total: 0, total_agents: 0, active_agents_7d: 0 }
+  const topOrganizations = stats?.organizations?.top_organizations || []
+
+  return {
+    reviewOrExpiredAssignments,
+    agentCollaboration,
+    agentRunResourceTrend,
+    buildSecurityParams,
+    capSupplyDemand,
+    collabDays,
+    collabDetail,
+    collabDetailGraph,
+    collabGraph,
+    collabGraphLoading,
+    collabLoading,
+    collabMetrics,
+    collabSummary,
+    collabSvgRef,
+    collabTimeline,
+    collabTimelineIdx,
+    commentSentiment,
+    crossProjEff,
+    decayAlerts,
+    depChain,
+    eventDetail,
+    exportCollabGraph,
+    exportCollabGraphPng,
+    exportCollabGraphSvg,
+    exportSecurityEvents,
+    exporting,
+    forceLinkDistance,
+    forceRepulsion,
+    formatDate,
+    formatDateTime,
+    getStatusColor,
+    getStatusText,
+    graphFullscreen,
+    graphFullscreenSize,
+    graphKinds,
+    graphLayout,
+    graphMinCount,
+    graphResetKey,
+    graphSearch,
+    graphShowLabels,
+    graphWindow,
+    handoffStats,
+    hasExpiredLeases,
+    historyData,
+    historyFilter,
+    historyLoading,
+    historyOpen,
+    idleRanking,
+    loadCollabDetail,
+    loadCollabGraph,
+    loadCollabMetrics,
+    loadDashboardStats,
+    loadForceParams,
+    loadMonitorData,
+    loadOrchestratorHistory,
+    loadOrchestratorStatus,
+    loadSandboxData,
+    loadSecurityEvents,
+    loadUnifiedTrend,
+    loading,
+    monitorData,
+    monitorHours,
+    monitorLoading,
+    navigate,
+    openHistory,
+    orchDailyTrend,
+    orchestration,
+    orchestrationLoading,
+    orchestratorStatus,
+    orgSummary,
+    owned,
+    pageTitle,
+    participated,
+    propagationNet,
+    protocolLatency,
+    reworkAnalysis,
+    runOrchestration,
+    sandboxData,
+    sandboxLoading,
+    sandboxTemplateUsage,
+    sandboxViolationTrend,
+    sandboxViolationsByAgent,
+    securityByAgent,
+    securityEvents,
+    securityFilter,
+    securityLoading,
+    securitySearch,
+    securitySeverity,
+    securitySince,
+    securityTrend,
+    securityUntil,
+    setAgentRunResourceTrend,
+    setCapSupplyDemand,
+    setCollabDays,
+    setCollabDetail,
+    setCollabGraph,
+    setCollabGraphLoading,
+    setCollabLoading,
+    setCollabMetrics,
+    setCollabTimeline,
+    setCollabTimelineIdx,
+    setCommentSentiment,
+    setCrossProjEff,
+    setDecayAlerts,
+    setDepChain,
+    setEventDetail,
+    setExporting,
+    setForceLinkDistance,
+    setForceRepulsion,
+    setGraphFullscreen,
+    setGraphFullscreenSize,
+    setGraphKinds,
+    setGraphLayout,
+    setGraphMinCount,
+    setGraphResetKey,
+    setGraphSearch,
+    setGraphShowLabels,
+    setGraphWindow,
+    setHandoffStats,
+    setHistoryData,
+    setHistoryFilter,
+    setHistoryLoading,
+    setHistoryOpen,
+    setIdleRanking,
+    setLoading,
+    setMonitorData,
+    setMonitorHours,
+    setMonitorLoading,
+    setOrchDailyTrend,
+    setOrchestration,
+    setOrchestrationLoading,
+    setOrchestratorStatus,
+    setPropagationNet,
+    setProtocolLatency,
+    setReworkAnalysis,
+    setSandboxData,
+    setSandboxLoading,
+    setSandboxTemplateUsage,
+    setSandboxViolationTrend,
+    setSandboxViolationsByAgent,
+    setSecurityByAgent,
+    setSecurityEvents,
+    setSecurityFilter,
+    setSecurityLoading,
+    setSecuritySearch,
+    setSecuritySeverity,
+    setSecuritySince,
+    setSecurityTrend,
+    setSecurityUntil,
+    setSkillMatching,
+    setSpecializationEvo,
+    setStats,
+    setTaskAllocationFairness,
+    setTrendEventType,
+    setTrendSeverity,
+    setTrendWindow,
+    setUnifiedSecTrend,
+    setWorkloadForecast,
+    skillMatching,
+    specializationEvo,
+    stats,
+    taskAllocationFairness,
+    tc,
+    topOrganizations,
+    tp,
+    trendEventType,
+    trendSeverity,
+    trendWindow,
+    unifiedSecTrend,
+    workloadForecast,
+  }
+}
