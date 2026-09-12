@@ -45,6 +45,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons'
 import { useAgentSandboxPanel } from './agents/hooks/useAgentSandboxPanel'
+import { useAgentChannelsPanel } from './agents/hooks/useAgentChannelsPanel'
 import {
   agentsApi,
   type Agent,
@@ -148,16 +149,15 @@ const Agents: React.FC = () => {
   const [recTasksLoading, setRecTasksLoading] = useState(false)
 
   // Channels
-  const [channels, setChannels] = useState<any[]>([])
-  const [channelActivityTrend, setChannelActivityTrend] = useState<ChannelActivityTrend | null>(null)
-  const [channelsOpen, setChannelsOpen] = useState(false)
-  const [channelCreateOpen, setChannelCreateOpen] = useState(false)
-  const [channelForm, setChannelForm] = useState<any>({ name: '', description: '', agent_ids: [] })
-  const [chatOpen, setChatOpen] = useState(false)
-  const [chatChannel, setChatChannel] = useState<any>(null)
-  const [chatMessages, setChatMessages] = useState<any[]>([])
-  const [chatInput, setChatInput] = useState('')
-  const [chatSending, setChatSending] = useState(false)
+  // 频道/聊天领域块已抽至 agents/hooks/useAgentChannelsPanel.ts（原样搬移）
+  const {
+    channels, channelActivityTrend, channelsOpen, setChannelsOpen,
+    channelCreateOpen, setChannelCreateOpen, channelForm, setChannelForm,
+    chatOpen, setChatOpen, chatChannel, setChatChannel, chatMessages,
+    setChatMessages, chatInput, setChatInput, chatSending,
+    loadChannels, openChannels, createChannel, openChat,
+    sendChatMessage,
+  } = useAgentChannelsPanel()
   // Collaboration templates
   const [collabTemplates, setCollabTemplates] = useState<any[]>([])
   const [collabTemplatesOpen, setCollabTemplatesOpen] = useState(false)
@@ -534,52 +534,6 @@ const Agents: React.FC = () => {
     }
   }
 
-  // --- Channels ---
-  const loadChannels = async () => {
-    try {
-      const result = await agentsApi.listChannels()
-      setChannels(Array.isArray(result) ? result : [])
-      agentsApi.getChannelActivityTrend(14, 10).then(setChannelActivityTrend).catch(() => {})
-    } catch { message.error('加载频道失败') }
-  }
-
-  const openChannels = () => {
-    setChannelsOpen(true)
-    loadChannels()
-  }
-
-  const createChannel = async () => {
-    if (!channelForm.name.trim()) { message.warning('请输入频道名称'); return }
-    try {
-      await agentsApi.createChannel(channelForm)
-      message.success('频道已创建')
-      setChannelCreateOpen(false)
-      setChannelForm({ name: '', description: '', agent_ids: [] })
-      loadChannels()
-    } catch { message.error('创建频道失败') }
-  }
-
-  const openChat = async (channel: any) => {
-    setChatChannel(channel)
-    setChatOpen(true)
-    setChatInput('')
-    try {
-      const msgs = await agentsApi.listChannelMessages(channel.id)
-      setChatMessages(Array.isArray(msgs) ? msgs : [])
-    } catch { setChatMessages([]) }
-  }
-
-  const sendChatMessage = async () => {
-    if (!chatChannel || !chatInput.trim()) return
-    setChatSending(true)
-    try {
-      await agentsApi.sendChannelMessage(chatChannel.id, { content: chatInput.trim() })
-      setChatInput('')
-      const msgs = await agentsApi.listChannelMessages(chatChannel.id)
-      setChatMessages(Array.isArray(msgs) ? msgs : [])
-    } catch { message.error('发送失败') }
-    finally { setChatSending(false) }
-  }
 
   const loadCollabTemplates = async () => {
     setCollabTemplatesLoading(true)
