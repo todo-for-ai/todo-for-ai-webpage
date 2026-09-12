@@ -47,8 +47,7 @@ import { statusColorMap, type WorkspaceTabKey } from './utils'
 import './AgentsPage.css'
 import { PageIntro } from '../../components/common/PageIntro'
 
-const { Title, Paragraph, Text } = Typography
-const { Search } = Input
+const { Text } = Typography
 
 export default function AgentsPage() {
   const { tp, tc, pageTitle, pageSubtitle } = usePageTranslation('agents')
@@ -92,11 +91,6 @@ export default function AgentsPage() {
     [workspaces]
   )
 
-  const handleViewModeChange = (mode: AgentsViewMode) => {
-    setViewMode(mode)
-    void saveAgentsViewModeToIndexedDb(mode)
-  }
-
   const toAgentDetail = (agentId: number) => {
     navigate(`/todo-for-ai/pages/agents/${agentId}/overview${workspaceId ? `?workspace_id=${workspaceId}` : ''}`)
   }
@@ -107,7 +101,7 @@ export default function AgentsPage() {
       title={tp('table.title')}
       extra={
         <Space wrap>
-          <Search
+          <Input.Search
             allowClear
             value={agentSearchInput}
             placeholder={tp('table.search', { defaultValue: 'Search agent name/display name' })}
@@ -380,20 +374,16 @@ export default function AgentsPage() {
 
   return (
     <div className="page-container">
-      <PageIntro
-        storageKey="page-intro:agents:v1"
-        title={tc('pageIntro.agents.title')}
-        description={tc('pageIntro.agents.desc')}
-      />
+      <PageIntro storageKey="page-intro:agents:v1" title={tc('pageIntro.agents.title')} description={tc('pageIntro.agents.desc')} />
       <div style={{ marginBottom: 16 }}>
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>
-            <Title level={2} className="page-title" style={{ marginBottom: 8 }}>
+            <Typography.Title level={2} className="page-title" style={{ marginBottom: 8 }}>
               {pageTitle}
-            </Title>
-            <Paragraph className="page-description" style={{ marginBottom: 0 }}>
+            </Typography.Title>
+            <Typography.Paragraph className="page-description" style={{ marginBottom: 0 }}>
               {pageSubtitle}
-            </Paragraph>
+            </Typography.Paragraph>
           </div>
 
           <Space>
@@ -401,7 +391,10 @@ export default function AgentsPage() {
               <Text type="secondary">{tp('viewMode.label')}</Text>
               <Segmented<AgentsViewMode>
                 value={viewMode}
-                onChange={(value) => handleViewModeChange(value)}
+                onChange={(value) => {
+                  setViewMode(value)
+                  void saveAgentsViewModeToIndexedDb(value)
+                }}
                 options={[
                   {
                     value: 'list',
