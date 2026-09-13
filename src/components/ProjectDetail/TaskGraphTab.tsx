@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Alert, Button, Spin, Tag, Tooltip } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
+import { useProjectGraphRealtime } from '../../hooks/useProjectGraphRealtime'
+import { wsService } from '../../services/websocketService'
 import { taskGraphApi, type TaskGraphData, type TaskGraphNode } from '../../api/taskGraph'
 
 interface TaskGraphTabProps {
@@ -14,6 +16,7 @@ const NODE_W = 216
 const NODE_H = 46
 const GAP_X = 96
 const GAP_Y = 14
+const STAGE_HEADER_H = 26
 
 // 状态色板（蓝/绿/橙/灰，深色描边文字 + 浅色底）
 const READINESS_STYLE: Record<TaskGraphNode['readiness'], { border: string; bg: string; text: string }> = {
@@ -70,6 +73,9 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
     if (projectId) fetchGraph()
   }, [projectId, fetchGraph])
 
+  // 实时刷新：加入项目房间，任务状态/依赖变化事件（去抖合并）后重取图
+  useProjectGraphRealtime(projectId, fetchGraph)
+
   const layout = useMemo(() => {
     if (!graph || graph.nodes.length === 0) return null
     const idSet = new Set(graph.nodes.map((n) => n.id))
@@ -99,7 +105,11 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
     const width = sortedLayers.length * (NODE_W + GAP_X) - GAP_X
     const maxRows = Math.max(...[...columns.values()].map((c) => c.length))
     const height = maxRows * NODE_H + (maxRows - 1) * GAP_Y
-    return { pos, nodeById, width, height }
+    const stages = sortedLayers.map((layer, colIndex) => ({
+      x: colIndex * (NODE_W + GAP_X),
+      count: columns.get(layer)!.length,
+    }))
+    return { pos, nodeById, width, height, stages }
   }, [graph])
 
   if (loading && !graph) {
@@ -120,16 +130,45 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
     ['done', tp('taskGraph.stats.done')],
     ['cancelled', tp('taskGraph.stats.cancelled')],
   ]
+  const legendItems = (['ready', 'blocked', 'done', 'cancelled'] as const).map((key) => ({
+    key,
+    label: tp(`taskGraph.readiness.${key}`),
+    color: READINESS_STYLE[key].border,
+  }))
+  const liveConnected = wsService.connected
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600 }}>{tp('taskGraph.title')}</span>
+          <Tag
+            color={liveConnected ? 'green' : 'default'}
+            title={liveConnected ? tp('taskGraph.liveTip') : tp('taskGraph.offlineTip')}
+            style={{ borderRadius: 4, marginInlineEnd: 0 }}
+          >
+            <span
+              style={{
+                display: 'inline-block',
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                marginRight: 5,
+                background: liveConnected ? '#389e0d' : '#bfbfbf',
+              }}
+            />
+            {liveConnected ? tp('taskGraph.live') : tp('taskGraph.offline')}
+          </Tag>
           {statEntries.map(([key, label]) => (
             <Tag key={key} style={{ borderRadius: 4, marginInlineEnd: 0 }}>
               {label}: {graph.stats[key]}
             </Tag>
+          ))}
+          {legendItems.map((item) => (
+            <span key={item.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#595959' }}>
+              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: item.color }} />
+              {item.label}
+            </span>
           ))}
           {graph.truncated && <Tag color="orange" style={{ borderRadius: 4 }}>{tp('taskGraph.truncated')}</Tag>}
         </div>
@@ -151,11 +190,30 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
       )}
 
       <div style={{ overflowX: 'auto', border: '1px solid #f0f0f0', borderRadius: 8, padding: 16 }}>
-        <div style={{ position: 'relative', width: layout!.width, height: layout!.height }}>
+        <div style={{ position: 'relative', width: layout!.width, height: layout!.height + STAGE_HEADER_H }}>
+          {/* 阶段标题行：第 N 阶段 · 任务数 */}
+          {layout!.stages.map((stage, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: stage.x,
+                top: 0,
+                width: NODE_W,
+                height: STAGE_HEADER_H,
+                fontSize: 12,
+                color: '#8c8c8c',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {tp('taskGraph.stage')} {i + 1} · {stage.count}
+            </div>
+          ))}
           <svg
             width={layout!.width}
             height={layout!.height}
-            style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+            style={{ position: 'absolute', top: STAGE_HEADER_H, left: 0, pointerEvents: 'none' }}
           >
             <defs>
               <marker id="tg-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
@@ -197,7 +255,7 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
                   style={{
                     position: 'absolute',
                     left: p.x,
-                    top: p.y,
+                    top: p.y + STAGE_HEADER_H,
                     width: NODE_W,
                     height: NODE_H,
                     background: style.bg,

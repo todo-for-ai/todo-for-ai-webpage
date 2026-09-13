@@ -530,6 +530,11 @@
     "cycles": {
       "title": "Dependency cycles detected: tasks in a cycle wait on each other and can never be dispatched. Fix the dependencies in task editing.",
       "node": "In cycle"
-    }
+    },
+    "stage": "Stage",
+    "live": "Live",
+    "offline": "Offline",
+    "liveTip": "Realtime push connected: the graph refreshes on task status/dependency changes",
+    "offlineTip": "Realtime push not connected; use Refresh to update manually"
   }
 }

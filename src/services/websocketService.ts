@@ -65,6 +65,11 @@ class WebSocketService {
     this.socket.on('help_request', (data: any) => {
       this.emit('help_request', data)
     })
+
+    // Project task graph refresh events (project room: task status/dependency changes)
+    this.socket.on('task_graph_changed', (data: any) => {
+      this.emit('task_graph_changed', data)
+    })
   }
 
   disconnect(): void {
@@ -91,6 +96,14 @@ class WebSocketService {
 
   leaveTaskRoom(taskId: number): void {
     this.socket?.emit('leave_task', { task_id: taskId })
+  }
+
+  joinProjectRoom(projectId: number): void {
+    this.socket?.emit('join_project', { project_id: projectId })
+  }
+
+  leaveProjectRoom(projectId: number): void {
+    this.socket?.emit('leave_project', { project_id: projectId })
   }
 }
 
