@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
+import { message } from 'antd'
 
 const { agentsApi } = vi.hoisted(() => ({
   agentsApi: {
@@ -13,6 +14,7 @@ const { agentsApi } = vi.hoisted(() => ({
     dispatchTaskToAgent: vi.fn(async () => ({ ok: true })),
     claimTask: vi.fn(async () => ({ ok: true, actions: [] })),
     postTaskEvent: vi.fn(async () => ({ id: 31 })),
+    handoffTask: vi.fn(async () => ({ ok: true })),
   },
 }))
 
@@ -134,5 +136,100 @@ describe('useTaskAssignmentActions', () => {
       await result.current.submitDispatch()
     })
     expect(result.current.dispatchOpen).toBe(false)
+  })
+})
+
+describe('useTaskAssignmentActions 动作分支补全', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const withActions = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('openFeedbackModal + submitHumanFeedback 成功后清空反馈态', async () => {
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.assignments).toHaveLength(1))
+    const assignment = result.current.assignments[0]
+    act(() => {
+      result.current.openFeedbackModal(assignment as never)
+    })
+    expect(result.current.feedbackAssignment).toBeTruthy()
+    await act(async () => {
+      await result.current.submitHumanFeedback()
+    })
+    expect(agentsApi.updateTaskAssignment).toHaveBeenCalled()
+    expect(result.current.feedbackAssignment).toBeNull()
+    expect(result.current.feedbackSubmitting).toBe(false)
+  })
+
+  it('postMessage 无内容早退、成功后清空并刷新', async () => {
+    const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    await act(async () => {
+      await result.current.postMessage()
+    })
+    expect(agentsApi.postTaskEvent).not.toHaveBeenCalled()
+    act(() => {
+      result.current.setComposerContent('hello')
+    })
+    await act(async () => {
+      await result.current.postMessage()
+    })
+    expect(agentsApi.postTaskEvent).toHaveBeenCalledWith(42, { content: 'hello', event_type: 'message', to_agent_id: undefined })
+    expect(result.current.composerContent).toBe('')
+    expect(successSpy).toHaveBeenCalled()
+    successSpy.mockRestore()
+  })
+
+  it('postMessage 失败给出错误提示', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.postTaskEvent.mockRejectedValueOnce(new Error('net down'))
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    act(() => {
+      result.current.setComposerContent('hi')
+    })
+    await act(async () => {
+      await result.current.postMessage()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('net down')
+    expect(result.current.posting).toBe(false)
+    errorSpy.mockRestore()
+  })
+
+  it('loadDispatchAgents 拉取派发候选并打开弹窗', async () => {
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadDispatchAgents).toBeTruthy())
+    await act(async () => {
+      await result.current.loadDispatchAgents()
+    })
+    expect(agentsApi.getAgents).toHaveBeenCalled()
+    act(() => {
+      result.current.openDispatchModal()
+    })
+    expect(result.current.dispatchOpen).toBe(true)
+  })
+
+  it('openHandoffModal + submitHandoff 成功后清空交接态', async () => {
+    const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.assignments).toHaveLength(1))
+    const assignment = result.current.assignments[0]
+    act(() => {
+      result.current.openHandoffModal(assignment as never)
+    })
+    expect(result.current.handoffAssignment).toBeTruthy()
+    await act(async () => {
+      await result.current.submitHandoff()
+    })
+    expect(agentsApi.handoffTask).toHaveBeenCalled()
+    expect(result.current.handoffAssignment).toBeNull()
+    expect(result.current.handoffSubmitting).toBe(false)
+    successSpy.mockRestore()
   })
 })

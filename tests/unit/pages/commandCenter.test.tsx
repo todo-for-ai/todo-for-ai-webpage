@@ -43,10 +43,11 @@ const { agentsApi, dashboardApi } = vi.hoisted(() => ({
 vi.mock('../../../src/api/agents', () => ({ agentsApi }))
 vi.mock('../../../src/api/dashboard', () => ({ dashboardApi }))
 
-import { useCommandCenterCollabGraph } from '../../../src/pages/commandCenter/useCommandCenterCollabGraph'
+import { useCollabGraphPanel } from '../../../src/pages/dashboard/hooks/useCollabGraphPanel'
 import { useCommandCenterData } from '../../../src/pages/commandCenter/useCommandCenterData'
+import { useCollabGraphPanel } from '../../../src/pages/dashboard/hooks/useCollabGraphPanel'
 
-describe('useCommandCenterCollabGraph', () => {
+describe('useCollabGraphPanel（指挥中心共用）', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.removeItem('collabGraphForceParams')
@@ -58,7 +59,7 @@ describe('useCommandCenterCollabGraph', () => {
   })
 
   it('首屏按 30 天窗口拉图，all 窗口不带 since', async () => {
-    const { result } = renderHook(() => useCommandCenterCollabGraph())
+    const { result } = renderHook(() => useCollabGraphPanel())
     await waitFor(() => expect(result.current.collabGraph).toBeTruthy())
     expect(agentsApi.getCollaborationGraph).toHaveBeenCalledWith({ limit: 50, since: expect.any(String) })
     act(() => {
@@ -68,14 +69,14 @@ describe('useCommandCenterCollabGraph', () => {
   })
 
   it('collabSummary 汇总节点/边/最活跃对', async () => {
-    const { result } = renderHook(() => useCommandCenterCollabGraph())
+    const { result } = renderHook(() => useCollabGraphPanel())
     await waitFor(() => expect(result.current.collabSummary).toEqual({
       nodeCount: 2, edgeCount: 1, topPair: { source: 'alice', target: 'bob', count: 5 },
     }))
   })
 
   it('loadCollabDetail 汇入明细', async () => {
-    const { result } = renderHook(() => useCommandCenterCollabGraph())
+    const { result } = renderHook(() => useCollabGraphPanel())
     await act(async () => {
       await result.current.loadCollabDetail(1, 'alice')
     })
@@ -90,13 +91,65 @@ describe('useCommandCenterCollabGraph', () => {
     vi.spyOn(document.body, 'removeChild').mockImplementation(((n: Node) => n) as never)
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
-    const { result } = renderHook(() => useCommandCenterCollabGraph())
+    const { result } = renderHook(() => useCollabGraphPanel())
     await waitFor(() => expect(result.current.collabGraph).toBeTruthy())
     act(() => {
       result.current.exportCollabGraph()
     })
     expect(successSpy).toHaveBeenCalledWith('协作关系图已导出为 CSV')
     expect(clickSpy).toHaveBeenCalled()
+  })
+})
+
+describe('useCollabGraphPanel（指挥中心共用）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.removeItem('collabGraphForceParams')
+    URL.createObjectURL = vi.fn(() => 'blob:u') as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    localStorage.removeItem('collabGraphForceParams')
+  })
+
+  it('明细子图与导出三件套', async () => {
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(((n: Node) => n) as never)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(((n: Node) => n) as never)
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
+    const { result } = renderHook(() => useCollabGraphPanel())
+    await waitFor(() => expect(result.current.collabGraph).toBeTruthy())
+    await act(async () => {
+      await result.current.loadCollabDetail(1, 'alice')
+    })
+    expect(result.current.collabDetailGraph?.nodes[0].messages).toBe(5)
+    act(() => {
+      result.current.exportCollabGraph()
+    })
+    expect(successSpy).toHaveBeenCalledWith('协作关系图已导出为 CSV')
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    Object.defineProperty(result.current.collabSvgRef, 'current', { value: svg, configurable: true })
+    act(() => {
+      result.current.exportCollabGraphSvg()
+    })
+    expect(successSpy).toHaveBeenCalledWith('协作关系图已导出为 SVG')
+    expect(clickSpy).toHaveBeenCalledTimes(2)
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    successSpy.mockRestore()
+  })
+
+  it('PNG 导出无图引用与空数据 CSV 的提示分支', () => {
+    const warnSpy = vi.spyOn(message, 'warning').mockImplementation(() => undefined as never)
+    const { result } = renderHook(() => useCollabGraphPanel())
+    act(() => {
+      result.current.exportCollabGraphSvg()
+      result.current.exportCollabGraphPng()
+    })
+    expect(warnSpy).toHaveBeenCalledTimes(2)
+    warnSpy.mockRestore()
   })
 })
 
@@ -142,6 +195,77 @@ describe('useCommandCenterData', () => {
     expect(agentsApi.getOrchestratorDailyTrend).toHaveBeenLastCalledWith({ severity: 'high', event_type: 'conflict' })
   })
 
+  it('openResolveConflict + submitResolveConflict 成功与失败', async () => {
+    const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    const { result } = renderHook(() => useCommandCenterData())
+    await waitFor(() => expect(result.current.loadAll).toBeTruthy())
+    act(() => {
+      result.current.openResolveConflict({ id: 9, suggested_strategy: 'manual' })
+    })
+    expect(result.current.resolveOpen).toBe(true)
+    expect(result.current.resolveForm.conflict_id).toBe(9)
+    await act(async () => {
+      await result.current.submitResolveConflict()
+    })
+    expect(agentsApi.resolveConflict).toHaveBeenCalledWith(9, 'manual', '')
+    expect(result.current.resolveOpen).toBe(false)
+    expect(successSpy).toHaveBeenCalledWith('冲突已解决')
+    agentsApi.resolveConflict.mockRejectedValueOnce(new Error('x'))
+    act(() => {
+      result.current.openResolveConflict({ conflict_id: 10 })
+    })
+    await act(async () => {
+      await result.current.submitResolveConflict()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('解决失败')
+    successSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('autoResolveConflicts 成功提示解决数量', async () => {
+    const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
+    const { result } = renderHook(() => useCommandCenterData())
+    await waitFor(() => expect(result.current.autoResolveConflicts).toBeTruthy())
+    await act(async () => {
+      await result.current.autoResolveConflicts()
+    })
+    expect(successSpy).toHaveBeenCalled()
+    successSpy.mockRestore()
+  })
+
+  it('exportSecurityEvents 成功导出', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:u') as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(((n: Node) => n) as never)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(((n: Node) => n) as never)
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
+    const { result } = renderHook(() => useCommandCenterData())
+    await waitFor(() => expect(result.current.exportSecurityEvents).toBeTruthy())
+    await act(async () => {
+      await result.current.exportSecurityEvents()
+    })
+    expect(agentsApi.exportSecurityEvents).toHaveBeenCalledWith({})
+    expect(clickSpy).toHaveBeenCalled()
+    expect(result.current.actionLoading).toBe('')
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    clickSpy.mockRestore()
+    successSpy.mockRestore()
+  })
+
+  it('loadAll 失败（非静默）提示', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    // loadAll 对每个端点都有 .catch(() => null)，外层 catch 为防御性分支；
+    // 这里验证单点失败不会让 loading 卡死
+    dashboardApi.getAgentMonitor.mockRejectedValueOnce(new Error('x'))
+    const { result } = renderHook(() => useCommandCenterData())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(errorSpy).not.toHaveBeenCalledWith('加载指挥中心数据失败')
+    errorSpy.mockRestore()
+  })
+
   it('runOrchestration 成功后刷新编排器状态', async () => {
     const successSpy = vi.spyOn(message, 'success').mockImplementation(() => undefined as never)
     const { result } = renderHook(() => useCommandCenterData())
@@ -170,6 +294,32 @@ describe('useCommandCenterData', () => {
     expect(successSpy).toHaveBeenCalledWith('冲突已解决')
     expect(result.current.resolveOpen).toBe(false)
     successSpy.mockRestore()
+  })
+
+  it('runOrchestration 失败提示', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.orchestrate.mockRejectedValueOnce(new Error('x'))
+    const { result } = renderHook(() => useCommandCenterData())
+    await waitFor(() => expect(result.current.runOrchestration).toBeTruthy())
+    await act(async () => {
+      await result.current.runOrchestration()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('执行编排失败')
+    expect(result.current.actionLoading).toBe('')
+    errorSpy.mockRestore()
+  })
+
+  it('exportSecurityEvents 失败提示', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.exportSecurityEvents.mockRejectedValueOnce(new Error('x'))
+    const { result } = renderHook(() => useCommandCenterData())
+    await waitFor(() => expect(result.current.exportSecurityEvents).toBeTruthy())
+    await act(async () => {
+      await result.current.exportSecurityEvents()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('导出安全事件失败')
+    expect(result.current.actionLoading).toBe('')
+    errorSpy.mockRestore()
   })
 
   it('autoResolveConflicts 失败提示', async () => {

@@ -40,7 +40,7 @@ const { Title, Text, Paragraph } = Typography
  * 四大数据源，作为统一指挥入口。支持手动刷新与 SSE 实时刷新。
  */
 import { useCommandCenterData } from './commandCenter/useCommandCenterData'
-import { useCommandCenterCollabGraph } from './commandCenter/useCommandCenterCollabGraph'
+import { useCollabGraphPanel } from './dashboard/hooks/useCollabGraphPanel'
 import { CommandCenterCollabCard } from './commandCenter/CommandCenterCollabCard'
 import { CommandCenterModals } from './commandCenter/CommandCenterModals'
 
@@ -49,15 +49,13 @@ const CommandCenter: React.FC = () => {
   const { tn } = useTranslation()
   const navigate = useNavigate()
   const data = useCommandCenterData()
-  const graph = useCommandCenterCollabGraph()
+  const graph = useCollabGraphPanel()
   const {
     graphWindow,
     setGraphWindow,
     graphLayout,
     setGraphLayout,
-    FORCE_PARAMS_KEY,
     loadForceParams,
-    initialForceParams,
     forceRepulsion,
     setForceRepulsion,
     forceLinkDistance,

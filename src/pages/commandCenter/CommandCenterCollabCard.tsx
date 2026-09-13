@@ -41,11 +41,11 @@ const { Title, Text, Paragraph } = Typography
  */
 
 import type { useCommandCenterData } from './useCommandCenterData'
-import type { useCommandCenterCollabGraph } from './useCommandCenterCollabGraph'
+import type { useCollabGraphPanel } from '../dashboard/hooks/useCollabGraphPanel'
 
 interface Props {
   data: ReturnType<typeof useCommandCenterData>
-  graph: ReturnType<typeof useCommandCenterCollabGraph>
+  graph: ReturnType<typeof useCollabGraphPanel>
   tc: (k: string) => string
   tn: (...args: any[]) => string
   navigate: (...args: any[]) => void
