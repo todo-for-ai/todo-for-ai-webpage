@@ -25,6 +25,9 @@ import {
 } from './collaborationUtils'
 import EventPayloadRenderer from './EventPayloadRenderer'
 
+import { useTaskCollaborationData } from './useTaskCollaborationData'
+import { useTaskAssignmentActions } from './useTaskAssignmentActions'
+import { TaskCollaborationModals } from './TaskCollaborationModals'
 const { Text } = Typography
 const { TextArea } = Input
 
@@ -34,95 +37,66 @@ interface TaskCollaborationTimelineProps {
 }
 
 export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps> = ({ taskId, tp }) => {
-  const [events, setEvents] = useState<TaskEvent[]>([])
-  const [assignments, setAssignments] = useState<TaskAssignment[]>([])
-  const [loading, setLoading] = useState(false)
-  const [loadFailed, setLoadFailed] = useState(false)
-  const [liveMode, setLiveMode] = useState(true)
-  const [updatingAssignmentId, setUpdatingAssignmentId] = useState<number | null>(null)
-  const [feedbackAssignment, setFeedbackAssignment] = useState<TaskAssignment | null>(null)
-  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
-  const [dispatchOpen, setDispatchOpen] = useState(false)
-  const [dispatchAgents, setDispatchAgents] = useState<Agent[]>([])
-  const [dispatchLoading, setDispatchLoading] = useState(false)
-  const [dispatchSubmitting, setDispatchSubmitting] = useState(false)
-  const [feedbackForm] = Form.useForm()
-  const [dispatchForm] = Form.useForm()
-  const [composerContent, setComposerContent] = useState('')
-  const [composerType, setComposerType] = useState<PostableTaskEventType>('message')
-  const [composerToAgentId, setComposerToAgentId] = useState<number | undefined>(undefined)
-  const [posting, setPosting] = useState(false)
-  const [handoffAssignment, setHandoffAssignment] = useState<TaskAssignment | null>(null)
-  const [handoffSubmitting, setHandoffSubmitting] = useState(false)
-  const [handoffForm] = Form.useForm()
-  const [runLogs, setRunLogs] = useState<Record<number, RunLogEntry[]>>({})
-  const [expandedRunId, setExpandedRunId] = useState<number | null>(null)
-  const [runLogsLoading, setRunLogsLoading] = useState(false)
-
-  const loadRunLogs = useCallback(async (runId: number) => {
-    setRunLogsLoading(true)
-    try {
-      const result = await agentsApi.getRunLogs(runId, { per_page: 200 })
-      setRunLogs(prev => ({ ...prev, [runId]: result.items || [] }))
-    } catch {
-      // silent
-    } finally {
-      setRunLogsLoading(false)
-    }
-  }, [])
-
-  const loadCollaboration = useCallback(async (options?: { silent?: boolean }) => {
-    if (!taskId) {
-      return
-    }
-
-    const silent = options?.silent === true
-    if (!silent) {
-      setLoading(true)
-    }
-    try {
-      const [assignmentResult, eventResult] = await Promise.all([
-        agentsApi.getTaskAssignments(taskId, { state: 'active', per_page: 10 }),
-        agentsApi.getTaskEvents(taskId, { per_page: 50 }),
-      ])
-      setAssignments(assignmentResult.items)
-      setEvents(eventResult.items)
-      setLoadFailed(false)
-    } catch {
-      if (!silent) {
-        setLoadFailed(true)
-      }
-    } finally {
-      if (!silent) {
-        setLoading(false)
-      }
-    }
-  }, [taskId])
-
-  useEffect(() => {
-    loadCollaboration()
-  }, [loadCollaboration])
-
-  useEffect(() => {
-    if (!liveMode || !taskId) {
-      return
-    }
-    const timer = window.setInterval(() => {
-      if (typeof document !== 'undefined' && document.hidden) {
-        return
-      }
-      loadCollaboration({ silent: true })
-    }, 8000)
-    return () => window.clearInterval(timer)
-  }, [liveMode, taskId, loadCollaboration])
-
-  // SSE: when the server pushes a collaboration event, refresh silently
-  useCollaborationSSE({
-    enabled: liveMode && !!taskId,
-    onEvent: useCallback((_event) => {
-      loadCollaboration({ silent: true })
-    }, [loadCollaboration]),
-  })
+  const data = useTaskCollaborationData(taskId)
+  const actions = useTaskAssignmentActions(taskId, tp, data)
+  const {
+    assignments,
+    composerContent,
+    composerToAgentId,
+    composerType,
+    dispatchAgents,
+    dispatchForm,
+    dispatchLoading,
+    dispatchOpen,
+    dispatchSubmitting,
+    events,
+    expandedRunId,
+    feedbackAssignment,
+    feedbackForm,
+    feedbackSubmitting,
+    handoffAssignment,
+    handoffForm,
+    handoffSubmitting,
+    liveMode,
+    loadCollaboration,
+    loadFailed,
+    loadRunLogs,
+    loading,
+    posting,
+    runLogs,
+    runLogsLoading,
+    setAssignments,
+    setComposerContent,
+    setComposerToAgentId,
+    setComposerType,
+    setDispatchAgents,
+    setDispatchLoading,
+    setDispatchOpen,
+    setDispatchSubmitting,
+    setEvents,
+    setExpandedRunId,
+    setFeedbackAssignment,
+    setFeedbackSubmitting,
+    setHandoffAssignment,
+    setHandoffSubmitting,
+    setLiveMode,
+    setLoadFailed,
+    setLoading,
+    setPosting,
+    setRunLogs,
+    setRunLogsLoading,
+    setUpdatingAssignmentId,
+    updatingAssignmentId,
+    updateAssignment,
+    openFeedbackModal,
+    loadDispatchAgents,
+    openDispatchModal,
+    submitDispatch,
+    submitHumanFeedback,
+    postMessage,
+    openHandoffModal,
+    submitHandoff,
+  } = { ...data, ...actions }
 
   const actorLabel = useCallback((event: TaskEvent) => {
     if (event.actor_type === 'agent') {
@@ -166,128 +140,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
     return translated === `collaboration.claimModes.${modeKey}` ? modeKey : translated
   }, [tp])
 
-  const updateAssignment = useCallback(async (assignment: TaskAssignment, data: UpdateAssignmentData) => {
-    setUpdatingAssignmentId(assignment.id)
-    try {
-      await agentsApi.updateTaskAssignment(taskId, assignment.id, data)
-      message.success(tp('collaboration.updateSuccess'))
-      await loadCollaboration()
-      return true
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : tp('collaboration.updateFailed'))
-      return false
-    } finally {
-      setUpdatingAssignmentId(null)
-    }
-  }, [loadCollaboration, taskId, tp])
-
-  const openFeedbackModal = useCallback((assignment: TaskAssignment) => {
-    setFeedbackAssignment(assignment)
-    feedbackForm.setFieldsValue({
-      feedback_content: '',
-    })
-  }, [feedbackForm])
-
-  const loadDispatchAgents = useCallback(async () => {
-    setDispatchLoading(true)
-    try {
-      const result = await agentsApi.getAgents({
-        status: 'all',
-        sort_by: 'last_seen_at',
-        sort_order: 'desc',
-        per_page: 100,
-      })
-      setDispatchAgents(result.items)
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : tp('collaboration.dispatch.loadAgentsFailed'))
-    } finally {
-      setDispatchLoading(false)
-    }
-  }, [tp])
-
-  const openDispatchModal = useCallback(() => {
-    dispatchForm.setFieldsValue({
-      agent_id: undefined,
-      lease_minutes: 30,
-      notes: '',
-    })
-    setDispatchOpen(true)
-    loadDispatchAgents()
-  }, [dispatchForm, loadDispatchAgents])
-
-  const submitDispatch = useCallback(async () => {
-    try {
-      const values = await dispatchForm.validateFields()
-      setDispatchSubmitting(true)
-      const result = await agentsApi.claimTask(values.agent_id, {
-        task_id: taskId,
-        lease_seconds: Math.max(1, Number(values.lease_minutes || 30)) * 60,
-        dispatch_source: 'human',
-        run_metadata: values.notes ? { dispatch_notes: values.notes } : {},
-      })
-
-      if (!result) {
-        message.info(tp('collaboration.dispatch.noTask'))
-        return
-      }
-
-      message.success(tp('collaboration.dispatch.success'))
-      setDispatchOpen(false)
-      dispatchForm.resetFields()
-      await loadCollaboration()
-    } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message)
-      }
-    } finally {
-      setDispatchSubmitting(false)
-    }
-  }, [dispatchForm, loadCollaboration, taskId, tp])
-
-  const submitHumanFeedback = useCallback(async () => {
-    if (!feedbackAssignment) {
-      return
-    }
-
-    try {
-      const values = await feedbackForm.validateFields()
-      setFeedbackSubmitting(true)
-      const updated = await updateAssignment(feedbackAssignment, {
-        state: 'running',
-        task_status: 'in_progress',
-        feedback_content: values.feedback_content,
-        notes: values.feedback_content,
-        lease_seconds: 1800,
-      })
-      if (updated) {
-        setFeedbackAssignment(null)
-        feedbackForm.resetFields()
-      }
-    } finally {
-      setFeedbackSubmitting(false)
-    }
-  }, [feedbackAssignment, feedbackForm, updateAssignment])
-
-  const postMessage = useCallback(async () => {
-    const content = composerContent.trim()
-    if (!content) {
-      return
-    }
-    setPosting(true)
-    try {
-      await agentsApi.postTaskEvent(taskId, { content, event_type: composerType, to_agent_id: composerToAgentId })
-      setComposerContent('')
-      setComposerType('message')
-      setComposerToAgentId(undefined)
-      message.success(tp('collaboration.composer.success'))
-      await loadCollaboration()
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : tp('collaboration.composer.failed'))
-    } finally {
-      setPosting(false)
-    }
-  }, [composerContent, composerType, composerToAgentId, loadCollaboration, taskId, tp])
-
   const composerTypeOptions = useMemo(() => (
     (['message', 'note', 'question', 'answer', 'handoff', 'blocker', 'decision', 'info'] as PostableTaskEventType[])
       .map(type => {
@@ -298,42 +150,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
         }
       })
   ), [tp])
-
-  const openHandoffModal = useCallback((assignment: TaskAssignment) => {
-    setHandoffAssignment(assignment)
-    handoffForm.setFieldsValue({
-      to_agent_id: undefined,
-      lease_minutes: 30,
-      reason: '',
-    })
-    loadDispatchAgents()
-  }, [handoffForm, loadDispatchAgents])
-
-  const submitHandoff = useCallback(async () => {
-    if (!handoffAssignment) {
-      return
-    }
-    try {
-      const values = await handoffForm.validateFields()
-      setHandoffSubmitting(true)
-      await agentsApi.handoffTask(taskId, {
-        to_agent_id: values.to_agent_id,
-        from_assignment_id: handoffAssignment.id,
-        lease_seconds: Math.max(1, Number(values.lease_minutes || 30)) * 60,
-        reason: values.reason || undefined,
-      })
-      message.success(tp('collaboration.handoff.success'))
-      setHandoffAssignment(null)
-      handoffForm.resetFields()
-      await loadCollaboration()
-    } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message)
-      }
-    } finally {
-      setHandoffSubmitting(false)
-    }
-  }, [handoffAssignment, handoffForm, loadCollaboration, taskId, tp])
 
   const renderAssignmentActions = useCallback((assignment: TaskAssignment) => {
     const updating = updatingAssignmentId === assignment.id
@@ -529,7 +345,6 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
       </Space>
     ),
   })), [actorLabel, events, renderClaimMode, renderEventTitle, renderMatchStrategy, renderState, tp])
-
   return (
     <>
       <Card
@@ -649,119 +464,7 @@ export const TaskCollaborationTimeline: React.FC<TaskCollaborationTimelineProps>
           )}
         </Spin>
       </Card>
-      <Modal
-        title={tp('collaboration.dispatch.title')}
-        open={dispatchOpen}
-        onOk={submitDispatch}
-        onCancel={() => {
-          setDispatchOpen(false)
-          dispatchForm.resetFields()
-        }}
-        confirmLoading={dispatchSubmitting}
-        okText={tp('collaboration.dispatch.submit')}
-        cancelText={tp('collaboration.dispatch.cancel')}
-      >
-        <Form form={dispatchForm} layout="vertical">
-          <Form.Item
-            name="agent_id"
-            label={tp('collaboration.dispatch.agent')}
-            rules={[{ required: true, message: tp('collaboration.dispatch.agentRequired') }]}
-          >
-            <Select
-              loading={dispatchLoading}
-              showSearch
-              optionFilterProp="label"
-              placeholder={tp('collaboration.dispatch.agentPlaceholder')}
-              options={dispatchAgents.map(agent => ({
-                value: agent.id,
-                label: `${agent.name} · ${agent.kind} · ${agent.status}`,
-                disabled: agent.status === 'paused' || agent.status === 'disabled',
-              }))}
-            />
-          </Form.Item>
-          <Form.Item
-            name="lease_minutes"
-            label={tp('collaboration.dispatch.leaseMinutes')}
-            rules={[{ required: true, message: tp('collaboration.dispatch.leaseRequired') }]}
-          >
-            <InputNumber min={1} max={1440} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="notes" label={tp('collaboration.dispatch.notes')}>
-            <TextArea rows={3} placeholder={tp('collaboration.dispatch.notesPlaceholder')} />
-          </Form.Item>
-        </Form>
-      </Modal>
-      <Modal
-        title={tp('collaboration.feedback.title')}
-        open={!!feedbackAssignment}
-        onOk={submitHumanFeedback}
-        onCancel={() => {
-          setFeedbackAssignment(null)
-          feedbackForm.resetFields()
-        }}
-        confirmLoading={feedbackSubmitting}
-        okText={tp('collaboration.feedback.submit')}
-        cancelText={tp('collaboration.feedback.cancel')}
-      >
-        <Form form={feedbackForm} layout="vertical">
-          <Form.Item
-            name="feedback_content"
-            label={tp('collaboration.feedback.label')}
-            rules={[{ required: true, message: tp('collaboration.feedback.required') }]}
-          >
-            <TextArea rows={5} placeholder={tp('collaboration.feedback.placeholder')} />
-          </Form.Item>
-        </Form>
-      </Modal>
-      <Modal
-        title={tp('collaboration.handoff.title')}
-        open={!!handoffAssignment}
-        onOk={submitHandoff}
-        onCancel={() => {
-          setHandoffAssignment(null)
-          handoffForm.resetFields()
-        }}
-        confirmLoading={handoffSubmitting}
-        okText={tp('collaboration.handoff.submit')}
-        cancelText={tp('collaboration.handoff.cancel')}
-      >
-        {handoffAssignment && (
-          <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-            {tp('collaboration.handoff.from')} {handoffAssignment.agent?.name || `Agent #${handoffAssignment.agent_id}`}
-          </Text>
-        )}
-        <Form form={handoffForm} layout="vertical">
-          <Form.Item
-            name="to_agent_id"
-            label={tp('collaboration.handoff.toAgent')}
-            rules={[{ required: true, message: tp('collaboration.handoff.toAgentRequired') }]}
-          >
-            <Select
-              loading={dispatchLoading}
-              showSearch
-              optionFilterProp="label"
-              placeholder={tp('collaboration.handoff.toAgentPlaceholder')}
-              options={dispatchAgents
-                .filter(agent => agent.id !== handoffAssignment?.agent_id)
-                .map(agent => ({
-                  value: agent.id,
-                  label: `${agent.name} · ${agent.kind} · ${agent.status}`,
-                  disabled: agent.status === 'paused' || agent.status === 'disabled',
-                }))}
-            />
-          </Form.Item>
-          <Form.Item
-            name="lease_minutes"
-            label={tp('collaboration.handoff.leaseMinutes')}
-            rules={[{ required: true, message: tp('collaboration.dispatch.leaseRequired') }]}
-          >
-            <InputNumber min={1} max={1440} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="reason" label={tp('collaboration.handoff.reason')}>
-            <TextArea rows={3} placeholder={tp('collaboration.handoff.reasonPlaceholder')} />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <TaskCollaborationModals {...({ ...data, ...actions, tp } as any)} />
     </>
   )
 }
