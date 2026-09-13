@@ -88,9 +88,16 @@ export default defineConfig(() => {
       proxy: {
         '/todo-for-ai/api': {
           // 使用 127.0.0.1 避免本地 localhost 在 IPv4/IPv6 切换时出现偶发 ECONNREFUSED
-          target: 'http://127.0.0.1:50110',
+          // VITE_API_PROXY_TARGET 可指向其他后端实例（如并行验证用的非默认端口）
+          target: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:50110',
           changeOrigin: true,
           secure: false,
+        },
+        // socket.io（/user/ws 实时推送）：dev 下前端与后端同源走代理，ws 升级必须透传
+        '/socket.io': {
+          target: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:50110',
+          changeOrigin: true,
+          ws: true,
         }
       }
     },
@@ -104,6 +111,11 @@ export default defineConfig(() => {
           target: 'http://127.0.0.1:50110',
           changeOrigin: true,
           secure: false,
+        },
+        '/socket.io': {
+          target: 'http://127.0.0.1:50110',
+          changeOrigin: true,
+          ws: true,
         }
       }
     }
