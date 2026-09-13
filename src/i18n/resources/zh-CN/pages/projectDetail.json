@@ -535,6 +535,43 @@
     "live": "实时同步",
     "offline": "实时离线",
     "liveTip": "已连接实时推送：任务状态/依赖变化自动刷新任务图",
-    "offlineTip": "实时推送未连接，可点击刷新手动更新"
+    "offlineTip": "实时推送未连接，可点击刷新手动更新",
+    "filter": {
+      "all": "重置筛选",
+      "tip": "点击按就绪态筛选节点，再点取消"
+    },
+    "progress": {
+      "tip": "各就绪态任务占比，点击色块同样可筛选"
+    },
+    "focus": {
+      "selected": "已选",
+      "upstream": "上游",
+      "downstream": "下游",
+      "clear": "清除聚焦",
+      "hint": "从左到右为依赖顺序：左侧任务完成后右侧才可派发；单击节点聚焦依赖链并查看详情，双击打开任务页，Esc 清除聚焦。"
+    },
+    "drawer": {
+      "priority": "优先级",
+      "assignees": "执行 Agent",
+      "noAssignees": "未指派 Agent",
+      "deps": "前置依赖",
+      "depsEmpty": "无前置依赖",
+      "depResolved": "已解除",
+      "depUnresolved": "阻塞中",
+      "depGhost": "依赖的任务不存在，按已解除处理",
+      "actions": "状态操作",
+      "markDone": "标记完成",
+      "cancel": "取消任务",
+      "reopen": "重新打开",
+      "openDetail": "打开任务详情页",
+      "updateFailed": "状态更新失败",
+      "updated": "状态已更新，任务图已同步",
+      "status_todo": "待处理",
+      "status_in_progress": "进行中",
+      "status_review": "评审中",
+      "status_done": "已完成",
+      "status_cancelled": "已取消",
+      "status_blocked": "已阻塞"
+    }
   }
 }

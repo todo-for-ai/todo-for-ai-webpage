@@ -535,6 +535,43 @@
     "live": "Live",
     "offline": "Offline",
     "liveTip": "Realtime push connected: the graph refreshes on task status/dependency changes",
-    "offlineTip": "Realtime push not connected; use Refresh to update manually"
+    "offlineTip": "Realtime push not connected; use Refresh to update manually",
+    "filter": {
+      "all": "Reset filter",
+      "tip": "Click to filter nodes by readiness; click again to clear"
+    },
+    "progress": {
+      "tip": "Share of tasks by readiness; click a segment to filter"
+    },
+    "focus": {
+      "selected": "Selected",
+      "upstream": "upstream",
+      "downstream": "downstream",
+      "clear": "Clear focus",
+      "hint": "Left to right is dependency order: a node becomes dispatchable once everything to its left completes. Click a node to focus its dependency chain and see details; double-click to open the task; Esc clears focus."
+    },
+    "drawer": {
+      "priority": "Priority",
+      "assignees": "Assigned agents",
+      "noAssignees": "No agent assigned",
+      "deps": "Blocked by",
+      "depsEmpty": "No blockers",
+      "depResolved": "resolved",
+      "depUnresolved": "blocking",
+      "depGhost": "Referenced task no longer exists; treated as resolved",
+      "actions": "Status actions",
+      "markDone": "Mark done",
+      "cancel": "Cancel task",
+      "reopen": "Reopen",
+      "openDetail": "Open task detail",
+      "updateFailed": "Failed to update status",
+      "updated": "Status updated, graph synced",
+      "status_todo": "To do",
+      "status_in_progress": "In progress",
+      "status_review": "In review",
+      "status_done": "Done",
+      "status_cancelled": "Cancelled",
+      "status_blocked": "Blocked"
+    }
   }
 }

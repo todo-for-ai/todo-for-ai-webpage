@@ -2,6 +2,13 @@ import { apiClient } from './client/index.js'
 
 // 项目任务图（DAG）：节点/边/就绪态/环组
 // 后端：GET /tasks/projects/<id>/task-graph（services/task_graph.py）
+/** 指派对象：后端写侧为 {type,id,name}（routes_delegation），容忍历史脏数据 */
+export interface TaskGraphAssignee {
+  type?: string
+  id?: number
+  name?: string
+}
+
 export interface TaskGraphNode {
   id: number
   title: string
@@ -11,7 +18,7 @@ export interface TaskGraphNode {
   priority: string | null
   is_ai_task: boolean
   epic_id: number | null
-  assignees: Array<number | string>
+  assignees: Array<TaskGraphAssignee | number | string>
   /** 原样透出的 blocked_by 引用（可能含失效 id） */
   blocked_by: number[]
   /** 未解除（阻塞者未到终态）的依赖 id */
