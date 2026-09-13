@@ -1,53 +1,160 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, Button, Spin, Tag, Tooltip } from 'antd'
+import {
+  ReactFlow,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  Handle,
+  MarkerType,
+  Position,
+  type Edge,
+  type Node,
+  type NodeProps,
+} from '@xyflow/react'
+import dagre from '@dagrejs/dagre'
+import { Alert, Button, Spin, Tag } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 import { useProjectGraphRealtime } from '../../hooks/useProjectGraphRealtime'
 import { wsService } from '../../services/websocketService'
 import { taskGraphApi, type TaskGraphData, type TaskGraphNode } from '../../api/taskGraph'
+import '@xyflow/react/dist/style.css'
 
 interface TaskGraphTabProps {
   projectId: number
 }
 
 // 布局常量（px）
-const NODE_W = 216
-const NODE_H = 46
-const GAP_X = 96
-const GAP_Y = 14
-const STAGE_HEADER_H = 26
+const NODE_W = 224
+const NODE_H = 56
 
-// 状态色板（蓝/绿/橙/灰，深色描边文字 + 浅色底）
+// 就绪态色板（蓝/绿/橙/灰，与派发依赖门语义一致）
 const READINESS_STYLE: Record<TaskGraphNode['readiness'], { border: string; bg: string; text: string }> = {
   ready: { border: '#0958d9', bg: '#e6f4ff', text: '#0958d9' },
   blocked: { border: '#d46b08', bg: '#fff7e6', text: '#d46b08' },
   done: { border: '#389e0d', bg: '#f6ffed', text: '#389e0d' },
   cancelled: { border: '#8c8c8c', bg: '#fafafa', text: '#595959' },
 }
-const CYCLE_BORDER = '#cf1322'
+const CYCLE_COLOR = '#cf1322'
+const EDGE_COLOR = '#b8bfc9'
+const EDGE_DONE_COLOR = '#69b389'
 
-/** 分层：layer(n) = 前置（本项目内）最长链长度。环边不参与定层（环用警示横幅表达）。 */
-function computeLayers(nodes: TaskGraphNode[], idSet: Set<number>): Map<number, number> {
-  const blockersOf = new Map<number, number[]>()
-  nodes.forEach((n) => {
-    blockersOf.set(n.id, n.blocked_by.filter((b) => idSet.has(b) && b !== n.id))
+type TaskNodeData = {
+  title: string
+  readiness: TaskGraphNode['readiness']
+  inCycle: boolean
+  idLabel: string
+} & Record<string, unknown>
+
+type TaskFlowNode = Node<TaskNodeData, 'taskNode'>
+
+function TaskNodeCard({ data }: NodeProps<TaskFlowNode>) {
+  const style = READINESS_STYLE[data.readiness]
+  return (
+    <div
+      style={{
+        width: NODE_W,
+        minHeight: NODE_H,
+        background: '#fff',
+        border: `1px solid ${style.border}55`,
+        borderLeft: `5px solid ${data.inCycle ? CYCLE_COLOR : style.border}`,
+        borderRadius: 8,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        padding: '7px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        gap: 3,
+      }}
+    >
+      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#262626',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          lineHeight: '18px',
+        }}
+      >
+        {data.readiness === 'done' && (
+          <span style={{ color: style.border, marginRight: 5 }}>✓</span>
+        )}
+        {data.title}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span
+          style={{
+            fontSize: 11,
+            lineHeight: '16px',
+            padding: '0 6px',
+            borderRadius: 4,
+            color: style.text,
+            background: style.bg,
+            border: `1px solid ${style.border}44`,
+          }}
+        >
+          {data.readiness}
+        </span>
+        <span style={{ fontSize: 11, color: '#8c8c8c' }}>{data.idLabel}</span>
+        {data.inCycle && (
+          <span style={{ fontSize: 11, color: CYCLE_COLOR }}>↻ cycle</span>
+        )}
+      </div>
+      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+    </div>
+  )
+}
+
+const nodeTypes = { taskNode: TaskNodeCard }
+
+/** dagre LR 自动分层布局：blocker 在左、下游在右。 */
+function buildFlow(graph: TaskGraphData, cycleIds: Set<number>) {
+  const idSet = new Set(graph.nodes.map((n) => n.id))
+  const inProjectEdges = graph.edges.filter((e) => idSet.has(e.from) && idSet.has(e.to))
+
+  const g = new dagre.graphlib.Graph()
+  g.setGraph({ rankdir: 'LR', nodesep: 42, ranksep: 120, marginx: 28, marginy: 28 })
+  graph.nodes.forEach((n) => g.setNode(String(n.id), { width: NODE_W, height: NODE_H }))
+  // dagre 1.x 的 setEdge 必须显式给 label 对象（缺 label 时 layout 写 points 崩溃）
+  inProjectEdges.forEach((e) => g.setEdge(String(e.from), String(e.to), {}))
+  dagre.layout(g)
+
+  const readinessById = new Map(graph.nodes.map((n) => [n.id, n.readiness]))
+  const nodes: TaskFlowNode[] = graph.nodes.map((n) => {
+    const pos = g.node(String(n.id))
+    return {
+      id: String(n.id),
+      type: 'taskNode',
+      position: { x: pos.x - NODE_W / 2, y: pos.y - NODE_H / 2 },
+      data: {
+        title: n.title,
+        readiness: n.readiness,
+        inCycle: cycleIds.has(n.id),
+        idLabel: `#${n.id}`,
+      },
+      draggable: false,
+    }
   })
-  const layers = new Map<number, number>()
-  const visiting = new Set<number>()
-  const depth = (id: number): number => {
-    const cached = layers.get(id)
-    if (cached !== undefined) return cached
-    if (visiting.has(id)) return 0 // 环：按 0 层处理，环本身由横幅警示
-    visiting.add(id)
-    const deps = blockersOf.get(id) || []
-    const value = deps.length === 0 ? 0 : 1 + Math.max(...deps.map(depth))
-    visiting.delete(id)
-    layers.set(id, value)
-    return value
-  }
-  nodes.forEach((n) => depth(n.id))
-  return layers
+  const edges: Edge[] = inProjectEdges.map((e, i) => {
+    const isCycle = cycleIds.has(e.from) && cycleIds.has(e.to)
+    const sourceDone = readinessById.get(e.from) === 'done'
+    const color = isCycle ? CYCLE_COLOR : sourceDone ? EDGE_DONE_COLOR : EDGE_COLOR
+    return {
+      id: `e-${e.from}-${e.to}-${i}`,
+      source: String(e.from),
+      target: String(e.to),
+      type: 'smoothstep',
+      animated: isCycle || sourceDone,
+      style: { stroke: color, strokeWidth: isCycle ? 2.2 : 1.6 },
+      markerEnd: { type: MarkerType.ArrowClosed, color, width: 16, height: 16 },
+    }
+  })
+  return { nodes, edges }
 }
 
 export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
@@ -76,40 +183,9 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
   // 实时刷新：加入项目房间，任务状态/依赖变化事件（去抖合并）后重取图
   useProjectGraphRealtime(projectId, fetchGraph)
 
-  const layout = useMemo(() => {
+  const flow = useMemo(() => {
     if (!graph || graph.nodes.length === 0) return null
-    const idSet = new Set(graph.nodes.map((n) => n.id))
-    const nodeById = new Map(graph.nodes.map((n) => [n.id, n]))
-    const layers = computeLayers(graph.nodes, idSet)
-
-    // 列内顺序保持 id 稳定
-    const columns = new Map<number, TaskGraphNode[]>()
-    graph.nodes.forEach((n) => {
-      const layer = layers.get(n.id) || 0
-      if (!columns.has(layer)) columns.set(layer, [])
-      columns.get(layer)!.push(n)
-    })
-    const sortedLayers = [...columns.keys()].sort((a, b) => a - b)
-
-    const pos = new Map<number, { x: number; y: number }>()
-    sortedLayers.forEach((layer, colIndex) => {
-      const col = columns.get(layer)!.sort((a, b) => a.id - b.id)
-      col.forEach((n, rowIndex) => {
-        pos.set(n.id, {
-          x: colIndex * (NODE_W + GAP_X),
-          y: rowIndex * (NODE_H + GAP_Y),
-        })
-      })
-    })
-
-    const width = sortedLayers.length * (NODE_W + GAP_X) - GAP_X
-    const maxRows = Math.max(...[...columns.values()].map((c) => c.length))
-    const height = maxRows * NODE_H + (maxRows - 1) * GAP_Y
-    const stages = sortedLayers.map((layer, colIndex) => ({
-      x: colIndex * (NODE_W + GAP_X),
-      count: columns.get(layer)!.length,
-    }))
-    return { pos, nodeById, width, height, stages }
+    return buildFlow(graph, new Set(graph.cycles.flat()))
   }, [graph])
 
   if (loading && !graph) {
@@ -118,11 +194,10 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
   if (error) {
     return <Alert type="error" showIcon message={tp('taskGraph.loadFailed')} description={error} />
   }
-  if (!graph || graph.nodes.length === 0) {
+  if (!graph || graph.nodes.length === 0 || !flow) {
     return <Alert type="info" showIcon message={tp('taskGraph.empty')} />
   }
 
-  const cycleIds = new Set(graph.cycles.flat())
   const statEntries: Array<[keyof TaskGraphData['stats'], string]> = [
     ['total', tp('taskGraph.stats.total')],
     ['ready', tp('taskGraph.stats.ready')],
@@ -189,110 +264,34 @@ export const TaskGraphTab: React.FC<TaskGraphTabProps> = ({ projectId }) => {
         />
       )}
 
-      <div style={{ overflowX: 'auto', border: '1px solid #f0f0f0', borderRadius: 8, padding: 16 }}>
-        <div style={{ position: 'relative', width: layout!.width, height: layout!.height + STAGE_HEADER_H }}>
-          {/* 阶段标题行：第 N 阶段 · 任务数 */}
-          {layout!.stages.map((stage, i) => (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                left: stage.x,
-                top: 0,
-                width: NODE_W,
-                height: STAGE_HEADER_H,
-                fontSize: 12,
-                color: '#8c8c8c',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              {tp('taskGraph.stage')} {i + 1} · {stage.count}
-            </div>
-          ))}
-          <svg
-            width={layout!.width}
-            height={layout!.height}
-            style={{ position: 'absolute', top: STAGE_HEADER_H, left: 0, pointerEvents: 'none' }}
-          >
-            <defs>
-              <marker id="tg-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-                <path d="M0,0 L8,4 L0,8 z" fill="#bfbfbf" />
-              </marker>
-            </defs>
-            {graph.edges.map((e, i) => {
-              const from = layout!.pos.get(e.from)
-              const to = layout!.pos.get(e.to)
-              if (!from || !to) return null // 跨项目/失效引用不入图
-              const x1 = from.x + NODE_W
-              const y1 = from.y + NODE_H / 2
-              const x2 = to.x
-              const y2 = to.y + NODE_H / 2
-              const mid = (x1 + x2) / 2
-              const isCycleEdge = cycleIds.has(e.from) && cycleIds.has(e.to)
-              return (
-                <path
-                  key={i}
-                  d={`M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2 - 2} ${y2}`}
-                  fill="none"
-                  stroke={isCycleEdge ? CYCLE_BORDER : '#bfbfbf'}
-                  strokeWidth={isCycleEdge ? 2 : 1.5}
-                  markerEnd="url(#tg-arrow)"
-                />
-              )
-            })}
-          </svg>
-
-          {graph.nodes.map((n) => {
-            const p = layout!.pos.get(n.id)
-            if (!p) return null
-            const style = READINESS_STYLE[n.readiness]
-            const inCycle = cycleIds.has(n.id)
-            return (
-              <Tooltip key={n.id} title={`${n.title} (#${n.id})`}>
-                <div
-                  onClick={() => navigate(`/todo-for-ai/pages/tasks/${n.id}`)}
-                  style={{
-                    position: 'absolute',
-                    left: p.x,
-                    top: p.y + STAGE_HEADER_H,
-                    width: NODE_W,
-                    height: NODE_H,
-                    background: style.bg,
-                    border: `1px solid ${style.border}`,
-                    borderLeft: `4px solid ${inCycle ? CYCLE_BORDER : style.border}`,
-                    borderRadius: 6,
-                    padding: '5px 10px',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    gap: 2,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: style.text,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      lineHeight: '18px',
-                    }}
-                  >
-                    {n.title}
-                  </div>
-                  <div style={{ fontSize: 11, color: style.text, opacity: 0.85, lineHeight: '14px' }}>
-                    {`#${n.id} · ${tp(`taskGraph.readiness.${n.readiness}`)}`}
-                    {inCycle ? ` · ${tp('taskGraph.cycles.node')}` : ''}
-                  </div>
-                </div>
-              </Tooltip>
-            )
-          })}
-        </div>
+      <div style={{ height: 480, border: '1px solid #f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.18, maxZoom: 1.05 }}
+          minZoom={0.2}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          onNodeClick={(_, node) => navigate(`/todo-for-ai/pages/tasks/${node.id}`)}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1.4} color="#dfe4ea" />
+          <Controls showInteractive={false} position="bottom-right" />
+          <MiniMap
+            position="top-right"
+            pannable
+            zoomable
+            style={{ width: 150, height: 96, borderRadius: 6, background: '#f4f7fb' }}
+            maskColor="rgba(15, 23, 42, 0.06)"
+            nodeStrokeColor="#ffffff"
+            nodeColor={(node) => {
+              const readiness = (node.data as TaskNodeData).readiness
+              return READINESS_STYLE[readiness].border
+            }}
+          />
+        </ReactFlow>
       </div>
       <div style={{ marginTop: 8, color: '#8c8c8c', fontSize: 12 }}>{tp('taskGraph.hint')}</div>
     </div>
