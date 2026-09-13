@@ -39,192 +39,118 @@ const { Title, Text, Paragraph } = Typography
  * Agent 协作指挥中心：单一页面聚合 Agent 监控、安全事件、冲突、编排状态
  * 四大数据源，作为统一指挥入口。支持手动刷新与 SSE 实时刷新。
  */
+import { useCommandCenterData } from './commandCenter/useCommandCenterData'
+import { useCommandCenterCollabGraph } from './commandCenter/useCommandCenterCollabGraph'
+import { CommandCenterCollabCard } from './commandCenter/CommandCenterCollabCard'
+import { CommandCenterModals } from './commandCenter/CommandCenterModals'
+
 const CommandCenter: React.FC = () => {
   const { tc } = usePageTranslation('common')
   const { tn } = useTranslation()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [monitorData, setMonitorData] = useState<any>(null)
-  const [conflictData, setConflictData] = useState<any>(null)
-  const [conflictList, setConflictList] = useState<any[]>([])
-  const [conflictTrend, setConflictTrend] = useState<ConflictsTrend | null>(null)
-  const [conflictsByAgent, setConflictsByAgent] = useState<ConflictsByAgent | null>(null)
-  const [conflictStrategyStats, setConflictStrategyStats] = useState<ConflictsStrategyStats | null>(null)
-  const [securityEvents, setSecurityEvents] = useState<any[]>([])
-  const [securityTrend, setSecurityTrend] = useState<any>(null)
-  const [securityByAgent, setSecurityByAgent] = useState<any>(null)
-  const [orchestratorStatus, setOrchestratorStatus] = useState<OrchestratorStatus | null>(null)
-  const [orchDailyTrend, setOrchDailyTrend] = useState<any>(null)
-  const [collabGraph, setCollabGraph] = useState<any>(null)
-  const [collabGraphLoading, setCollabGraphLoading] = useState(false)
-  const collabSvgRef = useRef<SVGSVGElement>(null)
-  // 节点点击展开的协作明细 Modal
-  const [collabDetail, setCollabDetail] = useState<{ agentId: number; name: string; list: any[]; loading: boolean } | null>(null)
-  const [graphWindow, setGraphWindow] = useState<string>('30')
-  const [graphLayout, setGraphLayout] = useState<'circular' | 'grid' | 'force'>('circular')
-  // 力导向参数：从 localStorage 恢复，变更时持久化（与 Dashboard 共享同一 key）
-  const FORCE_PARAMS_KEY = 'collabGraphForceParams'
-  const loadForceParams = (): { repulsion: number; linkDistance: number } => {
-    try {
-      const raw = localStorage.getItem(FORCE_PARAMS_KEY)
-      if (raw) {
-        const p = JSON.parse(raw)
-        return {
-          repulsion: typeof p.repulsion === 'number' ? p.repulsion : 1,
-          linkDistance: typeof p.linkDistance === 'number' ? p.linkDistance : 1,
-        }
-      }
-    } catch { /* ignore */ }
-    return { repulsion: 1, linkDistance: 1 }
-  }
-  const [initialForceParams] = useState(loadForceParams)
-  const [forceRepulsion, setForceRepulsion] = useState(initialForceParams.repulsion)
-  const [forceLinkDistance, setForceLinkDistance] = useState(initialForceParams.linkDistance)
-  useEffect(() => {
-    try { localStorage.setItem(FORCE_PARAMS_KEY, JSON.stringify({ repulsion: forceRepulsion, linkDistance: forceLinkDistance })) } catch { /* ignore */ }
-  }, [forceRepulsion, forceLinkDistance])
-  const [graphKinds, setGraphKinds] = useState<string[]>([])
-  const [graphSearch, setGraphSearch] = useState('')
-  const [graphMinCount, setGraphMinCount] = useState<number | null>(null)
-  const [graphResetKey, setGraphResetKey] = useState(0)
-  const [graphShowLabels, setGraphShowLabels] = useState(false)
-  const [graphFullscreen, setGraphFullscreen] = useState(false)
-  const [graphFullscreenSize, setGraphFullscreenSize] = useState(720)
-
-  // 协作图摘要（反映 kind 筛选 + minCount）
-  const collabSummary = useMemo(() => {
-    if (!collabGraph) return null
-    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
-    const kindNodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
-    const kindIds = new Set(kindNodes.map((n: any) => n.id))
-    const minC = graphMinCount && graphMinCount > 0 ? graphMinCount : 0
-    const edges = collabGraph.edges.filter((e: any) => {
-      if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
-      if (minC && e.count < minC) return false
-      return true
-    })
-    const usedIds = new Set<number>()
-    edges.forEach((e: any) => { usedIds.add(e.source); usedIds.add(e.target) })
-    const nodes = kindNodes.filter((n: any) => usedIds.has(n.id))
-    if (edges.length === 0) return { nodeCount: nodes.length, edgeCount: 0, topPair: null }
-    const top = edges.reduce((m: any, e: any) => (e.count > m.count ? e : m), edges[0])
-    const topPair = { source: nodes.find((n: any) => n.id === top.source)?.name, target: nodes.find((n: any) => n.id === top.target)?.name, count: top.count }
-    return { nodeCount: nodes.length, edgeCount: edges.length, topPair }
-  }, [collabGraph, graphKinds, graphMinCount])
-
-  // 协作明细 Modal 内嵌迷你子图：以选中 Agent 为中心
-  const collabDetailGraph = useMemo(() => {
-    if (!collabDetail || collabDetail.list.length === 0) return null
-    const center = collabDetail
-    const nodes = [
-      { id: center.agentId, name: center.name, kind: undefined, messages: 0 },
-      ...collabDetail.list.map((c: any) => ({ id: c.agent_id, name: c.name, kind: undefined, messages: c.total })),
-    ]
-    nodes[0].messages = collabDetail.list.reduce((s: number, c: any) => s + (c.total || 0), 0)
-    const edges = collabDetail.list.map((c: any) => ({
-      source: Math.min(center.agentId, c.agent_id),
-      target: Math.max(center.agentId, c.agent_id),
-      count: c.total,
-      ...(center.agentId < c.agent_id
-        ? { source_to_target: c.sent, target_to_source: c.received }
-        : { source_to_target: c.received, target_to_source: c.sent }),
-    }))
-    return { nodes, edges, total_edges: edges.length }
-  }, [collabDetail])
-  const [resolveOpen, setResolveOpen] = useState(false)
-  const [resolveForm, setResolveForm] = useState<any>({ conflict_id: 0, strategy: 'manual', description: '' })
-  const [eventDetail, setEventDetail] = useState<any>(null)
-  const [lastRefresh, setLastRefresh] = useState<string>('')
-  const [actionLoading, setActionLoading] = useState<string>('')  // 'orchestrate' | 'resolve' | 'export'
-  const [trendWindow, setTrendWindow] = useState<string>('30')
-  const [trendSeverity, setTrendSeverity] = useState<string>('')
-  const [trendEventType, setTrendEventType] = useState<string>('')
-
-  const loadAll = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    try {
-      const trendSince = trendWindow === 'all' ? undefined : dayjs().subtract(Number(trendWindow), 'day').toISOString()
-      const trendParams: any = trendSince ? { since: trendSince } : {}
-      if (trendSeverity) trendParams.severity = trendSeverity
-      if (trendEventType) trendParams.event_type = trendEventType
-      const [monitor, conflicts, conflictList, events, trend, byAgent, status, orchTrend, confTrend, confByAgent, confStrat] = await Promise.all([
-        dashboardApi.getAgentMonitor({ hours: '24' }).catch(() => null),
-        agentsApi.getConflictsDashboard().catch(() => null),
-        agentsApi.listConflicts({ active_only: 'true' }).catch(() => ({ items: [] })),
-        agentsApi.getSecurityEvents({ per_page: 10 }).catch(() => ({ items: [] })),
-        agentsApi.getSecurityEventsDailyTrend(trendParams).catch(() => null),
-        agentsApi.getSecurityEventsByAgent({}).catch(() => null),
-        agentsApi.getOrchestratorStatus().catch(() => null),
-        agentsApi.getOrchestratorDailyTrend(trendParams).catch(() => null),
-        agentsApi.getConflictsTrend(30).catch(() => null),
-        agentsApi.getConflictsByAgent(10).catch(() => null),
-        agentsApi.getConflictsStrategyStats().catch(() => null),
-      ])
-      setMonitorData(monitor)
-      setConflictData(conflicts)
-      setConflictList(conflictList?.items || [])
-      setConflictTrend(confTrend)
-      setConflictsByAgent(confByAgent)
-      setConflictStrategyStats(confStrat)
-      setSecurityEvents(events?.items || [])
-      setSecurityTrend(trend)
-      setSecurityByAgent(byAgent)
-      setOrchestratorStatus(status)
-      setOrchDailyTrend(orchTrend)
-      setLastRefresh(new Date().toLocaleTimeString('zh-CN'))
-    } catch {
-      if (!silent) message.error('加载指挥中心数据失败')
-    } finally {
-      if (!silent) setLoading(false)
-    }
-  }, [trendWindow, trendSeverity, trendEventType])
-
-  useEffect(() => {
-    loadAll()
-    // 每 60 秒自动刷新一次
-    const id = setInterval(() => loadAll(true), 60000)
-    return () => clearInterval(id)
-  }, [loadAll])
-
-  // 全屏协作图尺寸随窗口自适应
-  useEffect(() => {
-    const update = () => {
-      const s = Math.min(window.innerWidth - 80, window.innerHeight - 160, 900)
-      setGraphFullscreenSize(Math.max(360, s))
-    }
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  // Agent 协作关系图（独立加载，避免 loadAll 膨胀）
-  const loadCollabGraph = useCallback(async (window: string) => {
-    setCollabGraphLoading(true)
-    try {
-      const since = window === 'all' ? undefined : dayjs().subtract(Number(window), 'day').toISOString()
-      const g = await agentsApi.getCollaborationGraph(since ? { limit: 50, since } : { limit: 50 }).catch(() => null)
-      setCollabGraph(g)
-    } catch {
-      // silent
-    } finally {
-      setCollabGraphLoading(false)
-    }
-  }, [])
-
-  // 点击协作图节点：加载该 Agent 的 top 协作者明细
-  const loadCollabDetail = useCallback(async (agentId: number, name: string) => {
-    setCollabDetail({ agentId, name, list: [], loading: true })
-    try {
-      const result = await agentsApi.getAgentCollaborators(agentId, { limit: 10 })
-      setCollabDetail({ agentId, name, list: result?.collaborators || [], loading: false })
-    } catch {
-      setCollabDetail({ agentId, name, list: [], loading: false })
-    }
-  }, [])
-
-  useEffect(() => {
-    loadCollabGraph(graphWindow)
-  }, [loadCollabGraph, graphWindow])
+  const data = useCommandCenterData()
+  const graph = useCommandCenterCollabGraph()
+  const {
+    graphWindow,
+    setGraphWindow,
+    graphLayout,
+    setGraphLayout,
+    FORCE_PARAMS_KEY,
+    loadForceParams,
+    initialForceParams,
+    forceRepulsion,
+    setForceRepulsion,
+    forceLinkDistance,
+    setForceLinkDistance,
+    graphKinds,
+    setGraphKinds,
+    graphSearch,
+    setGraphSearch,
+    graphMinCount,
+    setGraphMinCount,
+    graphResetKey,
+    setGraphResetKey,
+    graphShowLabels,
+    setGraphShowLabels,
+    graphFullscreen,
+    setGraphFullscreen,
+    graphFullscreenSize,
+    setGraphFullscreenSize,
+    collabSummary,
+    collabDetailGraph,
+    loadCollabGraph,
+    loadCollabDetail,
+    exportCollabGraph,
+    exportCollabGraphSvg,
+    exportCollabGraphPng,
+    monitorSummary,
+    activeAgents,
+    totalAgents,
+    busyAgents,
+    offlineAgents,
+    conflictTotal,
+    conflictActive,
+    criticalEvents,
+    trendDays,
+    trendTotal,
+    lastDay,
+    prevDay,
+    dayDelta,
+    dayDeltaPct,
+    loading,
+    setLoading,
+    monitorData,
+    setMonitorData,
+    conflictData,
+    setConflictData,
+    conflictList,
+    setConflictList,
+    conflictTrend,
+    setConflictTrend,
+    conflictsByAgent,
+    setConflictsByAgent,
+    conflictStrategyStats,
+    setConflictStrategyStats,
+    securityEvents,
+    setSecurityEvents,
+    securityTrend,
+    setSecurityTrend,
+    securityByAgent,
+    setSecurityByAgent,
+    orchestratorStatus,
+    setOrchestratorStatus,
+    orchDailyTrend,
+    setOrchDailyTrend,
+    collabGraph,
+    setCollabGraph,
+    collabGraphLoading,
+    setCollabGraphLoading,
+    collabSvgRef,
+    collabDetail,
+    setCollabDetail,
+    resolveOpen,
+    setResolveOpen,
+    resolveForm,
+    setResolveForm,
+    eventDetail,
+    setEventDetail,
+    lastRefresh,
+    setLastRefresh,
+    actionLoading,
+    setActionLoading,
+    trendWindow,
+    setTrendWindow,
+    trendSeverity,
+    setTrendSeverity,
+    trendEventType,
+    setTrendEventType,
+    loadAll,
+    runOrchestration,
+    autoResolveConflicts,
+    openResolveConflict,
+    submitResolveConflict,
+    exportSecurityEvents,
+  } = { ...data, ...graph }
 
   // SSE 实时刷新：任一协作相关事件触发静默刷新
   useCollaborationSSE({
@@ -238,205 +164,6 @@ const CommandCenter: React.FC = () => {
       }
     }, [loadAll, loadCollabGraph, graphWindow]),
   })
-
-  // 快捷操作：立即编排
-  const runOrchestration = useCallback(async () => {
-    setActionLoading('orchestrate')
-    try {
-      const result = await agentsApi.orchestrate()
-      message.success(`编排完成（${result.duration_seconds}s，触发 ${result.triggers_fired}，解决冲突 ${result.conflicts_auto_resolved}）`)
-      await loadAll(true)
-    } catch {
-      message.error('执行编排失败')
-    } finally {
-      setActionLoading('')
-    }
-  }, [loadAll])
-
-  // 快捷操作：自动解决低严重度冲突
-  const autoResolveConflicts = useCallback(async () => {
-    setActionLoading('resolve')
-    try {
-      const result = await agentsApi.autoResolveConflicts()
-      const resolved = result?.resolved || 0
-      message.success(resolved > 0 ? `已自动解决 ${resolved} 个冲突` : '无符合条件的冲突可自动解决')
-      await loadAll(true)
-    } catch {
-      message.error('自动解决冲突失败')
-    } finally {
-      setActionLoading('')
-    }
-  }, [loadAll])
-
-  // 打开单个冲突解决 Modal
-  const openResolveConflict = (c: any) => {
-    setResolveForm({ conflict_id: c.id, strategy: c.suggested_strategy || 'manual', description: '' })
-    setResolveOpen(true)
-  }
-
-  // 提交解决冲突
-  const submitResolveConflict = async () => {
-    try {
-      const result = await agentsApi.resolveConflict(resolveForm.conflict_id, resolveForm.strategy, resolveForm.description)
-      message.success('冲突已解决')
-      setResolveOpen(false)
-      await loadAll(true)
-      if (result?.actions?.length) message.info(`执行 ${result.actions.length} 项动作`, 4)
-    } catch {
-      message.error('解决失败')
-    }
-  }
-
-  // 快捷操作：导出安全事件 CSV
-  const exportSecurityEvents = useCallback(async () => {
-    setActionLoading('export')
-    try {
-      const csv = await agentsApi.exportSecurityEvents({})
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `security_events_${new Date().toISOString().slice(0, 10)}.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      message.success('安全事件已导出')
-    } catch {
-      message.error('导出安全事件失败')
-    } finally {
-      setActionLoading('')
-    }
-  }, [])
-
-  // 导出协作关系图为 CSV（反映当前 kind 筛选）
-  const exportCollabGraph = useCallback(() => {
-    if (!collabGraph || (!collabGraph.nodes?.length && !collabGraph.edges?.length)) {
-      message.warning('暂无协作关系数据可导出')
-      return
-    }
-    const kindSet = graphKinds.length > 0 ? new Set(graphKinds) : null
-    const kindNodes = kindSet ? collabGraph.nodes.filter((n: any) => n.kind && kindSet.has(n.kind)) : collabGraph.nodes
-    const kindIds = new Set(kindNodes.map((n: any) => n.id))
-    const minC = graphMinCount && graphMinCount > 0 ? graphMinCount : 0
-    const edges = collabGraph.edges.filter((e: any) => {
-      if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
-      if (minC && e.count < minC) return false
-      return true
-    })
-    const usedIds = new Set<number>()
-    edges.forEach((e: any) => { usedIds.add(e.source); usedIds.add(e.target) })
-    const nodes = kindNodes.filter((n: any) => usedIds.has(n.id))
-    const esc = (v: unknown) => {
-      const s = v == null ? '' : String(v)
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-    }
-    const lines: string[] = []
-    lines.push('# 节点')
-    lines.push(['id', 'name', 'kind', 'messages'].map(esc).join(','))
-    nodes.forEach((n: any) => lines.push([n.id, n.name, n.kind ?? '', n.messages].map(esc).join(',')))
-    lines.push('')
-    lines.push('# 边')
-    lines.push(['source', 'target', 'count', 'source_to_target', 'target_to_source'].map(esc).join(','))
-    edges.forEach((e: any) => lines.push([e.source, e.target, e.count, e.source_to_target ?? 0, e.target_to_source ?? 0].map(esc).join(',')))
-    const text = '﻿' + lines.join('\n')
-    const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    message.success('协作关系图已导出为 CSV')
-  }, [collabGraph, graphKinds, graphMinCount])
-
-  // 导出协作关系图为 SVG 图片
-  const exportCollabGraphSvg = useCallback(() => {
-    const svg = collabSvgRef.current
-    if (!svg) {
-      message.warning('暂无可导出的图形')
-      return
-    }
-    const clone = svg.cloneNode(true) as SVGSVGElement
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    const text = new XMLSerializer().serializeToString(clone)
-    const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + text], { type: 'image/svg+xml;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.svg`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    message.success('协作关系图已导出为 SVG')
-  }, [])
-
-  // 导出协作关系图为 PNG（SVG → Canvas → PNG）
-  const exportCollabGraphPng = useCallback(() => {
-    const svg = collabSvgRef.current
-    if (!svg) {
-      message.warning('暂无可导出的图形')
-      return
-    }
-    const clone = svg.cloneNode(true) as SVGSVGElement
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    clone.setAttribute('width', String(svg.viewBox.baseVal.width || svg.clientWidth || 380))
-    clone.setAttribute('height', String(svg.viewBox.baseVal.height || svg.clientHeight || 380))
-    const text = new XMLSerializer().serializeToString(clone)
-    const svgBlob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + text], { type: 'image/svg+xml;charset=utf-8;' })
-    const url = URL.createObjectURL(svgBlob)
-    const img = new Image()
-    img.onload = () => {
-      const w = Number(clone.getAttribute('width')) || 380
-      const h = Number(clone.getAttribute('height')) || 380
-      const scale = 2
-      const canvas = document.createElement('canvas')
-      canvas.width = w * scale
-      canvas.height = h * scale
-      const ctx = canvas.getContext('2d')
-      if (!ctx) { URL.revokeObjectURL(url); message.error('PNG 导出失败'); return }
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      URL.revokeObjectURL(url)
-      canvas.toBlob((pngBlob) => {
-        if (!pngBlob) { message.error('PNG 导出失败'); return }
-        const pngUrl = URL.createObjectURL(pngBlob)
-        const a = document.createElement('a')
-        a.href = pngUrl
-        a.download = `collaboration_graph_${new Date().toISOString().slice(0, 10)}.png`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(pngUrl)
-        message.success('协作关系图已导出为 PNG')
-      }, 'image/png')
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); message.error('PNG 导出失败：SVG 渲染失败') }
-    img.src = url
-  }, [])
-
-  const monitorSummary = monitorData?.summary || {}
-  const activeAgents = monitorSummary.active || 0
-  const totalAgents = monitorSummary.total || 0
-  const busyAgents = monitorSummary.busy || 0
-  const offlineAgents = monitorSummary.offline || 0
-
-  const conflictTotal = conflictData?.total || 0
-  const conflictActive = conflictData?.active || 0
-
-  const criticalEvents = securityEvents.filter((e: any) => e.severity === 'CRITICAL').length
-
-  // 安全事件最近环比（基于按天趋势的最后两天）
-  const trendDays = securityTrend?.days || []
-  const trendTotal = securityTrend?.totals?.total ?? 0
-  const lastDay = trendDays.length > 0 ? trendDays[trendDays.length - 1].total : 0
-  const prevDay = trendDays.length > 1 ? trendDays[trendDays.length - 2].total : 0
-  const dayDelta = lastDay - prevDay
-  const dayDeltaPct = prevDay > 0 ? Math.round((dayDelta / prevDay) * 100) : (dayDelta > 0 ? 100 : 0)
 
   return (
     <div>
@@ -731,229 +458,10 @@ const CommandCenter: React.FC = () => {
         </Row>
 
         {/* Agent 协作关系图 */}
-        <Card
-          title={
-            <Space>
-              <ShareAltOutlined /> Agent 协作关系图
-              {collabSummary && (
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 'normal' }}>
-                  {collabSummary.nodeCount} 节点 · {collabSummary.edgeCount} 边
-                  {collabSummary.topPair && ` · 最活跃: ${collabSummary.topPair.source} ↔ ${collabSummary.topPair.target} (${collabSummary.topPair.count})`}
-                </Text>
-              )}
-            </Space>
-          }
-          variant="borderless"
-          style={{ marginTop: 16 }}
-          extra={
-            <Space size="small" wrap>
-              <Segmented
-                size="small"
-                value={graphLayout}
-                onChange={(v) => setGraphLayout(v as 'circular' | 'grid' | 'force')}
-                options={[
-                  { label: '环形', value: 'circular' },
-                  { label: '网格', value: 'grid' },
-                  { label: '力导向', value: 'force' },
-                ]}
-              />
-              {graphLayout === 'force' && (
-                <Space size={8}>
-                  <Tooltip title="斥力强度（越大越分散）">
-                    <Space size={4}><Text type="secondary" style={{ fontSize: 11 }}>斥力</Text><Slider min={0.2} max={3} step={0.1} value={forceRepulsion} onChange={setForceRepulsion} style={{ width: 80, margin: 0 }} /></Space>
-                  </Tooltip>
-                  <Tooltip title="链接距离（越大边越长）">
-                    <Space size={4}><Text type="secondary" style={{ fontSize: 11 }}>距离</Text><Slider min={0.2} max={3} step={0.1} value={forceLinkDistance} onChange={setForceLinkDistance} style={{ width: 80, margin: 0 }} /></Space>
-                  </Tooltip>
-                </Space>
-              )}
-              <Segmented
-                size="small"
-                value={graphWindow}
-                onChange={(v) => setGraphWindow(v as string)}
-                options={[
-                  { label: '7天', value: '7' },
-                  { label: '30天', value: '30' },
-                  { label: '全部', value: 'all' },
-                ]}
-              />
-              <Select
-                size="small"
-                mode="multiple"
-                maxTagCount="responsive"
-                style={{ minWidth: 140 }}
-                placeholder="全部类型"
-                value={graphKinds}
-                onChange={setGraphKinds}
-                options={[
-                  { value: 'coordinator', label: '协调者' },
-                  { value: 'autonomous', label: '自主型' },
-                  { value: 'assistant', label: '助手型' },
-                  { value: 'external', label: '外部' },
-                ]}
-              />
-              <Dropdown menu={{
-                items: [
-                  { key: 'csv', label: '导出 CSV', onClick: exportCollabGraph },
-                  { key: 'svg', label: '导出 SVG', onClick: exportCollabGraphSvg },
-                  { key: 'png', label: '导出 PNG', onClick: exportCollabGraphPng },
-                ],
-              }}>
-                <Button size="small" icon={<DownloadOutlined />}>导出</Button>
-              </Dropdown>
-              <Input
-                size="small"
-                allowClear
-                style={{ width: 140 }}
-                placeholder="搜索 Agent 名称"
-                prefix={<SearchOutlined />}
-                value={graphSearch}
-                onChange={(e) => setGraphSearch(e.target.value)}
-              />
-              <InputNumber
-                size="small"
-                min={1}
-                placeholder="最低消息量"
-                value={graphMinCount}
-                onChange={(v) => setGraphMinCount(v ?? null)}
-              />
-              <Button size="small" icon={<ReloadOutlined />} onClick={() => { try { localStorage.removeItem('ccCollabGraphPositions') } catch { /* ignore */ } setGraphResetKey((k) => k + 1) }}>重置布局</Button>
-              <Checkbox checked={graphShowLabels} onChange={(e) => setGraphShowLabels(e.target.checked)}>边标签</Checkbox>
-              <Button size="small" icon={<ExpandOutlined />} onClick={() => setGraphFullscreen(true)}>全屏</Button>
-            </Space>
-          }
-        >
-          <CollaborationGraphView
-            key={graphResetKey}
-            ref={collabSvgRef}
-            data={collabGraph}
-            size={380}
-            layout={graphLayout}
-            filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
-            searchTerm={graphSearch || undefined}
-            minCount={graphMinCount ?? undefined}
-            showEdgeLabels={graphShowLabels}
-            storageKey="ccCollabGraphPositions"
-            forceRepulsion={forceRepulsion}
-            forceLinkDistance={forceLinkDistance}
-            onNodeClick={(agentId) => {
-              const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
-              loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
-            }}
-          />
-        </Card>
+      <CommandCenterCollabCard data={data} graph={graph} tc={tc} tn={tn} navigate={navigate} />
       </Spin>
 
-      {/* 解决冲突 Modal */}
-      <Modal
-        title={`解决冲突 #${resolveForm.conflict_id}`}
-        open={resolveOpen}
-        onCancel={() => setResolveOpen(false)}
-        onOk={submitResolveConflict}
-        okText="解决"
-      >
-        <Form layout="vertical">
-          <Form.Item label="解决策略" required>
-            <Select value={resolveForm.strategy} onChange={(v) => setResolveForm({ ...resolveForm, strategy: v })}>
-              <Select.Option value="first_wins">先到先得 (保留最早分配)</Select.Option>
-              <Select.Option value="highest_reputation">最高声誉 (声誉最佳者胜出)</Select.Option>
-              <Select.Option value="least_loaded">最少负载 (活跃任务最少者胜出)</Select.Option>
-              <Select.Option value="auto_retry">自动重试 (取消过期/重新排队)</Select.Option>
-              <Select.Option value="split">拆分 (分配给多方)</Select.Option>
-              <Select.Option value="escalate">升级 (转交协调者)</Select.Option>
-              <Select.Option value="manual">人工 (仅记录)</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="解决说明">
-            <Input.TextArea value={resolveForm.description} onChange={(e) => setResolveForm({ ...resolveForm, description: e.target.value })} placeholder="可选: 解决备注" rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 安全事件详情 Modal */}
-      <SecurityEventDetailModal
-        event={eventDetail}
-        onClose={() => setEventDetail(null)}
-        onRunClick={(runId) => navigate(`/todo-for-ai/pages/workflows?run_id=${runId}`)}
-      />
-
-      {/* 协作图节点点击：协作明细 Modal */}
-      <Modal
-        title={`${collabDetail?.name || ''} 的协作伙伴`}
-        open={!!collabDetail}
-        onCancel={() => setCollabDetail(null)}
-        footer={[
-          <Button key="detail" type="link" onClick={() => { if (collabDetail) navigate(`/todo-for-ai/pages/agents?agent_id=${collabDetail.agentId}`) }}>
-            查看 Agent 详情
-          </Button>,
-          <Button key="close" onClick={() => setCollabDetail(null)}>关闭</Button>,
-        ]}
-      >
-        <Spin spinning={collabDetail?.loading}>
-          {collabDetail && collabDetail.list.length > 0 ? (
-            <>
-              {collabDetailGraph && (
-                <div style={{ marginBottom: 12 }}>
-                  <CollaborationGraphView
-                    data={collabDetailGraph}
-                    size={260}
-                    layout="grid"
-                    centerNodeId={collabDetail.agentId}
-                    storageKey={`ccCollabGraphDetail_${collabDetail.agentId}`}
-                  />
-                </div>
-              )}
-              <List
-                size="small"
-                dataSource={collabDetail.list}
-                renderItem={(c: any) => (
-                  <List.Item>
-                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                      <Text style={{ color: '#1890ff' }}>{c.name}</Text>
-                      <Space size={4}>
-                        <Tag>发 {c.sent}</Tag>
-                        <Tag>收 {c.received}</Tag>
-                        <Tag color="blue">合计 {c.total}</Tag>
-                      </Space>
-                    </Space>
-                  </List.Item>
-                )}
-              />
-            </>
-          ) : (
-            <Text type="secondary">暂无协作伙伴记录</Text>
-          )}
-        </Spin>
-      </Modal>
-
-      {/* 协作关系图全屏 Modal */}
-      <Modal
-        title="Agent 协作关系图（全屏）"
-        open={graphFullscreen}
-        onCancel={() => setGraphFullscreen(false)}
-        footer={null}
-        width="90%"
-        style={{ top: 20 }}
-        destroyOnClose
-      >
-        <CollaborationGraphView
-          data={collabGraph}
-          size={graphFullscreenSize}
-          layout={graphLayout}
-          filterKinds={graphKinds.length > 0 ? graphKinds : undefined}
-          searchTerm={graphSearch || undefined}
-          minCount={graphMinCount ?? undefined}
-          showEdgeLabels={graphShowLabels}
-          storageKey="ccCollabGraphPositions"
-          forceRepulsion={forceRepulsion}
-          forceLinkDistance={forceLinkDistance}
-          onNodeClick={(agentId) => {
-            const node = collabGraph?.nodes.find((n: any) => n.id === agentId)
-            setGraphFullscreen(false)
-            loadCollabDetail(agentId, node?.name || `Agent#${agentId}`)
-          }}
-        />
-      </Modal>
+      <CommandCenterModals data={data} graph={graph} tc={tc} tn={tn} navigate={navigate} />
     </div>
   )
 }
