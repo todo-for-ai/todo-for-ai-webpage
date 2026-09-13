@@ -19,6 +19,7 @@ import { ProjectContextHeader } from '../components/ProjectDetail/ProjectContext
 import { CodeTab } from '../components/ProjectDetail/CodeTab'
 import { AgentsTab } from '../components/ProjectDetail/AgentsTab'
 import { GovernanceTab } from '../components/ProjectDetail/GovernanceTab'
+import { TaskGraphTab } from '../components/ProjectDetail/TaskGraphTab'
 import { ProjectActivitySection } from '../components/ProjectDetail/ProjectActivitySection'
 import { projectContextApi, type ProjectOverview } from '../api/projectContext'
 import { LinkButton } from '../components/SmartLink'
@@ -195,6 +196,13 @@ const ProjectDetail = () => {
                     onOpenTab={handleTabChange}
                   />
                 </div>
+              )
+            },
+            {
+              key: 'task-graph',
+              label: tp('overview.tabs.taskGraph'),
+              children: (
+                <TaskGraphTab projectId={parseInt(id || '0', 10)} />
               )
             },
             {

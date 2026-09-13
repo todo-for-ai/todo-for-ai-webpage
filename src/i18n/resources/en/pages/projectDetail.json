@@ -55,7 +55,8 @@
       "code": "Code",
       "agents": "Agents",
       "governance": "Governance",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "taskGraph": "Task Graph"
     }
   },
   "members": {
@@ -464,19 +465,19 @@
       "stalled": "Repeatedly blocked (e.g. AI planner failed); waiting for manual action",
       "stopped": "Manually stopped; no more rounds"
     },
- "action": {
-  "create": "New Loop",
-  "pause": "Pause",
-  "resume": "Resume",
-  "stop": "Stop",
-  "kick": "Kick",
-  "cancel": "Cancel",
-  "adjust": "Adjust",
-  "save": "Save"
- },
- "hintKick": "Plan the next round immediately without waiting for a task to finish (fallback when an agent is down)",
- "adjustTitle": "Adjust endurance guardrails",
- "hintAdjust": "Set how long / how many rounds this agent group keeps working; enlarge the guardrails on an exhausted loop and press Resume to continue",
+    "action": {
+      "create": "New Loop",
+      "pause": "Pause",
+      "resume": "Resume",
+      "stop": "Stop",
+      "kick": "Kick",
+      "cancel": "Cancel",
+      "adjust": "Adjust",
+      "save": "Save"
+    },
+    "hintKick": "Plan the next round immediately without waiting for a task to finish (fallback when an agent is down)",
+    "adjustTitle": "Adjust endurance guardrails",
+    "hintAdjust": "Set how long / how many rounds this agent group keeps working; enlarge the guardrails on an exhausted loop and press Resume to continue",
     "form": {
       "title": "Loop title",
       "goal": "Goal",
@@ -504,5 +505,31 @@
     "hintTimeBudget": "Time budget: the loop stops starting new rounds when exceeded and waits for manual action",
     "directorTag": "Dir",
     "hintDirector": "Multi-agent orchestration: the director plans and reviews; each round task is routed to a matching executor by its required role"
+  },
+  "taskGraph": {
+    "title": "Task Dependency Graph",
+    "loading": "Loading task graph…",
+    "loadFailed": "Failed to load task graph",
+    "empty": "No tasks in this project yet. Create tasks to see the dependency graph.",
+    "refresh": "Refresh",
+    "truncated": "Over 500 tasks; showing the latest 500 only",
+    "hint": "Left to right is dependency order: a node becomes dispatchable once everything to its left completes. Click a node to open the task.",
+    "stats": {
+      "total": "Total",
+      "ready": "Ready",
+      "blocked": "Blocked",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "readiness": {
+      "ready": "Ready",
+      "blocked": "Blocked",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "cycles": {
+      "title": "Dependency cycles detected: tasks in a cycle wait on each other and can never be dispatched. Fix the dependencies in task editing.",
+      "node": "In cycle"
+    }
   }
 }

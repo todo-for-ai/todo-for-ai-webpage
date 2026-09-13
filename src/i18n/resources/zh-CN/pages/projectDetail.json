@@ -55,7 +55,8 @@
       "code": "代码",
       "agents": "Agent 协作",
       "governance": "治理",
-      "notifications": "通知设置"
+      "notifications": "通知设置",
+      "taskGraph": "任务图"
     }
   },
   "members": {
@@ -464,19 +465,19 @@
       "stalled": "连续受阻（如 AI 规划失败），已停止等待人工处理",
       "stopped": "已人工停止，不再推进"
     },
- "action": {
-  "create": "新建循环",
-  "pause": "暂停",
-  "resume": "继续",
-  "stop": "停止",
-  "kick": "立即推进",
-  "cancel": "取消",
-  "adjust": "调整",
-  "save": "保存"
- },
- "hintKick": "不等任务终态，立即尝试规划下一轮（agent 宕机等场景的兜底）",
- "adjustTitle": "调整持续干活护栏",
- "hintAdjust": "设置这群 Agent 跑多久、跑多少轮才停；轮数耗尽或超时的循环调大后点「继续」即可接着跑",
+    "action": {
+      "create": "新建循环",
+      "pause": "暂停",
+      "resume": "继续",
+      "stop": "停止",
+      "kick": "立即推进",
+      "cancel": "取消",
+      "adjust": "调整",
+      "save": "保存"
+    },
+    "hintKick": "不等任务终态，立即尝试规划下一轮（agent 宕机等场景的兜底）",
+    "adjustTitle": "调整持续干活护栏",
+    "hintAdjust": "设置这群 Agent 跑多久、跑多少轮才停；轮数耗尽或超时的循环调大后点「继续」即可接着跑",
     "form": {
       "title": "循环标题",
       "goal": "目标描述",
@@ -504,5 +505,31 @@
     "hintTimeBudget": "时长预算：超时后循环停止推进新轮次，等待人工处理",
     "directorTag": "指挥",
     "hintDirector": "多 Agent 编排：指挥者负责把目标拆解成计划并评审进展；每轮任务按岗位要求自动路由给匹配的执行者"
+  },
+  "taskGraph": {
+    "title": "任务依赖图",
+    "loading": "任务图加载中…",
+    "loadFailed": "任务图加载失败",
+    "empty": "当前项目暂无任务，创建任务后即可查看依赖图",
+    "refresh": "刷新",
+    "truncated": "任务数超过 500，仅展示最新 500 个",
+    "hint": "从左到右为依赖顺序：左侧任务完成后右侧才可派发；点击节点查看任务详情。",
+    "stats": {
+      "total": "总任务",
+      "ready": "可派发",
+      "blocked": "被阻塞",
+      "done": "已完成",
+      "cancelled": "已取消"
+    },
+    "readiness": {
+      "ready": "可派发",
+      "blocked": "被阻塞",
+      "done": "已完成",
+      "cancelled": "已取消"
+    },
+    "cycles": {
+      "title": "发现依赖环：环内任务会互相等待、永远无法派发，请到任务编辑中调整依赖",
+      "node": "在环上"
+    }
   }
 }
