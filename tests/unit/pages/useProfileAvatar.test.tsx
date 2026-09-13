@@ -118,3 +118,80 @@ describe('useProfileAvatar', () => {
     expect(ok).toBe(false)
   })
 })
+
+describe('useProfileAvatar 分支补全', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getStoredAvatarToken.mockReturnValue(null)
+  })
+
+  const setup = () => renderHook(() => useProfileAvatar(mockUser, updateUser, messageApi, tp))
+
+  it('无本地 token 时更新失败走 clearStoredAvatarToken', async () => {
+    updateUser.mockRejectedValueOnce(new Error('boom'))
+    const errorSpy = vi.spyOn(messageApi, 'error').mockImplementation(() => undefined)
+    const { result } = setup()
+    await waitFor(() => expect(result.current.builtinAvatarOptions).toBeTruthy())
+    let ok = false
+    await act(async () => {
+      ok = await result.current.updateAvatarToken('tok-x', 'ok.k', 'fail.k')
+    })
+    expect(ok).toBe(false)
+    // 无先前本地 token → 回滚走 clear 而非 set
+    expect(clearStoredAvatarToken).toHaveBeenCalledWith(42)
+    expect(result.current.localAvatarToken).toBeNull()
+    errorSpy.mockRestore()
+  })
+
+  it('handleSelectAvatar 选择不同 token 成功后关闭选择器', async () => {
+    const { result } = setup()
+    await waitFor(() => expect(result.current.builtinAvatarOptions).toBeTruthy())
+    act(() => {
+      result.current.setIsAvatarPickerOpen(true)
+    })
+    await act(async () => {
+      await result.current.handleSelectAvatar('tok-a-42-alice')
+    })
+    expect(result.current.isAvatarPickerOpen).toBe(false)
+    expect(result.current.localAvatarToken).toBe('tok-a-42-alice')
+  })
+
+  it('handleRandomAvatar 无可选头像时早退', async () => {
+    getBuiltinAvatarOptions.mockReturnValueOnce([])
+    const { result } = setup()
+    await waitFor(() => expect(result.current.builtinAvatarOptions).toBeTruthy())
+    await act(async () => {
+      await result.current.handleRandomAvatar()
+    })
+    expect(result.current.isAvatarUpdating).toBe(false)
+  })
+})
+
+describe('useProfileAvatar 守卫分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getStoredAvatarToken.mockReturnValue('tok-1')
+  })
+
+  it('handleSelectAvatar 同 token 早退（仅关闭选择器）', async () => {
+    const { result } = renderHook(() => useProfileAvatar(mockUser, updateUser, messageApi, tp))
+    await waitFor(() => expect(result.current.localAvatarToken).toBe('tok-1'))
+    act(() => {
+      result.current.setIsAvatarPickerOpen(true)
+    })
+    await act(async () => {
+      await result.current.handleSelectAvatar('tok-1')
+    })
+    expect(result.current.isAvatarPickerOpen).toBe(false)
+    expect(updateUser).not.toHaveBeenCalled()
+  })
+
+  it('未登录时 updateAvatarToken 守卫直接返回 false', async () => {
+    const { result } = renderHook(() => useProfileAvatar(null as never, updateUser, messageApi, tp))
+    let ok: boolean | undefined
+    await act(async () => {
+      ok = await result.current.updateAvatarToken('tok', 'ok.k', 'fail.k')
+    })
+    expect(ok).toBe(false)
+  })
+})
