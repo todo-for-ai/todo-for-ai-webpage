@@ -6,7 +6,7 @@ import type { CollaborationGraph as GraphData } from '../api/agents'
 const { Text } = Typography
 
 import { KIND_COLOR_DEFAULT, KIND_COLORS, kindColor, kindGradientUrl, reputationColor, reputationStrokeWidth } from './collaboration-graph/collaborationGraphShared'
-
+import { useForceSimulation } from './collaboration-graph/useForceSimulation'
 
 interface CollaborationGraphViewProps {
   /** 图数据：nodes + edges */
@@ -107,6 +107,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const draggingRef = useRef<number | null>(null)
   const dragMovedRef = useRef(false)
   const svgWrapRef = useRef<HTMLDivElement | null>(null)
+  const { forceCoords } = useForceSimulation({ layout, size, cx, cy, forceRepulsion, forceLinkDistance, nodes, edges })
+
   // 缩放与平移
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -114,76 +116,6 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const panningRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
 
   // 力导向布局实时坐标（rAF 逐步收敛，让用户看到布局过程）
-  const initialForceCoords = (): Map<number, { x: number; y: number; vx: number; vy: number }> => {
-    const m = new Map<number, { x: number; y: number; vx: number; vy: number }>()
-    const radius = size / 2 - 40
-    nodes.forEach((n, i) => {
-      const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1) - Math.PI / 2
-      m.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), vx: 0, vy: 0 })
-    })
-    return m
-  }
-  const [forceCoords, setForceCoords] = useState<Map<number, { x: number; y: number; vx: number; vy: number }>>(initialForceCoords)
-  const rafRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    if (layout !== 'force') return
-    // 重置为圆周起点，重新收敛
-    let coords = initialForceCoords()
-    setForceCoords(new Map(coords))
-    const k = size / 10
-    const repulsion = Math.max(0, forceRepulsion)
-    const linkK = Math.max(1, k * Math.max(0, forceLinkDistance))
-    const idxList = nodes.map((n) => n.id)
-    const edgeList = edges.map((e) => ({ source: e.source, target: e.target }))
-    const maxFrames = 180
-    let frame = 0
-    const tick = () => {
-      frame++
-      // 斥力
-      for (let i = 0; i < idxList.length; i++) {
-        for (let j = i + 1; j < idxList.length; j++) {
-          const a = coords.get(idxList[i])!
-          const b = coords.get(idxList[j])!
-          let dx = a.x - b.x
-          let dy = a.y - b.y
-          let d = Math.hypot(dx, dy)
-          if (d < 1) { d = 1; dx = (i % 3) - 1; dy = (j % 3) - 1 }
-          const f = ((k * k) / (d * d)) * repulsion
-          const ux = dx / d
-          const uy = dy / d
-          a.vx += ux * f; a.vy += uy * f
-          b.vx -= ux * f; b.vy -= uy * f
-        }
-      }
-      // 吸引力（边）
-      edgeList.forEach((e) => {
-        const a = coords.get(e.source); const b = coords.get(e.target)
-        if (!a || !b) return
-        const dx = b.x - a.x; const dy = b.y - a.y
-        const d = Math.max(1, Math.hypot(dx, dy))
-        const f = (d * d) / linkK
-        const ux = dx / d; const uy = dy / d
-        a.vx += ux * f; a.vy += uy * f
-        b.vx -= ux * f; b.vy -= uy * f
-      })
-      // 应用速度 + 中心引力 + 阻尼
-      const damping = 0.85
-      coords.forEach((c) => {
-        c.vx = (c.vx + (cx - c.x) * 0.01) * damping
-        c.vy = (c.vy + (cy - c.y) * 0.01) * damping
-        c.x += Math.max(-12, Math.min(12, c.vx))
-        c.y += Math.max(-12, Math.min(12, c.vy))
-      })
-      setForceCoords(new Map(coords))
-      if (frame < maxFrames) {
-        rafRef.current = requestAnimationFrame(tick)
-      }
-    }
-    rafRef.current = requestAnimationFrame(tick)
-    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout, size, cx, cy, forceRepulsion, forceLinkDistance, nodes.map((n) => n.id).join(','), edges.map((e) => `${e.source}-${e.target}-${e.count}`).join(',')])
 
   if (nodes.length === 0) {
     return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
