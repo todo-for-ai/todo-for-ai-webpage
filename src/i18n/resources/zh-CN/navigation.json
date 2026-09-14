@@ -61,7 +61,8 @@
     "pinManager": "管理Pin项目",
     "userManagement": "用户管理",
     "admin": "管理员",
-    "user": "用户"
+    "user": "用户",
+    "systemMonitor": "系统监控"
   },
   "footer": {
     "copyright": "版权所有",

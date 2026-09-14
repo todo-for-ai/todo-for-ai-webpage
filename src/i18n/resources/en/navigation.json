@@ -61,7 +61,8 @@
     "pinManager": "Manage Pinned Projects",
     "userManagement": "User Management",
     "admin": "Administrator",
-    "user": "User"
+    "user": "User",
+    "systemMonitor": "System Monitor"
   },
   "footer": {
     "copyright": "Copyright",

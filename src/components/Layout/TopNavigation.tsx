@@ -10,8 +10,7 @@ import {
   ApartmentOutlined,
   PushpinOutlined,
   ControlOutlined,
-  CloudServerOutlined,
-  MonitorOutlined
+  CloudServerOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
 import NotificationBell from '../NotificationBell'
@@ -159,15 +158,6 @@ const TopNavigation: React.FC = () => {
       icon: <ControlOutlined />,
       label: '指挥中心',
     },
-    ...(isAdmin
-      ? [
-          {
-            key: '/todo-for-ai/pages/system-monitor',
-            icon: <MonitorOutlined />,
-            label: '系统监控'
-          }
-        ]
-      : []),
     ...(isAdmin && setupComplete === false
       ? [
           {
