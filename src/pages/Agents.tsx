@@ -55,6 +55,9 @@ import { useAgentConflicts } from './agents/hooks/useAgentConflicts'
 import { useAgentCrudActions } from './agents/hooks/useAgentCrudActions'
 import { useAgentLiveDashboard } from './agents/hooks/useAgentLiveDashboard'
 import { buildAgentsTableColumns } from './agents/agentsTableColumns'
+import AgentsBoardSection from './agents/AgentsBoardSection'
+import AgentsOpsModals from './agents/AgentsOpsModals'
+import AgentsCollabModals from './agents/AgentsCollabModals'
 import {
   agentsApi,
   type Agent,
@@ -486,467 +489,332 @@ const Agents: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={2} style={{ margin: 0 }}>Agent 协作</Title>
-        <Space>
-          <NotificationPopover
-            unreadCount={unreadCount}
-            notifications={notifications}
-            loading={notificationsLoading}
-            onMarkAllRead={markAllRead}
-            onOpen={loadNotifications}
-          />
-          <Tooltip title={liveMode ? '实时刷新已开启（每 10 秒）' : '实时刷新已关闭'}>
-            <Space size={4}>
-              <Switch size="small" checked={liveMode} onChange={setLiveMode} />
-              <Text type="secondary">{liveMode ? '实时' : '手动'}</Text>
-            </Space>
-          </Tooltip>
-          <Button icon={<ReloadOutlined />} onClick={() => { loadAgents(); loadReviewQueue() }}>刷新</Button>
-          <Button icon={<ApiOutlined />} onClick={async () => {
-            try {
-              const result = await agentsApi.markOfflineAgents()
-              message.success(result.marked_offline > 0 ? `已标记 ${result.marked_offline} 个 Agent 为离线` : '所有 Agent 均在线')
-              loadAgents()
-            } catch { message.error('检测失败') }
-          }}>检测离线</Button>
-          <Button icon={<TeamOutlined />} onClick={openChannels}>频道</Button>
-          <Button icon={<AppstoreOutlined />} onClick={openCollabTemplates}>协作模板</Button>
-          <Button icon={<SwapOutlined />} onClick={openProtocols}>协议</Button>
-          <Button icon={<SafetyOutlined />} onClick={openSandboxes}>沙盒</Button>
-          <Button icon={<SettingOutlined />} onClick={() => openStepOverride()}>步骤重配置</Button>
-          <Button icon={<WarningOutlined />} onClick={openConflicts}>冲突</Button>
-          <Button type="primary" icon={<ApiOutlined />} onClick={openCreateModal}>注册 Agent</Button>
-        </Space>
-      </div>
-
-      <AgentStatsBar agents={agents} reviewQueue={reviewQueue} />
-
-      <CapabilityMapCard agents={agents} />
-
-      {/* 任务分布统计 */}
-      {dashboardStats && <TaskDistributionCard stats={dashboardStats} />}
-
-      {/* 维护操作 */}
-      <MaintenanceActionsCard onRefreshStats={loadDashboardStats} />
-
-      {/* 实时协作事件流 */}
-      {liveMode && <LiveEventFeedCard events={liveEvents} onClear={() => setLiveEvents([])} />}
-
-      <ReviewQueueSection
-        items={reviewQueue}
-        loading={reviewLoading}
-        actionFilter={reviewActionFilter}
-        onActionFilterChange={setReviewActionFilter}
-        onRefresh={() => loadReviewQueue()}
-        onUpdateItem={updateReviewQueueItem}
-      />
-
-      <Card>
-        <div style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Input.Search
-            allowClear
-            placeholder="搜索 Agent"
-            style={{ width: 280 }}
-            value={searchText}
-            onChange={event => setSearchText(event.target.value)}
-            onSearch={() => loadAgents()}
-          />
-          <Select
-            value={statusFilter}
-            style={{ width: 140 }}
-            onChange={setStatusFilter}
-            options={[{ label: '全部状态', value: 'all' }, ...statusOptions]}
-          />
-        </div>
-        <Table
-          columns={columns}
-          dataSource={agents}
-          rowKey="id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 1180 }}
-        />
-      </Card>
-
-      <AgentFormModal
-        open={modalOpen}
-        editingAgent={editingAgent}
-        form={form}
-        onOk={saveAgent}
-        onCancel={() => setModalOpen(false)}
-      />
-
-      <FeedbackModal
-        open={feedbackModalOpen}
-        submitting={feedbackSubmitting}
-        reviewItem={feedbackReviewItem}
-        form={feedbackForm}
-        onOk={submitHumanFeedback}
-        onCancel={() => {
-          setFeedbackModalOpen(false)
-          setFeedbackReviewItem(null)
-          feedbackForm.resetFields()
-        }}
-      />
-
-      <AgentDetailDrawer
-        open={drawerOpen}
-        selectedAgent={selectedAgent}
+      <AgentsBoardSection
         agents={agents}
-        assignments={assignments}
-        assignmentLoading={assignmentLoading}
-        assignmentColumns={assignmentColumns}
-        inboxItems={inboxItems}
-        claimTaskId={claimTaskId}
+        columns={columns}
+        dashboardStats={dashboardStats}
+        editingAgent={editingAgent}
+        feedbackForm={feedbackForm}
+        feedbackModalOpen={feedbackModalOpen}
+        feedbackReviewItem={feedbackReviewItem}
+        feedbackSubmitting={feedbackSubmitting}
+        form={form}
+        liveEvents={liveEvents}
+        liveMode={liveMode}
+        loadAgents={loadAgents}
+        loadDashboardStats={loadDashboardStats}
+        loadNotifications={loadNotifications}
+        loadReviewQueue={loadReviewQueue}
+        loading={loading}
+        markAllRead={markAllRead}
+        modalOpen={modalOpen}
+        notifications={notifications}
+        notificationsLoading={notificationsLoading}
+        openChannels={openChannels}
+        openCollabTemplates={openCollabTemplates}
+        openConflicts={openConflicts}
+        openCreateModal={openCreateModal}
+        openProtocols={openProtocols}
+        openSandboxes={openSandboxes}
+        openStepOverride={openStepOverride}
+        reviewActionFilter={reviewActionFilter}
+        reviewLoading={reviewLoading}
+        reviewQueue={reviewQueue}
+        saveAgent={saveAgent}
+        searchText={searchText}
+        setFeedbackModalOpen={setFeedbackModalOpen}
+        setFeedbackReviewItem={setFeedbackReviewItem}
+        setLiveEvents={setLiveEvents}
+        setLiveMode={setLiveMode}
+        setModalOpen={setModalOpen}
+        setReviewActionFilter={setReviewActionFilter}
+        setSearchText={setSearchText}
+        setStatusFilter={setStatusFilter}
+        statusFilter={statusFilter}
+        submitHumanFeedback={submitHumanFeedback}
+        unreadCount={unreadCount}
+        updateReviewQueueItem={updateReviewQueueItem}
+      />
+
+      <AgentsOpsModals
+        acknowledgeConflict={acknowledgeConflict}
+        adaptLoading={adaptLoading}
+        adaptOpen={adaptOpen}
+        adaptSuggestions={adaptSuggestions}
         agentReputation={agentReputation}
         agentSandbox={agentSandbox}
-        reputationHistory={reputationHistory}
+        agents={agents}
+        applyAdaptation={applyAdaptation}
+        applyDecay={applyDecay}
+        applyDispatchPreview={applyDispatchPreview}
+        assignmentColumns={assignmentColumns}
+        assignmentLoading={assignmentLoading}
+        assignments={assignments}
+        authorizeAgent={authorizeAgent}
+        authorizeForm={authorizeForm}
+        authorizeOpen={authorizeOpen}
+        autoExtractExperiences={autoExtractExperiences}
+        autoExtractKnowledge={autoExtractKnowledge}
+        autoResolveConflicts={autoResolveConflicts}
+        broadcastAgent={broadcastAgent}
+        broadcastContent={broadcastContent}
+        broadcastOpen={broadcastOpen}
+        broadcasting={broadcasting}
+        claimTask={claimTask}
+        claimTaskId={claimTaskId}
+        clearStepOverride={clearStepOverride}
+        collabSubgraph={collabSubgraph}
         collaborators={collaborators}
         collaboratorsLoading={collaboratorsLoading}
-        collabSubgraph={collabSubgraph}
+        conflictDetail={conflictDetail}
+        conflictDetailOpen={conflictDetailOpen}
+        conflictOpen={conflictOpen}
+        conflictResolveForm={conflictResolveForm}
+        conflictResolveOpen={conflictResolveOpen}
+        conflicts={conflicts}
+        createExperience={createExperience}
+        createKnowledgeEntry={createKnowledgeEntry}
+        crossProjectLoading={crossProjectLoading}
+        crossProjects={crossProjects}
+        crossTasksLoading={crossTasksLoading}
+        deleteExperience={deleteExperience}
+        deleteKnowledgeEntry={deleteKnowledgeEntry}
+        dispatchCandidateOptions={dispatchCandidateOptions}
+        dispatchPolicyDirty={dispatchPolicyDirty}
+        dispatchPolicySaving={dispatchPolicySaving}
+        dispatchPreview={dispatchPreview}
+        dispatchPreviewAgent={dispatchPreviewAgent}
+        dispatchPreviewApplying={dispatchPreviewApplying}
+        dispatchPreviewLoading={dispatchPreviewLoading}
+        dispatchPreviewOpen={dispatchPreviewOpen}
+        dispatchPreviewOptions={dispatchPreviewOptions}
+        dmContent={dmContent}
+        dmFrom={dmFrom}
+        dmOpen={dmOpen}
+        dmSending={dmSending}
+        dmTo={dmTo}
+        drawerOpen={drawerOpen}
+        experienceCreateOpen={experienceCreateOpen}
+        experienceDetail={experienceDetail}
+        experienceDetailOpen={experienceDetailOpen}
+        experienceForm={experienceForm}
         experiences={experiences}
         experiencesLoading={experiencesLoading}
-        experienceCreateOpen={experienceCreateOpen}
-        experienceForm={experienceForm}
-        experienceDetailOpen={experienceDetailOpen}
-        experienceDetail={experienceDetail}
-        sharedExperiencesOpen={sharedExperiencesOpen}
+        form={form}
+        ignoreConflict={ignoreConflict}
+        inboxItems={inboxItems}
+        knowledgeCreateOpen={knowledgeCreateOpen}
+        knowledgeDetail={knowledgeDetail}
+        knowledgeDetailOpen={knowledgeDetailOpen}
+        knowledgeEntries={knowledgeEntries}
+        knowledgeForm={knowledgeForm}
+        knowledgeLoading={knowledgeLoading}
+        knowledgeSearch={knowledgeSearch}
+        learnFromExperience={learnFromExperience}
+        loadAdaptSuggestions={loadAdaptSuggestions}
+        loadAssignments={loadAssignments}
+        loadConflicts={loadConflicts}
+        loadCrossProjectTasks={loadCrossProjectTasks}
+        loadKnowledge={loadKnowledge}
+        loadSharedExperiences={loadSharedExperiences}
+        loadStepEffective={loadStepEffective}
+        loading={loading}
+        navigate={navigate}
+        openConflictDetail={openConflictDetail}
+        openCrossProject={openCrossProject}
+        openExperienceDetail={openExperienceDetail}
+        openKnowledgeDetail={openKnowledgeDetail}
+        openResolveConflict={openResolveConflict}
+        openSandboxes={openSandboxes}
+        previewDispatchTasks={previewDispatchTasks}
+        recTasks={recTasks}
+        recTasksAgent={recTasksAgent}
+        recTasksLoading={recTasksLoading}
+        recTasksOpen={recTasksOpen}
+        recalculateReputation={recalculateReputation}
+        reputationHistory={reputationHistory}
+        revokeCrossProject={revokeCrossProject}
+        saveDispatchPolicy={saveDispatchPolicy}
+        scanConflicts={scanConflicts}
+        selectedAgent={selectedAgent}
+        sendBroadcast={sendBroadcast}
+        sendDirectMessage={sendDirectMessage}
+        setAdaptOpen={setAdaptOpen}
+        setAdaptSuggestions={setAdaptSuggestions}
+        setAuthorizeForm={setAuthorizeForm}
+        setAuthorizeOpen={setAuthorizeOpen}
+        setBroadcastAgent={setBroadcastAgent}
+        setBroadcastContent={setBroadcastContent}
+        setBroadcastOpen={setBroadcastOpen}
+        setClaimTaskId={setClaimTaskId}
+        setConflictDetailOpen={setConflictDetailOpen}
+        setConflictOpen={setConflictOpen}
+        setConflictResolveForm={setConflictResolveForm}
+        setConflictResolveOpen={setConflictResolveOpen}
+        setDispatchPolicyDirty={setDispatchPolicyDirty}
+        setDispatchPreview={setDispatchPreview}
+        setDispatchPreviewAgent={setDispatchPreviewAgent}
+        setDispatchPreviewOpen={setDispatchPreviewOpen}
+        setDmContent={setDmContent}
+        setDmFrom={setDmFrom}
+        setDmOpen={setDmOpen}
+        setDmTo={setDmTo}
+        setDrawerOpen={setDrawerOpen}
+        setExperienceCreateOpen={setExperienceCreateOpen}
+        setExperienceDetailOpen={setExperienceDetailOpen}
+        setExperienceForm={setExperienceForm}
+        setKnowledgeCreateOpen={setKnowledgeCreateOpen}
+        setKnowledgeDetail={setKnowledgeDetail}
+        setKnowledgeDetailOpen={setKnowledgeDetailOpen}
+        setKnowledgeForm={setKnowledgeForm}
+        setKnowledgeSearch={setKnowledgeSearch}
+        setRecTasks={setRecTasks}
+        setRecTasksAgent={setRecTasksAgent}
+        setRecTasksOpen={setRecTasksOpen}
+        setSharedExperiencesOpen={setSharedExperiencesOpen}
+        setStepOverrideForm={setStepOverrideForm}
+        setStepOverrideOpen={setStepOverrideOpen}
+        shareExperience={shareExperience}
         sharedExperiences={sharedExperiences}
-        crossProjects={crossProjects}
-        crossProjectLoading={crossProjectLoading}
-        knowledgeProps={{
-          selectedAgent,
-          entries: knowledgeEntries,
-          loading: knowledgeLoading,
-          search: knowledgeSearch,
-          onSearchChange: setKnowledgeSearch,
-          onSearch: () => selectedAgent && loadKnowledge(selectedAgent),
-          createOpen: knowledgeCreateOpen,
-          form: knowledgeForm,
-          onFormChange: setKnowledgeForm,
-          onCreateOpenChange: setKnowledgeCreateOpen,
-          onCreate: createKnowledgeEntry,
-          detailOpen: knowledgeDetailOpen,
-          detail: knowledgeDetail,
-          onDetailOpenChange: setKnowledgeDetailOpen,
-          onDetailChange: setKnowledgeDetail,
-          onDelete: deleteKnowledgeEntry,
-          onOpenDetail: openKnowledgeDetail,
-          onAutoExtract: autoExtractKnowledge,
-        }}
-        experienceProps={{
-          createOpen: experienceCreateOpen,
-          createForm: experienceForm,
-          detailOpen: experienceDetailOpen,
-          detail: experienceDetail,
-          sharedOpen: sharedExperiencesOpen,
-          sharedExperiences,
-          selectedAgent,
-          onCreateOpenChange: setExperienceCreateOpen,
-          onCreateFormChange: setExperienceForm,
-          onCreate: createExperience,
-          onDetailOpenChange: setExperienceDetailOpen,
-          onOpenDetail: openExperienceDetail,
-          onSharedOpenChange: setSharedExperiencesOpen,
-          onLearnFromExperience: learnFromExperience,
-        }}
-        onClose={() => setDrawerOpen(false)}
-        onClaimTaskIdChange={setClaimTaskId}
-        onClaimTask={claimTask}
-        onRefreshAssignments={loadAssignments}
-        onNavigate={navigate}
-        onOpenAgent={(agent) => { setTimeout(() => loadAssignments(agent), 100) }}
-        onRecalculateReputation={recalculateReputation}
-        onOpenSandboxes={openSandboxes}
-        onLoadAdaptSuggestions={loadAdaptSuggestions}
-        adaptLoading={adaptLoading}
-        onSetDrawerOpen={setDrawerOpen}
-        onSetExperienceCreateOpen={setExperienceCreateOpen}
-        onAutoExtractExperiences={autoExtractExperiences}
-        onLoadSharedExperiences={loadSharedExperiences}
         sharedExperiencesLoading={sharedExperiencesLoading}
-        onApplyDecay={applyDecay}
-        onValidateExperience={validateExperience}
-        onShareExperience={shareExperience}
-        onDeleteExperience={deleteExperience}
-        onOpenExperienceDetail={openExperienceDetail}
-        onSetAuthorizeOpen={setAuthorizeOpen}
-        onOpenCrossProject={openCrossProject}
-        onLoadCrossProjectTasks={loadCrossProjectTasks}
-        crossTasksLoading={crossTasksLoading}
-        onRevokeCrossProject={revokeCrossProject}
+        sharedExperiencesOpen={sharedExperiencesOpen}
+        stepEffective={stepEffective}
+        stepOverrideForm={stepOverrideForm}
+        stepOverrideOpen={stepOverrideOpen}
+        submitResolveConflict={submitResolveConflict}
+        submitStepOverride={submitStepOverride}
+        updateDispatchPreviewOptions={updateDispatchPreviewOptions}
+        validateExperience={validateExperience}
       />
 
-      {/* 广播消息 Modal */}
-      <BroadcastModal
-        open={broadcastOpen}
-        agent={broadcastAgent}
-        content={broadcastContent}
-        sending={broadcasting}
-        onClose={() => { setBroadcastOpen(false); setBroadcastAgent(null); setBroadcastContent('') }}
-        onContentChange={setBroadcastContent}
-        onSend={sendBroadcast}
-      />
-
-      {/* 派活预览 Modal */}
-      <DispatchPreviewModal
-        open={dispatchPreviewOpen}
-        agent={dispatchPreviewAgent}
-        preview={dispatchPreview}
-        loading={dispatchPreviewLoading}
-        applying={dispatchPreviewApplying}
-        policySaving={dispatchPolicySaving}
-        policyDirty={dispatchPolicyDirty}
-        options={dispatchPreviewOptions}
-        candidateOptions={dispatchCandidateOptions}
-        onClose={() => {
-          setDispatchPreviewOpen(false)
-          setDispatchPreviewAgent(null)
-          setDispatchPreview(null)
-          setDispatchPolicyDirty(false)
-        }}
-        onApply={applyDispatchPreview}
-        onPreview={() => dispatchPreviewAgent && previewDispatchTasks(dispatchPreviewAgent, dispatchPreviewOptions)}
-        onSavePolicy={saveDispatchPolicy}
-        onUpdateOptions={updateDispatchPreviewOptions}
-      />
-
-      {/* Agent 直接消息 Modal */}
-      <DirectMessageModal
-        open={dmOpen}
-        from={dmFrom}
-        to={dmTo}
-        content={dmContent}
-        sending={dmSending}
+      <AgentsCollabModals
         agents={agents}
-        onCancel={() => { setDmOpen(false); setDmFrom(null); setDmTo(null); setDmContent('') }}
-        onOk={sendDirectMessage}
-        onToChange={setDmTo}
-        onContentChange={setDmContent}
-      />
-
-      {/* Recommended tasks Modal */}
-      <RecommendedTasksModal
-        open={recTasksOpen}
-        agent={recTasksAgent}
-        tasks={recTasks}
-        loading={recTasksLoading}
-        onCancel={() => { setRecTasksOpen(false); setRecTasksAgent(null); setRecTasks([]) }}
-        onClaim={(agent, taskId) => { claimTask(agent, taskId, true); setRecTasksOpen(false) }}
-      />
-
-      {/* Channels Drawer */}
-      <ChannelsDrawer
-        open={channelsOpen}
+        channelActivityTrend={channelActivityTrend}
+        channelCreateOpen={channelCreateOpen}
+        channelForm={channelForm}
         channels={channels}
-        agents={agents}
-        activityTrend={channelActivityTrend}
-        createOpen={channelCreateOpen}
-        createForm={channelForm}
-        chatOpen={chatOpen}
+        channelsOpen={channelsOpen}
         chatChannel={chatChannel}
-        chatMessages={chatMessages}
         chatInput={chatInput}
+        chatMessages={chatMessages}
+        chatOpen={chatOpen}
         chatSending={chatSending}
-        onClose={() => setChannelsOpen(false)}
-        onCreateOpenChange={setChannelCreateOpen}
-        onCreateFormChange={setChannelForm}
-        onCreate={createChannel}
-        onOpenChat={openChat}
-        onDeleteChannel={async (channelId: number) => {
-          try { await agentsApi.deleteChannel(channelId); message.success('已删除'); loadChannels() }
-          catch { message.error('删除失败') }
-        }}
-        onChatInputChange={setChatInput}
-        onSendChatMessage={sendChatMessage}
-        onCloseChat={() => { setChatOpen(false); setChatChannel(null); setChatMessages([]) }}
-      />
-
-      {/* Collaboration Templates Modal */}
-      <CollaborationTemplatesModal
-        open={collabTemplatesOpen}
-        templates={collabTemplates}
-        loading={collabTemplatesLoading}
-        onClose={() => setCollabTemplatesOpen(false)}
-        onOpenInstantiate={openCollabInstantiate}
-        onReload={loadCollabTemplates}
-      />
-
-      {/* Instantiate Collaboration Template Modal */}
-      <InstantiateCollabTemplateModal
-        open={collabInstantiateOpen}
-        templateName={collabInstantiateName}
-        projectId={collabInstantiateProjectId}
-        instantiating={collabInstantiating}
-        onCancel={() => setCollabInstantiateOpen(false)}
-        onOk={instantiateCollabTemplate}
-        onProjectIdChange={setCollabInstantiateProjectId}
-      />
-
-      {/* Protocols Modal */}
-      <ProtocolsModal
-        open={protocolsOpen}
-        loading={protocolsLoading}
-        protocols={protocols}
-        agents={agents}
-        createOpen={protocolCreateOpen}
-        createForm={protocolForm}
-        detailOpen={protocolDetailOpen}
-        detail={protocolDetail}
-        respondOpen={protocolRespondOpen}
-        respondForm={protocolRespondMsg}
-        deliberationOpen={deliberationOpen}
+        claimCrossTask={claimCrossTask}
+        collabInstantiateName={collabInstantiateName}
+        collabInstantiateOpen={collabInstantiateOpen}
+        collabInstantiateProjectId={collabInstantiateProjectId}
+        collabInstantiating={collabInstantiating}
+        collabTemplates={collabTemplates}
+        collabTemplatesLoading={collabTemplatesLoading}
+        collabTemplatesOpen={collabTemplatesOpen}
+        completeSandboxExec={completeSandboxExec}
+        createChannel={createChannel}
+        createExperience={createExperience}
+        createProtocol={createProtocol}
+        crossTasks={crossTasks}
+        crossTasksOpen={crossTasksOpen}
+        deleteSandbox={deleteSandbox}
         deliberationForm={deliberationForm}
-        onClose={() => setProtocolsOpen(false)}
-        onCreateOpenChange={setProtocolCreateOpen}
-        onCreateFormChange={setProtocolForm}
-        onCreate={createProtocol}
-        onOpenDetail={openProtocolDetail}
-        onDetailOpenChange={setProtocolDetailOpen}
-        onDetailChange={setProtocolDetail}
-        onRespondOpenChange={setProtocolRespondOpen}
-        onRespondFormChange={setProtocolRespondMsg}
-        onRespond={respondToProtocol}
-        onResolve={resolveProtocol}
-        onDeliberationOpenChange={setDeliberationOpen}
-        onDeliberationFormChange={setDeliberationForm}
-        onDeliberationSubmit={submitDeliberation}
-      />
-
-      {/* Sandbox Management Drawer */}
-      <SandboxDrawer
-        open={sandboxOpen}
+        deliberationOpen={deliberationOpen}
+        experienceCreateOpen={experienceCreateOpen}
+        experienceDetail={experienceDetail}
+        experienceDetailOpen={experienceDetailOpen}
+        experienceForm={experienceForm}
+        instantiateCollabTemplate={instantiateCollabTemplate}
+        instantiateTemplate={instantiateTemplate}
+        learnFromExperience={learnFromExperience}
+        loadChannels={loadChannels}
+        loadCollabTemplates={loadCollabTemplates}
+        loading={loading}
+        openChat={openChat}
+        openCollabInstantiate={openCollabInstantiate}
+        openCreateSandbox={openCreateSandbox}
+        openEditSandbox={openEditSandbox}
+        openExperienceDetail={openExperienceDetail}
+        openProtocolDetail={openProtocolDetail}
+        openSandboxCheck={openSandboxCheck}
+        openSandboxExec={openSandboxExec}
+        openSandboxExecDetail={openSandboxExecDetail}
+        openSandboxStart={openSandboxStart}
+        openSandboxTemplates={openSandboxTemplates}
+        openSandboxViolation={openSandboxViolation}
+        protocolCreateOpen={protocolCreateOpen}
+        protocolDetail={protocolDetail}
+        protocolDetailOpen={protocolDetailOpen}
+        protocolForm={protocolForm}
+        protocolRespondMsg={protocolRespondMsg}
+        protocolRespondOpen={protocolRespondOpen}
+        protocols={protocols}
+        protocolsLoading={protocolsLoading}
+        protocolsOpen={protocolsOpen}
+        resolveProtocol={resolveProtocol}
+        respondToProtocol={respondToProtocol}
+        revokeSandboxExec={revokeSandboxExec}
+        sandboxCheckForm={sandboxCheckForm}
+        sandboxCheckOpen={sandboxCheckOpen}
+        sandboxCheckResult={sandboxCheckResult}
+        sandboxEditingId={sandboxEditingId}
+        sandboxExecDetail={sandboxExecDetail}
+        sandboxExecDetailOpen={sandboxExecDetailOpen}
+        sandboxExecOpen={sandboxExecOpen}
+        sandboxExecSandboxId={sandboxExecSandboxId}
+        sandboxExecutions={sandboxExecutions}
+        sandboxForm={sandboxForm}
+        sandboxFormOpen={sandboxFormOpen}
+        sandboxOpen={sandboxOpen}
+        sandboxStartForm={sandboxStartForm}
+        sandboxStartOpen={sandboxStartOpen}
+        sandboxTemplateOpen={sandboxTemplateOpen}
+        sandboxTemplates={sandboxTemplates}
+        sandboxViolationForm={sandboxViolationForm}
+        sandboxViolationOpen={sandboxViolationOpen}
         sandboxes={sandboxes}
-        templates={sandboxTemplates}
-        agents={agents}
-        templateOpen={sandboxTemplateOpen}
-        formOpen={sandboxFormOpen}
-        editingId={sandboxEditingId}
-        formData={sandboxForm}
-        execOpen={sandboxExecOpen}
-        execSandboxId={sandboxExecSandboxId}
-        executions={sandboxExecutions}
-        execDetail={sandboxExecDetail}
-        execDetailOpen={sandboxExecDetailOpen}
-        checkOpen={sandboxCheckOpen}
-        checkForm={sandboxCheckForm}
-        checkResult={sandboxCheckResult}
-        startOpen={sandboxStartOpen}
-        startForm={sandboxStartForm}
-        violationOpen={sandboxViolationOpen}
-        violationForm={sandboxViolationForm}
-        onClose={() => setSandboxOpen(false)}
-        onOpenTemplates={openSandboxTemplates}
-        onCreate={openCreateSandbox}
-        onEdit={openEditSandbox}
-        onDelete={deleteSandbox}
-        onSubmitForm={submitSandboxForm}
-        onInstantiateTemplate={instantiateTemplate}
-        onCloseTemplates={() => setSandboxTemplateOpen(false)}
-        onOpenExec={openSandboxExec}
-        onOpenExecDetail={openSandboxExecDetail}
-        onCompleteExec={completeSandboxExec}
-        onRevokeExec={revokeSandboxExec}
-        onOpenCheck={openSandboxCheck}
-        onSubmitCheck={submitSandboxCheck}
-        onOpenStart={openSandboxStart}
-        onSubmitStart={submitSandboxStart}
-        onOpenViolation={openSandboxViolation}
-        onSubmitViolation={submitSandboxViolation}
-        setFormData={setSandboxForm}
-        setCheckForm={setSandboxCheckForm}
-        setStartForm={setSandboxStartForm}
-        setViolationForm={setSandboxViolationForm}
-        setExecDetailOpen={setSandboxExecDetailOpen}
-        setExecOpen={setSandboxExecOpen}
-        setFormOpen={setSandboxFormOpen}
-        setTemplateOpen={setSandboxTemplateOpen}
-        setCheckOpen={setSandboxCheckOpen}
-        setStartOpen={setSandboxStartOpen}
-        setViolationOpen={setSandboxViolationOpen}
-        setCheckResult={setSandboxCheckResult}
-      />
-
-      {/* Workflow Step Dynamic Reconfiguration Modal */}
-      <StepOverrideModal
-        open={stepOverrideOpen}
-        form={stepOverrideForm}
-        effective={stepEffective}
-        agents={agents}
-        onCancel={() => setStepOverrideOpen(false)}
-        onSubmit={submitStepOverride}
-        onClear={clearStepOverride}
-        onFormChange={setStepOverrideForm}
-        onLoadEffective={loadStepEffective}
-      />
-
-      {/* Conflict Management Drawer */}
-      <ConflictDrawer
-        open={conflictOpen}
-        conflicts={conflicts}
-        detail={conflictDetail}
-        detailOpen={conflictDetailOpen}
-        resolveOpen={conflictResolveOpen}
-        resolveForm={conflictResolveForm}
-        onClose={() => setConflictOpen(false)}
-        onRefresh={() => loadConflicts()}
-        onScan={scanConflicts}
-        onAutoResolve={autoResolveConflicts}
-        onOpenDetail={openConflictDetail}
-        onAcknowledge={acknowledgeConflict}
-        onIgnore={ignoreConflict}
-        onOpenResolve={openResolveConflict}
-        onSubmitResolve={submitResolveConflict}
-        setDetailOpen={setConflictDetailOpen}
-        setResolveOpen={setConflictResolveOpen}
-        setResolveForm={setConflictResolveForm}
-      />
-
-      {/* Experience Modals */}
-      <ExperienceDrawer
-        createOpen={experienceCreateOpen}
-        createForm={experienceForm}
-        detailOpen={experienceDetailOpen}
-        detail={experienceDetail}
-        sharedOpen={sharedExperiencesOpen}
+        selectedAgent={selectedAgent}
+        sendChatMessage={sendChatMessage}
+        setChannelCreateOpen={setChannelCreateOpen}
+        setChannelForm={setChannelForm}
+        setChannelsOpen={setChannelsOpen}
+        setChatChannel={setChatChannel}
+        setChatInput={setChatInput}
+        setChatMessages={setChatMessages}
+        setChatOpen={setChatOpen}
+        setCollabInstantiateOpen={setCollabInstantiateOpen}
+        setCollabInstantiateProjectId={setCollabInstantiateProjectId}
+        setCollabTemplatesOpen={setCollabTemplatesOpen}
+        setCrossTasksOpen={setCrossTasksOpen}
+        setDeliberationForm={setDeliberationForm}
+        setDeliberationOpen={setDeliberationOpen}
+        setExperienceCreateOpen={setExperienceCreateOpen}
+        setExperienceDetailOpen={setExperienceDetailOpen}
+        setExperienceForm={setExperienceForm}
+        setProtocolCreateOpen={setProtocolCreateOpen}
+        setProtocolDetail={setProtocolDetail}
+        setProtocolDetailOpen={setProtocolDetailOpen}
+        setProtocolForm={setProtocolForm}
+        setProtocolRespondMsg={setProtocolRespondMsg}
+        setProtocolRespondOpen={setProtocolRespondOpen}
+        setProtocolsOpen={setProtocolsOpen}
+        setSandboxCheckForm={setSandboxCheckForm}
+        setSandboxCheckOpen={setSandboxCheckOpen}
+        setSandboxCheckResult={setSandboxCheckResult}
+        setSandboxExecDetailOpen={setSandboxExecDetailOpen}
+        setSandboxExecOpen={setSandboxExecOpen}
+        setSandboxForm={setSandboxForm}
+        setSandboxFormOpen={setSandboxFormOpen}
+        setSandboxOpen={setSandboxOpen}
+        setSandboxStartForm={setSandboxStartForm}
+        setSandboxStartOpen={setSandboxStartOpen}
+        setSandboxTemplateOpen={setSandboxTemplateOpen}
+        setSandboxViolationForm={setSandboxViolationForm}
+        setSandboxViolationOpen={setSandboxViolationOpen}
+        setSharedExperiencesOpen={setSharedExperiencesOpen}
         sharedExperiences={sharedExperiences}
-        selectedAgent={selectedAgent}
-        onCreateOpenChange={setExperienceCreateOpen}
-        onCreateFormChange={setExperienceForm}
-        onCreate={createExperience}
-        onDetailOpenChange={setExperienceDetailOpen}
-        onOpenDetail={openExperienceDetail}
-        onSharedOpenChange={setSharedExperiencesOpen}
-        onLearnFromExperience={learnFromExperience}
-      />
-
-      {/* Cross-Project Authorize Modal */}
-      <CrossProjectAuthorizeModal
-        open={authorizeOpen}
-        agentName={selectedAgent?.name || ''}
-        form={authorizeForm}
-        onCancel={() => setAuthorizeOpen(false)}
-        onOk={authorizeAgent}
-        onFormChange={setAuthorizeForm}
-      />
-
-      {/* Adaptive Capabilities Modal */}
-      <AdaptiveCapabilitiesModal
-        open={adaptOpen}
-        agentName={selectedAgent?.name || ''}
-        suggestions={adaptSuggestions}
-        onCancel={() => { setAdaptOpen(false); setAdaptSuggestions(null) }}
-        onApplyAdaptation={applyAdaptation}
-      />
-
-      {/* Cross-Project Tasks Modal */}
-      <CrossProjectModal
-        open={crossTasksOpen}
-        selectedAgent={selectedAgent}
-        tasks={crossTasks}
-        onClose={() => setCrossTasksOpen(false)}
-        onClaim={claimCrossTask}
+        sharedExperiencesOpen={sharedExperiencesOpen}
+        submitDeliberation={submitDeliberation}
+        submitSandboxCheck={submitSandboxCheck}
+        submitSandboxForm={submitSandboxForm}
+        submitSandboxStart={submitSandboxStart}
+        submitSandboxViolation={submitSandboxViolation}
       />
     </div>
   )
