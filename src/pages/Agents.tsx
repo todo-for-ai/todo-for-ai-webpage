@@ -50,6 +50,9 @@ import { useAgentIntelligencePanel } from './agents/hooks/useAgentIntelligencePa
 import { useAgentInboxDmTasks } from './agents/hooks/useAgentInboxDmTasks'
 import { useAgentDispatchPanel } from './agents/hooks/useAgentDispatchPanel'
 import { useAgentCollabKnowledgePanel } from './agents/hooks/useAgentCollabKnowledgePanel'
+import { useAgentStepOverrides } from './agents/hooks/useAgentStepOverrides'
+import { useAgentConflicts } from './agents/hooks/useAgentConflicts'
+import { buildAgentsTableColumns } from './agents/agentsTableColumns'
 import {
   agentsApi,
   type Agent,
@@ -317,17 +320,25 @@ const Agents: React.FC = () => {
     openSandboxViolation, submitSandboxViolation,
     openSandboxTemplates, instantiateTemplate,
   } = useAgentSandboxPanel()
-  // Workflow step dynamic reconfiguration
-  const [stepOverrideOpen, setStepOverrideOpen] = useState(false)
-  const [stepOverrideForm, setStepOverrideForm] = useState<any>({ run_id: undefined, step_key: '', agent_id: undefined, required_capabilities: '', timeout_seconds: undefined, retry_count: undefined, on_failure: undefined, condition: '', task_template_id: undefined, sub_workflow_id: undefined })
-  const [stepEffective, setStepEffective] = useState<any>(null)
-  // Conflict detection & resolution
-  const [conflictOpen, setConflictOpen] = useState(false)
-  const [conflicts, setConflicts] = useState<any[]>([])
-  const [conflictDetail, setConflictDetail] = useState<any>(null)
-  const [conflictDetailOpen, setConflictDetailOpen] = useState(false)
-  const [conflictResolveOpen, setConflictResolveOpen] = useState(false)
-  const [conflictResolveForm, setConflictResolveForm] = useState<any>({ conflict_id: 0, strategy: '', description: '' })
+  // Workflow step dynamic reconfiguration 域块已抽至 agents/hooks/useAgentStepOverrides.ts（原样搬移）
+  const {
+    stepOverrideOpen, setStepOverrideOpen,
+    stepOverrideForm, setStepOverrideForm,
+    stepEffective, setStepEffective,
+    openStepOverride, loadStepEffective, submitStepOverride, clearStepOverride,
+  } = useAgentStepOverrides()
+  // Conflict detection & resolution 域块已抽至 agents/hooks/useAgentConflicts.ts（原样搬移）
+  const {
+    conflictOpen, setConflictOpen,
+    conflicts, setConflicts,
+    conflictDetail, setConflictDetail,
+    conflictDetailOpen, setConflictDetailOpen,
+    conflictResolveOpen, setConflictResolveOpen,
+    conflictResolveForm, setConflictResolveForm,
+    loadConflicts, openConflicts, scanConflicts, openConflictDetail,
+    acknowledgeConflict, ignoreConflict, openResolveConflict,
+    submitResolveConflict, autoResolveConflicts,
+  } = useAgentConflicts()
   // Reputation
   const [agentReputation, setAgentReputation] = useState<any>(null)
   const [reputationHistory, setReputationHistory] = useState<ReputationHistory | null>(null)
@@ -647,130 +658,8 @@ const Agents: React.FC = () => {
 
 
 
-  // ---- Workflow step dynamic reconfiguration ----
-  const openStepOverride = async (runId?: number, stepKey?: string) => {
-    setStepOverrideForm({ run_id: runId, step_key: stepKey || '', agent_id: undefined, required_capabilities: '', timeout_seconds: undefined, retry_count: undefined, on_failure: undefined, condition: '', task_template_id: undefined, sub_workflow_id: undefined })
-    setStepEffective(null)
-    setStepOverrideOpen(true)
-    if (runId && stepKey) loadStepEffective(runId, stepKey)
-  }
-
-  const loadStepEffective = async (runId: number, stepKey: string) => {
-    try {
-      const result = await agentsApi.getStepEffectiveParams(runId, stepKey)
-      setStepEffective(result)
-      const eff = result.effective_params || {}
-      const ov = result.overrides || {}
-      setStepOverrideForm((prev: any) => ({
-        ...prev,
-        agent_id: ov.agent_id !== undefined ? ov.agent_id : eff.agent_id ?? undefined,
-        required_capabilities: (eff.required_capabilities || []).join(', '),
-        timeout_seconds: eff.timeout_seconds ?? undefined,
-        retry_count: eff.retry_count ?? undefined,
-        on_failure: eff.on_failure || undefined,
-        condition: eff.condition ? JSON.stringify(eff.condition) : '',
-        task_template_id: eff.task_template_id ?? undefined,
-        sub_workflow_id: eff.sub_workflow_id ?? undefined,
-      }))
-    } catch { message.error('加载有效参数失败') }
-  }
-
-  const submitStepOverride = async () => {
-    if (!stepOverrideForm.run_id || !stepOverrideForm.step_key) { message.warning('请填写运行 ID 和步骤 key'); return }
-    const overrides: any = {}
-    if (stepOverrideForm.agent_id !== undefined && stepOverrideForm.agent_id !== null && stepOverrideForm.agent_id !== '') overrides.agent_id = Number(stepOverrideForm.agent_id)
-    if (stepOverrideForm.required_capabilities) overrides.required_capabilities = String(stepOverrideForm.required_capabilities).split(',').map((s: string) => s.trim()).filter(Boolean)
-    if (stepOverrideForm.timeout_seconds !== undefined && stepOverrideForm.timeout_seconds !== null && stepOverrideForm.timeout_seconds !== '') overrides.timeout_seconds = Number(stepOverrideForm.timeout_seconds)
-    if (stepOverrideForm.retry_count !== undefined && stepOverrideForm.retry_count !== null && stepOverrideForm.retry_count !== '') overrides.retry_count = Number(stepOverrideForm.retry_count)
-    if (stepOverrideForm.on_failure) overrides.on_failure = stepOverrideForm.on_failure
-    if (stepOverrideForm.condition) { try { overrides.condition = JSON.parse(stepOverrideForm.condition) } catch { message.error('condition 必须是合法 JSON'); return } }
-    if (stepOverrideForm.task_template_id) overrides.task_template_id = Number(stepOverrideForm.task_template_id)
-    if (stepOverrideForm.sub_workflow_id) overrides.sub_workflow_id = Number(stepOverrideForm.sub_workflow_id)
-    if (Object.keys(overrides).length === 0) { message.warning('请至少填写一项覆盖参数'); return }
-    try {
-      const result = await agentsApi.setStepRuntimeOverride(Number(stepOverrideForm.run_id), String(stepOverrideForm.step_key), { overrides, merge: true })
-      message.success('步骤运行时覆盖已应用')
-      setStepEffective(result)
-    } catch { message.error('应用覆盖失败') }
-  }
-
-  const clearStepOverride = async () => {
-    if (!stepOverrideForm.run_id || !stepOverrideForm.step_key) return
-    try {
-      const result = await agentsApi.clearStepRuntimeOverride(Number(stepOverrideForm.run_id), String(stepOverrideForm.step_key))
-      message.success('运行时覆盖已清除')
-      setStepEffective(result)
-    } catch { message.error('清除覆盖失败') }
-  }
-
-  // ---- Conflict detection & resolution ----
-  const loadConflicts = async (activeOnly = true) => {
-    try {
-      const result = await agentsApi.listConflicts(activeOnly ? { active_only: 'true' } : {})
-      setConflicts(result.items || [])
-    } catch { message.error('加载冲突列表失败') }
-  }
-
-  const openConflicts = async () => {
-    setConflictOpen(true)
-    loadConflicts()
-  }
-
-  const scanConflicts = async () => {
-    try {
-      const result = await agentsApi.scanConflicts()
-      message.success(result.detected > 0 ? `检测到 ${result.detected} 个新冲突` : '无新冲突')
-      loadConflicts()
-    } catch { message.error('扫描失败') }
-  }
-
-  const openConflictDetail = async (id: number) => {
-    try {
-      const result = await agentsApi.getConflict(id)
-      setConflictDetail(result.conflict)
-      setConflictDetailOpen(true)
-    } catch { message.error('加载冲突详情失败') }
-  }
-
-  const acknowledgeConflict = async (id: number) => {
-    try {
-      await agentsApi.acknowledgeConflict(id)
-      message.success('已确认')
-      loadConflicts()
-    } catch { message.error('确认失败') }
-  }
-
-  const ignoreConflict = async (id: number) => {
-    try {
-      await agentsApi.ignoreConflict(id)
-      message.success('已忽略')
-      loadConflicts()
-    } catch { message.error('忽略失败') }
-  }
-
-  const openResolveConflict = (c: any) => {
-    setConflictResolveForm({ conflict_id: c.id, strategy: c.suggested_strategy || 'manual', description: '' })
-    setConflictResolveOpen(true)
-  }
-
-  const submitResolveConflict = async () => {
-    try {
-      const result = await agentsApi.resolveConflict(conflictResolveForm.conflict_id, conflictResolveForm.strategy, conflictResolveForm.description)
-      message.success('冲突已解决')
-      setConflictResolveOpen(false)
-      loadConflicts()
-      if (result.actions?.length) message.info(`执行 ${result.actions.length} 项动作`, 4)
-    } catch { message.error('解决失败') }
-  }
-
-  const autoResolveConflicts = async () => {
-    try {
-      const result = await agentsApi.autoResolveConflicts()
-      message.success(`自动解决 ${result.auto_resolved || 0} 个, 跳过 ${result.skipped || 0} 个`)
-      loadConflicts()
-    } catch { message.error('自动解决失败') }
-  }
-
+  // ---- Workflow step dynamic reconfiguration / Conflict detection & resolution ----
+  // 两域块已抽至 agents/hooks/useAgentStepOverrides.ts 与 useAgentConflicts.ts（原样搬移）
 
   const resolveProtocol = async (protocolId: number, resolution: string) => {
     try {
@@ -837,204 +726,14 @@ const Agents: React.FC = () => {
     }
   }
 
-  const columns = [
-    {
-      title: 'Agent',
-      dataIndex: 'name',
-      key: 'name',
-      render: (_: string, record: Agent) => (
-        <Space direction="vertical" size={2}>
-          <Space>
-            <Text strong>{record.name}</Text>
-            <Tag color={statusColor[record.status]}>{record.status}</Tag>
-          </Space>
-          <Text type="secondary">
-            {record.description || `${record.provider || 'runtime'} ${record.model || ''}`.trim() || '未配置描述'}
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: '类型',
-      dataIndex: 'kind',
-      key: 'kind',
-      width: 110,
-      render: (kind: AgentKind) => <Tag>{kind}</Tag>,
-    },
-    {
-      title: '协作角色',
-      dataIndex: 'collaboration_role',
-      key: 'collaboration_role',
-      width: 100,
-      render: (role: string) => {
-        const roleMap: Record<string, { color: string; label: string }> = {
-          leader: { color: 'gold', label: '领导者' },
-          follower: { color: 'blue', label: '跟随者' },
-          standalone: { color: 'default', label: '独立' },
-        }
-        const info = roleMap[role || 'standalone'] || roleMap.standalone
-        return <Tag color={info.color}>{info.label}</Tag>
-      },
-    },
-    {
-      title: '能力',
-      dataIndex: 'capabilities',
-      key: 'capabilities',
-      render: (capabilities: string[], record: Agent) => (
-        <Tooltip
-          title={capabilities.length >= 3 ? <CapabilityRadar capabilities={capabilities} size={140} /> : undefined}
-          overlayStyle={{ maxWidth: 'none' }}
-        >
-          <div>{renderCapabilities(capabilities)}</div>
-        </Tooltip>
-      ),
-    },
-    {
-      title: '派发',
-      dataIndex: ['stats', 'active_assignments'],
-      key: 'active_assignments',
-      width: 120,
-      render: (_: number, record: Agent) => (
-        <Space direction="vertical" size={0}>
-          <Text>{record.stats?.active_assignments || 0} 活跃</Text>
-          <Text type="secondary">{record.stats?.total_runs || 0} 次运行</Text>
-        </Space>
-      ),
-    },
-    {
-      title: '在线状态',
-      dataIndex: 'last_seen_at',
-      key: 'online_status',
-      width: 180,
-      render: (val: string | undefined, record: Agent) => {
-        const ONLINE_THRESHOLD_MS = 30 * 60 * 1000 // 30 minutes
-        const WARN_THRESHOLD_MS = 15 * 60 * 1000 // 15 minutes
-        const lastSeen = val ? new Date(val).getTime() : 0
-        const now = Date.now()
-        const elapsed = now - lastSeen
-
-        if (record.status === 'offline' || !val) {
-          return <Space><Badge status="default" /><span style={{ color: '#999' }}>离线</span></Space>
-        }
-        if (elapsed < WARN_THRESHOLD_MS) {
-          return <Space><Badge status="success" /><span style={{ color: '#52c41a' }}>在线</span></Space>
-        }
-        if (elapsed < ONLINE_THRESHOLD_MS) {
-          const mins = Math.floor(elapsed / 60000)
-          return <Space><Badge status="warning" /><span style={{ color: '#faad14' }}>{mins}分钟前</span></Space>
-        }
-        return <Space><Badge status="error" /><span style={{ color: '#ff4d4f' }}>超时</span></Space>
-      },
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 430,
-      render: (_: unknown, record: Agent) => (
-        <Space size="small" wrap>
-          <Tooltip title="记录一次在线心跳">
-            <Button size="small" icon={<ThunderboltOutlined />} onClick={() => heartbeat(record)}>
-              心跳
-            </Button>
-          </Tooltip>
-          {record.kind === 'coordinator' ? (
-            <>
-              <Tooltip title="先查看待办任务与空闲 Agent 的匹配计划">
-                <Button size="small" icon={<SearchOutlined />} onClick={() => previewDispatchTasks(record)}>
-                  预览派活
-                </Button>
-              </Tooltip>
-              <Tooltip title="作为协调器，把待办任务按能力匹配自动分派给空闲 Agent">
-                <Button size="small" type="primary" icon={<DeploymentUnitOutlined />} onClick={() => dispatchTasks(record)}>
-                  自动派活
-                </Button>
-              </Tooltip>
-            </>
-          ) : (
-            <>
-              <Button size="small" icon={<PlayCircleOutlined />} onClick={() => claimTask(record, null, true)}>
-                智能领取
-              </Button>
-              <Tooltip title="查看与此 Agent 能力匹配的待办任务">
-                <Button size="small" icon={<BulbOutlined />} onClick={() => loadRecommendedTasks(record)}>
-                  推荐
-                </Button>
-              </Tooltip>
-              <Button size="small" onClick={() => claimTask(record, null, false)}>
-                优先级领取
-              </Button>
-            </>
-          )}
-          <Button size="small" icon={<ApiOutlined />} onClick={() => loadAssignments(record)}>
-            派发
-          </Button>
-          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
-            编辑
-          </Button>
-          <Tooltip title="向所有活跃 Agent 发送广播消息">
-            <Button size="small" icon={<SoundOutlined />} onClick={() => { setBroadcastAgent(record); setBroadcastOpen(true); setBroadcastContent('') }}>
-              广播
-            </Button>
-          </Tooltip>
-          <Tooltip title="向指定 Agent 发送直接消息">
-            <Button size="small" icon={<SendOutlined />} onClick={() => { setDmFrom(record); setDmTo(null); setDmOpen(true); setDmContent('') }}>
-              消息
-            </Button>
-          </Tooltip>
-        </Space>
-      ),
-    },
-  ]
-
-  const assignmentColumns = [
-    {
-      title: '任务',
-      dataIndex: 'task',
-      key: 'task',
-      render: (_: unknown, record: TaskAssignment) => (
-        <Space direction="vertical" size={2}>
-          <Text strong>#{record.task_id} {record.task?.title || '未加载任务标题'}</Text>
-          <Text type="secondary">{record.task?.project?.name || '-'}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: '状态',
-      dataIndex: 'state',
-      key: 'state',
-      width: 120,
-      render: (state: TaskAssignmentState) => <Tag color={stateColor[state]}>{state}</Tag>,
-    },
-    {
-      title: '进度',
-      dataIndex: 'progress_rate',
-      key: 'progress_rate',
-      width: 130,
-      render: (progress: number) => <Progress percent={progress || 0} size="small" />,
-    },
-    {
-      title: '租约到期',
-      dataIndex: 'lease_expires_at',
-      key: 'lease_expires_at',
-      width: 190,
-      render: formatDateTime,
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 260,
-      render: (_: unknown, record: TaskAssignment) => (
-        <Space size="small" wrap>
-          <Button size="small" onClick={() => updateAssignmentState(record, 'running')}>运行</Button>
-          <Button size="small" onClick={() => updateAssignmentState(record, 'waiting_human')}>等人</Button>
-          <Button size="small" icon={<CheckCircleOutlined />} onClick={() => updateAssignmentState(record, 'done')}>
-            完成
-          </Button>
-          <Button size="small" danger onClick={() => updateAssignmentState(record, 'failed')}>失败</Button>
-        </Space>
-      ),
-    },
-  ]
+  // 表格列定义已抽至 agents/agentsTableColumns.tsx（原样搬移，处理器经 ctx 注入）
+  const { columns, assignmentColumns } = buildAgentsTableColumns({
+    heartbeat, previewDispatchTasks, dispatchTasks, claimTask, loadRecommendedTasks,
+    loadAssignments, openEditModal,
+    setBroadcastAgent, setBroadcastOpen, setBroadcastContent,
+    setDmFrom, setDmTo, setDmOpen, setDmContent,
+    updateAssignmentState,
+  })
 
   return (
     <div style={{ padding: 24 }}>
