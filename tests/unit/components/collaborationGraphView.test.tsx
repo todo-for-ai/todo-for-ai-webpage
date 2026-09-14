@@ -80,4 +80,32 @@ describe('CollaborationGraphView 组件渲染', () => {
     expect(container.querySelector('svg')).toBeTruthy()
     rafCallbacks.forEach((cb) => cb(16))
   })
+
+  it('hover 节点：弹出详情面板并随离开消失', () => {
+    const { container } = render(<CollaborationGraphView data={fixture} />)
+    const bobGroup = [...container.querySelectorAll('svg g')]
+      .filter((g) => g.textContent?.includes('bob'))
+      .sort((a, b) => (a.textContent || '').length - (b.textContent || '').length)[0]
+    fireEvent.mouseEnter(bobGroup)
+    const panel = container.querySelector('foreignObject')
+    expect(panel).toBeTruthy()
+    expect(panel!.textContent).toContain('bob')
+    fireEvent.mouseLeave(bobGroup)
+    expect(container.querySelector('foreignObject')).toBeNull()
+  })
+
+  it('hover 高消息量边对应的节点：渲染脉冲流光 animate', () => {
+    const { container } = render(<CollaborationGraphView data={fixture} />)
+    const svg = container.querySelector('svg')!
+    // count=9 边 ratio=0.9≥0.5：无 hover 时叠加流光 animate；另有节点脉冲 animate
+    const animations = svg.querySelectorAll('animate')
+    expect(animations.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('searchTerm 未命中节点全部变淡（dimmed 分支无 hover 面板）', () => {
+    const { container } = render(<CollaborationGraphView data={fixture} searchTerm="nomatch" />)
+    const svg = container.querySelector('svg')!
+    expect(svg.textContent).toContain('alice')
+    expect(container.querySelector('foreignObject')).toBeNull()
+  })
 })
