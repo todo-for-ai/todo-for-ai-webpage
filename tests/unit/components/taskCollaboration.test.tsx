@@ -411,3 +411,207 @@ describe('useTaskCollaborationData SSE 静默刷新', () => {
     await waitFor(() => expect(agentsApi.getTaskEvents.mock.calls.length).toBeGreaterThan(before))
   })
 })
+
+describe('useTaskCollaborationData 轮询守卫与 SSE 静默刷新（覆盖补齐）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sseOptions.length = 0
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const withData = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('document.hidden 时轮询跳过', async () => {
+    const original = document.hidden
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true })
+    try {
+      const { result } = withData()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      const before = agentsApi.getTaskEvents.mock.calls.length
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(24000)
+      })
+      expect(agentsApi.getTaskEvents.mock.calls.length).toBe(before)
+    } finally {
+      Object.defineProperty(document, 'hidden', { configurable: true, value: false })
+    }
+  })
+
+  it('document.hidden 可见时 8 秒轮询静默刷新', async () => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false })
+    const { result } = withData()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    const before = agentsApi.getTaskEvents.mock.calls.length
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000)
+    })
+    expect(agentsApi.getTaskEvents.mock.calls.length).toBeGreaterThan(before)
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false })
+  })
+
+  it('SSE onEvent 触发静默刷新', async () => {
+    const { result } = withData()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    const before = agentsApi.getTaskEvents.mock.calls.length
+    const options = sseOptions[sseOptions.length - 1]
+    await act(async () => {
+      options.onEvent({ event_type: 'task.updated' })
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50)
+    })
+    expect(agentsApi.getTaskEvents.mock.calls.length).toBeGreaterThan(before)
+  })
+})
+
+describe('useTaskAssignmentActions 反馈与交接失败路径', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sseOptions.length = 0
+  })
+
+  const withData = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('submitHumanFeedback 成功走反馈更新并清空反馈态', async () => {
+    const { result } = withData()
+    await waitFor(() => expect(result.current.assignments).toHaveLength(1))
+    const assignment = result.current.assignments[0]
+    act(() => {
+      result.current.openFeedbackModal(assignment as never)
+    })
+    await act(async () => {
+      await result.current.submitHumanFeedback()
+    })
+    expect(agentsApi.updateTaskAssignment).toHaveBeenCalled()
+    expect(result.current.feedbackAssignment).toBeNull()
+    expect(result.current.feedbackSubmitting).toBe(false)
+  })
+
+  it('submitHandoff 失败给出错误提示并复位', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.handoffTask.mockRejectedValue(new Error('handoff boom'))
+    const { result } = withData()
+    await waitFor(() => expect(result.current.assignments).toHaveLength(1))
+    const assignment = result.current.assignments[0]
+    act(() => {
+      result.current.openHandoffModal(assignment as never)
+    })
+    await act(async () => {
+      await result.current.submitHandoff()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('handoff boom')
+    expect(result.current.handoffSubmitting).toBe(false)
+    errorSpy.mockRestore()
+  })
+})
+
+describe('useTaskAssignmentActions 守卫与非 Error 回退分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sseOptions.length = 0
+  })
+
+  const withActions = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('submitHumanFeedback 无反馈对象时早退', async () => {
+    const { result } = withActions()
+    await act(async () => {
+      await result.current.submitHumanFeedback()
+    })
+    expect(result.current.feedbackSubmitting).toBe(false)
+  })
+
+  it('submitHandoff 无交接对象时早退', async () => {
+    const { result } = withActions()
+    await act(async () => {
+      await result.current.submitHandoff()
+    })
+    expect(result.current.handoffSubmitting).toBe(false)
+  })
+
+  it('updateAssignment 非 Error 抛出走 tp 兜底', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.updateTaskAssignment.mockRejectedValueOnce('plain-reject')
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.assignments).toHaveLength(1))
+    let ok: boolean | undefined
+    await act(async () => {
+      ok = await result.current.updateAssignment(result.current.assignments[0], { state: 'done' } as never)
+    })
+    expect(ok).toBe(false)
+    expect(errorSpy).toHaveBeenCalled()
+    errorSpy.mockRestore()
+  })
+})
+
+describe('useTaskCollaborationData dispatch noTask 分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const withActions = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('claimTask 返回空时提示无任务并返回', async () => {
+    const infoSpy = vi.spyOn(message, 'info').mockImplementation(() => undefined as never)
+    agentsApi.claimTask.mockResolvedValueOnce(null as never)
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    await act(async () => {
+      await result.current.submitDispatch()
+    })
+    expect(infoSpy).toHaveBeenCalled()
+    infoSpy.mockRestore()
+  })
+})
+
+describe('useTaskAssignmentActions loadDispatchAgents 失败', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sseOptions.length = 0
+  })
+
+  const withActions = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('loadDispatchAgents 失败给出错误提示并复位', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.getAgents.mockRejectedValueOnce(new Error('agents boom'))
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadDispatchAgents).toBeTruthy())
+    await act(async () => {
+      await result.current.loadDispatchAgents()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('agents boom')
+    expect(result.current.dispatchLoading).toBe(false)
+    errorSpy.mockRestore()
+  })
+})
