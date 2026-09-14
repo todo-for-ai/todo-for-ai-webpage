@@ -577,6 +577,18 @@ describe('useTaskCollaborationData dispatch noTask 分支', () => {
     return { ...data, ...actions }
   })
 
+  it('submitDispatch 失败给出错误提示并复位', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.claimTask.mockRejectedValueOnce(new Error('dispatch boom'))
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    await act(async () => {
+      await result.current.submitDispatch()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('dispatch boom')
+    expect(result.current.dispatchSubmitting).toBe(false)
+  })
+
   it('claimTask 返回空时提示无任务并返回', async () => {
     const infoSpy = vi.spyOn(message, 'info').mockImplementation(() => undefined as never)
     agentsApi.claimTask.mockResolvedValueOnce(null as never)
