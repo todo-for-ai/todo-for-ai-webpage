@@ -52,6 +52,7 @@ import { useAgentDispatchPanel } from './agents/hooks/useAgentDispatchPanel'
 import { useAgentCollabKnowledgePanel } from './agents/hooks/useAgentCollabKnowledgePanel'
 import { useAgentStepOverrides } from './agents/hooks/useAgentStepOverrides'
 import { useAgentConflicts } from './agents/hooks/useAgentConflicts'
+import { useAgentCrudActions } from './agents/hooks/useAgentCrudActions'
 import { buildAgentsTableColumns } from './agents/agentsTableColumns'
 import {
   agentsApi,
@@ -84,30 +85,47 @@ import NotificationPopover from './agents/NotificationPopover'
 const { Title, Text } = Typography
 
 const Agents: React.FC = () => {
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [reviewQueue, setReviewQueue] = useState<ReviewQueueItem[]>([])
-  const [loading, setLoading] = useState(false)
   const [assignmentLoading, setAssignmentLoading] = useState(false)
-  const [reviewLoading, setReviewLoading] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingAgent, setEditingAgent] = useState<Agent | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const pendingAgentId = searchParams.get('agent_id')
   const [autoOpened, setAutoOpened] = useState(false)
   const [autoOpenedConflicts, setAutoOpenedConflicts] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [statusFilter, setStatusFilter] = useState<AgentStatus | 'all'>('all')
-  const [reviewActionFilter, setReviewActionFilter] = useState<ReviewQueueAction>('all')
+  // Agent CRUD/广播/声誉/沙盒域块已抽至 agents/hooks/useAgentCrudActions.ts（原样搬移）
+  const {
+    agents, setAgents,
+    reviewQueue, setReviewQueue,
+    loading, setLoading,
+    reviewLoading, setReviewLoading,
+    modalOpen, setModalOpen,
+    editingAgent, setEditingAgent,
+    searchText, setSearchText,
+    statusFilter, setStatusFilter,
+    reviewActionFilter, setReviewActionFilter,
+    broadcastOpen, setBroadcastOpen,
+    broadcastAgent, setBroadcastAgent,
+    broadcastContent, setBroadcastContent,
+    broadcasting, setBroadcasting,
+    agentReputation, setAgentReputation,
+    reputationHistory, setReputationHistory,
+    agentSandbox, setAgentSandbox,
+    form,
+    loadAgents,
+    loadReviewQueue,
+    openCreateModal,
+    openEditModal,
+    saveAgent,
+    heartbeat,
+    sendBroadcast,
+    loadAgentReputation,
+    loadAgentSandbox,
+    recalculateReputation,
+  } = useAgentCrudActions({ selectedAgent })
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
   const [liveMode, setLiveMode] = useState(true)
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
-  const [broadcastOpen, setBroadcastOpen] = useState(false)
-  const [broadcastAgent, setBroadcastAgent] = useState<Agent | null>(null)
-  const [broadcastContent, setBroadcastContent] = useState('')
-  const [broadcasting, setBroadcasting] = useState(false)
 
 
 
@@ -340,16 +358,12 @@ const Agents: React.FC = () => {
     submitResolveConflict, autoResolveConflicts,
   } = useAgentConflicts()
   // Reputation
-  const [agentReputation, setAgentReputation] = useState<any>(null)
-  const [reputationHistory, setReputationHistory] = useState<ReputationHistory | null>(null)
   // Agent-bound sandbox (shown in drawer)
-  const [agentSandbox, setAgentSandbox] = useState<any>(null)
 
   // Live event feed
   const [liveEvents, setLiveEvents] = useState<{ type: string; payload: any; time: number }[]>([])
   const MAX_LIVE_EVENTS = 30
 
-  const [form] = Form.useForm()
   const [feedbackForm] = Form.useForm()
 
   useEffect(() => {
@@ -484,182 +498,10 @@ const Agents: React.FC = () => {
     }, [drawerOpen, selectedAgent]),
   })
 
-  const loadAgents = async (options?: { silent?: boolean }) => {
-    const silent = options?.silent === true
-    if (!silent) setLoading(true)
-    try {
-      const result = await agentsApi.getAgents({
-        status: statusFilter,
-        search: searchText,
-        sort_by: 'last_seen_at',
-        sort_order: 'desc',
-        per_page: 50,
-      })
-      setAgents(result.items)
-    } catch (error) {
-      if (!silent) message.error('加载 Agent 失败')
-    } finally {
-      if (!silent) setLoading(false)
-    }
-  }
-
-  const loadReviewQueue = async (options?: { silent?: boolean }) => {
-    const silent = options?.silent === true
-    if (!silent) setReviewLoading(true)
-    try {
-      const result = await agentsApi.getReviewQueue({
-        action: reviewActionFilter,
-        per_page: 20,
-      })
-      setReviewQueue(result.items)
-    } catch (error) {
-      if (!silent) message.error(error instanceof Error ? error.message : '加载人工审核队列失败')
-    } finally {
-      if (!silent) setReviewLoading(false)
-    }
-  }
-
-  const openCreateModal = () => {
-    setEditingAgent(null)
-    form.setFieldsValue({
-      name: '',
-      description: '',
-      kind: 'assistant',
-      status: 'active',
-      provider: '',
-      model: '',
-      capabilitiesText: '',
-      configText: '{}',
-    })
-    setModalOpen(true)
-  }
-
-  const openEditModal = (agent: Agent) => {
-    setEditingAgent(agent)
-    form.setFieldsValue({
-      name: agent.name,
-      description: agent.description,
-      kind: agent.kind,
-      status: agent.status,
-      provider: agent.provider,
-      model: agent.model,
-      capabilitiesText: (agent.capabilities || []).join('\n'),
-      configText: stringifyConfig(agent),
-    })
-    setModalOpen(true)
-  }
-
-  const saveAgent = async () => {
-    try {
-      const values = await form.validateFields()
-      let config = {}
-      try {
-        config = JSON.parse(values.configText || '{}')
-      } catch {
-        message.error('运行配置必须是合法 JSON')
-        return
-      }
-
-      const payload = {
-        name: values.name,
-        description: values.description,
-        kind: values.kind,
-        status: values.status,
-        provider: values.provider,
-        model: values.model,
-        capabilities: parseLines(values.capabilitiesText),
-        config,
-      }
-
-      if (editingAgent) {
-        await agentsApi.updateAgent(editingAgent.id, payload)
-        message.success('Agent 已更新')
-      } else {
-        await agentsApi.createAgent(payload)
-        message.success('Agent 已创建')
-      }
-
-      setModalOpen(false)
-      loadAgents()
-    } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message)
-      }
-    }
-  }
-
-  const heartbeat = async (agent: Agent) => {
-    try {
-      await agentsApi.heartbeatAgent(agent.id, 'active')
-      message.success('心跳已记录')
-      loadAgents()
-    } catch {
-      message.error('心跳失败')
-    }
-  }
-
-  const sendBroadcast = async () => {
-    if (!broadcastAgent || !broadcastContent.trim()) {
-      message.warning('请输入广播内容')
-      return
-    }
-    setBroadcasting(true)
-    try {
-      const result = await agentsApi.broadcastMessage(broadcastAgent.id, broadcastContent.trim())
-      message.success(`广播已发送给 ${result.recipient_count} 个活跃 Agent`)
-      setBroadcastOpen(false)
-      setBroadcastAgent(null)
-      setBroadcastContent('')
-    } catch {
-      message.error('广播发送失败')
-    } finally {
-      setBroadcasting(false)
-    }
-  }
 
 
 
 
-
-  const loadAgentReputation = async (agent: Agent) => {
-    try {
-      const data = await agentsApi.getAgentReputation(agent.id)
-      setAgentReputation(data)
-    } catch {
-      setAgentReputation(null)
-    }
-    try {
-      const hist = await agentsApi.getAgentReputationHistory(agent.id, { limit: 200 })
-      setReputationHistory(hist)
-    } catch {
-      setReputationHistory(null)
-    }
-  }
-
-  const loadAgentSandbox = async (agent: Agent) => {
-    try {
-      const data = await agentsApi.getAgentSandbox(agent.id)
-      setAgentSandbox(data.sandbox || null)
-    } catch {
-      setAgentSandbox(null)
-    }
-  }
-
-  const recalculateReputation = async () => {
-    if (!selectedAgent) return
-    try {
-      const data = await agentsApi.recalculateReputation(selectedAgent.id)
-      setAgentReputation(data)
-      const hist = await agentsApi.getAgentReputationHistory(selectedAgent.id, { limit: 200 })
-      setReputationHistory(hist)
-      message.success('声誉已重新计算')
-    } catch { message.error('重新计算失败') }
-  }
-
-
-
-  // ---- Workflow step dynamic reconfiguration / Conflict detection & resolution ----
-  // 两域块已抽至 agents/hooks/useAgentStepOverrides.ts 与 useAgentConflicts.ts（原样搬移）
 
   const resolveProtocol = async (protocolId: number, resolution: string) => {
     try {
@@ -669,10 +511,6 @@ const Agents: React.FC = () => {
       loadProtocols()
     } catch { message.error('操作失败') }
   }
-
-
-
-
 
   const loadDashboardStats = async () => {
     try {
