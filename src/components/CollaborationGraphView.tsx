@@ -1,13 +1,16 @@
 import React from 'react'
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Empty, Typography } from 'antd'
 import type { CollaborationGraph as GraphData } from '../api/agents'
 
 const { Text } = Typography
 
-import { KIND_COLOR_DEFAULT, KIND_COLORS, kindColor, kindGradientUrl, reputationColor, reputationStrokeWidth } from './collaboration-graph/collaborationGraphShared'
+import { kindColor, kindGradientUrl, reputationColor, reputationStrokeWidth } from './collaboration-graph/collaborationGraphShared'
 import { computeStaticPositions, filterGraphData } from './collaboration-graph/collaborationGraphShared'
 import { useForceSimulation } from './collaboration-graph/useForceSimulation'
+import { useGraphInteraction } from './collaboration-graph/useGraphInteraction'
+import GraphDefs from './collaboration-graph/GraphDefs'
+import GraphLegends from './collaboration-graph/GraphLegends'
 
 interface CollaborationGraphViewProps {
   /** 图数据：nodes + edges */
@@ -69,41 +72,22 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
   const cy = size / 2
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
   const [hoveredEdge, setHoveredEdge] = useState<{ source: number; target: number } | null>(null)
-  // 拖拽：节点位置覆盖（用户手动调整），可选从 localStorage 恢复
-  const loadPersisted = (): Record<number, { x: number; y: number }> => {
-    if (!storageKey) return {}
-    try {
-      const raw = localStorage.getItem(storageKey)
-      if (!raw) return {}
-      const parsed = JSON.parse(raw)
-      if (parsed && typeof parsed === 'object') {
-        const out: Record<number, { x: number; y: number }> = {}
-        for (const k of Object.keys(parsed)) {
-          const v = parsed[k]
-          if (v && typeof v.x === 'number' && typeof v.y === 'number') {
-            out[Number(k)] = { x: v.x, y: v.y }
-          }
-        }
-        return out
-      }
-    } catch {
-      // ignore malformed storage
-    }
-    return {}
-  }
-  const [dragOverride, setDragOverride] = useState<Record<number, { x: number; y: number }>>(loadPersisted)
-  const storageKeyRef = useRef(storageKey)
-  storageKeyRef.current = storageKey
-  const draggingRef = useRef<number | null>(null)
-  const dragMovedRef = useRef(false)
   const svgWrapRef = useRef<HTMLDivElement | null>(null)
   const { forceCoords } = useForceSimulation({ layout, size, cx, cy, forceRepulsion, forceLinkDistance, nodes, edges })
-
-  // 缩放与平移
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const panningRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
+  // 指针交互（节点拖拽覆盖/背景平移/滚轮缩放）沉淀于共享 hook
+  const {
+    zoom,
+    pan,
+    isDragging,
+    dragOverride,
+    onNodeDragStart,
+    onSvgMouseMove,
+    onSvgMouseUp,
+    onSvgWheel,
+    onBgMouseDown,
+    consumeDragMoved,
+    resetView,
+  } = useGraphInteraction({ svgWrapRef, storageKey })
 
   // 力导向布局实时坐标（rAF 逐步收敛，让用户看到布局过程）
 
@@ -127,61 +111,6 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
 
   // 取节点位置：优先拖拽覆盖
   const getPos = (id: number) => dragOverride[id] || nodePos.get(id) || { x: 0, y: 0 }
-
-  // 拖拽：将鼠标客户端坐标转为 svg 内坐标
-  const svgPoint = (clientX: number, clientY: number) => {
-    const svg = svgWrapRef.current?.querySelector('svg')
-    if (!svg) return { x: 0, y: 0 }
-    const pt = svg.createSVGPoint()
-    pt.x = clientX
-    pt.y = clientY
-    const ctm = svg.getScreenCTM()
-    if (!ctm) return { x: 0, y: 0 }
-    const p = pt.matrixTransform(ctm.inverse())
-    return { x: p.x, y: p.y }
-  }
-  const onNodeDragStart = (id: number) => {
-    draggingRef.current = id
-    dragMovedRef.current = false
-    setIsDragging(true)
-  }
-  const onSvgMouseMove = (e: React.MouseEvent) => {
-    if (draggingRef.current !== null) {
-      dragMovedRef.current = true
-      const p = svgPoint(e.clientX, e.clientY)
-      setDragOverride((prev) => ({ ...prev, [draggingRef.current as number]: { x: p.x, y: p.y } }))
-      return
-    }
-    if (panningRef.current) {
-      setPan({
-        x: panningRef.current.panX + (e.clientX - panningRef.current.startX),
-        y: panningRef.current.panY + (e.clientY - panningRef.current.startY),
-      })
-    }
-  }
-  const onSvgMouseUp = () => {
-    const wasNodeDrag = dragMovedRef.current && draggingRef.current !== null
-    draggingRef.current = null
-    panningRef.current = null
-    setIsDragging(false)
-    if (wasNodeDrag && storageKeyRef.current) {
-      try {
-        localStorage.setItem(storageKeyRef.current, JSON.stringify(dragOverride))
-      } catch {
-        // storage may be unavailable (private mode / quota)
-      }
-    }
-  }
-  // 滚轮缩放
-  const onSvgWheel = (e: React.WheelEvent) => {
-    e.preventDefault()
-    const factor = e.deltaY < 0 ? 1.1 : 0.9
-    setZoom((z) => Math.max(0.3, Math.min(3, z * factor)))
-  }
-  // 背景拖拽平移（非节点时）
-  const onBgMouseDown = (e: React.MouseEvent) => {
-    panningRef.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
-  }
 
   // 节点半径按消息量分四档梯度（低/中低/中/高），比纯线性对比更强
   const nodeTier = (n: { messages: number }) => {
@@ -220,7 +149,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
           </span>
           <button
             type="button"
-            onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }) }}
+            onClick={resetView}
             style={{ fontSize: 11, cursor: 'pointer', border: '1px solid #d9d9d9', background: '#fff', borderRadius: 4, padding: '1px 6px', color: '#595959' }}
           >
             重置视图
@@ -238,45 +167,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         onMouseLeave={onSvgMouseUp}
         onWheel={onSvgWheel}
       >
-        <defs>
-          {/* 边箭头：默认灰、高亮蓝 */}
-          <marker id="cg-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#bfbfbf" />
-          </marker>
-          <marker id="cg-arrow-hl" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#1890ff" />
-          </marker>
-          {/* 按 kind 的径向渐变：中心亮→边缘深，增强节点立体感 */}
-          {Object.entries(KIND_COLORS).map(([kind, color]) => {
-            // 将 hex 转为更亮/更暗版本
-            const r = parseInt(color.slice(1, 3), 16)
-            const g = parseInt(color.slice(3, 5), 16)
-            const b = parseInt(color.slice(5, 7), 16)
-            const lighter = `rgb(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)})`
-            const darker = `rgb(${Math.max(0, r - 40)},${Math.max(0, g - 40)},${Math.max(0, b - 40)})`
-            return (
-              <radialGradient key={kind} id={`cg-grad-${kind}`} cx="35%" cy="35%" r="65%">
-                <stop offset="0%" stopColor={lighter} />
-                <stop offset="100%" stopColor={darker} />
-              </radialGradient>
-            )
-          })}
-          {/* 默认 kind 渐变 */}
-          {(() => {
-            const color = KIND_COLOR_DEFAULT
-            const r = parseInt(color.slice(1, 3), 16)
-            const g = parseInt(color.slice(3, 5), 16)
-            const b = parseInt(color.slice(5, 7), 16)
-            const lighter = `rgb(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)})`
-            const darker = `rgb(${Math.max(0, r - 40)},${Math.max(0, g - 40)},${Math.max(0, b - 40)})`
-            return (
-              <radialGradient id="cg-grad-default" cx="35%" cy="35%" r="65%">
-                <stop offset="0%" stopColor={lighter} />
-                <stop offset="100%" stopColor={darker} />
-              </radialGradient>
-            )
-          })()}
-        </defs>
+        <GraphDefs />
         {/* 透明背景：接收平移拖拽 */}
         <rect x="0" y="0" width={size} height={size} fill="transparent" onMouseDown={onBgMouseDown} style={{ cursor: 'move' }} />
         <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
@@ -415,7 +306,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               onMouseEnter={() => setHoveredNode(n.id)}
               onMouseLeave={() => setHoveredNode(null)}
               onMouseDown={(e) => { e.preventDefault(); onNodeDragStart(n.id) }}
-              onClick={onNodeClick ? () => { if (dragMovedRef.current) { dragMovedRef.current = false; return }; onNodeClick(n.id) } : undefined}
+              onClick={onNodeClick ? () => { if (consumeDragMoved()) return; onNodeClick(n.id) } : undefined}
             >
               {/* 声誉环：外圈环，颜色按 reputation，粗细按声誉梯度 */}
               {(() => {
@@ -538,56 +429,7 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
         })}
         </g>
       </svg>
-      {/* kind 颜色图例（填充+虚线边框表示分组） */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
-        {Object.entries(KIND_COLORS).map(([kind, color]) => (
-          <span key={kind} style={{ fontSize: 11, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color, border: `2px dashed ${color}`, boxSizing: 'border-box' }} />
-            {kind}
-          </span>
-        ))}
-      </div>
-      {/* 边色阶图例（按消息量连续渐变） */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, color: '#8c8c8c' }}>边色阶(消息量):</span>
-        <span style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ display: 'inline-block', width: 50, height: 6, borderRadius: 3, background: 'linear-gradient(to right, #bfbfbf, #1890ff, #722ed1)' }} />
-          低 → 高
-        </span>
-        <span style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ display: 'inline-block', width: 14, borderTop: '2px dashed #fa541c' }} />
-          声誉差≥30
-        </span>
-      </div>
-      {/* 节点尺寸图例（按消息量梯度） */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, color: '#8c8c8c' }}>节点尺寸(消息量, 中/高显示声誉值):</span>
-        {[
-          { r: 7, l: '低' },
-          { r: 10, l: '中低' },
-          { r: 14, l: '中' },
-          { r: 18, l: '高' },
-        ].map(({ r, l }) => (
-          <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ display: 'inline-block', width: r, height: r, borderRadius: '50%', background: '#bfbfbf' }} />
-            {l}
-          </span>
-        ))}
-      </div>
-      {/* 声誉环图例（颜色+粗细） */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, color: '#8c8c8c' }}>声誉环:</span>
-        {[
-          { c: '#ff4d4f', w: 1.5, l: '低(<40)' },
-          { c: '#faad14', w: 2.5, l: '中(≥50)' },
-          { c: '#52c41a', w: 3.5, l: '高(≥80)' },
-        ].map(({ c, w, l }) => (
-          <span key={l} style={{ fontSize: 10, color: '#8c8c8c', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ display: 'inline-block', width: 16, height: w, background: c, borderRadius: 2 }} />
-            {l}
-          </span>
-        ))}
-      </div>
+      <GraphLegends />
     </div>
   )
 })
