@@ -46,17 +46,18 @@ export interface LayoutEdge {
 export interface FilterOptions {
   filterKinds?: string[]
   minCount?: number
+  /** 中心节点：即使被过滤/孤立也始终保留 */
   centerNodeId?: number
 }
 
-/** 按 kind 集合与最小消息量过滤节点/边：返回过滤后节点集与边集。 */
-export function filterGraphData<T extends { id: number }, E extends { source: number; target: number; count: number }>(
+/** 按 kind 集合与最小消息量过滤：边两端需在过滤集内，孤立节点剔除（中心节点保留）。 */
+export function filterGraphData<T extends { id: number; kind?: string | null }, E extends { source: number; target: number; count: number }>(
   allNodes: T[],
   allEdges: E[],
   opts: FilterOptions,
 ): { nodes: T[]; edges: E[] } {
   const kindSet = opts.filterKinds && opts.filterKinds.length > 0 ? new Set(opts.filterKinds) : null
-  const kindNodes = kindSet ? allNodes.filter((n) => (n as any).kind && kindSet.has((n as any).kind)) : allNodes
+  const kindNodes = kindSet ? allNodes.filter((n) => n.kind && kindSet.has(n.kind)) : allNodes
   const kindIds = new Set(kindNodes.map((n) => n.id))
   const minC = opts.minCount && opts.minCount > 0 ? opts.minCount : 0
   const edges = allEdges.filter((e) => {

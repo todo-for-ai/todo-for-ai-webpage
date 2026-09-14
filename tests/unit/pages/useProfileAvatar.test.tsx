@@ -195,3 +195,66 @@ describe('useProfileAvatar 守卫分支', () => {
     expect(ok).toBe(false)
   })
 })
+
+describe('useProfileAvatar handleRandomAvatar 守卫分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getStoredAvatarToken.mockReturnValue(null)
+  })
+
+  it('未登录时 handleRandomAvatar 早退', async () => {
+    const { result } = renderHook(() => useProfileAvatar(null as never, updateUser, messageApi, tp))
+    await act(async () => {
+      await result.current.handleRandomAvatar()
+    })
+    expect(pickRandomBuiltinAvatar).not.toHaveBeenCalled()
+    expect(result.current.isAvatarUpdating).toBe(false)
+  })
+
+  it('无可选头像（pickRandom 返回 null）时早退', async () => {
+    pickRandomBuiltinAvatar.mockReturnValueOnce(null)
+    const { result } = renderHook(() => useProfileAvatar(mockUser, updateUser, messageApi, tp))
+    await waitFor(() => expect(result.current.builtinAvatarOptions).toBeTruthy())
+    await act(async () => {
+      await result.current.handleRandomAvatar()
+    })
+    expect(result.current.isAvatarUpdating).toBe(false)
+  })
+})
+
+describe('useProfileAvatar 分页与偏好分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getStoredAvatarToken.mockReturnValue(null)
+  })
+
+  const seventyOptions = Array.from({ length: 70 }, (_, i) => ({ label: `av${i}`, token: `tok-${i}` }))
+
+  it('偏好头像 token 作为当前头像', async () => {
+    const user = { ...mockUser, preferences: { avatar_token: 'pref-token' } }
+    const { result } = renderHook(() => useProfileAvatar(user, updateUser, messageApi, tp))
+    await waitFor(() => expect(result.current.builtinAvatarOptions).toBeTruthy())
+    expect(result.current.currentAvatarValue).toBe('pref-token')
+  })
+
+  it('选择器打开时自动翻到当前头像所在页', async () => {
+    getBuiltinAvatarOptions.mockReturnValue(seventyOptions)
+    const user = { ...mockUser, preferences: { avatar_token: 'tok-65' } }
+    const { result } = renderHook(() => useProfileAvatar(user, updateUser, messageApi, tp))
+    await waitFor(() => expect(result.current.builtinAvatarOptions).toHaveLength(70))
+    act(() => {
+      result.current.setIsAvatarPickerOpen(true)
+    })
+    await waitFor(() => expect(result.current.avatarPage).toBe(2))
+  })
+
+  it('avatarPage 超出总页数时钳制回有效页', async () => {
+    getBuiltinAvatarOptions.mockReturnValue(seventyOptions)
+    const { result } = renderHook(() => useProfileAvatar({ ...mockUser, preferences: { avatar_token: 'tok-65' } }, updateUser, messageApi, tp))
+    await waitFor(() => expect(result.current.avatarPageCount).toBe(2))
+    act(() => {
+      result.current.setAvatarPage(5)
+    })
+    await waitFor(() => expect(result.current.avatarPage).toBe(2))
+  })
+})

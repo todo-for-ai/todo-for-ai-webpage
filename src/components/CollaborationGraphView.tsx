@@ -6,6 +6,7 @@ import type { CollaborationGraph as GraphData } from '../api/agents'
 const { Text } = Typography
 
 import { KIND_COLOR_DEFAULT, KIND_COLORS, kindColor, kindGradientUrl, reputationColor, reputationStrokeWidth } from './collaboration-graph/collaborationGraphShared'
+import { computeStaticPositions, filterGraphData } from './collaboration-graph/collaborationGraphShared'
 import { useForceSimulation } from './collaboration-graph/useForceSimulation'
 
 interface CollaborationGraphViewProps {
@@ -58,23 +59,12 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
 }, ref) => {
   const allNodes = data?.nodes || []
   const allEdges = data?.edges || []
-  // 按 kind 过滤：仅保留选中 kind 的节点，边两端都必须在过滤集内
-  const kindSet = filterKinds && filterKinds.length > 0 ? new Set(filterKinds) : null
-  const kindNodes = kindSet ? allNodes.filter((n) => n.kind && kindSet.has(n.kind)) : allNodes
-  const kindIds = new Set(kindNodes.map((n) => n.id))
-  // 按最小消息量过滤边：count 低于 minCount 的边剔除
-  const minC = minCount && minCount > 0 ? minCount : 0
-  const filteredEdges = allEdges.filter((e) => {
-    if (kindSet && !(kindIds.has(e.source) && kindIds.has(e.target))) return false
-    if (minC && e.count < minC) return false
-    return true
+  // 按 kind/minCount 过滤（中心节点始终保留），逻辑沉淀于共享模块
+  const { nodes, edges } = filterGraphData(allNodes, allEdges, {
+    filterKinds,
+    minCount,
+    centerNodeId,
   })
-  // 仅保留出现在过滤后边中的节点（剔除因边过滤而孤立的节点），中心节点始终保留
-  const usedIds = new Set<number>()
-  filteredEdges.forEach((e) => { usedIds.add(e.source); usedIds.add(e.target) })
-  if (centerNodeId !== undefined) usedIds.add(centerNodeId)
-  const nodes = (kindSet ? kindNodes : allNodes).filter((n) => usedIds.has(n.id))
-  const edges = filteredEdges
   const cx = size / 2
   const cy = size / 2
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
@@ -126,27 +116,14 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
 
   // 节点位置
   const nodePos = useMemo(() => {
-    const pos = new Map<number, { x: number; y: number }>()
-    if (layout === 'grid') {
-      const cols = Math.ceil(Math.sqrt(nodes.length))
-      const cell = (size - 40) / Math.max(cols, 1)
-      nodes.forEach((n, i) => {
-        const row = Math.floor(i / cols)
-        const col = i % cols
-        pos.set(n.id, { x: 20 + cell * (col + 0.5), y: 20 + cell * (row + 0.5) })
-      })
-    } else if (layout === 'force') {
+    if (layout === 'force') {
       // 力导向位置由 rAF 效果实时更新到 forceCoords，这里直接读取当前帧
+      const pos = new Map<number, { x: number; y: number }>()
       forceCoords.forEach((c, id) => pos.set(id, { x: c.x, y: c.y }))
-    } else {
-      const radius = size / 2 - 40 // 留出标签空间
-      nodes.forEach((n, i) => {
-        const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
-        pos.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) })
-      })
+      return pos
     }
-    return pos
-  }, [nodes, edges, layout, size, cx, cy, forceCoords])
+    return computeStaticPositions(nodes, layout, size)
+  }, [nodes, layout, size, forceCoords])
 
   // 取节点位置：优先拖拽覆盖
   const getPos = (id: number) => dragOverride[id] || nodePos.get(id) || { x: 0, y: 0 }
