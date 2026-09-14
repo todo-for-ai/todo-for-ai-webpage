@@ -233,3 +233,181 @@ describe('useTaskAssignmentActions 动作分支补全', () => {
     successSpy.mockRestore()
   })
 })
+
+describe('useTaskAssignmentActions 失败路径', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const withActions = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('postMessage 失败给出错误提示并复位 posting', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.postTaskEvent.mockRejectedValueOnce(new Error('net down'))
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    act(() => {
+      result.current.setComposerContent('hi')
+    })
+    await act(async () => {
+      await result.current.postMessage()
+    })
+    expect(errorSpy).toHaveBeenCalledWith('net down')
+    expect(result.current.posting).toBe(false)
+    errorSpy.mockRestore()
+  })
+
+  it('submitHandoff 失败给出错误提示并复位', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => undefined as never)
+    agentsApi.handoffTask.mockRejectedValueOnce(new Error('x'))
+    const { result } = withActions()
+    await waitFor(() => expect(result.current.assignments).toHaveLength(1))
+    const assignment = result.current.assignments[0]
+    act(() => {
+      result.current.openHandoffModal(assignment as never)
+    })
+    await act(async () => {
+      await result.current.submitHandoff()
+    })
+    expect(errorSpy).toHaveBeenCalled()
+    expect(result.current.handoffSubmitting).toBe(false)
+    errorSpy.mockRestore()
+  })
+})
+
+describe('useTaskCollaborationData 轮询/SSE/失败分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const withData = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('loadRunLogs 失败静默复位', async () => {
+    agentsApi.getRunLogs.mockRejectedValueOnce(new Error('x'))
+    const { result } = withData()
+    await act(async () => {
+      await result.current.loadRunLogs(9)
+    })
+    expect(result.current.runLogsLoading).toBe(false)
+  })
+
+  it('轮询：8 秒间隔静默刷新', async () => {
+    const { result } = withData()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000)
+    })
+    const calls = agentsApi.getTaskEvents.mock.calls.length
+    expect(calls).toBeGreaterThanOrEqual(1)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000)
+    })
+    expect(agentsApi.getTaskEvents.mock.calls.length).toBeGreaterThan(calls)
+  })
+
+  it('SSE onEvent 触发静默刷新', async () => {
+    vi.useRealTimers()
+    const { result } = withData()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    const before = agentsApi.getTaskEvents.mock.calls.length
+    act(() => {
+      result.current.loadCollaboration({ silent: true })
+    })
+    await waitFor(() => expect(agentsApi.getTaskEvents.mock.calls.length).toBeGreaterThan(before))
+  })
+})
+
+describe('useTaskCollaborationData 轮询守卫与失败分支', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const withData = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('taskId 缺失时 loadCollaboration 早退（覆盖守卫行）', async () => {
+    const r0 = renderHook(() => useTaskCollaborationData(0))
+    await act(async () => {
+      await r0.result.current.loadCollaboration()
+    })
+    expect(agentsApi.getTaskEvents).not.toHaveBeenCalled()
+    r0.unmount()
+  })
+
+  it('document.hidden 时轮询跳过', async () => {
+    const original = document.hidden
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true })
+    try {
+      const before = agentsApi.getTaskEvents.mock.calls.length
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(24000)
+      })
+      expect(agentsApi.getTaskEvents.mock.calls.length).toBe(before)
+    } finally {
+      Object.defineProperty(document, 'hidden', { configurable: true, value: false })
+    }
+  })
+})
+
+describe('useTaskCollaborationData 非静默失败', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const withData = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('loadCollaboration 失败置 loadFailed', async () => {
+    agentsApi.getTaskEvents.mockRejectedValue('x')
+    const { result } = withData()
+    await waitFor(() => expect(result.current.loadFailed).toBe(true))
+    agentsApi.getTaskEvents.mockRestore()
+  })
+})
+
+describe('useTaskCollaborationData SSE 静默刷新', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sseOptions.length = 0
+  })
+
+  const withData = () => renderHook(() => {
+    const data = useTaskCollaborationData(42)
+    const actions = useTaskAssignmentActions(42, (k: string) => k, data)
+    return { ...data, ...actions }
+  })
+
+  it('SSE onEvent 触发静默刷新', async () => {
+    const { result } = withData()
+    await waitFor(() => expect(result.current.loadCollaboration).toBeTruthy())
+    const before = agentsApi.getTaskEvents.mock.calls.length
+    const options = sseOptions[sseOptions.length - 1]
+    await act(async () => {
+      options.onEvent({ event_type: 'task.updated' })
+    })
+    await waitFor(() => expect(agentsApi.getTaskEvents.mock.calls.length).toBeGreaterThan(before))
+  })
+})
