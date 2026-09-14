@@ -1,95 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Form, message } from 'antd'
 import {
-  Button, Card, Col, Row, Modal, Form, Input, InputNumber, Select, Space, Tag, Steps, Spin,
-  message, Popconfirm, Descriptions, Empty, Tooltip, Badge, Table, List, Typography,
-  Drawer, Progress, Timeline, Alert,
-} from 'antd'
-const { Text } = Typography
-import {
-  PlusOutlined, DeleteOutlined, PlayCircleOutlined, StopOutlined,
-  CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
-  ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
-  HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
-  SettingOutlined, LineChartOutlined, PieChartOutlined, RetweetOutlined, DotChartOutlined,
-  HeatMapOutlined, BarChartOutlined,
-} from '@ant-design/icons'
-import {
-  agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent,
-  type WorkflowRunConsoleResult, type WorkflowStepStats, type WorkflowRunTrend,
-  type WorkflowFailureCorrelation, type WorkflowFailureCorrelationByStep,
-  type WorkflowFailedStepsByDuration, type WorkflowStepDurationHistogram,
-  type WorkflowRunDurationPercentiles, type WorkflowStepFailureRate,
-  type WorkflowStepCofailureMatrix, type WorkflowSuccessRateByWorkflow,
-  type WorkflowStepRetryTopology, type WorkflowStepHourlyDistribution,
-  type WorkflowStepDependencyBottleneck, type WorkflowSimilarityMatrix,
-  type WorkflowStepBottleneckTimeline, type WorkflowStructuralComplexity,
+  agentsApi, type WorkflowItem, type WorkflowRunItem, type Agent,
+  type WorkflowRunConsoleResult,
 } from '../../api/agents'
-import WorkflowDagViewer, { type DagStepData } from '../../components/Workflow/WorkflowDagViewer'
-import SortableStepCard from '../../components/Workflow/SortableStepCard'
-import WorkflowRunTrendChart from '../../components/WorkflowRunTrendChart'
-import { useCollaborationSSE } from '../../hooks/useCollaborationSSE'
-
-// Extracted components
-import WorkflowFormModal from './WorkflowFormModal'
-import WorkflowRunConsole from './WorkflowRunConsole'
-import WorkflowDefinitionsCard from './WorkflowDefinitionsCard'
-import TriggerCreationModal from './TriggerCreationModal'
-import LaunchWorkflowModal from './LaunchWorkflowModal'
-import WorkflowRunsTriggers from './WorkflowRunsTriggers'
-import WorkflowAnalyticsCards from './WorkflowAnalyticsCards'
-import ScheduledTriggersCard from './ScheduledTriggersCard'
-import WorkflowRunsCard from './WorkflowRunsCard'
-import WorkflowTemplatesCard from './WorkflowTemplatesCard'
-
-const { Option } = Select
-const { TextArea } = Input
-
-// Step status icon/color mapping
-const STEP_STATUS_MAP: Record<string, { color: string; icon: React.ReactNode }> = {
-  pending: { color: 'default', icon: <ClockCircleOutlined /> },
-  waiting: { color: 'warning', icon: <ClockCircleOutlined /> },
-  running: { color: 'processing', icon: <ReloadOutlined spin /> },
-  succeeded: { color: 'success', icon: <CheckCircleOutlined /> },
-  failed: { color: 'error', icon: <CloseCircleOutlined /> },
-  skipped: { color: 'default', icon: <StopOutlined /> },
-  cancelled: { color: 'default', icon: <StopOutlined /> },
-}
-
-const WORKFLOW_STATUS_COLORS: Record<string, string> = {
-  pending: 'default',
-  running: 'processing',
-  paused: 'warning',
-  succeeded: 'success',
-  failed: 'error',
-  cancelled: 'default',
-}
-
+import { useWorkflowAnalytics } from './useWorkflowAnalytics'
+import { useWorkflowTriggers } from './useWorkflowTriggers'
+import { useWorkflowVersions } from './useWorkflowVersions'
+import { useWorkflowTemplates } from './useWorkflowTemplates'
 
 /**
- * 工作流页数据层：工作流/运行/触发器/版本/模板状态与全部处理器、 Effects。
- * 由 Workflows 页面原样拆出。
+ * 工作流页数据层组合根：工作流/运行核心状态、加载与运行控制台/启动等处理器。
+ * 分析扇出、触发器、版本、模板各域拆至同名域 hook，本文件负责组装并保持
+ * 原 useWorkflowsData 的返回键集不变（消费方仅 Workflows.tsx）。
  */
 export function useWorkflowsData() {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [runs, setRuns] = useState<WorkflowRunItem[]>([])
-  const [stepStats, setStepStats] = useState<WorkflowStepStats | null>(null)
-  const [stepDurationHistogram, setStepDurationHistogram] = useState<WorkflowStepDurationHistogram | null>(null)
-  const [runDurationPercentiles, setRunDurationPercentiles] = useState<WorkflowRunDurationPercentiles | null>(null)
-  const [stepFailureRate, setStepFailureRate] = useState<WorkflowStepFailureRate | null>(null)
-  const [stepCofailureMatrix, setStepCofailureMatrix] = useState<WorkflowStepCofailureMatrix | null>(null)
-  const [successRateByWorkflow, setSuccessRateByWorkflow] = useState<WorkflowSuccessRateByWorkflow | null>(null)
-  const [stepRetryTopology, setStepRetryTopology] = useState<WorkflowStepRetryTopology | null>(null)
-  const [stepHourlyDistribution, setStepHourlyDistribution] = useState<WorkflowStepHourlyDistribution | null>(null)
-  const [stepDependencyBottleneck, setStepDependencyBottleneck] = useState<WorkflowStepDependencyBottleneck | null>(null)
-  const [similarityMatrix, setSimilarityMatrix] = useState<WorkflowSimilarityMatrix | null>(null)
-  const [stepDurationHist, setStepDurationHist] = useState<WorkflowStepDurationHistogram | null>(null)
-  const [stepBottleneckTl, setStepBottleneckTl] = useState<WorkflowStepBottleneckTimeline | null>(null)
-  const [structuralComplexity, setStructuralComplexity] = useState<WorkflowStructuralComplexity | null>(null)
-  const [runTrend, setRunTrend] = useState<WorkflowRunTrend | null>(null)
-  const [failureCorrelation, setFailureCorrelation] = useState<WorkflowFailureCorrelation | null>(null)
-  const [failureCorrelationByStep, setFailureCorrelationByStep] = useState<WorkflowFailureCorrelationByStep | null>(null)
-  const [failedStepsByDuration, setFailedStepsByDuration] = useState<WorkflowFailedStepsByDuration | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
   const [runsLoading, setRunsLoading] = useState(false)
@@ -105,28 +33,6 @@ export function useWorkflowsData() {
   const [launchWorkflowId, setLaunchWorkflowId] = useState<number | null>(null)
   const [launching, setLaunching] = useState(false)
   const [launchForm] = Form.useForm()
-
-  // Trigger state
-  const [triggers, setTriggers] = useState<any[]>([])
-  const [triggerLoading, setTriggerLoading] = useState(false)
-  const [triggerModalOpen, setTriggerModalOpen] = useState(false)
-  const [triggerForm] = Form.useForm()
-  const [triggerTargetWfId, setTriggerTargetWfId] = useState<number | null>(null)
-
-  // Template state
-  const [templates, setTemplates] = useState<any[]>([])
-  const [templateLoading, setTemplateLoading] = useState(false)
-
-  // Version management state
-  const [versionModalOpen, setVersionModalOpen] = useState(false)
-  const [versionWfId, setVersionWfId] = useState<number | null>(null)
-  const [versions, setVersions] = useState<any[]>([])
-  const [currentVersion, setCurrentVersion] = useState<number>(1)
-  const [versionLoading, setVersionLoading] = useState(false)
-  const [diffModalOpen, setDiffModalOpen] = useState(false)
-  const [diffData, setDiffData] = useState<any>(null)
-  const [diffV1, setDiffV1] = useState<number>(0)
-  const [diffV2, setDiffV2] = useState<number>(0)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -144,34 +50,23 @@ export function useWorkflowsData() {
     }
   }, [])
 
+  const analytics = useWorkflowAnalytics()
+  const triggerDomain = useWorkflowTriggers()
+  const versionDomain = useWorkflowVersions({ loadData })
+  const templateDomain = useWorkflowTemplates({ loadData })
+
   const loadRuns = useCallback(async () => {
     setRunsLoading(true)
     try {
       const result = await agentsApi.getWorkflowRuns({ per_page: 50 })
       setRuns(result.items)
-      agentsApi.getWorkflowStepStats(30).then(setStepStats).catch(() => {})
-      agentsApi.getWorkflowStepDurationHistogram(10).then(setStepDurationHistogram).catch(() => {})
-      agentsApi.getWorkflowRunDurationPercentiles(30).then(setRunDurationPercentiles).catch(() => {})
-      agentsApi.getWorkflowStepFailureRate(30, 15).then(setStepFailureRate).catch(() => {})
-      agentsApi.getWorkflowStepCofailureMatrix(30, 8).then(setStepCofailureMatrix).catch(() => {})
-      agentsApi.getWorkflowSuccessRateByWorkflow(30, 10).then(setSuccessRateByWorkflow).catch(() => {})
-      agentsApi.getWorkflowStepRetryTopology(30, 15).then(setStepRetryTopology).catch(() => {})
-      agentsApi.getWorkflowStepHourlyDistribution(30, 10).then(setStepHourlyDistribution).catch(() => {})
-      agentsApi.getWorkflowStepDependencyBottleneck(30, 10).then(setStepDependencyBottleneck).catch(() => {})
-      agentsApi.getWorkflowSimilarityMatrix(30, 5, 20).then(setSimilarityMatrix).catch(() => {})
-      agentsApi.getWorkflowStepDurationHistogram(10).then(setStepDurationHist).catch(() => {})
-      agentsApi.getWorkflowStepBottleneckTimeline(30, 8).then(setStepBottleneckTl).catch(() => {})
-      agentsApi.getWorkflowStructuralComplexity(20).then(setStructuralComplexity).catch(() => {})
-      agentsApi.getWorkflowRunTrend(30).then(setRunTrend).catch(() => {})
-      agentsApi.getWorkflowFailureCorrelation(30, 2).then(setFailureCorrelation).catch(() => {})
-      agentsApi.getWorkflowFailureCorrelationByStep(30, 2).then(setFailureCorrelationByStep).catch(() => {})
-      agentsApi.getWorkflowFailedStepsByDuration(30, 20).then(setFailedStepsByDuration).catch(() => {})
+      analytics.fetchAnalytics()
     } catch {
       message.error('加载工作流运行记录失败')
     } finally {
       setRunsLoading(false)
     }
-  }, [])
+  }, [analytics.fetchAnalytics])
 
   useEffect(() => {
     loadData()
@@ -324,170 +219,11 @@ export function useWorkflowsData() {
     }
   }
 
-  // --- Trigger helpers ---
-  const loadTriggers = useCallback(async () => {
-    setTriggerLoading(true)
-    try {
-      const result = await agentsApi.getWorkflowTriggers({ per_page: 100 })
-      setTriggers(result.items)
-    } catch {
-      message.error('加载触发器失败')
-    } finally {
-      setTriggerLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadTriggers()
-  }, [loadTriggers])
-
-  const openTriggerModal = (workflowId: number) => {
-    setTriggerTargetWfId(workflowId)
-    setTriggerModalOpen(true)
-    triggerForm.resetFields()
-  }
-
-  const handleCreateTrigger = async () => {
-    if (!triggerTargetWfId) return
-    try {
-      const values = await triggerForm.validateFields()
-      await agentsApi.createWorkflowTrigger({
-        workflow_id: triggerTargetWfId,
-        name: values.name,
-        cron_expr: values.cron_expr || undefined,
-        one_shot_at: values.one_shot_at || undefined,
-        is_active: values.is_active !== false,
-        project_id: values.project_id || undefined,
-      })
-      message.success('触发器创建成功')
-      setTriggerModalOpen(false)
-      loadTriggers()
-    } catch (e: any) {
-      if (e?.errorFields) return
-      message.error('创建触发器失败: ' + (e?.message || ''))
-    }
-  }
-
-  const handleToggleTrigger = async (trigger: any) => {
-    try {
-      await agentsApi.updateWorkflowTrigger(trigger.id, { is_active: !trigger.is_active })
-      message.success(trigger.is_active ? '已停用' : '已启用')
-      loadTriggers()
-    } catch {
-      message.error('操作失败')
-    }
-  }
-
-  const handleDeleteTrigger = async (id: number) => {
-    try {
-      await agentsApi.deleteWorkflowTrigger(id)
-      message.success('已删除')
-      loadTriggers()
-    } catch {
-      message.error('删除失败')
-    }
-  }
-
-  // --- Version management ---
-  const openVersionModal = async (wfId: number) => {
-    setVersionWfId(wfId)
-    setVersionModalOpen(true)
-    setVersionLoading(true)
-    try {
-      const data = await agentsApi.listWorkflowVersions(wfId)
-      setVersions(data?.versions || [])
-      setCurrentVersion(data?.current_version || 1)
-    } catch { message.error('加载版本历史失败') }
-    finally { setVersionLoading(false) }
-  }
-
-  const handleRollback = async (targetVersion: number) => {
-    if (!versionWfId) return
-    try {
-      await agentsApi.rollbackWorkflow(versionWfId, targetVersion)
-      message.success(`已回滚到版本 ${targetVersion}`)
-      openVersionModal(versionWfId)
-      loadData()
-    } catch { message.error('回滚失败') }
-  }
-
-  const handleDiffVersions = async (v1: number, v2: number) => {
-    if (!versionWfId) return
-    try {
-      const data = await agentsApi.diffWorkflowVersions(versionWfId, v1, v2)
-      setDiffData(data)
-      setDiffV1(v1)
-      setDiffV2(v2)
-      setDiffModalOpen(true)
-    } catch { message.error('比较失败') }
-  }
-
-  // --- Template helpers ---
-  const loadTemplates = useCallback(async () => {
-    setTemplateLoading(true)
-    try {
-      const result = await agentsApi.getWorkflowTemplates()
-      setTemplates(result)
-    } catch {
-      // silent
-    } finally {
-      setTemplateLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadTemplates()
-  }, [loadTemplates])
-
-  const instantiateTemplate = async (key: string, name: string) => {
-    try {
-      await agentsApi.instantiateWorkflowTemplate(key, { name })
-      message.success(`工作流「${name}」已从模板创建`)
-      loadData()
-    } catch {
-      message.error('从模板创建失败')
-    }
-  }
-
   return {
     workflows,
     setWorkflows,
     runs,
     setRuns,
-    stepStats,
-    setStepStats,
-    stepDurationHistogram,
-    setStepDurationHistogram,
-    runDurationPercentiles,
-    setRunDurationPercentiles,
-    stepFailureRate,
-    setStepFailureRate,
-    stepCofailureMatrix,
-    setStepCofailureMatrix,
-    successRateByWorkflow,
-    setSuccessRateByWorkflow,
-    stepRetryTopology,
-    setStepRetryTopology,
-    stepHourlyDistribution,
-    setStepHourlyDistribution,
-    stepDependencyBottleneck,
-    setStepDependencyBottleneck,
-    similarityMatrix,
-    setSimilarityMatrix,
-    stepDurationHist,
-    setStepDurationHist,
-    stepBottleneckTl,
-    setStepBottleneckTl,
-    structuralComplexity,
-    setStructuralComplexity,
-    runTrend,
-    setRunTrend,
-    failureCorrelation,
-    setFailureCorrelation,
-    failureCorrelationByStep,
-    setFailureCorrelationByStep,
-    failedStepsByDuration,
-    setFailedStepsByDuration,
     agents,
     setAgents,
     loading,
@@ -517,37 +253,6 @@ export function useWorkflowsData() {
     launching,
     setLaunching,
     launchForm,
-    triggers,
-    setTriggers,
-    triggerLoading,
-    setTriggerLoading,
-    triggerModalOpen,
-    setTriggerModalOpen,
-    triggerForm,
-    triggerTargetWfId,
-    setTriggerTargetWfId,
-    templates,
-    setTemplates,
-    templateLoading,
-    setTemplateLoading,
-    versionModalOpen,
-    setVersionModalOpen,
-    versionWfId,
-    setVersionWfId,
-    versions,
-    setVersions,
-    currentVersion,
-    setCurrentVersion,
-    versionLoading,
-    setVersionLoading,
-    diffModalOpen,
-    setDiffModalOpen,
-    diffData,
-    setDiffData,
-    diffV1,
-    setDiffV1,
-    diffV2,
-    setDiffV2,
     loadData,
     loadRuns,
     handleDelete,
@@ -560,15 +265,9 @@ export function useWorkflowsData() {
     handlePauseRun,
     handleResumeRun,
     handleRetryRun,
-    loadTriggers,
-    openTriggerModal,
-    handleCreateTrigger,
-    handleToggleTrigger,
-    handleDeleteTrigger,
-    openVersionModal,
-    handleRollback,
-    handleDiffVersions,
-    loadTemplates,
-    instantiateTemplate
+    ...triggerDomain,
+    ...versionDomain,
+    ...templateDomain,
+    ...analytics,
   }
 }
