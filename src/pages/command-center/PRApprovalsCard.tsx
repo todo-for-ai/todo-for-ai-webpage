@@ -80,7 +80,7 @@ const PRApprovalsCard: FC = () => {
     >
       <List
         loading={loading}
-        dataSource={items}
+        dataSource={Array.isArray(items) ? items : []}
         locale={{ emptyText: '没有待审批的 PR 请求' }}
         renderItem={(item) => {
           const meta = TYPE_META[item.interaction_type] ?? { label: item.interaction_type, color: 'default' }
