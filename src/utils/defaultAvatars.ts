@@ -1,44 +1,111 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAvatar } from '@dicebear/core'
 import {
-  adventurerNeutral,
-  botttsNeutral,
+  adventurer, adventurerNeutral,
+  avataaars, avataaarsNeutral,
+  bigEars, bigEarsNeutral, bigSmile,
+  bottts, botttsNeutral,
+  croodles, croodlesNeutral,
+  dylan,
   funEmoji,
-  loreleiNeutral,
-  pixelArtNeutral,
+  lorelei, loreleiNeutral,
+  micah, miniavs,
+  notionists, notionistsNeutral,
+  openPeeps,
+  personas,
+  pixelArt, pixelArtNeutral,
   thumbs,
+  toonHead,
 } from '@dicebear/collection'
 
 const BUILTIN_AVATAR_PREFIX = 'dicebear:'
 const BUILTIN_AVATAR_SIZE = 128
-const BUILTIN_AVATAR_COUNT = 500
+const BUILTIN_AVATAR_COUNT = 1000
 const LOCAL_AVATAR_TOKEN_PREFIX = 'todo-for-ai:avatar-token:'
 
 const BUILTIN_STYLE_MAP = {
-  adventurerNeutral,
-  botttsNeutral,
+  adventurer, adventurerNeutral,
+  avataaars, avataaarsNeutral,
+  bigEars, bigEarsNeutral, bigSmile,
+  bottts, botttsNeutral,
+  croodles, croodlesNeutral,
+  dylan,
   funEmoji,
-  loreleiNeutral,
-  pixelArtNeutral,
+  lorelei, loreleiNeutral,
+  micah, miniavs,
+  notionists, notionistsNeutral,
+  openPeeps,
+  personas,
+  pixelArt, pixelArtNeutral,
   thumbs,
+  toonHead,
 } as const
 
+/** 形象分类（面向用户的筛选维度） */
+export const AVATAR_CATEGORY_ROBOT = 'robot'
+export const AVATAR_CATEGORY_CUTE = 'cute'
+export const AVATAR_CATEGORY_PEOPLE = 'people'
+export const AVATAR_CATEGORY_PIXEL = 'pixel'
+
+export const AVATAR_CATEGORIES: Array<{ key: string; label: string; styles: string[] }> = [
+  {
+    key: AVATAR_CATEGORY_ROBOT,
+    label: '机器人',
+    styles: ['bottts', 'botttsNeutral', 'thumbs'],
+  },
+  {
+    key: AVATAR_CATEGORY_CUTE,
+    label: '萌趣卡通',
+    styles: ['bigSmile', 'funEmoji', 'toonHead', 'croodles', 'croodlesNeutral', 'micah', 'miniavs', 'bigEars', 'bigEarsNeutral', 'personas'],
+  },
+  {
+    key: AVATAR_CATEGORY_PEOPLE,
+    label: '人物插画',
+    styles: ['adventurer', 'adventurerNeutral', 'avataaars', 'avataaarsNeutral', 'dylan', 'lorelei', 'loreleiNeutral', 'notionists', 'notionistsNeutral', 'openPeeps'],
+  },
+  {
+    key: AVATAR_CATEGORY_PIXEL,
+    label: '像素复古',
+    styles: ['pixelArt', 'pixelArtNeutral'],
+  },
+]
+
 const BUILTIN_STYLE_SEQUENCE = [
-  'adventurerNeutral',
-  'botttsNeutral',
-  'funEmoji',
-  'loreleiNeutral',
-  'pixelArtNeutral',
-  'thumbs',
+  // 交错排列：连续翻页时风格始终多样
+  'bottts', 'bigSmile', 'avataaars', 'pixelArt',
+  'funEmoji', 'toonHead', 'adventurer', 'pixelArtNeutral',
+  'botttsNeutral', 'croodles', 'lorelei', 'thumbs',
+  'micah', 'personas', 'avataaarsNeutral', 'bigEars',
+  'croodlesNeutral', 'dylan', 'notionists', 'bigEarsNeutral',
+  'loreleiNeutral', 'notionistsNeutral', 'adventurerNeutral', 'miniavs', 'openPeeps',
 ] as const
 
 const BUILTIN_STYLE_LABELS: Record<BuiltinAvatarStyle, string> = {
-  adventurerNeutral: 'Adventurer',
-  botttsNeutral: 'Bottts',
+  adventurer: 'Adventurer',
+  adventurerNeutral: 'Adventurer·N',
+  avataaars: 'Avataaars',
+  avataaarsNeutral: 'Avataaars·N',
+  bigEars: 'Big Ears',
+  bigEarsNeutral: 'Big Ears·N',
+  bigSmile: 'Big Smile',
+  bottts: 'Bottts',
+  botttsNeutral: 'Bottts·N',
+  croodles: 'Croodles',
+  croodlesNeutral: 'Croodles·N',
+  dylan: 'Dylan',
   funEmoji: 'Emoji',
-  loreleiNeutral: 'Lorelei',
-  pixelArtNeutral: 'Pixel',
+  lorelei: 'Lorelei',
+  loreleiNeutral: 'Lorelei·N',
+  micah: 'Micah',
+  miniavs: 'Miniavs',
+  notionists: 'Notionists',
+  notionistsNeutral: 'Notionists·N',
+  openPeeps: 'Open Peeps',
+  personas: 'Personas',
+  pixelArt: 'Pixel',
+  pixelArtNeutral: 'Pixel·N',
   thumbs: 'Thumbs',
+  toonHead: 'Toon Head',
 }
 
 const BUILTIN_SEED_WORDS = [
@@ -77,6 +144,12 @@ export interface BuiltinAvatarOption {
   style: BuiltinAvatarStyle
   seed: string
   label: string
+  category: string
+}
+
+const categoryOfStyle = (style: string): string => {
+  const hit = AVATAR_CATEGORIES.find((c) => c.styles.includes(style))
+  return hit ? hit.key : AVATAR_CATEGORY_CUTE
 }
 
 const getAvatarTokenStorageKey = (userId: number | string): string => {
@@ -186,8 +259,8 @@ export const resolveUserAvatarSrc = (avatarUrl: string | null | undefined, fallb
 
 /**
  * Agent 形象解析：avatar_url 已配置（http/storage/dicebear token）时用之；
- * 否则按 Agent 身份（id+name）确定性生成机器人形象——同一 Agent 永远同一张脸，
- * 协作图/时间线/列表里一眼认出"这是哪个 Agent"。
+ * 否则按 Agent 身份（id+name）从内置形象库确定性取一个——同一 Agent 永远同一张脸，
+ * 不同 Agent 大概率不同脸，协作图/时间线/列表里一眼认出"这是哪个 Agent"。
  */
 export const resolveAgentAvatarSrc = (
   avatarUrl: string | null | undefined,
@@ -197,8 +270,30 @@ export const resolveAgentAvatarSrc = (
   if (avatarUrl && avatarUrl.trim()) {
     return resolveUserAvatarSrc(avatarUrl)
   }
-  const seed = `${agentId ?? 0}-${agentName ?? 'agent'}`
-  return renderBuiltinAvatar('botttsNeutral', seed)
+  const parsed = parseBuiltinAvatarToken(getAutoAgentAvatarToken(agentName, agentId))
+  if (parsed) {
+    return renderBuiltinAvatar(parsed.style, parsed.seed)
+  }
+  return renderBuiltinAvatar('botttsNeutral', `${agentId ?? 0}-${agentName ?? 'agent'}`)
+}
+
+/** 稳定字符串哈希（djb2），用于把 Agent 身份映射到形象库下标 */
+const stableHash = (input: string): number => {
+  let hash = 5381
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) + hash + input.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+/**
+ * Agent 自动形象分配：按身份从内置形象库确定性挑一个 token。
+ * 用户选过头像（avatar_url 非空）时不会被覆盖；创建 Agent 时可直接预填此 token。
+ */
+export const getAutoAgentAvatarToken = (agentName?: string, agentId?: number): string => {
+  const pool = getBuiltinAvatarOptions(`agent-${agentId ?? 0}-${agentName ?? ''}`)
+  const index = stableHash(`${agentId ?? 0}:${agentName ?? 'agent'}`) % pool.length
+  return pool[index].token
 }
 
 export const getBuiltinAvatarOptions = (identitySeed: string): BuiltinAvatarOption[] => {
@@ -220,6 +315,7 @@ export const getBuiltinAvatarOptions = (identitySeed: string): BuiltinAvatarOpti
         style,
         seed,
         label: `${BUILTIN_STYLE_LABELS[style]} ${options.length + 1}`,
+        category: categoryOfStyle(style),
       })
     }
 

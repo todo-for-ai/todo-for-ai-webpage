@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useRef } from 'react'
-import { Avatar, Button, message, Spin } from 'antd'
-import { CameraOutlined, DeleteOutlined } from '@ant-design/icons'
+import { useMemo, useState, useRef } from 'react'
+import { Avatar, Button, message, Modal, Pagination, Select, Space, Spin } from 'antd'
+import { CameraOutlined, DeleteOutlined, SmileOutlined } from '@ant-design/icons'
 import { storageConfigApi } from '../../../api/storage'
-import { resolveUserAvatarSrc } from '../../../utils/defaultAvatars'
+import {
+  AVATAR_CATEGORIES,
+  getBuiltinAvatarOptions,
+  resolveAgentAvatarSrc,
+  resolveUserAvatarSrc,
+} from '../../../utils/defaultAvatars'
+import type { BuiltinAvatarOption } from '../../../utils/defaultAvatars'
 import { useTranslation } from '../../../i18n/hooks/useTranslation'
 import './AgentAvatarUpload.css'
 
@@ -12,6 +18,7 @@ interface AgentAvatarUploadProps {
   onChange?: (url: string) => void
   workspaceId: number
   agentName?: string
+  agentId?: number
   size?: number
   disabled?: boolean
 }
@@ -21,12 +28,43 @@ const AgentAvatarUpload: React.FC<AgentAvatarUploadProps> = ({
   onChange,
   workspaceId,
   agentName = '',
+  agentId,
   size = 80,
   disabled = false,
 }) => {
   const { tc } = useTranslation()
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const [libraryPage, setLibraryPage] = useState(1)
+  const [libraryCategory, setLibraryCategory] = useState<string>('all')
+
+  const LIBRARY_PAGE_SIZE = 60
+  // 形象库：25 种风格 × 种子词 → 1000 个确定性别形象
+  const libraryOptions = useMemo(
+    () => getBuiltinAvatarOptions(`agent-${agentId ?? 0}-${agentName || 'draft'}`),
+    [agentId, agentName],
+  )
+  const categoryOptions = useMemo(() => {
+    if (libraryCategory === 'all') return libraryOptions
+    return libraryOptions.filter((o) => o.category === libraryCategory)
+  }, [libraryOptions, libraryCategory])
+  const libraryPageCount = Math.max(1, Math.ceil(categoryOptions.length / LIBRARY_PAGE_SIZE))
+  const pagedLibraryOptions = useMemo(
+    () => categoryOptions.slice((libraryPage - 1) * LIBRARY_PAGE_SIZE, libraryPage * LIBRARY_PAGE_SIZE),
+    [categoryOptions, libraryPage],
+  )
+  const safeLibraryPage = Math.min(libraryPage, libraryPageCount)
+
+  const openLibrary = () => {
+    setLibraryPage(1)
+    setLibraryOpen(true)
+  }
+  const selectLibraryAvatar = (token: string) => {
+    onChange?.(token)
+    setLibraryOpen(false)
+    message.success(tc('agentAvatar.messages.uploadSuccess'))
+  }
 
   // 处理文件选择
   const handleFileSelect = async (file: File) => {
@@ -101,10 +139,10 @@ const AgentAvatarUpload: React.FC<AgentAvatarUploadProps> = ({
     fileInputRef.current?.click()
   }
 
-  // 获取头像显示内容
+  // 获取头像显示内容：未配置时展示按身份自动分配的形象（确定性，同一 Agent 永远同一张脸）
   const avatarSrc = value
     ? resolveUserAvatarSrc(value, agentName || 'agent')
-    : undefined
+    : resolveAgentAvatarSrc(undefined, agentName, agentId)
 
   return (
     <div className="agent-avatar-upload">
@@ -175,6 +213,108 @@ const AgentAvatarUpload: React.FC<AgentAvatarUploadProps> = ({
         style={{ display: 'none' }}
         disabled={disabled || uploading}
       />
+
+      {/* 操作区：形象库 / 上传 */}
+      {!disabled && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+          <Button
+            size="small"
+            icon={<SmileOutlined />}
+            onClick={openLibrary}
+            disabled={uploading}
+          >
+            形象库
+          </Button>
+          <Button size="small" onClick={openFilePicker} disabled={uploading}>
+            上传
+          </Button>
+          {value && (
+            <Button
+              size="small"
+              type="text"
+              danger
+              onClick={handleDelete}
+              disabled={uploading}
+            >
+              清除
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* 形象库选择弹窗 */}
+      <Modal
+        title="选择 Agent 形象"
+        open={libraryOpen}
+        onCancel={() => setLibraryOpen(false)}
+        footer={null}
+        width={820}
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Select
+              value={libraryCategory}
+              onChange={(v) => { setLibraryCategory(v); setLibraryPage(1) }}
+              style={{ minWidth: 140 }}
+              options={[
+                { value: 'all', label: `全部（${libraryOptions.length}）` },
+                ...AVATAR_CATEGORIES.map((c) => ({
+                  value: c.key,
+                  label: `${c.label}（${libraryOptions.filter((o) => o.category === c.key).length}）`,
+                })),
+              ]}
+            />
+            <span style={{ color: '#8c8c8c', fontSize: 12 }}>
+              第 {safeLibraryPage}/{libraryPageCount} 页 · 共 {categoryOptions.length} 个
+            </span>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+              gap: 10,
+              maxHeight: 420,
+              overflowY: 'auto',
+              paddingRight: 4,
+            }}
+          >
+            {pagedLibraryOptions.map((option: BuiltinAvatarOption) => {
+              const isSelected = option.token === value
+              return (
+                <button
+                  key={option.token}
+                  type="button"
+                  title={option.label}
+                  onClick={() => selectLibraryAvatar(option.token)}
+                  style={{
+                    border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                    borderRadius: 6,
+                    backgroundColor: '#fff',
+                    cursor: 'pointer',
+                    padding: 4,
+                    display: 'flex',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Avatar
+                    src={resolveUserAvatarSrc(option.token)}
+                    size={56}
+                    shape="square"
+                  />
+                </button>
+              )
+            })}
+          </div>
+          <Pagination
+            current={safeLibraryPage}
+            pageSize={LIBRARY_PAGE_SIZE}
+            total={categoryOptions.length}
+            onChange={(page) => setLibraryPage(page)}
+            showSizeChanger={false}
+            style={{ textAlign: 'right' }}
+          />
+        </Space>
+      </Modal>
 
       {/* 提示文字 */}
       <div className="agent-avatar-upload__hint">

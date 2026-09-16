@@ -25,6 +25,7 @@ interface AvatarPickerProps {
   onClose: () => void
   onSelect: (token: string) => void
   onPageChange: (page: number) => void
+  headerExtra?: React.ReactNode
 }
 
 export const AvatarPicker: React.FC<AvatarPickerProps> = ({
@@ -41,6 +42,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
   onClose,
   onSelect,
   onPageChange,
+  headerExtra,
 }) => {
   return (
     <Modal
@@ -60,6 +62,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
           </span>
         </div>
 
+        {headerExtra}
         <div
           style={{
             display: 'grid',

@@ -232,6 +232,7 @@ export function AgentEditorForm({
                           <AgentAvatarUpload
                             workspaceId={workspaceId || 0}
                             agentName={form.getFieldValue('display_name') || form.getFieldValue('name')}
+                            agentId={agent?.id}
                             size={120}
                           />
                         </Form.Item>
