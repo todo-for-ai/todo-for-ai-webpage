@@ -48,6 +48,7 @@ import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TestTelegramGroup from './pages/TestTelegramGroup'
 import CommandLineDemo from './pages/CommandLineDemo'
+import Integrations from './pages/Integrations'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -110,6 +111,7 @@ function App() {
             }>
               <Route index element={<Dashboard />} />
               <Route path="agent-collaboration" element={<Agents />} />
+              <Route path="integrations" element={<Integrations />} />
               <Route path="workflows" element={<Workflows />} />
               <Route path="command-center" element={<CommandCenter />} />
               <Route path="projects" element={<Projects />} />

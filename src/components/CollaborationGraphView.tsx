@@ -6,6 +6,7 @@ import type { CollaborationGraph as GraphData } from '../api/agents'
 const { Text } = Typography
 
 import { kindColor, kindGradientUrl, reputationColor, reputationStrokeWidth } from './collaboration-graph/collaborationGraphShared'
+import { resolveAgentAvatarSrc } from '../utils/defaultAvatars'
 import { computeStaticPositions, filterGraphData } from './collaboration-graph/collaborationGraphShared'
 import { useForceSimulation } from './collaboration-graph/useForceSimulation'
 import { useGraphInteraction } from './collaboration-graph/useGraphInteraction'
@@ -332,6 +333,18 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
               >
                 <title>{`${n.name} (Agent#${n.id} · ${n.kind || 'unknown'}${isCenter ? ' · 中心' : ''}${n.reputation !== null && n.reputation !== undefined ? ` · 声誉 ${n.reputation}` : ''}): ${n.messages} 条消息`}</title>
               </circle>
+              {/* Agent 形象头像：有 avatar_url 用之，否则按身份确定性生成机器人形象；clipPath 裁剪进节点圆 */}
+              <clipPath id={`cg-avatar-${n.id}`}>
+                <circle r={r} cx={0} cy={0} />
+              </clipPath>
+              <image
+                href={resolveAgentAvatarSrc(n.avatar_url, n.name, n.id)}
+                x={-r} y={-r} width={2 * r} height={2 * r}
+                clipPath={`url(#cg-avatar-${n.id})`}
+                preserveAspectRatio="xMidYMid slice"
+                fillOpacity={dimmed ? 0.2 : (anyHover ? (highlighted ? 1 : 0.5) : 0.95)}
+                style={{ pointerEvents: 'none' }}
+              />
               {/* 脉冲扩散环：按 nodeTier 活跃度动画，tier 越高脉冲越快越明显 */}
               {(() => {
                 const tier = nodeTier(n)

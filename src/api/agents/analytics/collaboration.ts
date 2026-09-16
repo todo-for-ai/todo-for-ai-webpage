@@ -16,6 +16,8 @@ export interface CollaborationGraphNode {
   id: number
   name: string
   kind?: string | null
+  avatar_url?: string | null
+  display_name?: string | null
   messages: number
   reputation?: number | null
 }

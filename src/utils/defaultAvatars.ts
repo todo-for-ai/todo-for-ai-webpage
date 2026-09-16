@@ -184,6 +184,23 @@ export const resolveUserAvatarSrc = (avatarUrl: string | null | undefined, fallb
   return renderBuiltinAvatar('botttsNeutral', fallbackSeed)
 }
 
+/**
+ * Agent 形象解析：avatar_url 已配置（http/storage/dicebear token）时用之；
+ * 否则按 Agent 身份（id+name）确定性生成机器人形象——同一 Agent 永远同一张脸，
+ * 协作图/时间线/列表里一眼认出"这是哪个 Agent"。
+ */
+export const resolveAgentAvatarSrc = (
+  avatarUrl: string | null | undefined,
+  agentName?: string,
+  agentId?: number,
+): string => {
+  if (avatarUrl && avatarUrl.trim()) {
+    return resolveUserAvatarSrc(avatarUrl)
+  }
+  const seed = `${agentId ?? 0}-${agentName ?? 'agent'}`
+  return renderBuiltinAvatar('botttsNeutral', seed)
+}
+
 export const getBuiltinAvatarOptions = (identitySeed: string): BuiltinAvatarOption[] => {
   const options: BuiltinAvatarOption[] = []
   const tokenSet = new Set<string>()

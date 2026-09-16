@@ -158,6 +158,11 @@ const TopNavigation: React.FC = () => {
       icon: <ControlOutlined />,
       label: '指挥中心',
     },
+    {
+      key: '/todo-for-ai/pages/integrations',
+      icon: <ApiOutlined />,
+      label: '集成中心',
+    },
     ...(isAdmin && setupComplete === false
       ? [
           {
