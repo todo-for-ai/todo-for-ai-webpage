@@ -114,7 +114,8 @@ export const AgentStatusPanel: React.FC<AgentStatusPanelProps> = ({ workspaceId 
       {/* Agent cards grid */}
       <Row gutter={[12, 12]}>
         {health.agents.map((agent) => {
-          const config = STATUS_CONFIG[agent.status]
+          // 未知/未上报运行状态的 Agent（如从未心跳的反连 Agent）回退到 inactive，避免整面板崩溃
+          const config = STATUS_CONFIG[agent.status] || STATUS_CONFIG.inactive
           return (
             <Col key={agent.agent_id} xs={24} sm={12} md={8} lg={6}>
               <Card

@@ -318,8 +318,8 @@ const AgentAvatarUpload: React.FC<AgentAvatarUploadProps> = ({
 
       {/* 提示文字 */}
       <div className="agent-avatar-upload__hint">
-        <div>{tc('agentAvatar.hint.format')}</div>
-        <div>{tc('agentAvatar.hint.size')}</div>
+        <div>内置 1000 个形象，也可上传图片（JPG/PNG/SVG）</div>
+        <div>上传图片最大 2MB；未选择时自动分配专属形象</div>
       </div>
     </div>
   )
