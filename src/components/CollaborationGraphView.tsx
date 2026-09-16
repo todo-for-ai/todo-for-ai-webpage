@@ -92,10 +92,8 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
 
   // 力导向布局实时坐标（rAF 逐步收敛，让用户看到布局过程）
 
-  if (nodes.length === 0) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
-  }
-
+  // 注意：这里不能提前 return（hooks 顺序违规会让 React 卸载整棵树，
+  // 表现为仪表板/指挥中心整页白屏），空数据交给下方渲染分支。
   const maxMsg = Math.max(1, ...nodes.map((n) => n.messages))
   const maxCount = Math.max(1, ...edges.map((e) => e.count))
 
@@ -138,6 +136,10 @@ const CollaborationGraphView = React.forwardRef<SVGSVGElement, CollaborationGrap
       return id === hoveredEdge.source || id === hoveredEdge.target
     }
     return true
+  }
+
+  if (nodes.length === 0 || edges.length === 0) {
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无协作关系数据" style={{ margin: '8px 0' }} />
   }
 
   return (
