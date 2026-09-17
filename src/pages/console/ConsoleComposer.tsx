@@ -1,0 +1,159 @@
+import React, { useCallback, useState } from 'react'
+import { Button, Input, Switch, Tooltip, message } from 'antd'
+import { SendOutlined, PauseCircleOutlined } from '@ant-design/icons'
+import { runtimeEventsApi } from '../../api/runtimeEvents.js'
+import { taskChatApi } from '../../api/taskChat.js'
+import { agentsApi } from '../../api/agents'
+import { getErrorMessage } from '../../utils/errorUtils.js'
+import type { AgentTimeline } from '../../hooks/useAgentTimeline'
+import {
+  parseTerminalCommand,
+  TERMINAL_COMMAND_HELP,
+} from '../components/TaskDetail/agentTerminalCore'
+import { canDispatchTask, firstAgentId } from './consoleData'
+
+const CONSOLE_ACCENT = '#00b96b'
+
+interface ConsoleComposerProps {
+  task: any
+  running: boolean
+  timeline: AgentTimeline
+  /** 发送/派发后刷新任务状态 */
+  onActivity?: () => void
+  onStopped?: () => void
+}
+
+/**
+ * Console 底部指令区（对标 "Ask for follow-up changes"）：
+ * 留言必达（实时转发 + 下轮注入）；空闲 AI 任务可「发送并派发」直接开工；
+ * /stop /clear /help 与任务详情页终端一致。
+ */
+export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
+  task,
+  running,
+  timeline,
+  onActivity,
+  onStopped,
+}) => {
+  const { pushLocalLine, loadChat, clearView } = timeline
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [stopping, setStopping] = useState(false)
+  /** 空闲且有 Agent 归属时默认勾选：发送留言后顺带派发执行 */
+  const [dispatchAfterSend, setDispatchAfterSend] = useState(true)
+  const dispatchable = canDispatchTask(task)
+
+  const doStop = useCallback(async () => {
+    try {
+      setStopping(true)
+      const result = await runtimeEventsApi.stopAgent(task.id)
+      message.success(
+        result.transport === 'ws_command'
+          ? '已发送停止指令，Agent 正在终止'
+          : '已标记取消，Agent 将在下次续约时终止'
+      )
+      onStopped?.()
+    } catch (error) {
+      message.error(getErrorMessage(error, '停止失败'))
+    } finally {
+      setStopping(false)
+    }
+  }, [task?.id, onStopped])
+
+  const handleSend = useCallback(async () => {
+    const text = input.trim()
+    if (!text || sending || !task?.id) return
+
+    const command = parseTerminalCommand(text)
+    if (command) {
+      setInput('')
+      if (command.type === 'help') {
+        TERMINAL_COMMAND_HELP.forEach(t => pushLocalLine(t, 'system'))
+      } else if (command.type === 'clear') {
+        clearView()
+      } else if (command.type === 'stop') {
+        if (running) await doStop()
+        else pushLocalLine('当前没有执行中的任务', 'system')
+      } else {
+        pushLocalLine(`未知命令 /${command.name}，输入 /help 查看可用命令`, 'system')
+      }
+      return
+    }
+
+    setInput('')
+    pushLocalLine(text, 'user')
+    try {
+      setSending(true)
+      await taskChatApi.sendMessage(task.id, text)
+      await loadChat()
+      // 空闲任务：留言已入列，顺带派发让 Agent 马上开工
+      const agentId = firstAgentId(task)
+      if (dispatchAfterSend && dispatchable && agentId) {
+        await agentsApi.dispatchTasks(agentId, { project_id: task.project_id })
+        pushLocalLine(`已派发给 Agent #${agentId}，任务进入执行队列`, 'system')
+        onActivity?.()
+      }
+    } catch (error) {
+      message.error(getErrorMessage(error, '发送失败'))
+    } finally {
+      setSending(false)
+    }
+  }, [input, sending, task, running, dispatchAfterSend, dispatchable,
+    pushLocalLine, loadChat, clearView, doStop, onActivity])
+
+  return (
+    <div style={{ padding: '12px 20px 16px', borderTop: '1px solid #2b2d31' }} data-testid="console-composer">
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+        <span style={{ color: CONSOLE_ACCENT, fontWeight: 700, fontSize: 16, lineHeight: '24px', fontFamily: 'SFMono-Regular, Consolas, monospace' }}>❯</span>
+        <Input.TextArea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              handleSend()
+            }
+          }}
+          placeholder={running ? 'Agent 执行中，留言将实时转发并在下轮注入…' : '让 Agent 做什么… （Enter 发送）'}
+          autoSize={{ minRows: 1, maxRows: 6 }}
+          variant="borderless"
+          data-testid="console-input"
+          style={{ flex: 1, background: '#232428', color: '#e8e8e8', fontSize: 14, borderRadius: 8, padding: '8px 12px' }}
+        />
+        {running ? (
+          <Tooltip title="中断当前执行">
+            <Button danger icon={<PauseCircleOutlined />} loading={stopping} onClick={doStop}>
+              停止
+            </Button>
+          </Tooltip>
+        ) : null}
+        <Button
+          type="primary"
+          icon={<SendOutlined />}
+          loading={sending}
+          disabled={!input.trim()}
+          onClick={handleSend}
+          style={{ borderRadius: 6 }}
+        >
+          发送
+        </Button>
+      </div>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 6, fontSize: 12, color: '#666' }}>
+        {dispatchable && (
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: dispatchAfterSend ? CONSOLE_ACCENT : '#8c8c8c' }}>
+            <Switch
+              size="small"
+              checked={dispatchAfterSend}
+              onChange={setDispatchAfterSend}
+              data-testid="console-dispatch-toggle"
+            />
+            发送并派发执行
+          </label>
+        )}
+        <span>Enter 发送 · Shift+Enter 换行 · /help 查看命令</span>
+      </div>
+    </div>
+  )
+}
+
+export default ConsoleComposer

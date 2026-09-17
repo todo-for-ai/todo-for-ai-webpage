@@ -121,7 +121,8 @@ const TaskChatThread: React.FC<TaskChatThreadProps> = ({ taskId }) => {
   const hasMore = messages.length < total
 
   const renderMessage = (msg: ChatMessage, isReply = false) => {
-    const config = ACTOR_CONFIG[msg.actor_type] || ACTOR_CONFIG.SYSTEM
+    // 真实接口 actor_type 为小写（human/agent/system），归一化后查表
+    const config = ACTOR_CONFIG[(msg.actor_type || '').toUpperCase()] || ACTOR_CONFIG.SYSTEM
 
     return (
       <div

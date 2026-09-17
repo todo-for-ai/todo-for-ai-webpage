@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Card, Drawer, Input, Tag, message } from 'antd'
 import {
   VerticalAlignBottomOutlined,
@@ -8,23 +8,17 @@ import {
   HistoryOutlined,
   SendOutlined,
 } from '@ant-design/icons'
-import { runtimeEventsApi, type RuntimeEventItem } from '../../../api/runtimeEvents.js'
-import { taskChatApi, type ChatMessage } from '../../../api/taskChat.js'
+import { runtimeEventsApi } from '../../../api/runtimeEvents.js'
+import { taskChatApi } from '../../../api/taskChat.js'
 import { getErrorMessage } from '../../../utils/errorUtils.js'
 import TaskChatThread from '../../../components/TaskChatThread'
-import { useTaskRealtime } from '../../../hooks/useTaskRealtime'
+import { useAgentTimeline } from '../../../hooks/useAgentTimeline'
 import {
   buildTranscriptText,
-  chatLinesFromMessages,
-  eventLineFromEvent,
-  mergeTerminalLines,
   parseTerminalCommand,
   TERMINAL_COMMAND_HELP,
   type TerminalLine,
 } from './agentTerminalCore'
-
-const MAX_LINES = 800
-const CHAT_PAGE_SIZE = 50
 
 const LINE_STYLE: Record<TerminalLine['kind'], { bullet: string; color: string; italic?: boolean }> = {
   user: { bullet: '❯', color: '#52c41a' },
@@ -46,136 +40,21 @@ interface AgentTerminalProps {
 }
 
 /**
- * 交互终端：Claude Code 风格的任务级 REPL。
- * 统一时间线（任务对话 + Agent 运行事件流）+ 底部输入行 + Esc 两段式中断
- * + /stop /clear /help 斜杠命令。交互式会话的收口界面。
+ * 交互终端：Claude Code 风格的任务级 REPL（任务详情页内嵌卡片版）。
+ * 时间线状态由 useAgentTimeline 提供；全屏版见 pages/console/ConsoleWorkspace。
  */
 export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, onStopped }) => {
-  const [chatMsgs, setChatMsgs] = useState<ChatMessage[]>([])
-  const [events, setEvents] = useState<RuntimeEventItem[]>([])
-  /** 本地乐观回声：发送后立即上屏，服务端记录回来后按同文去重顶替 */
-  const [pending, setPending] = useState<TerminalLine[]>([])
+  const timeline = useAgentTimeline(taskId)
+  const { lines, atBottom, scrollRef, handleScroll, scrollToBottom, loadChat, pushLocalLine, clearView } = timeline
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [confirmingStop, setConfirmingStop] = useState(false)
   /** Esc 两段式中断：第一次武装提示，再次按下才真正停止 */
   const [escArmed, setEscArmed] = useState(false)
-  const [atBottom, setAtBottom] = useState(true)
   const [showHistory, setShowHistory] = useState(false)
-  const lastEventIdRef = useRef(0)
-  const seenEventIdsRef = useRef<Set<number>>(new Set())
-  const localSeqRef = useRef(0)
   const escTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-
-  const appendEvents = useCallback((incoming: RuntimeEventItem[]) => {
-    if (!incoming?.length) return
-    // 去重与游标推进必须在 updater 外完成：updater 必须是纯函数，
-    // StrictMode 双调用下副作用会让第二次执行误判为「全部见过」而丢掉整批事件。
-    const fresh = incoming.filter(e => e.id && !seenEventIdsRef.current.has(e.id))
-    if (!fresh.length) return
-    fresh.forEach(e => seenEventIdsRef.current.add(e.id))
-    const last = fresh[fresh.length - 1].id
-    if (last > lastEventIdRef.current) lastEventIdRef.current = last
-    setEvents(prev => {
-      const merged = [...prev, ...fresh]
-      return merged.length > MAX_LINES ? merged.slice(-MAX_LINES) : merged
-    })
-  }, [])
-
-  /** 最新一页对话（升序）：total 超过一页时取最后一页，保证终端呈现最新记录 */
-  const loadChat = useCallback(async () => {
-    if (!taskId) return
-    try {
-      const first = await taskChatApi.getMessages(taskId, 1, CHAT_PAGE_SIZE)
-      let items = first.items || []
-      const total = first.total || items.length
-      if (total > CHAT_PAGE_SIZE) {
-        const lastPage = Math.ceil(total / CHAT_PAGE_SIZE)
-        const last = await taskChatApi.getMessages(taskId, lastPage, CHAT_PAGE_SIZE)
-        items = last.items || []
-      }
-      setChatMsgs(items)
-      // 服务端已落库的消息顶替同文本的本地回声
-      const serverTexts = new Set(
-        items.filter(m => m.actor_type === 'HUMAN').map(m => m.content)
-      )
-      setPending(prev => prev.filter(p => !serverTexts.has(p.text)))
-    } catch {
-      // 静默：轮询兜底场景下可能暂无权限或网络抖动
-    }
-  }, [taskId])
-
-  useEffect(() => {
-    if (!taskId) return
-    loadChat()
-    const timer = setInterval(loadChat, 20000)
-    return () => clearInterval(timer)
-  }, [taskId, loadChat])
-
-  // 运行事件：初始拉取 + 5s 轮询兜底 + WS 增量
-  useEffect(() => {
-    if (!taskId) return
-    let cancelled = false
-    const fetchEvents = async () => {
-      try {
-        const page = await runtimeEventsApi.list(taskId, lastEventIdRef.current)
-        if (!cancelled) appendEvents(page.items || [])
-      } catch {
-        // 静默
-      }
-    }
-    fetchEvents()
-    const timer = setInterval(fetchEvents, 5000)
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
-  }, [taskId, appendEvents])
-
-  const onRuntimeEvent = useCallback((data: any) => {
-    if (data?.task_id !== taskId || !data?.id) return
-    appendEvents([data as RuntimeEventItem])
-  }, [taskId, appendEvents])
-
-  useTaskRealtime({ taskId, onRuntimeEvent, onComment: loadChat })
-
-  const lines = useMemo(
-    () => mergeTerminalLines(
-      chatLinesFromMessages(chatMsgs),
-      events.map(eventLineFromEvent).filter(Boolean) as TerminalLine[],
-      pending,
-    ),
-    [chatMsgs, events, pending],
-  )
-
-  // 自动滚底（用户上翻时让位）
-  useEffect(() => {
-    if (atBottom && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [lines, atBottom])
-
-  const handleScroll = () => {
-    const el = scrollRef.current
-    if (!el) return
-    setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 40)
-  }
-
-  const scrollToBottom = () => {
-    setAtBottom(true)
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }
-
-  const pushLocalLine = useCallback((text: string, kind: TerminalLine['kind']) => {
-    localSeqRef.current += 1
-    const line: TerminalLine = { key: `local-${localSeqRef.current}`, kind, text, ts: Date.now() }
-    setPending(prev => [...prev, line])
-  }, [])
 
   const doStop = useCallback(async () => {
     setEscArmed(false)
@@ -213,9 +92,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
       if (command.type === 'help') {
         TERMINAL_COMMAND_HELP.forEach(t => pushLocalLine(t, 'system'))
       } else if (command.type === 'clear') {
-        setChatMsgs([])
-        setEvents([])
-        setPending([])
+        clearView()
       } else if (command.type === 'stop') {
         if (running) await doStop()
         else pushLocalLine('当前没有执行中的任务', 'system')
@@ -236,7 +113,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
     } finally {
       setSending(false)
     }
-  }, [input, sending, running, taskId, doStop, loadChat, pushLocalLine])
+  }, [input, sending, running, taskId, doStop, loadChat, pushLocalLine, clearView])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing) return
@@ -256,13 +133,6 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
     }
   }
 
-  const handleClear = () => {
-    // 仅清空视图；游标保留，避免轮询把历史重新灌回来
-    setChatMsgs([])
-    setEvents([])
-    setPending([])
-  }
-
   const commandHint = input.trim().startsWith('/')
 
   return (
@@ -278,7 +148,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
       extra={
         <div style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
           <Button size="small" type="text" icon={<CopyOutlined />} title="复制终端内容" onClick={handleCopy} />
-          <Button size="small" type="text" icon={<ClearOutlined />} title="清空视图" onClick={handleClear} />
+          <Button size="small" type="text" icon={<ClearOutlined />} title="清空视图" onClick={clearView} />
           <Button size="small" type="text" icon={<HistoryOutlined />} title="完整对话记录" onClick={() => setShowHistory(true)} />
           {running && (
             confirmingStop ? (

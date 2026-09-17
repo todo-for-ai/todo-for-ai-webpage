@@ -45,6 +45,15 @@ describe('chatLinesFromMessages', () => {
       ['c4', 'system', '提示'],
     ])
   })
+
+  it('真实接口契约：actor_type 小写（human/agent）同样正确归类（回归：全渲染成灰色 system）', () => {
+    const lines = chatLinesFromMessages([
+      chat({ id: 21, actor_type: 'human' as any, content: '小写用户' }),
+      chat({ id: 22, actor_type: 'agent' as any, content: '小写Agent', created_at: '2026-09-17T10:00:05' }),
+    ])
+    expect(lines.map(l => l.kind)).toEqual(['user', 'agent'])
+    expect(lines.every(l => l.source === 'chat')).toBe(true)
+  })
 })
 
 describe('eventLineFromEvent', () => {

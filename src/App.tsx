@@ -49,6 +49,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TestTelegramGroup from './pages/TestTelegramGroup'
 import CommandLineDemo from './pages/CommandLineDemo'
 import Integrations from './pages/Integrations'
+import ConsoleWorkspace from './pages/console/ConsoleWorkspace'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -102,6 +103,13 @@ function App() {
             <Route path="/todo-for-ai/pages/terms" element={<TermsOfService />} />
             <Route path="/todo-for-ai/pages/privacy" element={<PrivacyPolicy />} />
             <Route path="/todo-for-ai/pages/test-telegram" element={<TestTelegramGroup />} />
+
+            {/* 全屏工作台（无管理侧边栏）- 需要认证 */}
+            <Route path="/todo-for-ai/pages/console" element={
+              <AuthGuard>
+                <ConsoleWorkspace />
+              </AuthGuard>
+            } />
 
             {/* 主应用 - 需要认证 */}
             <Route path="/todo-for-ai/pages" element={

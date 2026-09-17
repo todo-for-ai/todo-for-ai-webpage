@@ -8,6 +8,9 @@ import type { ChatMessage } from '../../../api/taskChat.js'
 
 export type TerminalLineKind = 'user' | 'agent' | 'system' | 'progress' | 'status' | 'error'
 
+/** 行来源：chat=任务对话消息，event=运行事件流，local=本地未落库回声/提示 */
+export type TerminalLineSource = 'chat' | 'event' | 'local'
+
 export interface TerminalLine {
   /** 稳定去重键：c{chatId} / c{chatId}r{replyId} / e{eventId} / local-{n} */
   key: string
@@ -15,6 +18,7 @@ export interface TerminalLine {
   text: string
   /** epoch ms，用于跨源排序 */
   ts: number
+  source?: TerminalLineSource
 }
 
 const toTs = (value?: string | null): number => {
@@ -23,21 +27,25 @@ const toTs = (value?: string | null): number => {
   return Number.isNaN(parsed) ? 0 : parsed
 }
 
+/** actor_type 归一化：真实接口返回小写（human/agent/system），统一到大写比较 */
+export const normActor = (actor?: string | null): string => (actor || '').toUpperCase()
+
 /** 任务对话消息 → 时间线（顶层消息 + 内联回复，均按 created_at 升序输入） */
 export function chatLinesFromMessages(messages: ChatMessage[]): TerminalLine[] {
   const lines: TerminalLine[] = []
   for (const msg of messages || []) {
     const kind: TerminalLineKind =
-      msg.actor_type === 'HUMAN' ? 'user' : msg.actor_type === 'AGENT' ? 'agent' : 'system'
-    lines.push({ key: `c${msg.id}`, kind, text: msg.content, ts: toTs(msg.created_at) })
+      normActor(msg.actor_type) === 'HUMAN' ? 'user' : normActor(msg.actor_type) === 'AGENT' ? 'agent' : 'system'
+    lines.push({ key: `c${msg.id}`, kind, text: msg.content, ts: toTs(msg.created_at), source: 'chat' })
     for (const reply of msg.replies || []) {
       const replyKind: TerminalLineKind =
-        reply.actor_type === 'HUMAN' ? 'user' : reply.actor_type === 'AGENT' ? 'agent' : 'system'
+        normActor(reply.actor_type) === 'HUMAN' ? 'user' : normActor(reply.actor_type) === 'AGENT' ? 'agent' : 'system'
       lines.push({
         key: `c${msg.id}r${reply.id}`,
         kind: replyKind,
         text: `↳ ${reply.content}`,
         ts: toTs(reply.created_at),
+        source: 'chat',
       })
     }
   }
@@ -55,16 +63,16 @@ export function eventLineFromEvent(ev: RuntimeEventItem): TerminalLine | null {
   if (!ev || !ev.id) return null
   const type = ev.event_type || 'log'
   if (type in STATUS_LABEL) {
-    return { key: `e${ev.id}`, kind: 'status', text: STATUS_LABEL[type], ts: toTs(ev.event_timestamp) }
+    return { key: `e${ev.id}`, kind: 'status', text: STATUS_LABEL[type], ts: toTs(ev.event_timestamp), source: 'event' }
   }
   if (type === 'error') {
-    return { key: `e${ev.id}`, kind: 'error', text: ev.message || '执行出错', ts: toTs(ev.event_timestamp) }
+    return { key: `e${ev.id}`, kind: 'error', text: ev.message || '执行出错', ts: toTs(ev.event_timestamp), source: 'event' }
   }
   if (type === 'progress') {
-    return { key: `e${ev.id}`, kind: 'progress', text: ev.message, ts: toTs(ev.event_timestamp) }
+    return { key: `e${ev.id}`, kind: 'progress', text: ev.message, ts: toTs(ev.event_timestamp), source: 'event' }
   }
   // output / log / 未知类型都按 Agent 输出呈现
-  return { key: `e${ev.id}`, kind: 'agent', text: ev.message, ts: toTs(ev.event_timestamp) }
+  return { key: `e${ev.id}`, kind: 'agent', text: ev.message, ts: toTs(ev.event_timestamp), source: 'event' }
 }
 
 /**
