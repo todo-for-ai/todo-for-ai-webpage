@@ -8,6 +8,7 @@ interface TaskRealtimeOptions {
   onComment?: () => void
   onApprovalRequest?: () => void
   onHelpRequest?: () => void
+  onRuntimeEvent?: (data: any) => void
 }
 
 export function useTaskRealtime({
@@ -16,11 +17,13 @@ export function useTaskRealtime({
   onComment,
   onApprovalRequest,
   onHelpRequest,
+  onRuntimeEvent,
 }: TaskRealtimeOptions) {
   const stableOnUpdate = useCallback(() => { onTaskUpdate?.() }, [onTaskUpdate])
   const stableOnComment = useCallback(() => { onComment?.() }, [onComment])
   const stableOnApproval = useCallback(() => { onApprovalRequest?.() }, [onApprovalRequest])
   const stableOnHelp = useCallback(() => { onHelpRequest?.() }, [onHelpRequest])
+  const stableOnRuntimeEvent = useCallback((data: any) => { onRuntimeEvent?.(data) }, [onRuntimeEvent])
 
   useEffect(() => {
     if (!taskId) return
@@ -38,6 +41,9 @@ export function useTaskRealtime({
     const unsubHelp = wsService.on('help_request', (data: any) => {
       if (data.task_id === taskId) stableOnHelp()
     })
+    const unsubRuntime = wsService.on('task_runtime_event', (data: any) => {
+      if (data.task_id === taskId) stableOnRuntimeEvent(data)
+    })
 
     return () => {
       wsService.leaveTaskRoom(taskId)
@@ -45,6 +51,7 @@ export function useTaskRealtime({
       unsubComment()
       unsubApproval()
       unsubHelp()
+      unsubRuntime()
     }
-  }, [taskId, stableOnUpdate, stableOnComment, stableOnApproval, stableOnHelp])
+  }, [taskId, stableOnUpdate, stableOnComment, stableOnApproval, stableOnHelp, stableOnRuntimeEvent])
 }

@@ -8,6 +8,8 @@ import { agentsApi, type SharedContextEntry } from '../../../api/agents'
 import { parseTaskDocument } from '../../../utils/taskContent'
 import dayjs from 'dayjs'
 import { TaskCollaborationTimeline } from './TaskCollaborationTimeline'
+import { AgentRunConsole } from './AgentRunConsole'
+import TaskChatThread from '../../../components/TaskChatThread'
 import SubtaskTree from '../../../components/Task/SubtaskTree'
 
 const { Paragraph, Text, Link } = Typography
@@ -25,6 +27,8 @@ interface TaskDetailContentProps {
   handleCreateFromTask: () => void
   handleCreateTask: () => void
   handleCopyTask: () => void
+  /** 外部状态变化（如停止执行）后刷新任务 */
+  onRefreshTask?: () => void
   tp: (key: string, options?: any) => string
 }
 
@@ -34,6 +38,7 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
   handleCreateFromTask,
   handleCreateTask,
   handleCopyTask,
+  onRefreshTask,
   tp
 }) => {
   const [subtasks, setSubtasks] = useState<Task[]>([])
@@ -145,10 +150,34 @@ export const TaskDetailContent: React.FC<TaskDetailContentProps> = ({
             ))}
           </div>
         </Card>
+
+        {/* 任务对话：用户与 agent 的留言线程（交互式会话的输入面） */}
+        {task.is_ai_task && (
+          <Card
+            title="任务对话"
+            size="small"
+            style={{ marginBottom: '16px' }}
+            styles={{ body: { height: 360, display: 'flex', flexDirection: 'column' } }}
+          >
+            <div style={{ color: '#999', fontSize: 12, marginBottom: 8 }}>
+              留言会实时转发给正在执行的 Agent；Agent 将在下一轮执行时正式纳入上下文。
+            </div>
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <TaskChatThread taskId={task.id} />
+            </div>
+          </Card>
+        )}
       </div>
 
       <div style={{ flex: 2 }}>
-        <Card title={tp('info.title')}>
+        {/* Agent 运行控制台：实时输出 + 停止执行（交互式会话的观察面） */}
+        <AgentRunConsole
+          taskId={task.id}
+          running={task.status === 'in_progress'}
+          onStopped={onRefreshTask}
+        />
+
+        <Card title={tp('info.title')} style={{ marginTop: 8 }}>
           <Descriptions column={1} size="small">
             <Descriptions.Item label={tp('info.taskId')}>
               <span>#{task.id}</span>

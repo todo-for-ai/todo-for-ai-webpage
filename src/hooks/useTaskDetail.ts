@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { App } from 'antd'
 import { useTaskStore, useProjectStore } from '../stores'
@@ -8,6 +8,7 @@ import { contextRulesApi, type BuildContextResponse } from '../api/contextRules'
 import { customPromptsService } from '../services/customPromptsService'
 import { analytics } from '../utils/analytics'
 import { getErrorMessage } from '../utils/errorUtils'
+import { useTaskRealtime } from './useTaskRealtime'
 
 interface TaskDetailFilters {
   status: string
@@ -153,6 +154,18 @@ export const useTaskDetail = (tp: (key: string) => string) => {
     setCustomButtons(buttons)
   }, [])
 
+  // 交互式会话：任务被（如「停止执行」）外部更新时自动刷新
+  const taskIdNum = task?.id
+  const refreshTask = useCallback(() => {
+    if (taskIdNum) loadTask(taskIdNum)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskIdNum])
+
+  useTaskRealtime({
+    taskId: taskIdNum ?? 0,
+    onTaskUpdate: refreshTask,
+  })
+
   return {
     task,
     loading,
@@ -161,6 +174,7 @@ export const useTaskDetail = (tp: (key: string) => string) => {
     contextLoading,
     customButtons,
     projects,
+    refreshTask,
     handleEdit,
     handleDelete,
     handlePreviousTask,

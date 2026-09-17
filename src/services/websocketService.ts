@@ -56,6 +56,11 @@ class WebSocketService {
       this.emit('task_comment', data)
     })
 
+    // Agent runtime 事件流（交互式会话：实时输出控制台）
+    this.socket.on('task_runtime_event', (data: any) => {
+      this.emit('task_runtime_event', data)
+    })
+
     // Approval events
     this.socket.on('approval_request', (data: any) => {
       this.emit('approval_request', data)

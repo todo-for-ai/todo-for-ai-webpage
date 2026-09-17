@@ -26,6 +26,7 @@ const TaskDetail: React.FC = () => {
     contextLoading,
     customButtons,
     projects,
+    refreshTask,
     handleEdit,
     handleDelete,
     handlePreviousTask,
@@ -128,6 +129,7 @@ const TaskDetail: React.FC = () => {
         handleCreateFromTask={() => {}}
         handleCreateTask={() => {}}
         handleCopyTask={() => {}}
+        onRefreshTask={refreshTask}
         tp={tp}
       />
 
