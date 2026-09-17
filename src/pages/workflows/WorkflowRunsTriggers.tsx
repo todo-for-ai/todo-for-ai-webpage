@@ -18,6 +18,7 @@ interface Props {
   loadTriggers: any
   openTriggerModal: any
   viewRun: any
+  onViewCanvas?: (runId: number) => void
   workflows: any
 }
 
@@ -36,6 +37,7 @@ export default function WorkflowRunsTriggers(props: Props) {
     loadTriggers,
     openTriggerModal,
     viewRun,
+    onViewCanvas,
     workflows } = props
 
   return (
@@ -46,6 +48,7 @@ export default function WorkflowRunsTriggers(props: Props) {
         runsLoading={runsLoading}
         onRefresh={loadRuns}
         onViewRun={viewRun}
+        onViewCanvas={onViewCanvas}
         onPauseRun={handlePauseRun}
         onResumeRun={handleResumeRun}
         onRetryRun={handleRetryRun}

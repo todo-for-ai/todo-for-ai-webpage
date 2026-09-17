@@ -5,6 +5,7 @@
  */
 import { Button, Card, Empty, Popconfirm, Space, Spin, Tag } from 'antd'
 import {
+  PartitionOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
@@ -31,6 +32,7 @@ interface WorkflowRunsCardProps {
   onResumeRun: (runId: number) => void
   onRetryRun: (runId: number) => void
   onCancelRun: (runId: number) => void
+  onViewCanvas?: (runId: number) => void
 }
 
 const WorkflowRunsCard: FC<WorkflowRunsCardProps> = ({
@@ -42,6 +44,7 @@ const WorkflowRunsCard: FC<WorkflowRunsCardProps> = ({
   onResumeRun,
   onRetryRun,
   onCancelRun,
+  onViewCanvas,
 }) => (
   <Card title="运行记录" style={{ marginBottom: 24 }} extra={<Button size="small" onClick={onRefresh}>刷新</Button>}>
     <Spin spinning={runsLoading}>
@@ -71,6 +74,13 @@ const WorkflowRunsCard: FC<WorkflowRunsCardProps> = ({
                     <span style={{ fontSize: 12, color: '#8c8c8c' }}>
                       {new Date(run.created_at).toLocaleString()}
                     </span>
+                    <Button
+                      size="small"
+                      icon={<PartitionOutlined />}
+                      onClick={(e) => { e.stopPropagation(); onViewCanvas?.(run.id) }}
+                    >
+                      画布
+                    </Button>
                     {run.status === 'running' && (
                       <Button size="small" icon={<PauseCircleOutlined />} onClick={(e) => { e.stopPropagation(); onPauseRun(run.id) }}>
                         暂停

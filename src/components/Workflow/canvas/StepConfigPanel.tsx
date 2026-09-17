@@ -48,6 +48,8 @@ const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
   const handleProvider = (provider: WorkflowIntegrationConfig['provider']) => {
     const next: WorkflowIntegrationConfig = { ...(integration ?? {}), provider }
     if (provider === 'coze' && !next.workflow_id) next.workflow_id = ''
+    if (provider === 'http' && !next.method) next.method = 'POST'
+    if (provider === 'http' && !next.url) next.url = ''
     onChange({ integration_config: next })
   }
 
@@ -192,6 +194,74 @@ const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
                   </>
                 )}
 
+                {integration.provider === 'http' && (
+                  <>
+                    <div style={labelStyle}>请求方法</div>
+                    <Select
+                      style={{ width: '100%' }} value={(integration.method ?? 'POST').toUpperCase()}
+                      options={['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'].map(m => ({ value: m, label: m }))}
+                      onChange={v => patchIntegration({ method: v })}
+                    />
+                    <div style={labelStyle}>URL（支持 {'{{sys.*}}'} / {'{{context.*}}'} 占位符，默认拦截内网地址）</div>
+                    <Input
+                      placeholder="https://api.example.com/hook"
+                      value={integration.url ?? ''}
+                      onChange={e => patchIntegration({ url: e.target.value })}
+                    />
+                    <div style={labelStyle}>请求头（JSON 对象，可选）</div>
+                    <TextArea
+                      rows={2} style={{ fontFamily: 'monospace', fontSize: 12 }}
+                      value={integration.headers ? JSON.stringify(integration.headers, null, 2) : ''}
+                      onChange={e => {
+                        try {
+                          const parsed = JSON.parse(e.target.value)
+                          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                            patchIntegration({ headers: parsed })
+                          }
+                        } catch { /* 编辑过程容忍临时非法 JSON */ }
+                      }}
+                      placeholder={'{"X-Token": "abc"}'}
+                    />
+                    <div style={labelStyle}>请求体（JSON 对象或字符串，可选）</div>
+                    <TextArea
+                      rows={3} style={{ fontFamily: 'monospace', fontSize: 12 }}
+                      value={typeof integration.body === 'string'
+                        ? integration.body
+                        : integration.body ? JSON.stringify(integration.body, null, 2) : ''}
+                      onChange={e => {
+                        const raw = e.target.value
+                        try {
+                          const parsed = JSON.parse(raw)
+                          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                            patchIntegration({ body: parsed })
+                          } else {
+                            patchIntegration({ body: raw })
+                          }
+                        } catch {
+                          patchIntegration({ body: raw })
+                        }
+                      }}
+                      placeholder={'{"run_id": "{{sys.run_id}}"}'}
+                    />
+                    <div style={labelStyle}>安全</div>
+                    <Switch
+                      size="small" checkedChildren="允许内网地址"
+                      unCheckedChildren="拦截内网地址"
+                      checked={Boolean(integration.allow_private_hosts)}
+                      onChange={v => patchIntegration({ allow_private_hosts: v })}
+                    />
+                    <div style={labelStyle}>API Key（可选，配置后作为 Authorization: Bearer 头）</div>
+                    <Input.Password
+                      placeholder={integration.api_key_set ? '••••••••（保持已配置的 Key）' : '可选'}
+                      value={integration.api_key && !integration.api_key_set ? integration.api_key : ''}
+                      onChange={e => patchIntegration({ api_key: e.target.value })}
+                      autoComplete="new-password"
+                    />
+                  </>
+                )}
+
+                {integration.provider !== 'http' && (
+                <>
                 <div style={labelStyle}>输入参数（JSON 对象，值支持 {'{{step_result_x}}'} 等占位符）</div>
                 <TextArea
                   rows={4} style={{ fontFamily: 'monospace', fontSize: 12 }}
@@ -209,6 +279,8 @@ const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
                   value={integration.timeout_seconds}
                   onChange={v => patchIntegration({ timeout_seconds: v ?? undefined })}
                 />
+                </>
+                )}
               </>
             ),
           }]}

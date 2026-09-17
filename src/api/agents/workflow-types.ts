@@ -53,13 +53,18 @@ export interface WorkflowItem {
 
 /** 外部工作流平台连接器（Dify / Coze）——api_key 后端加密存储、回传脱敏 */
 export interface WorkflowIntegrationConfig {
-  provider: 'dify' | 'coze'
+  provider: 'dify' | 'coze' | 'http'
   base_url?: string
   api_key?: string
   api_key_set?: boolean
   workflow_id?: string
   inputs?: Record<string, unknown>
   timeout_seconds?: number
+  method?: string
+  url?: string
+  headers?: Record<string, string>
+  body?: Record<string, unknown> | string
+  allow_private_hosts?: boolean
 }
 
 export interface CreateWorkflowStepData {
@@ -123,6 +128,7 @@ export interface WorkflowStepRunItem {
   error?: string
   attempt: number
   runtime_overrides?: Record<string, unknown>
+  result_summary?: string
 }
 
 export interface WorkflowRunItem {

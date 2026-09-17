@@ -9,7 +9,7 @@ export type CanvasStep = CreateWorkflowStepData & {
 }
 
 export const INTEGRATION_PROVIDERS: {
-  value: WorkflowIntegrationConfig['provider']
+  value: WorkflowIntegrationConfig['provider'] | 'http'
   label: string
   color: string
   docs: string
@@ -25,6 +25,12 @@ export const INTEGRATION_PROVIDERS: {
     label: 'Coze',
     color: 'cyan',
     docs: 'Coze 平台 → 工作体 → 发布为 API（PAT 令牌）',
+  },
+  {
+    value: 'http',
+    label: 'HTTP',
+    color: 'green',
+    docs: '调用任意公网 HTTP API（webhook/自动化入口），默认拦截内网地址',
   },
 ]
 

@@ -33,6 +33,7 @@ import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 // Extracted components
 import WorkflowFormModal from './workflows/WorkflowFormModal'
 import WorkflowCanvasModal from '../components/Workflow/canvas/WorkflowCanvasModal'
+import WorkflowRunCanvasModal from '../components/Workflow/canvas/WorkflowRunCanvasModal'
 import WorkflowRunConsole from './workflows/WorkflowRunConsole'
 import WorkflowDefinitionsCard from './workflows/WorkflowDefinitionsCard'
 import TriggerCreationModal from './workflows/TriggerCreationModal'
@@ -151,6 +152,8 @@ const Workflows: React.FC = () => {
 
   // 画布编辑器当前打开的工作流（null = 关闭）
   const [canvasWfId, setCanvasWfId] = useState<number | null>(null)
+  // 运行态画布当前打开的运行（null = 关闭）
+  const [runCanvasId, setRunCanvasId] = useState<number | null>(null)
 
   return (
     <div style={{ padding: '24px' }}>
@@ -221,6 +224,13 @@ const Workflows: React.FC = () => {
         } }
       />
 
+      {/* Run canvas */}
+      <WorkflowRunCanvasModal
+        runId={runCanvasId}
+        onClose={() => setRunCanvasId(null)}
+        onOpenConsole={(id) => { setRunCanvasId(null); openConsole(id) }}
+      />
+
       {/* Canvas editor */}
       <WorkflowCanvasModal
         workflowId={canvasWfId}
@@ -267,6 +277,7 @@ const Workflows: React.FC = () => {
         openTriggerModal={ openTriggerModal }
         viewRun={ viewRun }
         workflows={ workflows }
+        onViewCanvas={ setRunCanvasId }
       />
       {/* Trigger creation modal */}
       <Modal
