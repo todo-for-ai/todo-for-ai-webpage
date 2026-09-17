@@ -30,7 +30,7 @@ export function useTerminalSend({
   afterSend,
   onError,
 }: UseTerminalSendOptions) {
-  const { pushLocalLine, loadChat, clearView } = timeline
+  const { pushLocalLine, removeLocalLine, loadChat, clearView } = timeline
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const commandHint = input.trim().startsWith('/')
@@ -56,7 +56,7 @@ export function useTerminalSend({
     }
 
     setInput('')
-    pushLocalLine(text, 'user')
+    const echoKey = pushLocalLine(text, 'user')
     try {
       setSending(true)
       await taskChatApi.sendMessage(taskId, text)
@@ -66,13 +66,16 @@ export function useTerminalSend({
         if (note) pushLocalLine(note, 'system')
       }
     } catch (error) {
+      // 发送失败：撤回乐观回声、把文本还给输入框，避免用户丢字
+      removeLocalLine(echoKey)
+      setInput(text)
       if (onError) onError(error, '发送失败')
       else pushLocalLine(`发送失败：${(error as Error)?.message || '未知错误'}`, 'error')
     } finally {
       setSending(false)
     }
   }, [input, sending, running, taskId, doStop, afterSend, onError,
-    pushLocalLine, loadChat, clearView])
+    pushLocalLine, removeLocalLine, loadChat, clearView])
 
   return { input, setInput, sending, commandHint, handleSend }
 }

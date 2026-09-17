@@ -31,10 +31,15 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
   onStopped,
 }) => {
   const [stopping, setStopping] = useState(false)
+  /** Esc 两段式中断：第一次武装提示，再次按下才真正停止 */
+  const [escArmed, setEscArmed] = useState(false)
+  const escTimerRef = useRef<ReturnType<typeof setTimeout>>()
   /** 空闲且有 Agent 归属时默认勾选：发送留言后顺带派发执行 */
   const [dispatchAfterSend, setDispatchAfterSend] = useState(true)
   const dispatchable = canDispatchTask(task)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => () => { if (escTimerRef.current) clearTimeout(escTimerRef.current) }, [])
 
   // 切换任务后自动聚焦输入行
   useEffect(() => {
@@ -58,6 +63,21 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
     }
   }, [task?.id, onStopped])
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return
+    if (e.key === 'Escape' && running) {
+      e.preventDefault()
+      if (escTimerRef.current) clearTimeout(escTimerRef.current)
+      if (escArmed) {
+        setEscArmed(false)
+        doStop()
+      } else {
+        setEscArmed(true)
+        escTimerRef.current = setTimeout(() => setEscArmed(false), 2500)
+      }
+    }
+  }, [running, escArmed, doStop])
+
   const { input, setInput, sending, commandHint, handleSend } = useTerminalSend({
     taskId: task?.id,
     running,
@@ -76,7 +96,11 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
   })
 
   return (
-    <div style={{ padding: '12px 20px 16px', borderTop: `1px solid ${CONSOLE_TOKENS.border}` }} data-testid="console-composer">
+    <div
+      style={{ padding: '12px 20px 16px', borderTop: `1px solid ${CONSOLE_TOKENS.border}` }}
+      data-testid="console-composer"
+      onKeyDown={handleKeyDown}
+    >
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
         <span style={{ color: CONSOLE_TOKENS.accent, fontWeight: 700, fontSize: 16, lineHeight: '24px', fontFamily: CONSOLE_MONO }}>❯</span>
         <Input.TextArea
@@ -114,6 +138,11 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
         </Button>
       </div>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 6, fontSize: 12, color: CONSOLE_TOKENS.textFaint }}>
+        {escArmed && (
+          <span style={{ color: CONSOLE_TOKENS.amber, fontFamily: CONSOLE_MONO }} data-testid="console-esc-hint">
+            再按 Esc 确认中断执行
+          </span>
+        )}
         {dispatchable && (
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: dispatchAfterSend ? CONSOLE_TOKENS.accent : CONSOLE_TOKENS.textMuted }}>
             <Switch

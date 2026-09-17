@@ -25,7 +25,9 @@ export interface AgentTimeline {
   loadChat: () => Promise<void>
   appendEvents: (incoming: RuntimeEventItem[]) => void
   onRuntimeEvent: (data: any) => void
-  pushLocalLine: (text: string, kind: TerminalLine['kind']) => void
+  /** 返回该行 key，供失败时 removeLocalLine 撤回 */
+  pushLocalLine: (text: string, kind: TerminalLine['kind']) => string
+  removeLocalLine: (key: string) => void
   clearView: () => void
 }
 
@@ -106,8 +108,15 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
   useEffect(() => {
     if (!taskId) return
     loadChat()
-    const timer = setInterval(loadChat, 20000)
-    return () => clearInterval(timer)
+    // 页面不可见时暂停网络轮询（WS 增量仍生效），回前台立即补一次
+    const tick = () => { if (!document.hidden) loadChat() }
+    const timer = setInterval(tick, 20000)
+    const onVisible = () => { if (!document.hidden) loadChat() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [taskId, loadChat])
 
   // 运行事件：初始拉取 + 5s 轮询兜底 + WS 增量
@@ -123,10 +132,13 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
       }
     }
     fetchEvents()
-    const timer = setInterval(fetchEvents, 5000)
+    const timer = setInterval(() => { if (!document.hidden) fetchEvents() }, 5000)
+    const onVisible = () => { if (!document.hidden) fetchEvents() }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       cancelled = true
       clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [taskId, appendEvents])
 
@@ -172,8 +184,14 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
 
   const pushLocalLine = useCallback((text: string, kind: TerminalLine['kind']) => {
     localSeqRef.current += 1
-    const line: TerminalLine = { key: `local-${localSeqRef.current}`, kind, text, ts: Date.now() }
+    const key = `local-${localSeqRef.current}`
+    const line: TerminalLine = { key, kind, text, ts: Date.now() }
     setPending(prev => [...prev, line])
+    return key
+  }, [])
+
+  const removeLocalLine = useCallback((key: string) => {
+    setPending(prev => prev.filter(p => p.key !== key))
   }, [])
 
   const clearView = useCallback(() => {
@@ -186,6 +204,6 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
     chatMsgs, events, lines, pending, atBottom,
     scrollRef, handleScroll, scrollToBottom,
     loadChat, appendEvents, onRuntimeEvent,
-    pushLocalLine, clearView,
+    pushLocalLine, removeLocalLine, clearView,
   }
 }

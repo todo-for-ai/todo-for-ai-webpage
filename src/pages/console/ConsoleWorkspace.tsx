@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, ConfigProvider, Spin, Tag, Tooltip, theme as antdTheme } from 'antd'
 import {
@@ -6,6 +6,7 @@ import {
   MenuUnfoldOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
   RightOutlined,
   LinkOutlined,
 } from '@ant-design/icons'
@@ -13,6 +14,7 @@ import { useConsoleTasks } from '../../hooks/useConsoleTasks'
 import ConsoleSidebar from './ConsoleSidebar'
 import ConsoleTranscript from './ConsoleTranscript'
 import ConsoleInfoPanel from './ConsoleInfoPanel'
+import ConsoleQuickSwitcher from './ConsoleQuickSwitcher'
 import { consoleStatusMeta } from './consoleData'
 import { CONSOLE_TOKENS, CONSOLE_SCOPE_CSS } from './consoleTheme'
 
@@ -30,6 +32,19 @@ export const ConsoleWorkspace: React.FC = () => {
   } = useConsoleTasks()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [infoCollapsed, setInfoCollapsed] = useState(false)
+  /** ⌘K / Ctrl+K 快速任务切换 */
+  const [switcherOpen, setSwitcherOpen] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        setSwitcherOpen(v => !v)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   const running = detail?.status === 'in_progress'
   const statusMeta = detail ? consoleStatusMeta(detail.status) : null
@@ -116,6 +131,9 @@ export const ConsoleWorkspace: React.FC = () => {
               <span style={{ color: CONSOLE_TOKENS.textFaint }}>未选择任务</span>
             )}
             <div style={{ flex: 1 }} />
+            <Tooltip title="搜索任务（⌘K）">
+              <Button size="small" type="text" icon={<SearchOutlined />} onClick={() => setSwitcherOpen(true)} title="搜索任务（⌘K）" />
+            </Tooltip>
             <Tooltip title="刷新">
               <Button size="small" type="text" icon={<ReloadOutlined />} onClick={refresh} title="刷新" />
             </Tooltip>
@@ -158,6 +176,13 @@ export const ConsoleWorkspace: React.FC = () => {
             )}
           </div>
         </div>
+
+        <ConsoleQuickSwitcher
+          open={switcherOpen}
+          tasks={tasks}
+          onClose={() => setSwitcherOpen(false)}
+          onSelect={handleSelect}
+        />
 
         {/* 右侧信息面板 */}
         {detail && !infoCollapsed && (

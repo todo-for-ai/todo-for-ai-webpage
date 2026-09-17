@@ -18,8 +18,10 @@ interface ConsoleTranscriptProps {
 const hhmm = (ts?: number) =>
   ts ? new Date(ts).toTimeString().slice(0, 5) : ''
 
-/** Agent 聊天消息（TaskLog）→ Markdown 块；运行事件原始输出 → 等宽文本 */
-const LineBody: React.FC<{ line: TerminalLine }> = ({ line }) => {
+/** Agent 聊天消息（TaskLog）→ Markdown 块；运行事件原始输出 → 等宽文本。
+ *  memo：时间线每次合并产生新数组，行对象引用在 byKey 下保持稳定，
+ *  memo 掉未变化的行可避免整列表（含 milkdown 编辑器）重渲染。 */
+const LineBody = React.memo<{ line: TerminalLine }>(({ line }) => {
   if (line.kind === 'user') {
     return (
       <div style={{ display: 'flex', gap: 10, margin: '10px 0' }} data-testid="console-user-line">
@@ -88,7 +90,7 @@ const LineBody: React.FC<{ line: TerminalLine }> = ({ line }) => {
   return (
     <div style={{ color: T.textMuted, fontStyle: 'italic', fontSize: 13, margin: '4px 0' }}>○ {line.text}</div>
   )
-}
+})
 
 /**
  * Console 会话主区：完整时间线（对话 + 运行事件）按执行轮次分代渲染，
