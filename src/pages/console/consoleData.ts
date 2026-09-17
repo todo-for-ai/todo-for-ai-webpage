@@ -89,6 +89,8 @@ export interface AttemptSegment {
   key: string
   /** 轮次标题；null = 首个 started 之前的历史段 */
   label: string | null
+  /** 该轮开始时间（epoch ms，取 started 行 ts），供分隔条渲染时刻 */
+  startedTs?: number
   lines: TerminalLine[]
 }
 
@@ -103,11 +105,24 @@ export function splitAttemptSegments(lines: TerminalLine[]): AttemptSegment[] {
     const isStart = line.kind === 'status' && line.text === '开始执行'
     if (isStart) {
       attemptNo += 1
-      segments.push({ key: `attempt-${line.key}`, label: `Iteration ${attemptNo}`, lines: [] })
+      segments.push({
+        key: `attempt-${line.key}`,
+        label: `Iteration ${attemptNo}`,
+        startedTs: line.ts || undefined,
+        lines: [],
+      })
     }
     segments[segments.length - 1].lines.push(line)
   }
   return segments.filter(seg => seg.label !== null || seg.lines.length > 0)
+}
+
+/** 任务流顶部摘要：总数与执行中数量 */
+export function summarizeConsoleTasks(tasks: ConsoleTaskLike[]): { total: number; running: number } {
+  return {
+    total: tasks.length,
+    running: (tasks || []).filter(t => t.status === 'in_progress').length,
+  }
 }
 
 /** 任务对 Agent 是否可派发（非执行中/审核中的 AI 任务且绑定了 Agent） */

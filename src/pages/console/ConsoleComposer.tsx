@@ -1,18 +1,13 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Input, Switch, Tooltip, message } from 'antd'
 import { SendOutlined, PauseCircleOutlined } from '@ant-design/icons'
 import { runtimeEventsApi } from '../../api/runtimeEvents.js'
-import { taskChatApi } from '../../api/taskChat.js'
 import { agentsApi } from '../../api/agents'
 import { getErrorMessage } from '../../utils/errorUtils.js'
 import type { AgentTimeline } from '../../hooks/useAgentTimeline'
-import {
-  parseTerminalCommand,
-  TERMINAL_COMMAND_HELP,
-} from '../components/TaskDetail/agentTerminalCore'
+import { useTerminalSend } from '../../hooks/useTerminalSend'
 import { canDispatchTask, firstAgentId } from './consoleData'
-
-const CONSOLE_ACCENT = '#00b96b'
+import { CONSOLE_TOKENS, CONSOLE_MONO } from './consoleTheme'
 
 interface ConsoleComposerProps {
   task: any
@@ -26,7 +21,7 @@ interface ConsoleComposerProps {
 /**
  * Console 底部指令区（对标 "Ask for follow-up changes"）：
  * 留言必达（实时转发 + 下轮注入）；空闲 AI 任务可「发送并派发」直接开工；
- * /stop /clear /help 与任务详情页终端一致。
+ * /stop /clear /help 与任务详情页终端共用同一发送逻辑（useTerminalSend）。
  */
 export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
   task,
@@ -35,13 +30,16 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
   onActivity,
   onStopped,
 }) => {
-  const { pushLocalLine, loadChat, clearView } = timeline
-  const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
   const [stopping, setStopping] = useState(false)
   /** 空闲且有 Agent 归属时默认勾选：发送留言后顺带派发执行 */
   const [dispatchAfterSend, setDispatchAfterSend] = useState(true)
   const dispatchable = canDispatchTask(task)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // 切换任务后自动聚焦输入行
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [task?.id])
 
   const doStop = useCallback(async () => {
     try {
@@ -60,52 +58,29 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
     }
   }, [task?.id, onStopped])
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim()
-    if (!text || sending || !task?.id) return
-
-    const command = parseTerminalCommand(text)
-    if (command) {
-      setInput('')
-      if (command.type === 'help') {
-        TERMINAL_COMMAND_HELP.forEach(t => pushLocalLine(t, 'system'))
-      } else if (command.type === 'clear') {
-        clearView()
-      } else if (command.type === 'stop') {
-        if (running) await doStop()
-        else pushLocalLine('当前没有执行中的任务', 'system')
-      } else {
-        pushLocalLine(`未知命令 /${command.name}，输入 /help 查看可用命令`, 'system')
-      }
-      return
-    }
-
-    setInput('')
-    pushLocalLine(text, 'user')
-    try {
-      setSending(true)
-      await taskChatApi.sendMessage(task.id, text)
-      await loadChat()
-      // 空闲任务：留言已入列，顺带派发让 Agent 马上开工
-      const agentId = firstAgentId(task)
-      if (dispatchAfterSend && dispatchable && agentId) {
-        await agentsApi.dispatchTasks(agentId, { project_id: task.project_id })
-        pushLocalLine(`已派发给 Agent #${agentId}，任务进入执行队列`, 'system')
-        onActivity?.()
-      }
-    } catch (error) {
-      message.error(getErrorMessage(error, '发送失败'))
-    } finally {
-      setSending(false)
-    }
-  }, [input, sending, task, running, dispatchAfterSend, dispatchable,
-    pushLocalLine, loadChat, clearView, doStop, onActivity])
+  const { input, setInput, sending, commandHint, handleSend } = useTerminalSend({
+    taskId: task?.id,
+    running,
+    timeline,
+    doStop,
+    // 空闲任务：留言已入列，顺带派发让 Agent 马上开工
+    afterSend: dispatchAfterSend && dispatchable
+      ? async () => {
+          const agentId = firstAgentId(task)
+          await agentsApi.dispatchTasks(agentId!, { project_id: task.project_id })
+          onActivity?.()
+          return `已派发给 Agent #${agentId}，任务进入执行队列`
+        }
+      : undefined,
+    onError: (error, fallback) => message.error(getErrorMessage(error, fallback)),
+  })
 
   return (
-    <div style={{ padding: '12px 20px 16px', borderTop: '1px solid #2b2d31' }} data-testid="console-composer">
+    <div style={{ padding: '12px 20px 16px', borderTop: `1px solid ${CONSOLE_TOKENS.border}` }} data-testid="console-composer">
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-        <span style={{ color: CONSOLE_ACCENT, fontWeight: 700, fontSize: 16, lineHeight: '24px', fontFamily: 'SFMono-Regular, Consolas, monospace' }}>❯</span>
+        <span style={{ color: CONSOLE_TOKENS.accent, fontWeight: 700, fontSize: 16, lineHeight: '24px', fontFamily: CONSOLE_MONO }}>❯</span>
         <Input.TextArea
+          ref={inputRef as any}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -118,7 +93,7 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
           autoSize={{ minRows: 1, maxRows: 6 }}
           variant="borderless"
           data-testid="console-input"
-          style={{ flex: 1, background: '#232428', color: '#e8e8e8', fontSize: 14, borderRadius: 8, padding: '8px 12px' }}
+          style={{ flex: 1, background: CONSOLE_TOKENS.bgField, color: CONSOLE_TOKENS.textPrimary, fontSize: 14, borderRadius: 8, padding: '8px 12px' }}
         />
         {running ? (
           <Tooltip title="中断当前执行">
@@ -138,9 +113,9 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
           发送
         </Button>
       </div>
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 6, fontSize: 12, color: '#666' }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 6, fontSize: 12, color: CONSOLE_TOKENS.textFaint }}>
         {dispatchable && (
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: dispatchAfterSend ? CONSOLE_ACCENT : '#8c8c8c' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: dispatchAfterSend ? CONSOLE_TOKENS.accent : CONSOLE_TOKENS.textMuted }}>
             <Switch
               size="small"
               checked={dispatchAfterSend}
@@ -150,6 +125,7 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
             发送并派发执行
           </label>
         )}
+        {commandHint && <span style={{ color: CONSOLE_TOKENS.textMuted }}>/stop 中断 · /clear 清屏 · /help 列表</span>}
         <span>Enter 发送 · Shift+Enter 换行 · /help 查看命令</span>
       </div>
     </div>

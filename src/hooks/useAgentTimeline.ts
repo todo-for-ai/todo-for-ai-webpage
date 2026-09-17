@@ -43,6 +43,26 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
   const localSeqRef = useRef(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
+  // 任务切换时必须整体重置：游标与去重集合若残留旧任务值，
+  // 新任务的运行事件会因 after_id 过大整段拉空、对话也会短暂串台。
+  const activeTaskRef = useRef<number | null>(null)
+  const resetForTask = useCallback((id: number | null) => {
+    lastEventIdRef.current = 0
+    seenEventIdsRef.current = new Set()
+    localSeqRef.current = 0
+    setChatMsgs([])
+    setEvents([])
+    setPending([])
+    setAtBottom(true)
+    activeTaskRef.current = id
+  }, [])
+
+  useEffect(() => {
+    if (activeTaskRef.current !== taskId) {
+      resetForTask(taskId)
+    }
+  }, [taskId, resetForTask])
+
   const appendEvents = useCallback((incoming: RuntimeEventItem[]) => {
     if (!incoming?.length) return
     // 去重与游标推进必须在 updater 外完成：updater 必须是纯函数，
@@ -70,6 +90,8 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
         const last = await taskChatApi.getMessages(taskId, lastPage, CHAT_PAGE_SIZE)
         items = last.items || []
       }
+      // 慢响应晚于任务切换到达时不得覆盖新任务的对话
+      if (activeTaskRef.current !== taskId) return
       setChatMsgs(items)
       // 服务端已落库的消息顶替同文本的本地回声（actor_type 大小写归一）
       const serverTexts = new Set(

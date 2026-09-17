@@ -7,6 +7,7 @@ import {
   groupConsoleTasks,
   relativeTime,
   splitAttemptSegments,
+  summarizeConsoleTasks,
 } from '../../../src/pages/console/consoleData'
 import type { TerminalLine } from '../../../src/pages/components/TaskDetail/agentTerminalCore'
 
@@ -79,11 +80,34 @@ describe('splitAttemptSegments', () => {
     expect(segs[2].lines.map(l => l.key)).toEqual(['e4', 'e5'])
   })
 
+  it('records each attempt start ts for the divider clock', () => {
+    const mk = (key: string, kind: any, text: string, ts: number): any => ({ key, kind, text, ts })
+    const segs = splitAttemptSegments([
+      mk('e1', 'status', '开始执行', 1726650000000),
+      mk('e2', 'status', '开始执行', 1726653600000),
+    ])
+    expect(segs[0].startedTs).toBe(1726650000000)
+    expect(segs[1].startedTs).toBe(1726653600000)
+    expect(segs.length).toBe(2)
+  })
+
   it('returns empty history segment untouched when no attempts', () => {
     const segs = splitAttemptSegments([{ key: 'c1', kind: 'user', text: 'hi', ts: 1 }])
     expect(segs.length).toBe(1)
     expect(segs[0].label).toBeNull()
     expect(segs[0].lines.length).toBe(1)
+  })
+})
+
+describe('summarizeConsoleTasks', () => {
+  it('counts total and running tasks', () => {
+    const tasks = [
+      task({ id: 1, status: 'in_progress' }),
+      task({ id: 2, status: 'in_progress' }),
+      task({ id: 3, status: 'done' }),
+    ]
+    expect(summarizeConsoleTasks(tasks)).toEqual({ total: 3, running: 2 })
+    expect(summarizeConsoleTasks([])).toEqual({ total: 0, running: 0 })
   })
 })
 
