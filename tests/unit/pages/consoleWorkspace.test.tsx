@@ -11,12 +11,22 @@ const { tasksApi, taskChatApi, runtimeEventsApi, agentsApi, wsHandlers } = vi.ho
     ] })),
     getTask: vi.fn(async (id: number) => ({
       id, title: '执行中任务', status: 'in_progress', project_id: 10, priority: 'high',
+      content: '## 背景\n这是任务描述正文，包含验收标准。',
       created_at: '2026-09-18T09:00:00', updated_at: '2026-09-18T11:00:00',
       is_ai_task: true, assignees: [{ type: 'agent', id: 5 }],
       subtask_count: 4, subtask_done_count: 2,
       project: { id: 10, name: 'demo' },
     })),
     createTask: vi.fn(async (data: any) => ({ id: 999, ...data })),
+    getTaskAttachments: vi.fn(async () => [
+      { id: 1, task_id: 201, filename: 'report_a.txt', original_filename: 'report_a.txt', file_size: 2048, file_size_human: '2KB' },
+    ]),
+    getSubtasks: vi.fn(async () => [
+      { id: 301, title: '子任务甲', status: 'done' },
+      { id: 302, title: '子任务乙', status: 'todo' },
+    ]),
+    getTaskAttachmentDownloadUrl: vi.fn((taskId: number, attachmentId: number) =>
+      `/todo-for-ai/api/v1/tasks/${taskId}/attachments/${attachmentId}/download`),
   },
   taskChatApi: {
     getMessages: vi.fn(async () => ({
@@ -105,11 +115,21 @@ describe('ConsoleWorkspace', () => {
     expect(screen.getByText('✓ 执行完成')).toBeInTheDocument()
   })
 
-  it('shows info panel with subtask progress and shared context', async () => {
+  it('shows info panel with subtask progress, list, description and attachments', async () => {
     renderConsole()
     await waitFor(() => expect(screen.getByTestId('console-info-panel')).toBeInTheDocument())
     expect(screen.getByText('2/4')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText('research_summary')).toBeInTheDocument())
+    // 子任务列表
+    await waitFor(() => expect(screen.getByText('子任务甲')).toBeInTheDocument())
+    // 任务描述折叠展示 + 展开（在信息面板作用域内查，避免与时间线撞名）
+    expect(screen.getByTestId('console-desc-toggle')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('console-desc-toggle'))
+    const panel = screen.getByTestId('console-info-panel')
+    await waitFor(() => expect(panel.querySelector('.console-markdown')).not.toBeNull())
+    // 附件下载链接
+    const link = screen.getByText('report_a.txt').closest('a')
+    expect(link).toHaveAttribute('href')
   })
 
   it('running task shows 停止 button and no dispatch toggle', async () => {
@@ -134,6 +154,23 @@ describe('ConsoleWorkspace', () => {
 
     await waitFor(() => expect(taskChatApi.sendMessage).toHaveBeenCalledWith(202, '再跑一轮回归'))
     await waitFor(() => expect(agentsApi.dispatchTasks).toHaveBeenCalledWith(5, { project_id: 10 }))
+  })
+
+  it('⌘K quick switcher opens, filters and selects task', async () => {
+    renderConsole()
+    await waitFor(() => expect(screen.getByTestId('console-task-201')).toBeInTheDocument())
+
+    // Ctrl+K 打开自绘弹层
+    fireEvent.keyDown(document.body, { key: 'k', ctrlKey: true })
+    expect(screen.getByTestId('console-switcher')).toBeInTheDocument()
+    const input = screen.getByTestId('console-switcher-input')
+    fireEvent.change(input, { target: { value: '已完成' } })
+    fireEvent.click(screen.getByTestId('console-switcher-item-202'))
+
+    await waitFor(() => {
+      expect(tasksApi.getTask).toHaveBeenCalledWith(202)
+      expect(screen.queryByTestId('console-switcher')).not.toBeInTheDocument()
+    })
   })
 
   it('sidebar search filters the task stream', async () => {

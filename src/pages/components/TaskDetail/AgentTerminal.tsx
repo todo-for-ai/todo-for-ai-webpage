@@ -9,14 +9,12 @@ import {
   SendOutlined,
 } from '@ant-design/icons'
 import { runtimeEventsApi } from '../../../api/runtimeEvents.js'
-import { taskChatApi } from '../../../api/taskChat.js'
 import { getErrorMessage } from '../../../utils/errorUtils.js'
 import TaskChatThread from '../../../components/TaskChatThread'
 import { useAgentTimeline } from '../../../hooks/useAgentTimeline'
+import { useTerminalSend } from '../../../hooks/useTerminalSend'
 import {
   buildTranscriptText,
-  parseTerminalCommand,
-  TERMINAL_COMMAND_HELP,
   type TerminalLine,
 } from './agentTerminalCore'
 
@@ -45,9 +43,7 @@ interface AgentTerminalProps {
  */
 export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, onStopped }) => {
   const timeline = useAgentTimeline(taskId)
-  const { lines, atBottom, scrollRef, handleScroll, scrollToBottom, loadChat, pushLocalLine, clearView } = timeline
-  const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
+  const { lines, atBottom, scrollRef, handleScroll, scrollToBottom, clearView } = timeline
   const [stopping, setStopping] = useState(false)
   const [confirmingStop, setConfirmingStop] = useState(false)
   /** Esc 两段式中断：第一次武装提示，再次按下才真正停止 */
@@ -82,38 +78,13 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
     escTimerRef.current = setTimeout(() => setEscArmed(false), 2500)
   }, [])
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim()
-    if (!text || sending) return
-
-    const command = parseTerminalCommand(text)
-    if (command) {
-      setInput('')
-      if (command.type === 'help') {
-        TERMINAL_COMMAND_HELP.forEach(t => pushLocalLine(t, 'system'))
-      } else if (command.type === 'clear') {
-        clearView()
-      } else if (command.type === 'stop') {
-        if (running) await doStop()
-        else pushLocalLine('当前没有执行中的任务', 'system')
-      } else {
-        pushLocalLine(`未知命令 /${command.name}，输入 /help 查看可用命令`, 'system')
-      }
-      return
-    }
-
-    setInput('')
-    pushLocalLine(text, 'user')
-    try {
-      setSending(true)
-      await taskChatApi.sendMessage(taskId, text)
-      await loadChat()
-    } catch (error) {
-      message.error(getErrorMessage(error, '发送消息失败'))
-    } finally {
-      setSending(false)
-    }
-  }, [input, sending, running, taskId, doStop, loadChat, pushLocalLine, clearView])
+  const { input, setInput, sending, commandHint, handleSend } = useTerminalSend({
+    taskId,
+    running,
+    timeline,
+    doStop,
+    onError: (error, fallback) => message.error(getErrorMessage(error, fallback)),
+  })
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing) return
@@ -132,8 +103,6 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
       message.error('复制失败')
     }
   }
-
-  const commandHint = input.trim().startsWith('/')
 
   return (
     <Card

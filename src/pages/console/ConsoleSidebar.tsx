@@ -8,8 +8,10 @@ import {
   filterConsoleTasks,
   groupConsoleTasks,
   relativeTime,
+  summarizeConsoleTasks,
   type ConsoleTaskLike,
 } from './consoleData'
+import { CONSOLE_TOKENS as T, CONSOLE_MONO } from './consoleTheme'
 
 interface ConsoleSidebarProps {
   tasks: ConsoleTaskLike[]
@@ -40,6 +42,7 @@ export const ConsoleSidebar: React.FC<ConsoleSidebarProps> = ({
     () => groupConsoleTasks(filterConsoleTasks(tasks, query)),
     [tasks, query]
   )
+  const summary = useMemo(() => summarizeConsoleTasks(tasks), [tasks])
 
   const handleCreate = async () => {
     if (!form.title.trim() || !form.projectId) {
@@ -84,9 +87,24 @@ export const ConsoleSidebar: React.FC<ConsoleSidebarProps> = ({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           allowClear
-          style={{ marginTop: 8, background: '#232428', borderColor: '#2b2d31', borderRadius: 6 }}
+          style={{ marginTop: 8, background: T.bgField, borderColor: T.border, borderRadius: 6 }}
           data-testid="console-search"
         />
+        <div
+          data-testid="console-summary"
+          style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: T.textGhost, padding: '6px 4px 0' }}
+        >
+          <span>共 {summary.total} 个任务</span>
+          {summary.running > 0 && (
+            <span style={{ color: T.accent }}>
+              <span className="tfai-pulse-dot" style={{
+                display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                background: T.accent, marginRight: 4,
+              }} />
+              {summary.running} 执行中
+            </span>
+          )}
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 12px' }} data-testid="console-task-list">

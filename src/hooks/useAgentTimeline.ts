@@ -25,7 +25,9 @@ export interface AgentTimeline {
   loadChat: () => Promise<void>
   appendEvents: (incoming: RuntimeEventItem[]) => void
   onRuntimeEvent: (data: any) => void
-  pushLocalLine: (text: string, kind: TerminalLine['kind']) => void
+  /** 返回该行 key，供失败时 removeLocalLine 撤回 */
+  pushLocalLine: (text: string, kind: TerminalLine['kind']) => string
+  removeLocalLine: (key: string) => void
   clearView: () => void
 }
 
@@ -42,6 +44,26 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
   const seenEventIdsRef = useRef<Set<number>>(new Set())
   const localSeqRef = useRef(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+
+  // 任务切换时必须整体重置：游标与去重集合若残留旧任务值，
+  // 新任务的运行事件会因 after_id 过大整段拉空、对话也会短暂串台。
+  const activeTaskRef = useRef<number | null>(null)
+  const resetForTask = useCallback((id: number | null) => {
+    lastEventIdRef.current = 0
+    seenEventIdsRef.current = new Set()
+    localSeqRef.current = 0
+    setChatMsgs([])
+    setEvents([])
+    setPending([])
+    setAtBottom(true)
+    activeTaskRef.current = id
+  }, [])
+
+  useEffect(() => {
+    if (activeTaskRef.current !== taskId) {
+      resetForTask(taskId)
+    }
+  }, [taskId, resetForTask])
 
   const appendEvents = useCallback((incoming: RuntimeEventItem[]) => {
     if (!incoming?.length) return
@@ -70,6 +92,8 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
         const last = await taskChatApi.getMessages(taskId, lastPage, CHAT_PAGE_SIZE)
         items = last.items || []
       }
+      // 慢响应晚于任务切换到达时不得覆盖新任务的对话
+      if (activeTaskRef.current !== taskId) return
       setChatMsgs(items)
       // 服务端已落库的消息顶替同文本的本地回声（actor_type 大小写归一）
       const serverTexts = new Set(
@@ -84,8 +108,15 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
   useEffect(() => {
     if (!taskId) return
     loadChat()
-    const timer = setInterval(loadChat, 20000)
-    return () => clearInterval(timer)
+    // 页面不可见时暂停网络轮询（WS 增量仍生效），回前台立即补一次
+    const tick = () => { if (!document.hidden) loadChat() }
+    const timer = setInterval(tick, 20000)
+    const onVisible = () => { if (!document.hidden) loadChat() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [taskId, loadChat])
 
   // 运行事件：初始拉取 + 5s 轮询兜底 + WS 增量
@@ -101,10 +132,13 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
       }
     }
     fetchEvents()
-    const timer = setInterval(fetchEvents, 5000)
+    const timer = setInterval(() => { if (!document.hidden) fetchEvents() }, 5000)
+    const onVisible = () => { if (!document.hidden) fetchEvents() }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       cancelled = true
       clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [taskId, appendEvents])
 
@@ -150,8 +184,14 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
 
   const pushLocalLine = useCallback((text: string, kind: TerminalLine['kind']) => {
     localSeqRef.current += 1
-    const line: TerminalLine = { key: `local-${localSeqRef.current}`, kind, text, ts: Date.now() }
+    const key = `local-${localSeqRef.current}`
+    const line: TerminalLine = { key, kind, text, ts: Date.now() }
     setPending(prev => [...prev, line])
+    return key
+  }, [])
+
+  const removeLocalLine = useCallback((key: string) => {
+    setPending(prev => prev.filter(p => p.key !== key))
   }, [])
 
   const clearView = useCallback(() => {
@@ -164,6 +204,6 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
     chatMsgs, events, lines, pending, atBottom,
     scrollRef, handleScroll, scrollToBottom,
     loadChat, appendEvents, onRuntimeEvent,
-    pushLocalLine, clearView,
+    pushLocalLine, removeLocalLine, clearView,
   }
 }
