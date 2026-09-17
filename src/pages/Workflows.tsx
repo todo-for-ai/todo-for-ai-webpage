@@ -32,6 +32,7 @@ import { useCollaborationSSE } from '../hooks/useCollaborationSSE'
 
 // Extracted components
 import WorkflowFormModal from './workflows/WorkflowFormModal'
+import WorkflowCanvasModal from '../components/Workflow/canvas/WorkflowCanvasModal'
 import WorkflowRunConsole from './workflows/WorkflowRunConsole'
 import WorkflowDefinitionsCard from './workflows/WorkflowDefinitionsCard'
 import TriggerCreationModal from './workflows/TriggerCreationModal'
@@ -148,6 +149,9 @@ const Workflows: React.FC = () => {
     workflows,
   } = useWorkflowsData()
 
+  // 画布编辑器当前打开的工作流（null = 关闭）
+  const [canvasWfId, setCanvasWfId] = useState<number | null>(null)
+
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -175,6 +179,16 @@ const Workflows: React.FC = () => {
         openLaunch={ openLaunch }
         openTriggerModal={ openTriggerModal }
         openVersionModal={ openVersionModal }
+        openCanvas={ setCanvasWfId }
+      />
+
+      {/* Canvas editor */}
+      <WorkflowCanvasModal
+        workflowId={canvasWfId}
+        agents={agents}
+        workflows={workflows}
+        onClose={() => setCanvasWfId(null)}
+        onSaved={loadData}
       />
 
       {/* Analytics Cards (extracted) */}
