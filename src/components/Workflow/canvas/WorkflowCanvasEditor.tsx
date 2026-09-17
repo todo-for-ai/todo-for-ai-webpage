@@ -257,7 +257,8 @@ const WorkflowCanvasEditor: React.FC<WorkflowCanvasEditorProps> = ({
           >
             <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
             <Controls showInteractive={false} />
-            <MiniMap pannable zoomable />
+            {/* 右侧被配置面板覆盖，放左下角 */}
+            <MiniMap pannable zoomable position="top-left" />
           </ReactFlow>
         </div>
 
