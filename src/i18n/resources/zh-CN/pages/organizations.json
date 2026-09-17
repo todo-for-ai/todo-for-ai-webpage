@@ -108,28 +108,28 @@
     "subtitle": "查看组织信息、成员与项目",
     "back": "返回组织列表",
     "noDescription": "暂无组织描述",
-  "status": {
-    "active": "活跃",
-    "archived": "已归档",
-    "deleted": "已废弃"
-  },
-  "stats": {
-    "members": "成员总数",
-    "membersOverview": "成员概览",
-    "humanMembers": "人类成员",
-    "aiMembers": "AI 成员",
-    "invitedMembers": "邀请中",
-    "projects": "项目总数",
-    "projectsOverview": "项目概览",
-    "projectsActive": "进行中项目",
-    "projectsArchived": "已归档项目",
-    "projectsDeleted": "已废弃项目",
-    "activeProjects7d": "近 7 天活跃项目",
-    "lastActivity": "最近活跃时间",
-    "activityOverview": "活跃概览",
-    "activeRoles": "启用角色",
-    "totalRoles": "角色总数"
-  },
+    "status": {
+      "active": "活跃",
+      "archived": "已归档",
+      "deleted": "已废弃"
+    },
+    "stats": {
+      "members": "成员总数",
+      "membersOverview": "成员概览",
+      "humanMembers": "人类成员",
+      "aiMembers": "AI 成员",
+      "invitedMembers": "邀请中",
+      "projects": "项目总数",
+      "projectsOverview": "项目概览",
+      "projectsActive": "进行中项目",
+      "projectsArchived": "已归档项目",
+      "projectsDeleted": "已废弃项目",
+      "activeProjects7d": "近 7 天活跃项目",
+      "lastActivity": "最近活跃时间",
+      "activityOverview": "活跃概览",
+      "activeRoles": "启用角色",
+      "totalRoles": "角色总数"
+    },
     "fields": {
       "createdAt": "创建时间",
       "updatedAt": "更新时间"
@@ -150,7 +150,8 @@
       "activity": "活跃动态",
       "projects": "项目",
       "budgets": "预算配额",
-      "runtime": "运行时"
+      "runtime": "运行时",
+      "llmMetrics": "模型用量"
     },
     "recentActivity": {
       "title": "近期动态",

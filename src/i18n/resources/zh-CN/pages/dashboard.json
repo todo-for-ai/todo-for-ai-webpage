@@ -113,5 +113,27 @@
       "totalActivity": "总活跃度",
       "activeTime": "活跃时间"
     }
+  },
+  "llmUsage": {
+    "sectionTitle": "LLM API 用量",
+    "window": "近 7 天",
+    "empty": "暂无调用数据",
+    "date": "日期",
+    "calls": "调用",
+    "tokens": "Tokens",
+    "avgDuration": "平均耗时",
+    "successRate": "成功率",
+    "agent": "Agent",
+    "model": "模型",
+    "endpoint": "端点",
+    "errorCode": "错误码",
+    "task": "任务",
+    "time": "时间",
+    "status": "状态",
+    "cost": "成本",
+    "dailyTrend": "调用趋势",
+    "byAgent": "按 Agent",
+    "byModel": "按模型",
+    "recentFailures": "最近失败"
   }
 }

@@ -12,6 +12,7 @@ import { AgentOverviewTab } from './detailTabs/AgentOverviewTab'
 import { AgentProjectsTab } from './detailTabs/AgentProjectsTab'
 import { AgentRunsTab } from './detailTabs/AgentRunsTab'
 import { AgentRuntimeTab } from './detailTabs/AgentRuntimeTab'
+import { AgentLlmMetricsTab } from './detailTabs/AgentLlmMetricsTab'
 import { AgentTasksTab } from './detailTabs/AgentTasksTab'
 import { AgentTriggersTab } from './detailTabs/AgentTriggersTab'
 import './AgentDetailTabs.css'
@@ -25,7 +26,7 @@ interface AgentDetailTabsProps {
 }
 
 export const AGENT_DETAIL_TAB_KEYS = [
-  'overview', 'activity', 'projects', 'interactions', 'tasks', 'runs', 'runtime',
+  'overview', 'activity', 'projects', 'interactions', 'tasks', 'runs', 'llm', 'runtime',
   'triggers', 'keys', 'soul', 'secrets',
 ] as const
 
@@ -111,6 +112,13 @@ export function AgentDetailTabs({
             label: tp('detail.tabs.runs', { defaultValue: 'Runs' }),
             children: isTabLoaded('runs') ? (
               <AgentRunsTab workspaceId={workspaceId} agentId={agent.id} active={activeTab === 'runs'} />
+            ) : null,
+          },
+          {
+            key: 'llm',
+            label: tp('detail.tabs.llm', { defaultValue: 'LLM Usage' }),
+            children: isTabLoaded('llm') ? (
+              <AgentLlmMetricsTab workspaceId={workspaceId} agent={agent} active={activeTab === 'llm'} />
             ) : null,
           },
           {

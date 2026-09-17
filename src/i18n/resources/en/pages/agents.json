@@ -144,7 +144,8 @@
       "keys": "Keys",
       "soul": "SOUL Versions",
       "secrets": "Secrets",
-      "triggers": "Triggers"
+      "triggers": "Triggers",
+      "llm": "LLM Usage"
     },
     "common": {
       "yes": "Yes",

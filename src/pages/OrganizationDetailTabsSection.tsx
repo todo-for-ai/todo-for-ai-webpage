@@ -36,6 +36,7 @@ import { OrganizationMembersCard } from './organizations/components/Organization
 import NotificationChannelManager from '../components/NotificationChannelManager'
 import { OrgBudgetsTab } from './OrganizationDetail/components/OrgBudgetsTab'
 import { OrgRuntimeSettingsTab } from './OrganizationDetail/components/OrgRuntimeSettingsTab'
+import { OrgLlmMetricsTab } from './OrganizationDetail/components/OrgLlmMetricsTab'
 import { LinkButton } from '../components/SmartLink'
 import { formatFullDateTime, formatRelativeTimeI18n } from '../utils/dateUtils'
 import {
@@ -204,6 +205,13 @@ export function OrganizationDetailTabsSection(props: Bundle) {
               label: tp('detail.tabs.runtime'),
               children: (
                 <OrgRuntimeSettingsTab organizationId={parsedOrganizationId} canManage={!!canManageMembers} />
+              ),
+            },
+            {
+              key: 'llm-metrics',
+              label: tp('detail.tabs.llmMetrics'),
+              children: (
+                <OrgLlmMetricsTab organizationId={parsedOrganizationId} />
               ),
             },
           ]}

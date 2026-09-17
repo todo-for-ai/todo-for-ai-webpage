@@ -113,5 +113,27 @@
       "totalActivity": "Total activity",
       "activeTime": "Active time"
     }
+  },
+  "llmUsage": {
+    "sectionTitle": "LLM API Usage",
+    "window": "Last 7 days",
+    "empty": "No call data yet",
+    "date": "Date",
+    "calls": "Calls",
+    "tokens": "Tokens",
+    "avgDuration": "Avg Duration",
+    "successRate": "Success Rate",
+    "agent": "Agent",
+    "model": "Model",
+    "endpoint": "Endpoint",
+    "errorCode": "Error Code",
+    "task": "Task",
+    "time": "Time",
+    "status": "Status",
+    "cost": "Cost",
+    "dailyTrend": "Call Trend",
+    "byAgent": "By Agent",
+    "byModel": "By Model",
+    "recentFailures": "Recent Failures"
   }
 }

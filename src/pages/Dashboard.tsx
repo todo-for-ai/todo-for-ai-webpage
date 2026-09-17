@@ -51,6 +51,7 @@ import ReputationTrendPopover from '../components/ReputationTrendPopover'
 import PlatformActivityTrendSection from '../components/PlatformActivityTrendSection'
 import ExperiencesSection from './dashboard/ExperiencesSection'
 import TaskAnalyticsSection from './dashboard/TaskAnalyticsSection'
+import LlmUsageSection from './dashboard/LlmUsageSection'
 import AgentAnalyticsSection from './dashboard/AgentAnalyticsSection'
 import ConflictSection from './dashboard/ConflictSection'
 import CollaborationMetricsCard from './dashboard/CollaborationMetricsCard'
@@ -383,6 +384,8 @@ agentCollaboration,
       <ExperiencesSection />
       {/* Task Lifecycle Stats */}
       <TaskAnalyticsSection />
+      {/* LLM API Usage (per-user) */}
+      <LlmUsageSection />
       {/* Agent Composite Health */}
       <AgentAnalyticsSection />
       {/* Conflict Monitor */}
