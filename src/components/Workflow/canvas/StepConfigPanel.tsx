@@ -1,9 +1,9 @@
 import React from 'react'
 import {
-  Button, Collapse, Divider, Input, InputNumber, Popconfirm, Radio, Select, Switch, Tag, Tooltip,
+  Button, Collapse, Divider, Input, InputNumber, Popconfirm, Radio, Select, Spin, Switch, Tag, Tooltip,
 } from 'antd'
-import { DeleteOutlined } from '@ant-design/icons'
-import type { CreateWorkflowStepData, WorkflowIntegrationConfig } from '../../../api/agents'
+import { CaretRightOutlined, DeleteOutlined } from '@ant-design/icons'
+import type { CreateWorkflowStepData, WorkflowIntegrationConfig, WorkflowStepTestRunResult } from '../../../api/agents'
 import type { CanvasStep } from './canvasModel'
 import { CAPABILITY_OPTIONS, INTEGRATION_PROVIDERS } from './canvasModel'
 
@@ -17,6 +17,7 @@ interface StepConfigPanelProps {
   onChange: (patch: Partial<CreateWorkflowStepData>) => void
   onRemoveDependency: (dep: string) => void
   onRemove: () => void
+  onTestRun?: (stepKey: string) => Promise<WorkflowStepTestRunResult>
 }
 
 const CONDITION_OPERATORS = [
@@ -33,8 +34,10 @@ const CONDITION_OPERATORS = [
 const labelStyle: React.CSSProperties = { fontSize: 12, color: '#8c8c8c', margin: '8px 0 4px' }
 
 const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
-  step, stepKeys, agents, workflows, onChange, onRemoveDependency, onRemove,
+  step, stepKeys, agents, workflows, onChange, onRemoveDependency, onRemove, onTestRun,
 }) => {
+  const [testRunning, setTestRunning] = React.useState(false)
+  const [testResult, setTestResult] = React.useState<WorkflowStepTestRunResult | null>(null)
   const integration = step.integration_config ?? null
   const inputsText = integration?.inputs ? JSON.stringify(integration.inputs, null, 2) : ''
 
@@ -247,9 +250,54 @@ const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
       )}
 
       <Divider style={{ margin: '12px 0 8px' }} />
-      <Popconfirm title="确定删除该步骤？" onConfirm={onRemove}>
-        <Button size="small" danger icon={<DeleteOutlined />}>删除步骤</Button>
-      </Popconfirm>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <Button
+          size="small" type="primary" ghost icon={<CaretRightOutlined />}
+          loading={testRunning}
+          disabled={!onTestRun}
+          onClick={async () => {
+            if (!onTestRun) return
+            setTestRunning(true)
+            setTestResult(null)
+            try {
+              setTestResult(await onTestRun(step.step_key))
+            } finally {
+              setTestRunning(false)
+            }
+          }}
+        >测试运行</Button>
+        <Popconfirm title="确定删除该步骤？" onConfirm={onRemove}>
+          <Button size="small" danger icon={<DeleteOutlined />}>删除步骤</Button>
+        </Popconfirm>
+      </div>
+      {testRunning && <Spin size="small" />}
+      {testResult && (
+        <div style={{
+          border: '1px solid #d9d9d9', borderRadius: 6, padding: 8,
+          fontSize: 12, background: '#fff', maxHeight: 220, overflowY: 'auto',
+        }}>
+          {testResult.mode === 'agent_preview' ? (
+            <>
+              <div style={{ color: '#1677ff', marginBottom: 4 }}>
+                预览 · 将派给 {testResult.agent ? `#${testResult.agent.id} ${testResult.agent.name}` : '（无可用 Agent）'}
+              </div>
+              <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                {testResult.task_preview?.content || '（空内容）'}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ color: testResult.ok ? '#52c41a' : '#ff4d4f', marginBottom: 4 }}>
+                {testResult.provider} 调用{testResult.ok ? '成功' : '失败'}{testResult.error ? `：${testResult.error}` : ''}
+              </div>
+              <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                {testResult.output || '（无输出）'}
+              </div>
+            </>
+          )}
+          {testResult.note && <div style={{ color: '#8c8c8c', marginTop: 4 }}>{testResult.note}</div>}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button, Card, Col, Empty, Popconfirm, Row, Space, Spin, Tag, Tooltip } from 'antd'
-import { ApartmentOutlined, ClockCircleOutlined, DeleteOutlined, HistoryOutlined, PartitionOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import { ApartmentOutlined, ClockCircleOutlined, DeleteOutlined, DownloadOutlined, HistoryOutlined, PartitionOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import WorkflowDagViewer from '../../components/Workflow/WorkflowDagViewer'
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   openTriggerModal: any
   openVersionModal: any
   openCanvas?: (workflowId: number) => void
+  exportWorkflow?: (workflow: any) => void
 }
 
 export default function WorkflowDefinitionsCard(props: Props) {
@@ -22,7 +23,8 @@ export default function WorkflowDefinitionsCard(props: Props) {
     openLaunch,
     openTriggerModal,
     openVersionModal,
-    openCanvas } = props
+    openCanvas,
+    exportWorkflow } = props
 
   return (
     <>
@@ -55,6 +57,13 @@ export default function WorkflowDefinitionsCard(props: Props) {
                             icon={<PlayCircleOutlined />}
                             disabled={!wf.is_active}
                             onClick={() => openLaunch(wf.id)}
+                          />
+                        </Tooltip>
+                        <Tooltip title="导出 DSL">
+                          <Button
+                            size="small"
+                            icon={<DownloadOutlined />}
+                            onClick={() => exportWorkflow?.(wf)}
                           />
                         </Tooltip>
                         <Tooltip title="画布编辑">
