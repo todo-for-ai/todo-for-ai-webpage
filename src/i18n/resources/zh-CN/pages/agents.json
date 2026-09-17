@@ -144,7 +144,8 @@
       "keys": "密钥",
       "soul": "SOUL版本",
       "secrets": "机密",
-      "triggers": "触发器"
+      "triggers": "触发器",
+      "llm": "LLM 用量"
     },
     "common": {
       "yes": "是",

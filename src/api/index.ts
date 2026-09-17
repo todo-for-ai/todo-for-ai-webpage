@@ -27,3 +27,4 @@ export {
 } from './projectContext'
 export { notificationsApi } from './notifications'
 export { AuthAPI } from './auth'
+export { llmMetricsApi, type LlmMetricsSummary } from './llmMetrics'

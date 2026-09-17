@@ -31,6 +31,7 @@ export interface WorkflowStepItem {
   depends_on: string[]
   condition?: { step_key: string; operator: string; value?: string | boolean } | null
   sub_workflow_id?: number | null
+  integration_config?: WorkflowIntegrationConfig | null
   timeout_seconds?: number
   retry_count: number
   on_failure: string
@@ -50,6 +51,17 @@ export interface WorkflowItem {
   updated_at: string
 }
 
+/** 外部工作流平台连接器（Dify / Coze）——api_key 后端加密存储、回传脱敏 */
+export interface WorkflowIntegrationConfig {
+  provider: 'dify' | 'coze'
+  base_url?: string
+  api_key?: string
+  api_key_set?: boolean
+  workflow_id?: string
+  inputs?: Record<string, unknown>
+  timeout_seconds?: number
+}
+
 export interface CreateWorkflowStepData {
   step_key: string
   name?: string
@@ -61,6 +73,7 @@ export interface CreateWorkflowStepData {
   depends_on?: string[]
   condition?: { step_key: string; operator: string; value?: string | boolean } | null
   sub_workflow_id?: number | null
+  integration_config?: WorkflowIntegrationConfig | null
   timeout_seconds?: number
   retry_count?: number
   on_failure?: 'abort' | 'skip' | 'continue'

@@ -108,28 +108,28 @@
     "subtitle": "Review organization info, members, and projects",
     "back": "Back to Organizations",
     "noDescription": "No description yet",
-  "status": {
-    "active": "Active",
-    "archived": "Archived",
-    "deleted": "Deleted"
-  },
-  "stats": {
-    "members": "Total Members",
-    "membersOverview": "Members Overview",
-    "humanMembers": "Human Members",
-    "aiMembers": "AI Members",
-    "invitedMembers": "Invited",
-    "projects": "Total Projects",
-    "projectsOverview": "Projects Overview",
-    "projectsActive": "Active Projects",
-    "projectsArchived": "Archived Projects",
-    "projectsDeleted": "Deleted Projects",
-    "activeProjects7d": "Active Projects (7d)",
-    "lastActivity": "Last Activity",
-    "activityOverview": "Activity Overview",
-    "activeRoles": "Active Roles",
-    "totalRoles": "Total Roles"
-  },
+    "status": {
+      "active": "Active",
+      "archived": "Archived",
+      "deleted": "Deleted"
+    },
+    "stats": {
+      "members": "Total Members",
+      "membersOverview": "Members Overview",
+      "humanMembers": "Human Members",
+      "aiMembers": "AI Members",
+      "invitedMembers": "Invited",
+      "projects": "Total Projects",
+      "projectsOverview": "Projects Overview",
+      "projectsActive": "Active Projects",
+      "projectsArchived": "Archived Projects",
+      "projectsDeleted": "Deleted Projects",
+      "activeProjects7d": "Active Projects (7d)",
+      "lastActivity": "Last Activity",
+      "activityOverview": "Activity Overview",
+      "activeRoles": "Active Roles",
+      "totalRoles": "Total Roles"
+    },
     "fields": {
       "createdAt": "Created At",
       "updatedAt": "Updated At"
@@ -150,7 +150,8 @@
       "activity": "Activity",
       "projects": "Projects",
       "budgets": "Budgets",
-      "runtime": "Runtime"
+      "runtime": "Runtime",
+      "llmMetrics": "LLM Usage"
     },
     "recentActivity": {
       "title": "Recent Activity",
