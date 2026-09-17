@@ -28,12 +28,17 @@ import type {
   StepDurationHistogramResult,
   WorkflowStepBottleneckTimeline,
   WorkflowStructuralComplexity,
+  WorkflowDslExport,
+  WorkflowStepTestRunResult,
 } from './workflow-types'
 import { unwrapData, unwrapList, buildQuery } from './helpers'
 
 export interface WorkflowMethods {
   getWorkflows(params?: { is_active?: boolean; page?: number; per_page?: number }): Promise<ListResult<WorkflowItem>>
   getWorkflow(id: number): Promise<WorkflowItem>
+  exportWorkflowDsl(id: number): Promise<WorkflowDslExport>
+  importWorkflowDsl(dslText: string, name?: string): Promise<WorkflowItem>
+  testRunWorkflowStep(workflowId: number, stepKey: string, body?: { instructions?: string; context?: Record<string, unknown>; timeout_seconds?: number }): Promise<WorkflowStepTestRunResult>
   createWorkflow(data: CreateWorkflowData): Promise<WorkflowItem>
   updateWorkflow(id: number, data: Partial<CreateWorkflowData>): Promise<WorkflowItem>
   deleteWorkflow(id: number): Promise<void>
@@ -86,6 +91,18 @@ export function createWorkflowMethods(apiClient: ApiClient): WorkflowMethods {
 
     async getWorkflow(id: number): Promise<WorkflowItem> {
       return unwrapData<WorkflowItem>(await apiClient.get(`/agents/workflows/${id}`))
+    },
+
+    async exportWorkflowDsl(id: number): Promise<WorkflowDslExport> {
+      return unwrapData<WorkflowDslExport>(await apiClient.get(`/agents/workflows/${id}/export`))
+    },
+
+    async importWorkflowDsl(dslText: string, name?: string): Promise<WorkflowItem> {
+      return unwrapData<WorkflowItem>(await apiClient.post('/agents/workflows/import', { dsl_text: dslText, name }))
+    },
+
+    async testRunWorkflowStep(workflowId: number, stepKey: string, body?: { instructions?: string; context?: Record<string, unknown>; timeout_seconds?: number }): Promise<WorkflowStepTestRunResult> {
+      return unwrapData<WorkflowStepTestRunResult>(await apiClient.post(`/agents/workflows/${workflowId}/steps/${stepKey}/test-run`, body ?? {}))
     },
 
     async createWorkflow(data: CreateWorkflowData): Promise<WorkflowItem> {

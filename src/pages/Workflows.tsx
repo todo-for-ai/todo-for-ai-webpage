@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  Button, Card, Col, Row, Modal, Form, Input, InputNumber, Select, Space, Tag, Steps, Spin,
+  Button, Card, Col, Row, Modal, Form, Input, InputNumber, Select, Space, Tag, Steps, Spin, Upload,
   message, Popconfirm, Descriptions, Empty, Tooltip, Badge, Table, List, Typography,
   Drawer, Progress, Timeline, Alert,
 } from 'antd'
@@ -12,7 +12,7 @@ import {
   ApartmentOutlined, ReloadOutlined, PauseCircleOutlined,
   HistoryOutlined, MonitorOutlined, SafetyOutlined, WarningOutlined,
   SettingOutlined, LineChartOutlined, PieChartOutlined, RetweetOutlined, DotChartOutlined,
-  HeatMapOutlined, BarChartOutlined,
+  HeatMapOutlined, BarChartOutlined, ImportOutlined,
 } from '@ant-design/icons'
 import {
   agentsApi, type WorkflowItem, type WorkflowRunItem, type CreateWorkflowStepData, type Agent,
@@ -159,9 +159,31 @@ const Workflows: React.FC = () => {
           <ApartmentOutlined style={{ marginRight: 8 }} />
           工作流编排
         </h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-          创建工作流
-        </Button>
+        <Space>
+          <Upload
+            accept=".yaml,.yml,.json"
+            showUploadList={false}
+            beforeUpload={async file => {
+              try {
+                const text = await file.text()
+                const name = file.name.replace(/\.[^.]+$/, '')
+                await agentsApi.importWorkflowDsl(text, name)
+                const { message } = await import('antd')
+                message.success(`工作流已从 ${file.name} 导入`)
+                loadData()
+              } catch (e: any) {
+                const { message } = await import('antd')
+                message.error('导入失败: ' + (e?.response?.data?.error || e?.message || '未知错误'))
+              }
+              return false
+            }}
+          >
+            <Button icon={<ImportOutlined />}>导入 DSL</Button>
+          </Upload>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+            创建工作流
+          </Button>
+        </Space>
       </div>
 
       {/* Template marketplace */}
@@ -180,6 +202,23 @@ const Workflows: React.FC = () => {
         openTriggerModal={ openTriggerModal }
         openVersionModal={ openVersionModal }
         openCanvas={ setCanvasWfId }
+        exportWorkflow={ async (wf: any) => {
+          const { message } = await import('antd')
+          try {
+            const res = await agentsApi.exportWorkflowDsl(wf.id)
+            const blob = new Blob([res.dsl_text], { type: 'application/x-yaml' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `workflow-${wf.id}.yaml`
+            a.click()
+            URL.revokeObjectURL(url)
+            if (res.warnings?.length) message.warning(res.warnings.join('；'))
+            else message.success('已导出 DSL')
+          } catch (e: any) {
+            message.error('导出失败: ' + (e?.message || '未知错误'))
+          }
+        } }
       />
 
       {/* Canvas editor */}

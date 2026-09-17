@@ -86,6 +86,9 @@ class AgentsApiImpl implements AgentsApi {
   // WorkflowMethods
   getWorkflows = (params?) => this.workflow.getWorkflows(params)
   getWorkflow = (id) => this.workflow.getWorkflow(id)
+  exportWorkflowDsl = (id) => this.workflow.exportWorkflowDsl(id)
+  importWorkflowDsl = (dslText, name) => this.workflow.importWorkflowDsl(dslText, name)
+  testRunWorkflowStep = (workflowId, stepKey, body?) => this.workflow.testRunWorkflowStep(workflowId, stepKey, body)
   createWorkflow = (data) => this.workflow.createWorkflow(data)
   updateWorkflow = (id, data) => this.workflow.updateWorkflow(id, data)
   deleteWorkflow = (id) => this.workflow.deleteWorkflow(id)

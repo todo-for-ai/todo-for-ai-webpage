@@ -13,7 +13,7 @@ import {
 } from '@xyflow/react'
 import { Button, Input, InputNumber, message, Space, Tooltip } from 'antd'
 import { NodeIndexOutlined, PartitionOutlined, SaveOutlined } from '@ant-design/icons'
-import type { CreateWorkflowStepData, WorkflowItem } from '../../../api/agents'
+import { agentsApi, type CreateWorkflowStepData, type WorkflowItem } from '../../../api/agents'
 import { makeBlankStep, withLayout, type CanvasStep } from './canvasModel'
 import { applyConnect, applyDisconnect, autoLayout, stepsToFlow } from './flowModel'
 import StepNode from './StepNode'
@@ -279,6 +279,10 @@ const WorkflowCanvasEditor: React.FC<WorkflowCanvasEditorProps> = ({
                 return next
               })}
               onRemove={() => removeStep(selected.step_key)}
+              onTestRun={async (stepKey) => {
+                const res = await agentsApi.testRunWorkflowStep(workflow.id, stepKey)
+                return res
+              }}
             />
           ) : (
             <div style={{ padding: 16, color: '#8c8c8c', fontSize: 12 }}>

@@ -79,6 +79,24 @@ export interface CreateWorkflowStepData {
   on_failure?: 'abort' | 'skip' | 'continue'
 }
 
+/** 单步测试运行结果（agent 步骤=预览；连接器步骤=真实远端调用结果） */
+export interface WorkflowStepTestRunResult {
+  mode: 'agent_preview' | 'external'
+  agent?: { id: number; name: string } | null
+  task_preview?: { title: string; content: string; required_capabilities: string[] }
+  provider?: string
+  ok?: boolean
+  inputs?: Record<string, unknown>
+  output?: string
+  error?: string
+  note?: string
+}
+
+export interface WorkflowDslExport {
+  dsl_text: string
+  warnings: string[]
+}
+
 export interface CreateWorkflowData {
   name: string
   description?: string
