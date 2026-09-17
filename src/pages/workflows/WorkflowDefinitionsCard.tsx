@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button, Card, Col, Empty, Popconfirm, Row, Space, Spin, Tag, Tooltip } from 'antd'
-import { ApartmentOutlined, ClockCircleOutlined, DeleteOutlined, HistoryOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import { ApartmentOutlined, ClockCircleOutlined, DeleteOutlined, HistoryOutlined, PartitionOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import WorkflowDagViewer from '../../components/Workflow/WorkflowDagViewer'
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   openLaunch: any
   openTriggerModal: any
   openVersionModal: any
+  openCanvas?: (workflowId: number) => void
 }
 
 export default function WorkflowDefinitionsCard(props: Props) {
@@ -20,7 +21,8 @@ export default function WorkflowDefinitionsCard(props: Props) {
     loadData,
     openLaunch,
     openTriggerModal,
-    openVersionModal } = props
+    openVersionModal,
+    openCanvas } = props
 
   return (
     <>
@@ -53,6 +55,13 @@ export default function WorkflowDefinitionsCard(props: Props) {
                             icon={<PlayCircleOutlined />}
                             disabled={!wf.is_active}
                             onClick={() => openLaunch(wf.id)}
+                          />
+                        </Tooltip>
+                        <Tooltip title="画布编辑">
+                          <Button
+                            size="small"
+                            icon={<PartitionOutlined />}
+                            onClick={() => openCanvas?.(wf.id)}
                           />
                         </Tooltip>
                         <Tooltip title="添加定时触发器">

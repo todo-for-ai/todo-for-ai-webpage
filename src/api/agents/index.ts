@@ -59,6 +59,7 @@ export type {
 export type {
   WorkflowStepItem,
   WorkflowItem,
+  WorkflowIntegrationConfig,
   CreateWorkflowStepData,
   CreateWorkflowData,
   WorkflowStepRunItem,
