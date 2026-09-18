@@ -14,14 +14,7 @@ import {
 import type { FC } from 'react'
 import type { WorkflowRunItem } from '../../api/agents'
 
-const WORKFLOW_STATUS_COLORS: Record<string, string> = {
-  pending: 'default',
-  running: 'processing',
-  paused: 'warning',
-  succeeded: 'success',
-  failed: 'error',
-  cancelled: 'default',
-}
+import { WORKFLOW_STATUS_COLORS } from './runStatus'
 
 interface WorkflowRunsCardProps {
   runs: WorkflowRunItem[]

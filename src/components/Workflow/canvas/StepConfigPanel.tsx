@@ -2,7 +2,7 @@ import React from 'react'
 import {
   Button, Collapse, Divider, Input, InputNumber, Popconfirm, Radio, Select, Spin, Switch, Tag, Tooltip,
 } from 'antd'
-import { CaretRightOutlined, DeleteOutlined } from '@ant-design/icons'
+import { CaretRightOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { CreateWorkflowStepData, WorkflowIntegrationConfig, WorkflowStepTestRunResult } from '../../../api/agents'
 import type { CanvasStep } from './canvasModel'
 import { CAPABILITY_OPTIONS, INTEGRATION_PROVIDERS } from './canvasModel'
@@ -17,6 +17,7 @@ interface StepConfigPanelProps {
   onChange: (patch: Partial<CreateWorkflowStepData>) => void
   onRemoveDependency: (dep: string) => void
   onRemove: () => void
+  onDuplicate?: () => void
   onTestRun?: (stepKey: string) => Promise<WorkflowStepTestRunResult>
 }
 
@@ -34,7 +35,7 @@ const CONDITION_OPERATORS = [
 const labelStyle: React.CSSProperties = { fontSize: 12, color: '#8c8c8c', margin: '8px 0 4px' }
 
 const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
-  step, stepKeys, agents, workflows, onChange, onRemoveDependency, onRemove, onTestRun,
+  step, stepKeys, agents, workflows, onChange, onRemoveDependency, onRemove, onDuplicate, onTestRun,
 }) => {
   const [testRunning, setTestRunning] = React.useState(false)
   const [testResult, setTestResult] = React.useState<WorkflowStepTestRunResult | null>(null)
@@ -88,6 +89,34 @@ const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
 
       <div style={labelStyle}>描述（将作为该步 Agent 任务的指令正文）</div>
       <TextArea rows={3} value={step.description} onChange={e => onChange({ description: e.target.value })} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4, alignItems: 'center' }}>
+        <span style={{ fontSize: 11, color: '#8c8c8c' }}>插入变量：</span>
+        {(step.depends_on ?? []).map(dep => (
+          <Tooltip key={dep} title={`上游步骤 ${dep} 的输出`}>
+            <Tag
+              style={{ cursor: 'pointer', margin: 0, fontSize: 11 }}
+              color="blue"
+              onClick={() => onChange({ description: `${step.description ?? ''} {{step_result_${dep}}}` })}
+            >
+              {'{{step_result_' + dep + '}}'}
+            </Tag>
+          </Tooltip>
+        ))}
+        <Tooltip title="根任务标题">
+          <Tag
+            style={{ cursor: 'pointer', margin: 0, fontSize: 11 }}
+            color="cyan"
+            onClick={() => onChange({ description: `${step.description ?? ''} {{root_task_title}}` })}
+          >{'{{root_task_title}}'}</Tag>
+        </Tooltip>
+        <Tooltip title="本次运行 ID">
+          <Tag
+            style={{ cursor: 'pointer', margin: 0, fontSize: 11 }}
+            color="cyan"
+            onClick={() => onChange({ description: `${step.description ?? ''} {{run_id}}` })}
+          >{'{{run_id}}'}</Tag>
+        </Tooltip>
+      </div>
 
       <div style={labelStyle}>上游依赖（画布连线维护，可在此移除）</div>
       <div>
@@ -338,6 +367,11 @@ const StepConfigPanel: React.FC<StepConfigPanelProps> = ({
             }
           }}
         >测试运行</Button>
+        {onDuplicate && (
+          <Tooltip title="复制该步骤的完整配置为新步骤（不含 API Key）">
+            <Button size="small" icon={<CopyOutlined />} onClick={onDuplicate}>复制</Button>
+          </Tooltip>
+        )}
         <Popconfirm title="确定删除该步骤？" onConfirm={onRemove}>
           <Button size="small" danger icon={<DeleteOutlined />}>删除步骤</Button>
         </Popconfirm>

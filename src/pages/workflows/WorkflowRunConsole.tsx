@@ -18,25 +18,7 @@ import {
 } from '../../api/agents'
 import { useCollaborationSSE } from '../../hooks/useCollaborationSSE'
 
-// Step status icon/color mapping
-const STEP_STATUS_MAP: Record<string, { color: string; icon: React.ReactNode }> = {
-  pending: { color: 'default', icon: <ClockCircleOutlined /> },
-  waiting: { color: 'warning', icon: <ClockCircleOutlined /> },
-  running: { color: 'processing', icon: <ReloadOutlined spin /> },
-  succeeded: { color: 'success', icon: <CheckCircleOutlined /> },
-  failed: { color: 'error', icon: <CloseCircleOutlined /> },
-  skipped: { color: 'default', icon: <StopOutlined /> },
-  cancelled: { color: 'default', icon: <StopOutlined /> },
-}
-
-const WORKFLOW_STATUS_COLORS: Record<string, string> = {
-  pending: 'default',
-  running: 'processing',
-  paused: 'warning',
-  succeeded: 'success',
-  failed: 'error',
-  cancelled: 'default',
-}
+import { STEP_STATUS_MAP, WORKFLOW_STATUS_COLORS } from './runStatus'
 
 interface WorkflowRunConsoleProps {
   open: boolean
