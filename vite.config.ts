@@ -96,7 +96,15 @@ export default defineConfig(() => {
     preview: {
       port: 50112,
       host: '0.0.0.0',
-      strictPort: true
+      strictPort: true,
+      proxy: {
+        '/todo-for-ai/api': {
+          // 使用 127.0.0.1 避免本地 localhost 在 IPv4/IPv6 切换时出现偶发 ECONNREFUSED
+          target: 'http://127.0.0.1:50110',
+          changeOrigin: true,
+          secure: false,
+        }
+      }
     }
   }
 })
