@@ -19,6 +19,8 @@ export interface AgentTimeline {
   lines: TerminalLine[]
   pending: TerminalLine[]
   atBottom: boolean
+  /** 用户上翻期间新到的行数（回到底部即清零），供「N 条新输出」徽标 */
+  newBelow: number
   scrollRef: React.MutableRefObject<HTMLDivElement | null>
   handleScroll: () => void
   scrollToBottom: () => void
@@ -40,10 +42,20 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
   const [events, setEvents] = useState<RuntimeEventItem[]>([])
   const [pending, setPending] = useState<TerminalLine[]>([])
   const [atBottom, setAtBottom] = useState(true)
+  const [newBelow, setNewBelow] = useState(0)
   const lastEventIdRef = useRef(0)
   const seenEventIdsRef = useRef<Set<number>>(new Set())
   const localSeqRef = useRef(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  /** 镜像 atBottom / lines 长度，供增量统计 effect 不依赖它们重跑 */
+  const atBottomRef = useRef(true)
+  const linesLenRef = useRef(0)
+
+  const markAtBottom = useCallback((value: boolean) => {
+    atBottomRef.current = value
+    setAtBottom(value)
+    if (value) setNewBelow(0)
+  }, [])
 
   // 任务切换时必须整体重置：游标与去重集合若残留旧任务值，
   // 新任务的运行事件会因 after_id 过大整段拉空、对话也会短暂串台。
@@ -52,9 +64,12 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
     lastEventIdRef.current = 0
     seenEventIdsRef.current = new Set()
     localSeqRef.current = 0
+    linesLenRef.current = 0
     setChatMsgs([])
     setEvents([])
     setPending([])
+    setNewBelow(0)
+    atBottomRef.current = true
     setAtBottom(true)
     activeTaskRef.current = id
   }, [])
@@ -162,18 +177,25 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
     [chatMsgs, events, pending],
   )
 
+  // 上翻浏览期间新到的输出计入 newBelow（回到底部即清零）
+  useEffect(() => {
+    const delta = lines.length - linesLenRef.current
+    linesLenRef.current = lines.length
+    if (delta > 0 && !atBottomRef.current) setNewBelow(n => n + delta)
+  }, [lines])
+
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
     if (!el) return
-    setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 40)
-  }, [])
+    markAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 40)
+  }, [markAtBottom])
 
   const scrollToBottom = useCallback(() => {
-    setAtBottom(true)
+    markAtBottom(true)
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [])
+  }, [markAtBottom])
 
   // 自动滚底（用户上翻时让位）
   useEffect(() => {
@@ -201,7 +223,7 @@ export function useAgentTimeline(taskId: number | null): AgentTimeline {
   }, [])
 
   return {
-    chatMsgs, events, lines, pending, atBottom,
+    chatMsgs, events, lines, pending, atBottom, newBelow,
     scrollRef, handleScroll, scrollToBottom,
     loadChat, appendEvents, onRuntimeEvent,
     pushLocalLine, removeLocalLine, clearView,

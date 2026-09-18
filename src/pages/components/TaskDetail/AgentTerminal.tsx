@@ -17,6 +17,7 @@ import {
   buildTranscriptText,
   type TerminalLine,
 } from './agentTerminalCore'
+import TerminalCommandMenu from './TerminalCommandMenu'
 
 const LINE_STYLE: Record<TerminalLine['kind'], { bullet: string; color: string; italic?: boolean }> = {
   user: { bullet: '❯', color: '#52c41a' },
@@ -43,7 +44,7 @@ interface AgentTerminalProps {
  */
 export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, onStopped }) => {
   const timeline = useAgentTimeline(taskId)
-  const { lines, atBottom, scrollRef, handleScroll, scrollToBottom, clearView } = timeline
+  const { lines, atBottom, newBelow, scrollRef, handleScroll, scrollToBottom, clearView } = timeline
   const [stopping, setStopping] = useState(false)
   const [confirmingStop, setConfirmingStop] = useState(false)
   /** Esc 两段式中断：第一次武装提示，再次按下才真正停止 */
@@ -78,7 +79,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
     escTimerRef.current = setTimeout(() => setEscArmed(false), 2500)
   }, [])
 
-  const { input, setInput, sending, commandHint, handleSend } = useTerminalSend({
+  const { input, setInput, sending, commandHint, handleSend, handleInputKeyDown, commandMenu } = useTerminalSend({
     taskId,
     running,
     timeline,
@@ -183,6 +184,11 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
         <div style={{ textAlign: 'right', marginTop: 2 }}>
           <Button size="small" type="link" icon={<VerticalAlignBottomOutlined />} onClick={scrollToBottom}>
             回到底部
+            {newBelow > 0 && (
+              <span data-testid="terminal-new-below" style={{ marginLeft: 4, color: '#fa8c16' }}>
+                （{newBelow} 条新输出）
+              </span>
+            )}
           </Button>
         </div>
       )}
@@ -203,18 +209,14 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
             留言将实时转发给 Agent，并在下一轮执行时正式纳入上下文。
           </div>
         )}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', position: 'relative' }}>
+          <TerminalCommandMenu menu={commandMenu} theme="card" testIdPrefix="terminal-cmd-menu" />
           <span style={{ color: '#52c41a', fontWeight: 600, fontFamily: CONSOLE_FONT, fontSize: 14, lineHeight: '22px' }}>❯</span>
           <Input.TextArea
             ref={inputRef as any}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                handleSend()
-              }
-            }}
+            onKeyDown={handleInputKeyDown}
             placeholder="输入消息… （Enter 发送，Shift+Enter 换行，/help 查看命令）"
             autoSize={{ minRows: 1, maxRows: 4 }}
             variant="borderless"
@@ -225,7 +227,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
             type="primary"
             size="small"
             icon={<SendOutlined />}
-            onClick={handleSend}
+            onClick={() => handleSend()}
             loading={sending}
             disabled={!input.trim()}
             style={{ alignSelf: 'flex-end' }}

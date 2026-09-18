@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildTranscriptMarkdown,
   buildTranscriptText,
   chatLinesFromMessages,
   eventLineFromEvent,
+  filterTerminalCommands,
   mergeTerminalLines,
   parseTerminalCommand,
 } from '../../../src/pages/components/TaskDetail/agentTerminalCore'
@@ -126,5 +128,35 @@ describe('buildTranscriptText', () => {
       { key: 'e1', kind: 'error', text: 'boom', ts: 0 },
     ])
     expect(text.split('\n')).toEqual(['10:03 ❯ 你好', '✗ boom'])
+  })
+})
+
+describe('filterTerminalCommands', () => {
+  it('completes by prefix only while typing a bare slash command', () => {
+    expect(filterTerminalCommands('/').map(c => c.name)).toEqual(['stop', 'clear', 'help'])
+    expect(filterTerminalCommands('/CL')).toEqual([{ name: 'clear', desc: expect.any(String) }])
+    expect(filterTerminalCommands('/he').map(c => c.name)).toEqual(['help'])
+  })
+
+  it('returns empty for non-commands, spaced or empty input', () => {
+    expect(filterTerminalCommands('普通消息')).toEqual([])
+    expect(filterTerminalCommands('/stop now')).toEqual([])
+    expect(filterTerminalCommands('')).toEqual([])
+  })
+})
+
+describe('buildTranscriptMarkdown', () => {
+  it('prepends task heading when task is given', () => {
+    const md = buildTranscriptMarkdown(
+      [{ key: 'c1', kind: 'user', text: '开工', ts: Date.parse('2026-09-17T10:03:00') }],
+      { id: 201, title: '修复登录' },
+    )
+    // 末尾保留换行，便于文件下载与追加
+    expect(md.split('\n')).toEqual(['# Task #201 修复登录', '', '10:03 ❯ 开工', ''])
+  })
+
+  it('omits heading without task', () => {
+    const md = buildTranscriptMarkdown([{ key: 'e1', kind: 'system', text: 'x', ts: 0 }])
+    expect(md).toBe('○ x\n')
   })
 })

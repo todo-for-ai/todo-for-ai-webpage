@@ -132,3 +132,37 @@ export const TERMINAL_COMMAND_HELP = [
   '/clear 清空当前视图（不影响服务端记录）',
   '/help  显示命令列表',
 ]
+
+/** 斜杠命令元数据（补全菜单用） */
+export interface TerminalCommandMeta {
+  name: string
+  desc: string
+}
+
+export const TERMINAL_COMMANDS: TerminalCommandMeta[] = [
+  { name: 'stop', desc: '中断当前执行' },
+  { name: 'clear', desc: '清空当前视图（不影响服务端记录）' },
+  { name: 'help', desc: '显示命令列表' },
+]
+
+/**
+ * 按输入过滤补全项：仅当输入以 / 开头且不含空白（还在敲命令名）时给出；
+ * `input='/cl'` → clear；其余情况返回空数组。
+ */
+export function filterTerminalCommands(input: string): TerminalCommandMeta[] {
+  const text = input || ''
+  if (!text.startsWith('/') || /\s/.test(text)) return []
+  const prefix = text.slice(1).toLowerCase()
+  return TERMINAL_COMMANDS.filter(c => c.name.startsWith(prefix))
+}
+
+/** 导出 Markdown 转录：标题 + 纯文本转录（复制/下载共用） */
+export function buildTranscriptMarkdown(
+  lines: TerminalLine[],
+  task?: { id?: number; title?: string } | null
+): string {
+  const head = task?.id
+    ? `# Task #${task.id}${task.title ? ` ${task.title}` : ''}\n\n`
+    : ''
+  return `${head}${buildTranscriptText(lines)}\n`
+}
