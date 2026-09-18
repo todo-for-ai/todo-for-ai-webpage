@@ -10,7 +10,8 @@ import {
   ApartmentOutlined,
   PushpinOutlined,
   ControlOutlined,
-  CloudServerOutlined
+  CloudServerOutlined,
+  CodeOutlined
 } from '@ant-design/icons'
 import { UserAvatar } from '../UserProfile'
 import NotificationBell from '../NotificationBell'
@@ -157,6 +158,11 @@ const TopNavigation: React.FC = () => {
       key: '/todo-for-ai/pages/command-center',
       icon: <ControlOutlined />,
       label: '指挥中心',
+    },
+    {
+      key: '/todo-for-ai/pages/console',
+      icon: <CodeOutlined />,
+      label: '工作台',
     },
     {
       key: '/todo-for-ai/pages/integrations',

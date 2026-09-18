@@ -173,6 +173,25 @@ export const ConsoleTranscript: React.FC<ConsoleTranscriptProps> = ({
               <div style={{ marginTop: 6, fontSize: 13 }}>
                 在下方输入任务指令，Agent 执行时输出会实时滚动在这里。
               </div>
+              <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', gap: 14, fontSize: 12 }}>
+                {[
+                  ['/', '命令补全'],
+                  ['↑↓', '输入历史'],
+                  ['?', '快捷键'],
+                ].map(([keys, desc]) => (
+                  <span key={keys} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <kbd
+                      style={{
+                        background: T.bgField, border: `1px solid ${T.border}`, borderRadius: 4,
+                        color: T.textSecondary, fontFamily: CONSOLE_MONO, fontSize: 11, padding: '1px 6px',
+                      }}
+                    >
+                      {keys}
+                    </kbd>
+                    <span style={{ color: T.textGhost }}>{desc}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           ) : (
             segments.map(seg => (
@@ -180,10 +199,10 @@ export const ConsoleTranscript: React.FC<ConsoleTranscriptProps> = ({
                 {seg.label && (
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 10,
-                    margin: '18px 0 8px', color: T.textMuted, fontSize: 12,
+                    margin: '18px 0 8px', color: T.textMuted, fontSize: 12, letterSpacing: 0.5,
                   }} data-testid="console-iteration">
                     <span style={{ flex: 1, height: 1, background: T.border }} />
-                    <span>
+                    <span style={{ fontFamily: CONSOLE_MONO, fontSize: 11 }}>
                       {seg.label}{seg.startedTs ? ` · ${hhmm(seg.startedTs)}` : ''}
                     </span>
                     <span style={{ flex: 1, height: 1, background: T.border }} />

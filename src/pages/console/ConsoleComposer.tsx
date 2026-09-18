@@ -104,18 +104,26 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
     >
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', position: 'relative' }}>
         <TerminalCommandMenu menu={commandMenu} theme="console" testIdPrefix="console-cmd-menu" />
-        <span style={{ color: CONSOLE_TOKENS.accent, fontWeight: 700, fontSize: 16, lineHeight: '24px', fontFamily: CONSOLE_MONO }}>❯</span>
-        <Input.TextArea
-          ref={inputRef as any}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleInputKeyDown}
-          placeholder={running ? 'Agent 执行中，留言将实时转发并在下轮注入…' : '让 Agent 做什么… （Enter 发送，/ 唤出命令）'}
-          autoSize={{ minRows: 1, maxRows: 6 }}
-          variant="borderless"
-          data-testid="console-input"
-          style={{ flex: 1, background: CONSOLE_TOKENS.bgField, color: CONSOLE_TOKENS.textPrimary, fontSize: 14, borderRadius: 8, padding: '8px 12px' }}
-        />
+        <div
+          className="console-input-shell"
+          style={{
+            flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'flex-end',
+            background: CONSOLE_TOKENS.bgField, borderRadius: 8, padding: '4px 12px',
+          }}
+        >
+          <span style={{ color: CONSOLE_TOKENS.accent, fontWeight: 700, fontSize: 16, lineHeight: '26px', fontFamily: CONSOLE_MONO }}>❯</span>
+          <Input.TextArea
+            ref={inputRef as any}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            placeholder={running ? 'Agent 执行中，留言将实时转发并在下轮注入…' : '让 Agent 做什么… （Enter 发送，/ 唤出命令）'}
+            autoSize={{ minRows: 1, maxRows: 6 }}
+            variant="borderless"
+            data-testid="console-input"
+            style={{ flex: 1, background: 'transparent', color: CONSOLE_TOKENS.textPrimary, fontSize: 14, padding: '6px 0' }}
+          />
+        </div>
         {running ? (
           <Tooltip title="中断当前执行">
             <Button danger icon={<PauseCircleOutlined />} loading={stopping} onClick={doStop}>

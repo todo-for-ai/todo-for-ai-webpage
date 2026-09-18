@@ -58,7 +58,12 @@ export const ConsoleInfoPanel: React.FC<ConsoleInfoPanelProps> = ({ task }) => {
   const description = parseTaskDocument(task.content || '').body.trim()
 
   const sectionTitle = (text: string) => (
-    <div style={{ fontSize: 12, color: T.textMuted, margin: '16px 0 8px', letterSpacing: 1 }}>{text}</div>
+    <div style={{ margin: '16px 0 8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ width: 2, height: 11, borderRadius: 1, background: T.accent, display: 'inline-block', opacity: 0.8 }} />
+        <span style={{ fontSize: 12, color: T.textMuted, letterSpacing: 1 }}>{text}</span>
+      </div>
+    </div>
   )
 
   return (
@@ -150,6 +155,7 @@ export const ConsoleInfoPanel: React.FC<ConsoleInfoPanelProps> = ({ task }) => {
                 href={tasksApi.getTaskAttachmentDownloadUrl(task.id, att.id)}
                 target="_blank"
                 rel="noreferrer"
+                className="console-attachment"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px',
                   marginBottom: 4, background: T.bgPanelAlt, borderRadius: 6,

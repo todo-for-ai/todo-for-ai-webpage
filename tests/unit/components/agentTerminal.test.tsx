@@ -43,6 +43,7 @@ vi.mock('../../../src/services/websocketService', () => ({
 }))
 
 import { AgentTerminal } from '../../../src/pages/components/TaskDetail/AgentTerminal'
+import { MemoryRouter } from 'react-router-dom'
 
 // 两个时间源（对话 09:59 + 事件 10:00）应按时间升序合并
 describe('AgentTerminal', () => {
@@ -51,8 +52,15 @@ describe('AgentTerminal', () => {
     wsHandlers.clear()
   })
 
+  const renderTerminal = (props: { taskId: number; running?: boolean }) =>
+    render(
+      <MemoryRouter initialEntries={['/todo-for-ai/pages/tasks/1']}>
+        <AgentTerminal {...props} />
+      </MemoryRouter>
+    )
+
   it('renders merged chat + runtime timeline chronologically', async () => {
-    render(<AgentTerminal taskId={1} running={false} />)
+    renderTerminal({ taskId: 1, running: false })
     await waitFor(() => {
       expect(screen.getByText('请开始')).toBeInTheDocument()
       expect(screen.getByText('line-1')).toBeInTheDocument()
@@ -64,7 +72,7 @@ describe('AgentTerminal', () => {
   })
 
   it('appends WS runtime events and dedupes by id', async () => {
-    render(<AgentTerminal taskId={1} running={false} />)
+    renderTerminal({ taskId: 1, running: false })
     await waitFor(() => expect(screen.getByText('line-1')).toBeInTheDocument())
 
     const handler = wsHandlers.get('task_runtime_event')!
@@ -78,7 +86,7 @@ describe('AgentTerminal', () => {
   })
 
   it('StrictMode 下事件流不丢失（updater 必须是纯函数，回归：副作用写进 setEvents 导致 dev 白屏事件）', async () => {
-    render(<StrictMode><AgentTerminal taskId={1} running={false} /></StrictMode>)
+    render(<StrictMode><MemoryRouter><AgentTerminal taskId={1} running={false} /></MemoryRouter></StrictMode>)
     await waitFor(() => {
       expect(screen.getByText('line-1')).toBeInTheDocument()
       expect(screen.getByText('开始执行')).toBeInTheDocument()
@@ -86,7 +94,7 @@ describe('AgentTerminal', () => {
   })
 
   it('sends typed messages, echoes locally and reconciles with server record', async () => {
-    render(<AgentTerminal taskId={1} running={false} />)
+    renderTerminal({ taskId: 1, running: false })
     await waitFor(() => expect(screen.getByText('请开始')).toBeInTheDocument())
 
     fireEvent.change(screen.getByPlaceholderText(/输入消息/), { target: { value: '继续第三步' } })
@@ -113,7 +121,7 @@ describe('AgentTerminal', () => {
   })
 
   it('handles slash commands: help lists without sending, unknown hints, /stop calls API', async () => {
-    render(<AgentTerminal taskId={1} running />)
+    renderTerminal({ taskId: 1, running: true })
     await waitFor(() => expect(screen.getByText('line-1')).toBeInTheDocument())
 
     const input = screen.getByPlaceholderText(/输入消息/)
@@ -133,7 +141,7 @@ describe('AgentTerminal', () => {
   })
 
   it('interrupts via two-step Esc when running', async () => {
-    render(<AgentTerminal taskId={1} running />)
+    renderTerminal({ taskId: 1, running: true })
     await waitFor(() => expect(screen.getByText('line-1')).toBeInTheDocument())
 
     fireEvent.keyDown(screen.getByTestId('terminal-body'), { key: 'Escape' })
@@ -145,7 +153,7 @@ describe('AgentTerminal', () => {
   })
 
   it('stop button uses inline two-step confirm', async () => {
-    render(<AgentTerminal taskId={1} running />)
+    renderTerminal({ taskId: 1, running: true })
     await waitFor(() => expect(screen.getByText('停止执行')).toBeInTheDocument())
 
     fireEvent.click(screen.getByText('停止执行'))
@@ -155,7 +163,7 @@ describe('AgentTerminal', () => {
   })
 
   it('clear view empties the timeline', async () => {
-    render(<AgentTerminal taskId={1} running={false} />)
+    renderTerminal({ taskId: 1, running: false })
     await waitFor(() => expect(screen.getByText('line-1')).toBeInTheDocument())
 
     fireEvent.click(screen.getByTitle('清空视图'))
@@ -163,6 +171,12 @@ describe('AgentTerminal', () => {
       expect(screen.queryByText('line-1')).not.toBeInTheDocument()
       expect(screen.getByText(/欢迎使用交互终端/)).toBeInTheDocument()
     })
+  })
+
+  it('提供「在工作台打开」入口（全屏会话视图）', async () => {
+    renderTerminal({ taskId: 42, running: false })
+    await waitFor(() => expect(screen.getByText('line-1')).toBeInTheDocument())
+    expect(screen.getByTestId('terminal-open-console')).toBeInTheDocument()
   })
 
   afterEach(cleanup)
