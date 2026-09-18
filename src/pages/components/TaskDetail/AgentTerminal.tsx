@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button, Card, Drawer, Input, Tag, message } from 'antd'
 import {
   VerticalAlignBottomOutlined,
@@ -7,6 +8,7 @@ import {
   ClearOutlined,
   HistoryOutlined,
   SendOutlined,
+  ExportOutlined,
 } from '@ant-design/icons'
 import { runtimeEventsApi } from '../../../api/runtimeEvents.js'
 import { getErrorMessage } from '../../../utils/errorUtils.js'
@@ -43,6 +45,7 @@ interface AgentTerminalProps {
  * 时间线状态由 useAgentTimeline 提供；全屏版见 pages/console/ConsoleWorkspace。
  */
 export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, onStopped }) => {
+  const navigate = useNavigate()
   const timeline = useAgentTimeline(taskId)
   const { lines, atBottom, newBelow, scrollRef, handleScroll, scrollToBottom, clearView } = timeline
   const [stopping, setStopping] = useState(false)
@@ -117,6 +120,12 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ taskId, running, o
       }
       extra={
         <div style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+          <Button
+            size="small" type="text" icon={<ExportOutlined />}
+            title="在工作台打开（全屏会话视图）"
+            data-testid="terminal-open-console"
+            onClick={() => navigate(`/todo-for-ai/pages/console?task=${taskId}`)}
+          />
           <Button size="small" type="text" icon={<CopyOutlined />} title="复制终端内容" onClick={handleCopy} />
           <Button size="small" type="text" icon={<ClearOutlined />} title="清空视图" onClick={clearView} />
           <Button size="small" type="text" icon={<HistoryOutlined />} title="完整对话记录" onClick={() => setShowHistory(true)} />
