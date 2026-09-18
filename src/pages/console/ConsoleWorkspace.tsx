@@ -18,7 +18,7 @@ import ConsoleInfoPanel from './ConsoleInfoPanel'
 import ConsoleQuickSwitcher from './ConsoleQuickSwitcher'
 import ConsoleShortcutsOverlay from './ConsoleShortcutsOverlay'
 import { consoleStatusMeta } from './consoleData'
-import { CONSOLE_TOKENS, CONSOLE_SCOPE_CSS } from './consoleTheme'
+import { CONSOLE_TOKENS, CONSOLE_SCOPE_CSS, CONSOLE_POP_CSS } from './consoleTheme'
 
 /**
  * 全屏 Web 工作台（对标 AI 编程工具的远程控制台界面）：
@@ -69,6 +69,7 @@ export const ConsoleWorkspace: React.FC = () => {
       }}
     >
       <style>{CONSOLE_SCOPE_CSS}</style>
+      <style>{CONSOLE_POP_CSS}</style>
       <div
         data-testid="console-workspace"
         className="tfai-console"

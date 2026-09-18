@@ -114,13 +114,17 @@ export const ConsoleSidebar: React.FC<ConsoleSidebarProps> = ({
           </div>
         )}
         {groups.map(group => (
-          <div key={group.projectId} style={{ marginBottom: 12 }}>
+          <div key={group.projectId} style={{ marginBottom: 14 }}>
             <div style={{
-              fontSize: 11, color: '#8c8c8c', padding: '6px 8px 4px',
-              display: 'flex', justifyContent: 'space-between',
+              fontSize: 11, color: T.textMuted, padding: '6px 8px 4px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              letterSpacing: 0.5,
             }}>
-              <span>{group.projectName}</span>
-              <span>{group.tasks.length}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 3, height: 10, borderRadius: 1, background: T.bgHover, display: 'inline-block' }} />
+                {group.projectName}
+              </span>
+              <span style={{ color: T.textGhost, fontFamily: CONSOLE_MONO }}>{group.tasks.length}</span>
             </div>
             {group.tasks.map(task => {
               const meta = consoleStatusMeta(task.status)
@@ -130,10 +134,12 @@ export const ConsoleSidebar: React.FC<ConsoleSidebarProps> = ({
                   key={task.id}
                   onClick={() => onSelect(task.id)}
                   data-testid={`console-task-${task.id}`}
+                  className="console-task-item"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '7px 8px', borderRadius: 6, cursor: 'pointer',
-                    background: active ? '#2b2d31' : 'transparent',
+                    background: active ? T.bgPanelAlt : 'transparent',
+                    boxShadow: active ? `inset 2px 0 0 ${T.accent}` : 'none',
                     marginBottom: 2,
                   }}
                 >
@@ -143,12 +149,13 @@ export const ConsoleSidebar: React.FC<ConsoleSidebarProps> = ({
                     boxShadow: task.status === 'in_progress' ? `0 0 6px ${meta.color}` : 'none',
                   }} />
                   <span style={{
-                    flex: 1, fontSize: 13, color: active ? '#e8e8e8' : '#b8b8b8',
+                    flex: 1, fontSize: 13, color: active ? T.textPrimary : T.textSecondary,
+                    fontWeight: active ? 500 : 400,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {task.title}
                   </span>
-                  <span style={{ fontSize: 11, color: '#666', flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: T.textGhost, flexShrink: 0, fontFamily: CONSOLE_MONO }}>
                     {relativeTime(task.updated_at)}
                   </span>
                 </div>

@@ -1,5 +1,6 @@
 import React from 'react'
 import type { TerminalCommandMenuState } from '../../../hooks/useTerminalSend'
+import { CONSOLE_POP_CSS } from '../../console/consoleTheme'
 
 const PALETTES = {
   console: {
@@ -34,12 +35,16 @@ export const TerminalCommandMenu: React.FC<TerminalCommandMenuProps> = ({
   return (
     <div
       data-testid={testIdPrefix}
+      className="console-pop"
       style={{
         position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, minWidth: 280, zIndex: 30,
         background: c.bg, border: `1px solid ${c.border}`, borderRadius: 8,
         boxShadow: '0 6px 24px rgba(0,0,0,0.35)', padding: 4, overflow: 'hidden',
+        transformOrigin: 'bottom left',
       }}
     >
+      {/* 卡片终端（非 .tfai-console 作用域）也要有入场动画，随菜单挂载一次 */}
+      <style>{CONSOLE_POP_CSS}</style>
       {menu.items.map((item, i) => {
         const active = i === menu.index
         return (

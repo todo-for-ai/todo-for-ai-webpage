@@ -70,6 +70,7 @@ export const ConsoleQuickSwitcher: React.FC<ConsoleQuickSwitcherProps> = ({
     >
       <div
         data-testid="console-switcher"
+        className="console-pop"
         onClick={e => e.stopPropagation()}
         style={{
           width: 560, maxWidth: '92vw', background: T.bgPanel,

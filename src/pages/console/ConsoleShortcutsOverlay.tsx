@@ -60,6 +60,7 @@ export const ConsoleShortcutsOverlay: React.FC<ConsoleShortcutsOverlayProps> = (
     >
       <div
         data-testid="console-shortcuts"
+        className="console-pop"
         onClick={e => e.stopPropagation()}
         style={{
           width: 520, maxWidth: '92vw', maxHeight: '78vh', overflowY: 'auto',
