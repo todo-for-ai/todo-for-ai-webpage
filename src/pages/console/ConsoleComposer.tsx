@@ -8,6 +8,7 @@ import type { AgentTimeline } from '../../hooks/useAgentTimeline'
 import { useTerminalSend } from '../../hooks/useTerminalSend'
 import { canDispatchTask, firstAgentId } from './consoleData'
 import { CONSOLE_TOKENS, CONSOLE_MONO } from './consoleTheme'
+import TerminalCommandMenu from '../components/TaskDetail/TerminalCommandMenu'
 
 interface ConsoleComposerProps {
   task: any
@@ -78,7 +79,7 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
     }
   }, [running, escArmed, doStop])
 
-  const { input, setInput, sending, commandHint, handleSend } = useTerminalSend({
+  const { input, setInput, sending, commandHint, handleSend, handleInputKeyDown, commandMenu } = useTerminalSend({
     taskId: task?.id,
     running,
     timeline,
@@ -101,19 +102,15 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
       data-testid="console-composer"
       onKeyDown={handleKeyDown}
     >
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', position: 'relative' }}>
+        <TerminalCommandMenu menu={commandMenu} theme="console" testIdPrefix="console-cmd-menu" />
         <span style={{ color: CONSOLE_TOKENS.accent, fontWeight: 700, fontSize: 16, lineHeight: '24px', fontFamily: CONSOLE_MONO }}>❯</span>
         <Input.TextArea
           ref={inputRef as any}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              handleSend()
-            }
-          }}
-          placeholder={running ? 'Agent 执行中，留言将实时转发并在下轮注入…' : '让 Agent 做什么… （Enter 发送）'}
+          onKeyDown={handleInputKeyDown}
+          placeholder={running ? 'Agent 执行中，留言将实时转发并在下轮注入…' : '让 Agent 做什么… （Enter 发送，/ 唤出命令）'}
           autoSize={{ minRows: 1, maxRows: 6 }}
           variant="borderless"
           data-testid="console-input"
@@ -131,7 +128,7 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
           icon={<SendOutlined />}
           loading={sending}
           disabled={!input.trim()}
-          onClick={handleSend}
+          onClick={() => handleSend()}
           style={{ borderRadius: 6 }}
         >
           发送
@@ -155,7 +152,7 @@ export const ConsoleComposer: React.FC<ConsoleComposerProps> = ({
           </label>
         )}
         {commandHint && <span style={{ color: CONSOLE_TOKENS.textMuted }}>/stop 中断 · /clear 清屏 · /help 列表</span>}
-        <span>Enter 发送 · Shift+Enter 换行 · /help 查看命令</span>
+        <span>Enter 发送 · Shift+Enter 换行 · ↑↓ 历史 · /help 命令</span>
       </div>
     </div>
   )

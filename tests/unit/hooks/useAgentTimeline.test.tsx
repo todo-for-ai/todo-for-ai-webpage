@@ -98,4 +98,46 @@ describe('useAgentTimeline 任务切换重置（回归：游标残留致新任�
     })
     expect(result.current.lines.some(l => l.text === '迟到的任务一消息')).toBe(false)
   })
+
+  it('上翻浏览时新事件计入 newBelow；回到底部清零后可继续累计', async () => {
+    taskChatApi.getMessages.mockImplementation(async (_id: number) => chatPage(1, '任务一的消息'))
+    runtimeEventsApi.list.mockResolvedValue({ task_id: 1, items: [], last_id: 0 })
+
+    const { result } = renderHook(() => useAgentTimeline(1))
+    await waitFor(() => expect(result.current.lines.length).toBeGreaterThan(0))
+
+    // 用户上翻（模拟滚动离开底部）
+    act(() => {
+      // @ts-expect-error 测试桩：只关心滚动位置计算
+      result.current.scrollRef.current = { scrollHeight: 500, scrollTop: 0, clientHeight: 100 }
+      result.current.handleScroll()
+    })
+    expect(result.current.atBottom).toBe(false)
+
+    // 新事件到达 → 计入 newBelow
+    act(() => {
+      result.current.appendEvents([
+        { id: 11, attempt_id: 'a', event_type: 'output', seq: 1, message: '新输出A', event_timestamp: '2026-09-18T10:01:00' },
+        { id: 12, attempt_id: 'a', event_type: 'output', seq: 2, message: '新输出B', event_timestamp: '2026-09-18T10:01:01' },
+      ])
+    })
+    await waitFor(() => expect(result.current.newBelow).toBe(2))
+
+    // 回到底部 → 清零
+    act(() => result.current.scrollToBottom())
+    expect(result.current.newBelow).toBe(0)
+
+    // 再上翻 → 新输出继续累计
+    act(() => {
+      // @ts-expect-error 测试桩
+      result.current.scrollRef.current = { scrollHeight: 500, scrollTop: 0, clientHeight: 100 }
+      result.current.handleScroll()
+    })
+    act(() => {
+      result.current.appendEvents([
+        { id: 13, attempt_id: 'a', event_type: 'output', seq: 3, message: '新输出C', event_timestamp: '2026-09-18T10:01:02' },
+      ])
+    })
+    await waitFor(() => expect(result.current.newBelow).toBe(1))
+  })
 })

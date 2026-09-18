@@ -9,12 +9,14 @@ import {
   SearchOutlined,
   RightOutlined,
   LinkOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons'
 import { useConsoleTasks } from '../../hooks/useConsoleTasks'
 import ConsoleSidebar from './ConsoleSidebar'
 import ConsoleTranscript from './ConsoleTranscript'
 import ConsoleInfoPanel from './ConsoleInfoPanel'
 import ConsoleQuickSwitcher from './ConsoleQuickSwitcher'
+import ConsoleShortcutsOverlay from './ConsoleShortcutsOverlay'
 import { consoleStatusMeta } from './consoleData'
 import { CONSOLE_TOKENS, CONSOLE_SCOPE_CSS } from './consoleTheme'
 
@@ -34,17 +36,27 @@ export const ConsoleWorkspace: React.FC = () => {
   const [infoCollapsed, setInfoCollapsed] = useState(false)
   /** ⌘K / Ctrl+K 快速任务切换 */
   const [switcherOpen, setSwitcherOpen] = useState(false)
+  /** ? 快捷键帮助浮层 */
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault()
         setSwitcherOpen(v => !v)
+        return
+      }
+      // 快捷键帮助：? 唤起 / Esc 关闭（输入框中的 ? 不触发）
+      const target = e.target as HTMLElement | null
+      const typing = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      if (!typing && (e.key === '?' || (shortcutsOpen && e.key === 'Escape'))) {
+        e.preventDefault()
+        setShortcutsOpen(v => !v)
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [])
+  }, [shortcutsOpen])
 
   const running = detail?.status === 'in_progress'
   const statusMeta = detail ? consoleStatusMeta(detail.status) : null
@@ -134,6 +146,14 @@ export const ConsoleWorkspace: React.FC = () => {
             <Tooltip title="搜索任务（⌘K）">
               <Button size="small" type="text" icon={<SearchOutlined />} onClick={() => setSwitcherOpen(true)} title="搜索任务（⌘K）" />
             </Tooltip>
+            <Tooltip title="键盘快捷键（?）">
+              <Button
+                size="small" type="text" icon={<QuestionCircleOutlined />}
+                onClick={() => setShortcutsOpen(v => !v)}
+                title="键盘快捷键（?）"
+                data-testid="console-shortcuts-button"
+              />
+            </Tooltip>
             <Tooltip title="刷新">
               <Button size="small" type="text" icon={<ReloadOutlined />} onClick={refresh} title="刷新" />
             </Tooltip>
@@ -183,6 +203,8 @@ export const ConsoleWorkspace: React.FC = () => {
           onClose={() => setSwitcherOpen(false)}
           onSelect={handleSelect}
         />
+
+        <ConsoleShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
 
         {/* 右侧信息面板 */}
         {detail && !infoCollapsed && (

@@ -93,6 +93,16 @@ describe('ConsoleWorkspace', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     wsHandlers.clear()
+    // clearAllMocks 不清除 mockResolvedValue：前一条用例把 getTask 覆盖成
+    // 别的详情对象会泄漏到后续用例，这里统一恢复按 id 返回的规范实现
+    tasksApi.getTask.mockImplementation(async (id: number) => ({
+      id, title: '执行中任务', status: 'in_progress', project_id: 10, priority: 'high',
+      content: '## 背景\n这是任务描述正文，包含验收标准。',
+      created_at: '2026-09-18T09:00:00', updated_at: '2026-09-18T11:00:00',
+      is_ai_task: true, assignees: [{ type: 'agent', id: 5 }],
+      subtask_count: 4, subtask_done_count: 2,
+      project: { id: 10, name: 'demo' },
+    }))
   })
 
   it('renders sidebar task stream grouped by project and selects via URL', async () => {
@@ -180,6 +190,94 @@ describe('ConsoleWorkspace', () => {
     fireEvent.change(search, { target: { value: '已完成' } })
     await waitFor(() => expect(screen.queryByTestId('console-task-201')).not.toBeInTheDocument())
     expect(screen.getByTestId('console-task-202')).toBeInTheDocument()
+  })
+
+  it('slash command menu opens on "/", picks command by click', async () => {
+    renderConsole()
+    await waitFor(() => expect(screen.getByTestId('console-input')).toBeInTheDocument())
+
+    const input = screen.getByTestId('console-input')
+    fireEvent.change(input, { target: { value: '/' } })
+    const menu = await waitFor(() => screen.getByTestId('console-cmd-menu'))
+    expect(menu.querySelectorAll('[data-testid^="console-cmd-menu-item-"]').length).toBe(3)
+
+    // 点击选中 /help（命令列表直接上屏；系统行带 ○ 前缀，用正则匹配）
+    fireEvent.mouseDown(screen.getByTestId('console-cmd-menu-item-help'))
+    await waitFor(() => expect(screen.getByText(/clear 清空当前视图/)).toBeInTheDocument())
+    // 执行后输入框清空、菜单关闭
+    await waitFor(() => expect(screen.queryByTestId('console-cmd-menu')).not.toBeInTheDocument())
+  })
+
+  it('transcript toolbar copies and downloads the transcript', async () => {
+    const writeText = vi.fn(async () => {})
+    Object.assign(navigator, { clipboard: { writeText } })
+    const createObjectURL = vi.fn(() => 'blob:mock-url')
+    const revokeObjectURL = vi.fn()
+    Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true })
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true })
+
+    renderConsole()
+    await waitFor(() => expect(screen.getByText('请开始')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByTestId('console-transcript-copy'))
+    await waitFor(() => expect(writeText).toHaveBeenCalled())
+    const copied = writeText.mock.calls[0][0] as string
+    expect(copied).toContain('❯ 请开始')
+    expect(copied).toContain('line-1')
+
+    fireEvent.click(screen.getByTestId('console-transcript-download'))
+    expect(createObjectURL).toHaveBeenCalled()
+    const blob = createObjectURL.mock.calls[0][0] as Blob
+    expect(blob.type).toContain('text/markdown')
+  })
+
+  it('shortcuts overlay opens via header button or "?", closes via backdrop/Esc', async () => {
+    renderConsole()
+    await waitFor(() => expect(screen.getByTestId('console-input')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByTestId('console-shortcuts-button'))
+    expect(screen.getByTestId('console-shortcuts')).toBeInTheDocument()
+    expect(screen.getAllByTestId('console-shortcut-key').length).toBeGreaterThanOrEqual(10)
+
+    fireEvent.click(screen.getByTestId('console-shortcuts-backdrop'))
+    expect(screen.queryByTestId('console-shortcuts')).not.toBeInTheDocument()
+
+    // ? 唤起（目标非输入框）
+    fireEvent.keyDown(document.body, { key: '?' })
+    expect(screen.getByTestId('console-shortcuts')).toBeInTheDocument()
+    // Esc 关闭
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(screen.queryByTestId('console-shortcuts')).not.toBeInTheDocument()
+
+    // 输入框中敲 ? 不触发
+    fireEvent.change(screen.getByTestId('console-input'), { target: { value: '问号?' } })
+    fireEvent.keyDown(screen.getByTestId('console-input'), { key: '?' })
+    expect(screen.queryByTestId('console-shortcuts')).not.toBeInTheDocument()
+  })
+
+  it('scrolling up shows new-output badge when runtime events arrive; back to bottom clears', async () => {
+    renderConsole()
+    const transcript = await waitFor(() => screen.getByTestId('console-transcript'))
+    await waitFor(() => expect(screen.getByText('line-1')).toBeInTheDocument())
+
+    // jsdom 无布局：桩化滚动尺寸后触发 scroll，让 atBottom 变 false
+    // （scrollTop 须可写：回到底部与自动滚底都会赋值）
+    Object.defineProperty(transcript, 'scrollHeight', { value: 900, configurable: true })
+    Object.defineProperty(transcript, 'scrollTop', { value: 0, writable: true, configurable: true })
+    Object.defineProperty(transcript, 'clientHeight', { value: 200, configurable: true })
+    fireEvent.scroll(transcript)
+
+    // WS 推送两条新事件 → 徽标出现
+    const handler = wsHandlers.get('task_runtime_event')
+    expect(handler).toBeTruthy()
+    await waitFor(() => {
+      handler!({ id: 21, attempt_id: 'a1', event_type: 'output', seq: 4, message: '新输出甲', event_timestamp: '2026-09-18T10:11:00', task_id: 201 })
+      handler!({ id: 22, attempt_id: 'a1', event_type: 'output', seq: 5, message: '新输出乙', event_timestamp: '2026-09-18T10:11:01', task_id: 201 })
+    })
+    expect(await screen.findByTestId('console-new-below')).toHaveTextContent('2 条新输出')
+
+    fireEvent.click(screen.getByTestId('console-scroll-bottom'))
+    await waitFor(() => expect(screen.queryByTestId('console-new-below')).not.toBeInTheDocument())
   })
 
   afterEach(cleanup)

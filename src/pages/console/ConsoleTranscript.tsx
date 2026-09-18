@@ -1,8 +1,16 @@
 import React, { useMemo } from 'react'
-import { Button } from 'antd'
-import { VerticalAlignBottomOutlined } from '@ant-design/icons'
+import { Button, message } from 'antd'
+import {
+  VerticalAlignBottomOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons'
 import { useAgentTimeline } from '../../hooks/useAgentTimeline'
-import type { TerminalLine } from '../components/TaskDetail/agentTerminalCore'
+import {
+  buildTranscriptMarkdown,
+  buildTranscriptText,
+  type TerminalLine,
+} from '../components/TaskDetail/agentTerminalCore'
 import { MarkdownEditor } from '../../components/MarkdownEditor'
 import { splitAttemptSegments } from './consoleData'
 import ConsoleComposer from './ConsoleComposer'
@@ -103,15 +111,54 @@ export const ConsoleTranscript: React.FC<ConsoleTranscriptProps> = ({
   onActivity,
 }) => {
   const timeline = useAgentTimeline(task?.id ?? null)
-  const { lines, atBottom, scrollRef, handleScroll, scrollToBottom } = timeline
+  const { lines, atBottom, newBelow, scrollRef, handleScroll, scrollToBottom } = timeline
 
   const segments = useMemo(() => splitAttemptSegments(lines), [lines])
   const isEmpty = lines.length === 0
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(buildTranscriptText(lines))
+      message.success('已复制会话转录')
+    } catch {
+      message.error('复制失败')
+    }
+  }
+
+  const handleDownload = () => {
+    const name = `todo-for-ai-task-${task?.id ?? 0}-transcript.md`
+    const blob = new Blob([buildTranscriptMarkdown(lines, task)], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(url)
+    message.success(`已下载 ${name}`)
+  }
+
   if (!task) return null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
+      {/* 转录工具条：复制 / 下载 Markdown（悬停时间线右上角） */}
+      <div
+        data-testid="console-transcript-toolbar"
+        style={{ position: 'absolute', top: 10, right: 16, zIndex: 20, display: 'flex', gap: 4 }}
+      >
+        <Button
+          size="small" type="text" icon={<CopyOutlined />}
+          onClick={handleCopy} title="复制会话转录"
+          data-testid="console-transcript-copy"
+          style={{ color: T.textMuted }}
+        />
+        <Button
+          size="small" type="text" icon={<DownloadOutlined />}
+          onClick={handleDownload} title="下载会话转录（Markdown）"
+          data-testid="console-transcript-download"
+          style={{ color: T.textMuted }}
+        />
+      </div>
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -162,8 +209,19 @@ export const ConsoleTranscript: React.FC<ConsoleTranscriptProps> = ({
 
       {!atBottom && (
         <div style={{ textAlign: 'center', marginTop: -36, marginBottom: 4 }}>
-          <Button size="small" icon={<VerticalAlignBottomOutlined />} onClick={scrollToBottom} style={{ background: T.bgField, borderColor: T.border }}>
+          <Button
+            size="small"
+            icon={<VerticalAlignBottomOutlined />}
+            onClick={scrollToBottom}
+            style={{ background: T.bgField, borderColor: T.border }}
+            data-testid="console-scroll-bottom"
+          >
             回到底部
+            {newBelow > 0 && (
+              <span data-testid="console-new-below" style={{ marginLeft: 6, color: T.orange }}>
+                {newBelow} 条新输出
+              </span>
+            )}
           </Button>
         </div>
       )}
