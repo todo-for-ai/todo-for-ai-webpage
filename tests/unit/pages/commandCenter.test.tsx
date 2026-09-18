@@ -44,7 +44,7 @@ vi.mock('../../../src/api/agents', () => ({ agentsApi }))
 vi.mock('../../../src/api/dashboard', () => ({ dashboardApi }))
 
 import { useCollabGraphPanel } from '../../../src/pages/dashboard/hooks/useCollabGraphPanel'
-import { useCommandCenterData } from '../../../src/pages/commandCenter/useCommandCenterData'
+import { useCommandCenterData } from '../../../src/pages/command-center/useCommandCenterData'
 import { useCollabGraphPanel } from '../../../src/pages/dashboard/hooks/useCollabGraphPanel'
 
 describe('useCollabGraphPanel（指挥中心共用）', () => {

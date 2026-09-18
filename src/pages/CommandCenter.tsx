@@ -39,10 +39,10 @@ const { Title, Text, Paragraph } = Typography
  * Agent 协作指挥中心：单一页面聚合 Agent 监控、安全事件、冲突、编排状态
  * 四大数据源，作为统一指挥入口。支持手动刷新与 SSE 实时刷新。
  */
-import { useCommandCenterData } from './commandCenter/useCommandCenterData'
+import { useCommandCenterData } from './command-center/useCommandCenterData'
 import { useCollabGraphPanel } from './dashboard/hooks/useCollabGraphPanel'
-import { CommandCenterCollabCard } from './commandCenter/CommandCenterCollabCard'
-import { CommandCenterModals } from './commandCenter/CommandCenterModals'
+import { CommandCenterCollabCard } from './command-center/CommandCenterCollabCard'
+import { CommandCenterModals } from './command-center/CommandCenterModals'
 
 const CommandCenter: React.FC = () => {
   const { tc } = usePageTranslation('common')

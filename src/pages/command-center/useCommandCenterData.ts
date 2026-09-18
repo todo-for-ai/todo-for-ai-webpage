@@ -29,7 +29,6 @@ import PlatformActivityTrendSection from '../../components/PlatformActivityTrend
 import ConflictsTrendChart from '../../components/ConflictsTrendChart'
 import { useCollaborationSSE } from '../../hooks/useCollaborationSSE'
 import { useTranslation } from '../../i18n/hooks/useTranslation'
-import { CommandCenterStatsRow, SecurityEventTrendAlert, QuickActionsCard, AgentMonitorCard, SecurityEventsCard, OrchestratorStatusCard, PRApprovalsCard } from '../command-center'
 import { PageIntro } from '../../components/common/PageIntro'
 import { usePageTranslation } from '../../i18n/hooks/useTranslation'
 
