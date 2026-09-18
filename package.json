@@ -19,7 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "arch:audit": "node scripts/arch-audit.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
